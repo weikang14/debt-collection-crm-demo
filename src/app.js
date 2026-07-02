@@ -28,6 +28,7 @@ app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; re
 app.use(require('./routes/auth'));
 app.use('/clients', require('./routes/clients'));
 app.use('/debtors', require('./routes/debtors'));
+app.use('/cases', require('./routes/cases').router);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`CRM demo running: http://localhost:${PORT}`));

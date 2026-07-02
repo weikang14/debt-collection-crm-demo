@@ -1,0 +1,91 @@
+<% layout('layout'); -%>
+<div class="page-head">
+  <h1><%= c.case_no %> <%- include('../partials/statusBadge', { status: c.status }) %></h1>
+  <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit</a><% } %>
+</div>
+
+<div class="detail-grid">
+  <div class="card kv">
+    <div><span>Client</span><a href="/clients/<%= c.client_id %>"><%= c.client_name %></a></div>
+    <div><span>Debtor</span><a href="/debtors/<%= c.debtor_id %>"><%= c.debtor_name %></a></div>
+    <div><span>Debtor Phone</span><span class="mono"><%= c.debtor_phone||'—' %></span></div>
+    <div><span>IC/Passport</span><span class="mono"><%= c.ic_passport||'—' %></span></div>
+    <div><span>Agent</span><%= c.agent_name||'—' %></div>
+    <div><span>Principal</span><span class="num"><%= h.money(c.principal_amount) %></span></div>
+    <div><span>Interest</span><span class="num"><%= h.money(c.interest_amount) %></span></div>
+    <div><span>Outstanding</span><span class="num"><%= h.money(c.outstanding_amount) %></span></div>
+    <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
+    <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
+    <div><span>Remark</span><%= c.remark||'—' %></div>
+  </div>
+
+  <div>
+    <section class="panel" id="panel-payment">
+      <h3>Payments</h3>
+      <% if (!readOnly) { %>
+      <!-- Task 13: payment form -->
+      <% } %>
+      <% if (!payments.length) { %><%- include('../partials/empty', { msg: 'No payments recorded.' }) %><% } else { %>
+      <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th></tr></thead>
+      <tbody><% payments.forEach(p => { %><tr><td class="mono"><%= p.receipt_no %></td><td><%= h.dateFmt(p.payment_date) %></td>
+      <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td></tr><% }) %></tbody></table>
+      <% } %>
+    </section>
+
+    <section class="panel" id="panel-ptp">
+      <h3>Promise to Pay</h3>
+      <% if (!readOnly) { %>
+      <!-- Task 14: PTP form -->
+      <% } %>
+      <% if (!ptps.length) { %><%- include('../partials/empty', { msg: 'No PTPs recorded.' }) %><% } else { %>
+      <table class="data"><thead><tr><th class="num">Amount</th><th>Due Date</th><th>Status</th></tr></thead>
+      <tbody><% ptps.forEach(p => { %><tr><td class="num"><%= h.money(p.amount) %></td><td><%= h.dateFmt(p.due_date) %></td>
+      <td><span class="badge <%= p.status==='fulfilled'?'is-green':p.status==='broken'?'is-red':'is-gold' %>"><%= p.status %></span></td></tr><% }) %></tbody></table>
+      <% } %>
+    </section>
+
+    <section class="panel" id="panel-call">
+      <h3>Calls</h3>
+      <% if (!readOnly) { %>
+      <!-- Task 15: call log form -->
+      <% } %>
+      <% if (!calls.length) { %><%- include('../partials/empty', { msg: 'No calls logged.' }) %><% } else { %>
+      <table class="data"><thead><tr><th>Time</th><th>Duration</th><th>Result</th><th>Notes</th></tr></thead>
+      <tbody><% calls.forEach(call => { %><tr><td><%= h.dateTimeFmt(call.call_time) %></td><td><%= call.duration_seconds %>s</td>
+      <td><span class="badge <%= call.result==='answered'?'is-green':'is-neutral' %>"><%= call.result %></span></td><td><%= call.notes||'' %></td></tr><% }) %></tbody></table>
+      <% } %>
+    </section>
+
+    <section class="panel" id="panel-note">
+      <h3>Notes</h3>
+      <% if (!readOnly) { %>
+      <!-- Task 15: note form -->
+      <% } %>
+      <p>Notes are recorded in the timeline below.</p>
+    </section>
+
+    <section class="panel" id="panel-status">
+      <h3>Status</h3>
+      <% if (!readOnly) { %>
+      <!-- Task 16: status change form -->
+      <% } %>
+      <p><%- include('../partials/statusBadge', { status: c.status }) %>
+      <% if (terminal.includes(c.status)) { %> <span class="badge is-neutral">Terminal</span><% } %></p>
+    </section>
+  </div>
+</div>
+
+<h2>Tasks</h2>
+<% if (!tasks.length) { %><%- include('../partials/empty', { msg: 'No tasks for this case.' }) %><% } else { %>
+<table class="data"><thead><tr><th>Title</th><th>Due Date</th><th>Status</th></tr></thead>
+<tbody><% tasks.forEach(t => { %><tr><td><%= t.title %></td><td><%= h.dateFmt(t.due_date) %></td>
+<td><span class="badge <%= t.status==='done'?'is-green':'is-gold' %>"><%= t.status %></span></td></tr><% }) %></tbody></table>
+<% } %>
+
+<h2>Timeline</h2>
+<% if (!timeline.length) { %><%- include('../partials/empty', { msg: 'No activity yet.' }) %><% } else { %>
+<ul class="timeline">
+<% timeline.forEach(ev => { %><li><span class="badge is-neutral"><%= ev.event_type %></span> <%= ev.content %>
+<span class="meta"><%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
+</ul>
+<% } %>

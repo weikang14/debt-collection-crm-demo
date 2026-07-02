@@ -1,0 +1,24 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Cases</h1>
+  <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/cases/new">+ New Case</a><% } %>
+</div>
+<form class="card filters" method="get" action="/cases">
+  <label>Status <select name="status">
+    <option value="" <%= !query.status?'selected':'' %>>All</option>
+    <% statuses.forEach(s => { %><option value="<%= s %>" <%= query.status===s?'selected':'' %>><%= h.caseStatusLabel(s) %></option><% }) %>
+  </select></label>
+  <label>Priority <select name="priority">
+    <option value="" <%= !query.priority?'selected':'' %>>All</option>
+    <% priorities.forEach(p => { %><option value="<%= p %>" <%= query.priority===p?'selected':'' %>><%= p %></option><% }) %>
+  </select></label>
+  <label>Search <input name="q" value="<%= query.q||'' %>" placeholder="Case No or Debtor"></label>
+  <button class="btn btn-gold" type="submit">Filter</button>
+</form>
+<% if (!cases.length) { %><%- include('../partials/empty', { msg: 'No cases found.' }) %><% } else { %>
+<table class="data"><thead><tr><th>Case No</th><th>Client</th><th>Debtor</th><th>Agent</th><th class="num">Outstanding</th><th>Priority</th><th>Status</th></tr></thead>
+<tbody><% cases.forEach(cs => { %>
+<tr><td><a class="mono" href="/cases/<%= cs.id %>"><%= cs.case_no %></a></td><td><%= cs.client_name %></td><td><%= cs.debtor_name %></td>
+<td><%= cs.agent_name||'—' %></td><td class="num"><%= h.money(cs.outstanding_amount) %></td>
+<td><span class="badge <%= cs.priority==='urgent'||cs.priority==='high'?'is-red':cs.priority==='low'?'is-neutral':'is-gold' %>"><%= cs.priority %></span></td>
+<td><%- include('../partials/statusBadge', { status: cs.status }) %></td></tr>
+<% }) %></tbody></table><% } %>
