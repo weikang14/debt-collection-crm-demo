@@ -1,0 +1,21 @@
+<% layout('layout');
+  const pct = Math.min(100, attainment);
+  const barCls = attainment >= 100 ? 'is-green' : attainment >= 50 ? '' : 'is-red';
+-%>
+<div class="page-head"><h1><%= agent.name %></h1>
+  <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/agents/<%= agent.id %>/edit">Edit</a><% } %>
+</div>
+<div class="card kv">
+  <div><span>Contact</span><span class="mono"><%= agent.contact||'—' %></span></div><div><span>Department</span><%= agent.department||'—' %></div>
+  <div><span>Target</span><%= h.money(agent.target_amount) %></div><div><span>Collected</span><%= h.money(agent.collected) %></div>
+  <div><span>Case Count</span><%= agent.case_count %></div><div><span>Commission</span><%= agent.commission_rate %>%</div>
+  <div><span>Active</span><%= agent.active ? 'Yes' : 'No' %></div>
+</div>
+<p>Target Attainment: <%= attainment %>%</p>
+<div class="bar"><div class="fill <%= barCls %>" style="width: <%= pct %>%"></div></div>
+<h2>Assigned Cases</h2>
+<% if (!cases.length) { %><%- include('../partials/empty', { msg: 'No cases assigned to this agent.' }) %><% } else { %>
+<table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th class="num">Outstanding</th><th>Status</th></tr></thead><tbody>
+<% cases.forEach(c => { %><tr><td><a href="/cases/<%= c.id %>" class="mono"><%= c.case_no %></a></td><td><%= c.debtor_name %></td>
+<td class="num"><%= h.money(c.outstanding_amount) %></td><td><%- include('../partials/statusBadge', { status: c.status }) %></td></tr><% }) %>
+</tbody></table><% } %>

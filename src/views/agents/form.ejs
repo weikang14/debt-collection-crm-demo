@@ -1,0 +1,11 @@
+<% layout('layout'); -%>
+<div class="page-head"><h1><%= title %></h1></div>
+<form class="card form" method="post" action="<%= action %>">
+  <label>Name <input name="name" value="<%= agent.name||'' %>" required></label>
+  <label>Contact <input name="contact" value="<%= agent.contact||'' %>"></label>
+  <label>Department <input name="department" value="<%= agent.department||'' %>"></label>
+  <label>Target Amount <input name="target_amount" type="number" value="<%= agent.target_amount!=null?agent.target_amount:0 %>"></label>
+  <label>Commission % <input name="commission_rate" type="number" step="0.1" value="<%= agent.commission_rate!=null?agent.commission_rate:5 %>"></label>
+  <label><input type="checkbox" name="active" value="1" <%= agent.active!=null ? (agent.active?'checked':'') : 'checked' %>> Active</label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="/agents">Cancel</a></div>
+</form>
