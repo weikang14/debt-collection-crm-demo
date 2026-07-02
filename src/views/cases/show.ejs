@@ -71,7 +71,15 @@
     <section class="panel" id="panel-call">
       <h3>Calls</h3>
       <% if (!readOnly) { %>
-      <!-- Task 15: call log form -->
+      <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+      <form class="inline-form" method="post" action="/cases/<%= c.id %>/calls">
+        <h4>Log Call</h4>
+        <label>Result <select name="result"><option>answered</option><option>no_answer</option><option>busy</option><option>wrong_number</option><option>refused</option></select></label>
+        <label>Duration (s) <input type="number" name="duration_seconds" min="0" value="0"></label>
+        <label>Notes <input name="notes"></label>
+        <button class="btn btn-gold" type="submit">Log Call</button>
+      </form>
+      <% } %>
       <% } %>
       <% if (!calls.length) { %><%- include('../partials/empty', { msg: 'No calls logged.' }) %><% } else { %>
       <table class="data"><thead><tr><th>Time</th><th>Duration</th><th>Result</th><th>Notes</th></tr></thead>

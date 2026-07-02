@@ -99,4 +99,16 @@ router.post('/:id/ptps', requireLogin, requireRole('admin','manager','agent'), (
   res.redirect(`/cases/${c.id}?ok=PTP+created`);
 });
 
+router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const by = req.session.user.full_name;
+  const dur = Number(req.body.duration_seconds)||0;
+  run('INSERT INTO call_logs (case_id,agent_id,duration_seconds,result,notes) VALUES (?,?,?,?,?)',
+    [c.id, req.session.user.agent_id||c.agent_id||null, dur, req.body.result||'no_answer', req.body.notes||null]);
+  run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
+    [c.id,'call',`Call: ${req.body.result||'no_answer'} (${dur}s)${req.body.notes?' — '+req.body.notes:''}`, by]);
+  logAction(req,'call','case',c.id,`Logged call for ${c.case_no}`);
+  res.redirect(`/cases/${c.id}?ok=Call+logged`);
+});
+
 module.exports = { router, loadCase };
