@@ -5,18 +5,29 @@
 </div>
 
 <div class="detail-grid">
-  <div class="card kv">
-    <div><span>Client</span><a href="/clients/<%= c.client_id %>"><%= c.client_name %></a></div>
-    <div><span>Debtor</span><a href="/debtors/<%= c.debtor_id %>"><%= c.debtor_name %></a></div>
-    <div><span>Debtor Phone</span><span class="mono"><%= c.debtor_phone||'—' %></span></div>
-    <div><span>IC/Passport</span><span class="mono"><%= c.ic_passport||'—' %></span></div>
-    <div><span>Agent</span><%= c.agent_name||'—' %></div>
-    <div><span>Principal</span><span class="num"><%= h.money(c.principal_amount) %></span></div>
-    <div><span>Interest</span><span class="num"><%= h.money(c.interest_amount) %></span></div>
-    <div><span>Outstanding</span><span class="num"><%= h.money(c.outstanding_amount) %></span></div>
-    <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
-    <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
-    <div><span>Remark</span><%= c.remark||'—' %></div>
+  <div>
+    <div class="card kv">
+      <div><span>Client</span><a href="/clients/<%= c.client_id %>"><%= c.client_name %></a></div>
+      <div><span>Debtor</span><a href="/debtors/<%= c.debtor_id %>"><%= c.debtor_name %></a></div>
+      <div><span>Debtor Phone</span><span class="mono"><%= c.debtor_phone||'—' %></span></div>
+      <div><span>IC/Passport</span><span class="mono"><%= c.ic_passport||'—' %></span></div>
+      <div><span>Agent</span><%= c.agent_name||'—' %></div>
+      <div><span>Principal</span><span class="num"><%= h.money(c.principal_amount) %></span></div>
+      <div><span>Interest</span><span class="num"><%= h.money(c.interest_amount) %></span></div>
+      <div><span>Outstanding</span><span class="num"><%= h.money(c.outstanding_amount) %></span></div>
+      <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
+      <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
+      <div><span>Remark</span><%= c.remark||'—' %></div>
+    </div>
+
+    <h2>Timeline</h2>
+    <% if (!timeline.length) { %><%- include('../partials/empty', { msg: 'No activity yet.' }) %><% } else { %>
+    <% const evClass = { payment:'is-green', ptp_fulfilled:'is-green', ptp_broken:'is-red', ptp_created:'is-gold', status_change:'is-blue', legal:'is-red', call:'is-blue' }; %>
+    <ul class="timeline">
+    <% timeline.forEach(ev => { %><li><span class="badge <%= evClass[ev.event_type]||'is-neutral' %>"><%= ev.event_type %></span> <%= ev.content %>
+    <span class="meta"><%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
+    </ul>
+    <% } %>
   </div>
 
   <div>
@@ -126,12 +137,4 @@
 <table class="data"><thead><tr><th>Title</th><th>Due Date</th><th>Status</th></tr></thead>
 <tbody><% tasks.forEach(t => { %><tr><td><%= t.title %></td><td><%= h.dateFmt(t.due_date) %></td>
 <td><span class="badge <%= t.status==='done'?'is-green':'is-gold' %>"><%= t.status %></span></td></tr><% }) %></tbody></table>
-<% } %>
-
-<h2>Timeline</h2>
-<% if (!timeline.length) { %><%- include('../partials/empty', { msg: 'No activity yet.' }) %><% } else { %>
-<ul class="timeline">
-<% timeline.forEach(ev => { %><li><span class="badge is-neutral"><%= ev.event_type %></span> <%= ev.content %>
-<span class="meta"><%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
-</ul>
 <% } %>
