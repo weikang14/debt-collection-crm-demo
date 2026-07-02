@@ -1,0 +1,9 @@
+{
+  "outputStyle": "Proactive",
+  "prefersReducedMotion": false,
+  "permissions": {
+    "allow": [
+      "Bash(node -e \"try{require\\('node:sqlite'\\);console.log\\('node:sqlite OK without flag'\\)}catch\\(e\\){console.log\\('needs flag or unavailable:', e.message\\)}\")"
+    ]
+  }
+}
