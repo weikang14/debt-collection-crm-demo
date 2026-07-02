@@ -1,0 +1,410 @@
+/* ==========================================================================
+   Debt Collection CRM — base design system
+   Offline, system fonts only. No external URLs.
+   ========================================================================== */
+
+:root {
+  --ink: #10151f;
+  --paper: #faf6ee;
+  --gold: #b7842a;
+  --green: #1e7a4c;
+  --red: #a8342c;
+  --blue: #395a80;
+
+  --ink-soft: #1b2230;
+  --ink-line: #2a3242;
+  --paper-line: #e6ddc9;
+  --paper-soft: #f1ead9;
+  --ink-text: #2a2620;
+  --muted: #7a7566;
+
+  --font-display: Georgia, 'Iowan Old Style', serif;
+  --font-body: -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'Roboto Mono', monospace;
+
+  --radius: 6px;
+  --shadow: 0 1px 3px rgba(16, 21, 31, 0.12), 0 1px 2px rgba(16, 21, 31, 0.08);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-text);
+  background: var(--paper);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  color: var(--ink);
+  font-weight: normal;
+  margin: 0 0 12px;
+}
+h1 { font-size: 26px; letter-spacing: 0.2px; }
+h2 { font-size: 19px; }
+h3 { font-size: 16px; }
+p { line-height: 1.5; }
+
+.mono, .num {
+  font-family: var(--font-mono);
+}
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- App shell ---------- */
+
+body.app {
+  display: flex;
+  min-height: 100vh;
+}
+
+.sidebar {
+  width: 240px;
+  flex: 0 0 240px;
+  background: var(--ink);
+  color: #cfd4de;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  border-right: 3px solid var(--gold);
+}
+
+.sidebar .brand {
+  font-family: var(--font-display);
+  color: #fff;
+  font-size: 18px;
+  padding: 22px 20px;
+  border-bottom: 1px solid var(--ink-line);
+}
+.sidebar .brand span {
+  color: var(--gold);
+}
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  padding: 10px 0;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.sidebar nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 20px;
+  color: #b9c0cd;
+  font-size: 13.5px;
+  border-left: 3px solid transparent;
+}
+.sidebar nav a:hover {
+  background: var(--ink-soft);
+  color: #fff;
+  text-decoration: none;
+}
+.sidebar nav a.active {
+  background: var(--ink-soft);
+  color: #fff;
+  border-left-color: var(--gold);
+}
+.sidebar nav a svg {
+  flex: 0 0 auto;
+  opacity: 0.85;
+}
+
+.sidebar-foot {
+  border-top: 1px solid var(--ink-line);
+  padding: 14px 20px 18px;
+}
+.sidebar-foot .who {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+.sidebar-foot .who strong {
+  color: #fff;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.sidebar-foot .who small {
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 10.5px;
+  margin-top: 2px;
+}
+.sidebar-foot .logout {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #b9c0cd;
+  font-size: 13px;
+}
+.sidebar-foot .logout:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+.content {
+  flex: 1;
+  margin-left: 240px;
+  background: var(--paper);
+  padding: 28px;
+  min-width: 0;
+}
+
+/* ---------- Alerts / flash ---------- */
+
+.alert {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  border: 1px solid transparent;
+}
+.alert.is-green {
+  background: #e8f3ec;
+  color: var(--green);
+  border-color: #c3e0cd;
+}
+.alert.is-red {
+  background: #f7e9e8;
+  color: var(--red);
+  border-color: #edc7c4;
+}
+
+/* ---------- Card ---------- */
+
+.card {
+  background: #fff;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px 22px;
+  margin-bottom: 20px;
+}
+
+/* ---------- Buttons ---------- */
+
+.btn, button, input[type="submit"] {
+  font-family: var(--font-body);
+  font-size: 13.5px;
+  border: 1px solid var(--paper-line);
+  background: #fff;
+  color: var(--ink-text);
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  line-height: 1.2;
+}
+.btn:hover, button:hover, input[type="submit"]:hover {
+  border-color: var(--gold);
+  text-decoration: none;
+}
+.btn-gold, button, input[type="submit"] {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #fff;
+  font-weight: 600;
+}
+.btn-gold:hover, button:hover, input[type="submit"]:hover {
+  background: #a2761f;
+  border-color: #a2761f;
+}
+/* ---------- Forms ---------- */
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+input, select, textarea {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--ink-text);
+  background: #fff;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  padding: 9px 11px;
+}
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 2px rgba(183, 132, 42, 0.18);
+}
+
+/* ---------- Login page ---------- */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--ink);
+  background-image: linear-gradient(180deg, var(--ink) 0%, #171e2c 100%);
+}
+
+.login-card {
+  width: 340px;
+  background: var(--paper);
+  border-radius: var(--radius);
+  padding: 32px 28px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+  border-top: 4px solid var(--gold);
+}
+.login-card .brand {
+  font-family: var(--font-display);
+  color: var(--ink);
+  font-size: 20px;
+  margin-bottom: 20px;
+}
+.login-card .brand span {
+  color: var(--gold);
+}
+.login-card button,
+.login-card input[type="submit"] {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+.login-card .hint {
+  text-align: center;
+  margin-top: 16px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+/* ---------- Badges / status dots ---------- */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  text-transform: uppercase;
+  background: var(--paper-soft);
+  color: var(--ink-text);
+  white-space: nowrap;
+}
+.badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.badge.is-green { background: #e8f3ec; color: var(--green); }
+.badge.is-gold  { background: #f7ecd9; color: var(--gold); }
+.badge.is-red   { background: #f7e9e8; color: var(--red); }
+.badge.is-blue  { background: #e7edf3; color: var(--blue); }
+.badge.is-neutral { background: var(--paper-soft); color: var(--muted); }
+
+/* ---------- Tables ---------- */
+
+table.data {
+  width: 100%;
+  border-collapse: collapse;
+  background: #fff;
+  font-size: 13px;
+}
+table.data th, table.data td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--paper-line);
+  text-align: left;
+  vertical-align: middle;
+}
+table.data th {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  font-weight: 600;
+  background: var(--paper-soft);
+}
+table.data tbody tr:hover {
+  background: #fbf8f1;
+}
+table.data td.num, table.data th.num {
+  font-family: var(--font-mono);
+  text-align: right;
+}
+
+/* ---------- KPI grid (dashboard) ---------- */
+
+.kpi {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.kpi .tile {
+  background: #fff;
+  border: 1px solid var(--paper-line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 16px 18px;
+  border-left: 3px solid var(--gold);
+}
+.kpi .tile .label {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.kpi .tile .value {
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: var(--ink);
+}
+
+/* ---------- Progress bars (reports) ---------- */
+
+.bar {
+  height: 8px;
+  border-radius: 999px;
+  background: var(--paper-soft);
+  overflow: hidden;
+}
+.bar .fill {
+  height: 100%;
+  background: var(--gold);
+  border-radius: 999px;
+}
+.bar .fill.is-green { background: var(--green); }
+.bar .fill.is-red { background: var(--red); }
+.bar .fill.is-blue { background: var(--blue); }
+
+/* ---------- Empty state ---------- */
+
+.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--muted);
+  font-size: 13.5px;
+}

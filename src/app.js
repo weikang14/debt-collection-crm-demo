@@ -23,6 +23,8 @@ app.get('/health', (req, res) => res.type('text').send('ok'));
 // ROUTE MOUNT POINT — later tasks insert app.use(...) here
 const { attachUser } = require('./middleware/auth');
 app.use(attachUser);
+const h = require('./utils/helpers');
+app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; next(); });
 app.use(require('./routes/auth'));
 
 const PORT = process.env.PORT || 3000;
