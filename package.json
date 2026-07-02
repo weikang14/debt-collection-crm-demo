@@ -1,0 +1,19 @@
+{
+  "name": "debt-collection-crm",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "start": "node --no-warnings src/app.js",
+    "seed": "node --no-warnings src/db/seed.js",
+    "reset": "node -e \"require('fs').rmSync('data/crm.db',{force:true})\" && npm run seed",
+    "test": "node --no-warnings --test"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dayjs": "^1.11.13",
+    "ejs": "^3.1.10",
+    "ejs-mate": "^4.0.0",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1"
+  }
+}
