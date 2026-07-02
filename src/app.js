@@ -34,6 +34,7 @@ app.use('/ptps', require('./routes/ptps'));
 app.use('/agents', require('./routes/agents'));
 app.use('/tasks', require('./routes/tasks'));
 app.use('/reports', require('./routes/reports'));
+app.use('/search', require('./routes/search'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`CRM demo running: http://localhost:${PORT}`));
