@@ -1,0 +1,58 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Reports</h1></div>
+
+<form class="card filters" method="get" action="/reports">
+  <label>From <input type="date" name="from" value="<%= from %>"></label>
+  <label>To <input type="date" name="to" value="<%= to %>"></label>
+  <button class="btn btn-gold" type="submit">Apply</button>
+</form>
+
+<div class="card">
+  <h2>Collections by Client <span><%= from %> to <%= to %></span></h2>
+  <% if (!collection.length) { %><%- include('../partials/empty', { msg: 'No payments in this range.' }) %><% } else { %>
+  <% const cTotals = collection.reduce((a, r) => ({ cnt: a.cnt + r.cnt, total: a.total + r.total }), { cnt: 0, total: 0 }); %>
+  <table class="data"><thead><tr><th>Company</th><th class="num">Payments</th><th class="num">Total</th></tr></thead>
+  <tbody>
+  <% collection.forEach(row => { %>
+  <tr><td><%= row.company_name %></td><td class="num"><%= row.cnt %></td><td class="num"><%= h.money(row.total) %></td></tr>
+  <% }) %>
+  </tbody>
+  <tfoot><tr><td>Total</td><td class="num"><%= cTotals.cnt %></td><td class="num"><%= h.money(cTotals.total) %></td></tr></tfoot>
+  </table>
+  <% } %>
+</div>
+
+<div class="card">
+  <h2>Outstanding by Status</h2>
+  <% if (!outstanding.length) { %><%- include('../partials/empty', { msg: 'No open cases.' }) %><% } else { %>
+  <% const oTotals = outstanding.reduce((a, r) => ({ cnt: a.cnt + r.cnt, total: a.total + r.total }), { cnt: 0, total: 0 }); %>
+  <% const omax = outstanding.reduce((m, r) => Math.max(m, r.total), 0); %>
+  <table class="data"><thead><tr><th>Status</th><th class="num">Cases</th><th class="num">Outstanding</th><th>Proportion</th></tr></thead>
+  <tbody>
+  <% outstanding.forEach(row => { const pct = omax > 0 ? Math.round(row.total / omax * 100) : 0; %>
+  <tr><td><span class="badge <%= h.caseStatusClass(row.status) %>"><%= h.caseStatusLabel(row.status) %></span></td>
+  <td class="num"><%= row.cnt %></td><td class="num"><%= h.money(row.total) %></td>
+  <td><div class="bar"><div class="fill is-green" style="width: <%= pct %>%"></div></div></td></tr>
+  <% }) %>
+  </tbody>
+  <tfoot><tr><td>Total</td><td class="num"><%= oTotals.cnt %></td><td class="num"><%= h.money(oTotals.total) %></td><td></td></tr></tfoot>
+  </table>
+  <% } %>
+</div>
+
+<% if (!['agent','client'].includes(currentUser.role)) { %>
+<div class="card">
+  <h2>Agent Performance (<%= from %> to <%= to %>)</h2>
+  <% if (!performance.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
+  <table class="data"><thead><tr><th>Agent</th><th class="num">Collected</th><th class="num">Target</th><th>Attainment</th></tr></thead>
+  <tbody>
+  <% performance.forEach(row => { const pct = row.target_amount > 0 ? Math.min(100, Math.round(row.collected / row.target_amount * 100)) : 0;
+     const fillClass = pct >= 100 ? 'is-green' : pct < 50 ? 'is-red' : ''; %>
+  <tr><td><%= row.name %></td><td class="num"><%= h.money(row.collected) %></td><td class="num"><%= h.money(row.target_amount) %></td>
+  <td><div class="bar"><div class="fill <%= fillClass %>" style="width: <%= pct %>%"></div></div> <%= pct %>%</td></tr>
+  <% }) %>
+  </tbody>
+  </table>
+  <% } %>
+</div>
+<% } %>
