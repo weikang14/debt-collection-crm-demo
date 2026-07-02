@@ -1,0 +1,19 @@
+<% layout('layout'); -%>
+<div class="page-head"><h1><%= debtor.name %></h1>
+  <% if (['admin','manager','agent'].includes(currentUser.role)) { %><a class="btn" href="/debtors/<%= debtor.id %>/edit">Edit</a><% } %>
+</div>
+<div class="card kv">
+  <div><span>IC/Passport</span><span class="mono"><%= debtor.ic_passport||'—' %></span></div><div><span>Company</span><%= debtor.company||'—' %></div>
+  <div><span>Phone</span><span class="mono"><%= debtor.phone||'—' %></span></div><div><span>Email</span><%= debtor.email||'—' %></div>
+  <div><span>Address</span><%= debtor.address||'—' %></div><div><span>Employer</span><%= debtor.employer||'—' %></div>
+  <div><span>Salary</span><%= debtor.salary!=null?debtor.salary:'—' %></div>
+  <div><span>Risk</span><span class="badge <%= debtor.risk_level==='high'?'is-red':debtor.risk_level==='low'?'is-green':'is-gold' %>"><%= debtor.risk_level %></span></div>
+  <div><span>Guarantor Name</span><%= debtor.guarantor_name||'—' %></div><div><span>Guarantor Phone</span><span class="mono"><%= debtor.guarantor_phone||'—' %></span></div>
+  <div><span>Remark</span><%= debtor.remark||'—' %></div>
+</div>
+<h2>Cases</h2>
+<% if (!cases.length) { %><%- include('../partials/empty', { msg: 'No cases for this debtor.' }) %><% } else { %>
+<table class="data"><thead><tr><th>Case No</th><th class="num">Outstanding</th><th>Status</th></tr></thead><tbody>
+<% cases.forEach(c => { %><tr><td><a href="/cases/<%= c.id %>" class="mono"><%= c.case_no %></a></td>
+<td class="num"><%= h.money(c.outstanding_amount) %></td><td><%- include('../partials/statusBadge', { status: c.status }) %></td></tr><% }) %>
+</tbody></table><% } %>

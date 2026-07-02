@@ -1,0 +1,24 @@
+<% layout('layout'); -%>
+<div class="page-head"><h1><%= title %></h1></div>
+<form class="card form" method="post" action="<%= action %>">
+  <label>Name <input name="name" value="<%= debtor.name||'' %>" required></label>
+  <label>IC/Passport <input name="ic_passport" value="<%= debtor.ic_passport||'' %>"></label>
+  <label>Company <input name="company" value="<%= debtor.company||'' %>"></label>
+  <label>Phone <input name="phone" value="<%= debtor.phone||'' %>"></label>
+  <label>Email <input name="email" type="email" value="<%= debtor.email||'' %>"></label>
+  <label>Address <input name="address" value="<%= debtor.address||'' %>"></label>
+  <label>Employer <input name="employer" value="<%= debtor.employer||'' %>"></label>
+  <label>Salary <input name="salary" type="number" step="0.01" value="<%= debtor.salary!=null?debtor.salary:'' %>"></label>
+  <label>Risk Level <select name="risk_level">
+    <option value="low" <%= debtor.risk_level==='low'?'selected':'' %>>Low</option>
+    <option value="medium" <%= (!debtor.risk_level||debtor.risk_level==='medium')?'selected':'' %>>Medium</option>
+    <option value="high" <%= debtor.risk_level==='high'?'selected':'' %>>High</option>
+  </select></label>
+  <fieldset>
+    <legend>Guarantor</legend>
+    <label>Guarantor Name <input name="guarantor_name" value="<%= debtor.guarantor_name||'' %>"></label>
+    <label>Guarantor Phone <input name="guarantor_phone" value="<%= debtor.guarantor_phone||'' %>"></label>
+  </fieldset>
+  <label>Remark <textarea name="remark"><%= debtor.remark||'' %></textarea></label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="/debtors">Cancel</a></div>
+</form>
