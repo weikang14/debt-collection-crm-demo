@@ -111,4 +111,19 @@ router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), 
   res.redirect(`/cases/${c.id}?ok=Call+logged`);
 });
 
+router.post('/:id/notes', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'note',req.body.content||'',req.session.user.full_name]);
+  res.redirect(`/cases/${c.id}?ok=Note+added`);
+});
+router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const ns = req.body.status;
+  if (!CASE_STATUSES.includes(ns)) return res.redirect(`/cases/${c.id}?err=Invalid+status`);
+  run("UPDATE cases SET status=?, closed_at=CASE WHEN ? IN ('closed','fully_paid','cancelled') THEN datetime('now') ELSE closed_at END, updated_at=datetime('now') WHERE id=?", [ns, ns, c.id]);
+  run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'status_change',`Status changed ${c.status} → ${ns}`,req.session.user.full_name]);
+  logAction(req,'status_change','case',c.id,`Status ${c.status} → ${ns}`);
+  res.redirect(`/cases/${c.id}?ok=Status+updated`);
+});
+
 module.exports = { router, loadCase };

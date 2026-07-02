@@ -91,7 +91,12 @@
     <section class="panel" id="panel-note">
       <h3>Notes</h3>
       <% if (!readOnly) { %>
-      <!-- Task 15: note form -->
+      <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+      <form class="inline-form" method="post" action="/cases/<%= c.id %>/notes">
+        <label>Note <textarea name="content" required></textarea></label>
+        <button class="btn btn-gold" type="submit">Add Note</button>
+      </form>
+      <% } %>
       <% } %>
       <p>Notes are recorded in the timeline below.</p>
     </section>
@@ -99,7 +104,16 @@
     <section class="panel" id="panel-status">
       <h3>Status</h3>
       <% if (!readOnly) { %>
-      <!-- Task 16: status change form -->
+      <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+      <form class="inline-form" method="post" action="/cases/<%= c.id %>/status">
+        <label>Change Status
+          <select name="status">
+            <% statuses.forEach(s => { %><option value="<%= s %>" <%= c.status===s?'selected':'' %>><%= h.caseStatusLabel(s) %></option><% }) %>
+          </select>
+        </label>
+        <button class="btn btn-gold" type="submit">Update Status</button>
+      </form>
+      <% } %>
       <% } %>
       <p><%- include('../partials/statusBadge', { status: c.status }) %>
       <% if (terminal.includes(c.status)) { %> <span class="badge is-neutral">Terminal</span><% } %></p>
