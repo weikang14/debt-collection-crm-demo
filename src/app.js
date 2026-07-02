@@ -21,6 +21,9 @@ app.use(session({
 app.get('/health', (req, res) => res.type('text').send('ok'));
 
 // ROUTE MOUNT POINT — later tasks insert app.use(...) here
+const { attachUser } = require('./middleware/auth');
+app.use(attachUser);
+app.use(require('./routes/auth'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`CRM demo running: http://localhost:${PORT}`));

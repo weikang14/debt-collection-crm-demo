@@ -1,0 +1,12 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Login — Debt Collection CRM</title>
+<link rel="stylesheet" href="/css/style.css"></head>
+<body class="login-page">
+  <form class="login-card" method="post" action="/login">
+    <h1 class="brand">Debt Collection <span>CRM</span></h1>
+    <% if (error) { %><div class="alert is-red"><%= error %></div><% } %>
+    <label>Username <input name="username" autofocus required></label>
+    <label>Password <input name="password" type="password" required></label>
+    <button type="submit">Sign in</button>
+    <p class="hint"><a href="/demo-accounts">View demo accounts</a></p>
+  </form>
+</body></html>
