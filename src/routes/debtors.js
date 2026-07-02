@@ -36,9 +36,13 @@ router.get('/:id', requireLogin, canView, (req, res) => {
 router.get('/:id/edit', requireLogin, canEdit, (req, res) => {
   const debtor = get('SELECT * FROM debtors WHERE id=?', [req.params.id]);
   if (!debtor) return res.status(404).render('error', { message: 'Debtor not found' });
+  const ids = reachableDebtorIds(req.session.user);
+  if (ids !== null && !ids.includes(debtor.id)) return res.status(403).render('error', { message: 'Forbidden' });
   res.render('debtors/form', { title: 'Edit Debtor', debtor, action: `/debtors/${debtor.id}` });
 });
 router.post('/:id', requireLogin, canEdit, (req, res) => {
+  const ids = reachableDebtorIds(req.session.user);
+  if (ids !== null && !ids.includes(Number(req.params.id))) return res.status(403).render('error', { message: 'Forbidden' });
   const b = req.body;
   run(`UPDATE debtors SET name=?,ic_passport=?,company=?,phone=?,email=?,address=?,employer=?,salary=?,risk_level=?,guarantor_name=?,guarantor_phone=?,remark=? WHERE id=?`,
     [b.name,b.ic_passport,b.company,b.phone,b.email,b.address,b.employer,Number(b.salary)||null,b.risk_level||'medium',b.guarantor_name,b.guarantor_phone,b.remark,req.params.id]);
