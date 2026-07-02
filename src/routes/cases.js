@@ -82,4 +82,11 @@ router.get('/:id', requireLogin, (req, res) => {
     readOnly: ['auditor','client'].includes(req.session.user.role) });
 });
 
+const { applyPayment } = require('../services/payments');
+router.post('/:id/payments', requireLogin, requireRole('admin','manager','finance','agent'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const r = applyPayment(c.id, req.body, req);
+  res.redirect(`/cases/${c.id}?ok=Payment+${r.receipt_no}+recorded`);
+});
+
 module.exports = { router, loadCase };

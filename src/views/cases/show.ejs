@@ -23,7 +23,17 @@
     <section class="panel" id="panel-payment">
       <h3>Payments</h3>
       <% if (!readOnly) { %>
-      <!-- Task 13: payment form -->
+      <% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %>
+      <form class="inline-form" method="post" action="/cases/<%= c.id %>/payments">
+        <h4>Record Payment</h4>
+        <label>Date <input type="date" name="payment_date" required></label>
+        <label>Amount (RM) <input type="number" step="0.01" name="amount" required></label>
+        <label>Method <select name="method"><option>bank_transfer</option><option>cash</option><option>cheque</option><option>online</option></select></label>
+        <label>Reference <input name="reference"></label>
+        <label>Bank <input name="bank"></label>
+        <button class="btn btn-gold" type="submit">Add Payment</button>
+      </form>
+      <% } %>
       <% } %>
       <% if (!payments.length) { %><%- include('../partials/empty', { msg: 'No payments recorded.' }) %><% } else { %>
       <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th></tr></thead>

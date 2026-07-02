@@ -430,6 +430,24 @@ table.data td.num, table.data th.num {
   border-top: 1px solid var(--paper-line);
 }
 
+/* ---------- Inline form (narrow panel) ---------- */
+
+.inline-form {
+  margin-top: 12px;
+}
+.inline-form h4 {
+  font-size: 14px;
+  margin: 0 0 12px;
+}
+.inline-form label {
+  margin-bottom: 12px;
+}
+.inline-form button {
+  margin-top: 4px;
+  width: 100%;
+  justify-content: center;
+}
+
 /* ---------- Key/value grid ---------- */
 
 .kv {
