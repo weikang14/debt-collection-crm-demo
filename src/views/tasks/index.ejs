@@ -1,6 +1,5 @@
 <% layout('layout') -%>
 <div class="page-head"><h1>Tasks</h1>
-  <% if (['admin','manager','agent'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/tasks/new">+ New Task</a><% } %>
 </div>
 <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
 <form class="card form" method="post" action="/tasks/new">
