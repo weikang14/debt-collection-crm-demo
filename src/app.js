@@ -26,6 +26,7 @@ app.use(attachUser);
 const h = require('./utils/helpers');
 app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; next(); });
 app.use(require('./routes/auth'));
+app.use('/clients', require('./routes/clients'));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`CRM demo running: http://localhost:${PORT}`));

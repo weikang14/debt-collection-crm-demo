@@ -1,0 +1,12 @@
+<% layout('layout'); const client = clientData; -%>
+<div class="page-head"><h1><%= title %></h1></div>
+<form class="card form" method="post" action="<%= action %>">
+  <label>Company Name <input name="company_name" value="<%= client.company_name||'' %>" required></label>
+  <label>PIC Name <input name="pic_name" value="<%= client.pic_name||'' %>"></label>
+  <label>Phone <input name="phone" value="<%= client.phone||'' %>"></label>
+  <label>Email <input name="email" type="email" value="<%= client.email||'' %>"></label>
+  <label>Agreement No <input name="agreement_no" value="<%= client.agreement_no||'' %>"></label>
+  <label>Commission % <input name="commission_rate" type="number" step="0.1" value="<%= client.commission_rate!=null?client.commission_rate:15 %>"></label>
+  <label>Remark <textarea name="remark"><%= client.remark||'' %></textarea></label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="/clients">Cancel</a></div>
+</form>

@@ -1,0 +1,10 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Clients</h1>
+  <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/clients/new">+ New Client</a><% } %>
+</div>
+<% if (!clients.length) { %><%- include('../partials/empty', { msg: 'No clients yet.' }) %><% } else { %>
+<table class="data"><thead><tr><th>Company</th><th>PIC</th><th>Phone</th><th class="num">Commission %</th><th class="num">Cases</th></tr></thead>
+<tbody><% clients.forEach(c => { %>
+<tr><td><a href="/clients/<%= c.id %>"><%= c.company_name %></a></td><td><%= c.pic_name||'' %></td><td class="mono"><%= c.phone||'' %></td>
+<td class="num"><%= c.commission_rate %></td><td class="num"><%= c.case_count %></td></tr>
+<% }) %></tbody></table><% } %>

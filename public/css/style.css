@@ -400,6 +400,55 @@ table.data td.num, table.data th.num {
 .bar .fill.is-red { background: var(--red); }
 .bar .fill.is-blue { background: var(--blue); }
 
+/* ---------- Page head ---------- */
+
+.page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+.page-head h1 {
+  margin: 0;
+}
+
+/* ---------- Form layout ---------- */
+
+.form label {
+  margin-bottom: 16px;
+}
+.form textarea {
+  min-height: 90px;
+  resize: vertical;
+}
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 6px;
+  padding-top: 16px;
+  border-top: 1px solid var(--paper-line);
+}
+
+/* ---------- Key/value grid ---------- */
+
+.kv {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px 24px;
+}
+.kv > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.kv > div > span {
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--muted);
+}
+
 /* ---------- Empty state ---------- */
 
 .empty {
