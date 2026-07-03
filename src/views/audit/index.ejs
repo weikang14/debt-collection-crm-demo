@@ -1,0 +1,43 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Audit Log</h1></div>
+
+<form class="filters" method="get" action="/audit-log">
+  <label>Action
+    <select name="action">
+      <option value="">All actions</option>
+      <% actions.forEach(a => { %>
+      <option value="<%= a.action %>" <%= query.action===a.action?'selected':'' %>><%= a.action %></option>
+      <% }) %>
+    </select>
+  </label>
+  <button class="btn btn-gold" type="submit">Apply</button>
+</form>
+
+<% if (logs.length===0) { %>
+<%- include('../partials/empty', { msg: 'No audit entries.' }) %>
+<% } else { %>
+<table class="data">
+  <thead>
+    <tr>
+      <th>Time</th>
+      <th>User</th>
+      <th>Action</th>
+      <th>Entity</th>
+      <th>Details</th>
+      <th>IP</th>
+    </tr>
+  </thead>
+  <tbody>
+  <% logs.forEach(l => { %>
+    <tr>
+      <td><%= h.dateTimeFmt(l.created_at) %></td>
+      <td><%= l.username||'—' %></td>
+      <td><span class="badge"><%= l.action %></span></td>
+      <td><%= l.entity_type %><% if (l.entity_id) { %>#<%= l.entity_id %><% } %></td>
+      <td><%= l.details||'' %></td>
+      <td class="mono"><%= l.ip_address||'—' %></td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+<% } %>
