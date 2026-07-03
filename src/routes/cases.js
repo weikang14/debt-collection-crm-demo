@@ -3,7 +3,7 @@ const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
-const { nextCaseNo, nextReceiptNo } = require('../utils/numbering');
+const { nextCaseNo } = require('../utils/numbering');
 const { recomputeOutstanding, TERMINAL_STATUSES } = require('../services/payments');
 const router = express.Router();
 

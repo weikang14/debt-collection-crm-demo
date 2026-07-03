@@ -2,7 +2,7 @@ const express = require('express');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
-const { reachableDebtorIds } = require('../utils/scope');
+const { reachableDebtorIds, caseWhere } = require('../utils/scope');
 const router = express.Router();
 
 const canView = requireRole('admin','manager','agent','finance','auditor');
@@ -30,7 +30,8 @@ router.get('/:id', requireLogin, canView, (req, res) => {
   if (!debtor) return res.status(404).render('error', { message: 'Debtor not found' });
   const ids = reachableDebtorIds(req.session.user);
   if (ids !== null && !ids.includes(debtor.id)) return res.status(403).render('error', { message: 'Forbidden' });
-  const cases = all('SELECT * FROM cases WHERE debtor_id=? ORDER BY opened_at DESC', [req.params.id]);
+  const w = caseWhere(req.session.user);
+  const cases = all(`SELECT * FROM cases WHERE debtor_id=? AND ${w.clause} ORDER BY opened_at DESC`, [req.params.id, ...w.params]);
   res.render('debtors/show', { title: debtor.name, debtor, cases });
 });
 router.get('/:id/edit', requireLogin, canEdit, (req, res) => {

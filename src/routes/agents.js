@@ -18,7 +18,7 @@ router.get('/new', requireLogin, canEdit, (req, res) => res.render('agents/form'
 router.post('/', requireLogin, canEdit, (req, res) => {
   const b = req.body;
   const r = run('INSERT INTO agents (name,contact,department,target_amount,commission_rate,active) VALUES (?,?,?,?,?,?)',
-    [b.name,b.contact,b.department,Number(b.target_amount)||0,Number(b.commission_rate)||5, b.active?1:1]);
+    [b.name,b.contact,b.department,Number(b.target_amount)||0,Number(b.commission_rate)||5, b.active?1:0]);
   logAction(req,'create','agent',r.lastInsertRowid,`Created agent ${b.name}`);
   res.redirect('/agents?ok=Agent+created');
 });
