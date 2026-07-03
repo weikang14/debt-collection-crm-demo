@@ -8,7 +8,7 @@
 # broken by visitors.
 services:
   - type: web
-    name: debt-collection-crm
+    name: debt-collection-crm-demo
     runtime: node
     plan: free
     buildCommand: npm ci
