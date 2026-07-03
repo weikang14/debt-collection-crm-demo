@@ -1,6 +1,9 @@
 <% layout('layout') -%>
 <div class="page-head"><h1>Cases</h1>
-  <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/cases/new">+ New Case</a><% } %>
+  <div style="display:flex; gap:0.5rem;">
+    <a class="btn" href="/cases?format=csv<%= query.status ? '&status=' + query.status : '' %><%= query.priority ? '&priority=' + query.priority : '' %><%= query.q ? '&q=' + encodeURIComponent(query.q) : '' %>">Export CSV</a>
+    <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/cases/new">+ New Case</a><% } %>
+  </div>
 </div>
 <form class="card filters" method="get" action="/cases">
   <label>Status <select name="status">

@@ -5,6 +5,8 @@ const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
 const { recomputeOutstanding, TERMINAL_STATUSES } = require('../services/payments');
+const { toCsv, sendCsv } = require('../utils/csv');
+const { caseStatusLabel, dateFmt } = require('../utils/helpers');
 const router = express.Router();
 
 const CASE_STATUSES = ['new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased'];
@@ -43,6 +45,10 @@ router.get('/', requireLogin, (req, res) => {
   const cases = all(`SELECT cases.*, clients.company_name AS client_name, debtors.name AS debtor_name, agents.name AS agent_name
     FROM cases JOIN clients ON clients.id=cases.client_id JOIN debtors ON debtors.id=cases.debtor_id
     LEFT JOIN agents ON agents.id=cases.agent_id WHERE ${filters.join(' AND ')} ORDER BY cases.opened_at DESC`, params);
+  if (req.query.format === 'csv') {
+    const rows = cases.map(c => [c.case_no, c.debtor_name, c.agent_name || '', c.outstanding_amount, c.priority, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
+    return sendCsv(res, 'cases.csv', toCsv(['Case No', 'Debtor', 'Agent', 'Outstanding', 'Priority', 'Status', 'Opened'], rows));
+  }
   res.render('cases/list', { title: 'Cases', cases, statuses: CASE_STATUSES, priorities: PRIORITIES });
 });
 

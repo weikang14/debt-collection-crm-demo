@@ -3,7 +3,12 @@
 <title><%= typeof title !== 'undefined' ? title + ' — ' : '' %>Debt Collection CRM</title>
 <link rel="stylesheet" href="/css/style.css">
 </head><body class="app">
+  <header class="mobile-topbar">
+    <button class="nav-toggle" type="button" aria-label="Menu" onclick="document.body.classList.toggle('nav-open')">&#9776;</button>
+    <span class="brand">Debt Collection <span>CRM</span></span>
+  </header>
   <%- include('partials/sidebar') %>
+  <div class="nav-backdrop" onclick="document.body.classList.remove('nav-open')"></div>
   <main class="content">
     <%- include('partials/flash') %>
     <%- body %>

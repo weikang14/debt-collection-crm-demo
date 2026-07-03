@@ -11,7 +11,13 @@ const money = (n) =>
 const toMYT = (s) => dayjs.utc(s).add(8, 'hour');
 const dateFmt = (s) => (s ? toMYT(s).format('YYYY-MM-DD') : '');
 const dateTimeFmt = (s) => (s ? toMYT(s).format('YYYY-MM-DD HH:mm') : '');
-const daysOverdue = (iso) => (iso ? Math.max(0, dayjs().diff(dayjs(iso), 'day')) : 0);
+// "Overdue by how many days" relative to today in Malaysia time (MYT), so the
+// server's own timezone (e.g. UTC on Render) doesn't skew the count.
+const daysOverdue = (iso) => {
+  if (!iso) return 0;
+  const todayMYT = dayjs.utc().add(8, 'hour').format('YYYY-MM-DD');
+  return Math.max(0, dayjs(todayMYT).diff(dayjs(String(iso).slice(0, 10)), 'day'));
+};
 
 const CASE_STATUS = {
   new: ['New', 'is-neutral'], assigned: ['Assigned', 'is-blue'],

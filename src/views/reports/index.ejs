@@ -8,7 +8,7 @@
 </form>
 
 <div class="card">
-  <h2>Outstanding by Status</h2>
+  <h2>Outstanding by Status <a class="btn btn-sm" style="float:right" href="/reports?from=<%= from %>&to=<%= to %>&export=outstanding">Export CSV</a></h2>
   <% if (!outstanding.length) { %><%- include('../partials/empty', { msg: 'No open cases.' }) %><% } else { %>
   <% const oTotals = outstanding.reduce((a, r) => ({ cnt: a.cnt + r.cnt, total: a.total + r.total }), { cnt: 0, total: 0 }); %>
   <% const omax = outstanding.reduce((m, r) => Math.max(m, r.total), 0); %>
@@ -27,7 +27,7 @@
 
 <% if (!['agent','client'].includes(currentUser.role)) { %>
 <div class="card">
-  <h2>Agent Performance (<%= from %> to <%= to %>)</h2>
+  <h2>Agent Performance (<%= from %> to <%= to %>) <a class="btn btn-sm" style="float:right" href="/reports?from=<%= from %>&to=<%= to %>&export=performance">Export CSV</a></h2>
   <% if (!performance.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
   <table class="data"><thead><tr><th>Agent</th><th class="num">Collected</th><th class="num">Target</th><th>Attainment</th></tr></thead>
   <tbody>
