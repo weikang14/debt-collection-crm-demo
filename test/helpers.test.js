@@ -16,3 +16,18 @@ test('caseStatusClass maps semantics', () => {
 test('icon returns inline svg string', () => {
   assert.match(h.icon('dashboard'), /^<svg/);
 });
+test('dateTimeFmt converts stored UTC to MYT (+8)', () => {
+  // SQLite stores UTC; Malaysia is UTC+8
+  assert.strictEqual(h.dateTimeFmt('2026-07-03 14:30:00'), '2026-07-03 22:30');
+});
+test('dateFmt of a UTC datetime rolls to the correct MYT date', () => {
+  // 20:00 UTC = 04:00 next day in MYT
+  assert.strictEqual(h.dateFmt('2026-07-03 20:00:00'), '2026-07-04');
+});
+test('dateFmt of a date-only value is unchanged by the +8 shift', () => {
+  assert.strictEqual(h.dateFmt('2026-07-10'), '2026-07-10');
+});
+test('date helpers return empty string for null/undefined', () => {
+  assert.strictEqual(h.dateFmt(null), '');
+  assert.strictEqual(h.dateTimeFmt(undefined), '');
+});

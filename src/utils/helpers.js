@@ -1,11 +1,16 @@
 const dayjs = require('dayjs');
+const utc = require('dayjs/plugin/utc');
+dayjs.extend(utc);
 
 const money = (n) =>
   Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-const toMYT = (iso) => dayjs(iso + (iso && iso.endsWith('Z') ? '' : 'Z')).add(8, 'hour');
-const dateFmt = (iso) => (iso ? dayjs(iso).format('YYYY-MM-DD') : '');
-const dateTimeFmt = (iso) => (iso ? dayjs(iso).format('YYYY-MM-DD HH:mm') : '');
+// Stored datetimes are UTC (SQLite datetime('now')). Display in Malaysia time
+// (MYT = UTC+8, no daylight saving). dayjs.utc parses the SQLite string as UTC
+// reliably regardless of the server's own timezone (local dev or Render/UTC).
+const toMYT = (s) => dayjs.utc(s).add(8, 'hour');
+const dateFmt = (s) => (s ? toMYT(s).format('YYYY-MM-DD') : '');
+const dateTimeFmt = (s) => (s ? toMYT(s).format('YYYY-MM-DD HH:mm') : '');
 const daysOverdue = (iso) => (iso ? Math.max(0, dayjs().diff(dayjs(iso), 'day')) : 0);
 
 const CASE_STATUS = {

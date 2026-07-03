@@ -81,7 +81,7 @@ This is a demo; the following are intentionally not implemented (see
 
 - Money amounts are stored as SQLite `REAL` (floating point), not a decimal
   type — fine for a demo, not for production accounting.
-- Dates/times render in the server's local timezone, not Malaysia time (MYT).
+- Dates/times are stored in UTC and displayed in Malaysia time (MYT, UTC+8).
 - No real security hardening: session secret is hardcoded in `src/app.js`,
   passwords are demo-strength, and there's no rate limiting, CSRF protection,
   or transport encryption.
