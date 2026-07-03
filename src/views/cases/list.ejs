@@ -15,9 +15,9 @@
   <button class="btn btn-gold" type="submit">Filter</button>
 </form>
 <% if (!cases.length) { %><%- include('../partials/empty', { msg: 'No cases found.' }) %><% } else { %>
-<table class="data"><thead><tr><th>Case No</th><th>Client</th><th>Debtor</th><th>Agent</th><th class="num">Outstanding</th><th>Priority</th><th>Status</th></tr></thead>
+<table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Agent</th><th class="num">Outstanding</th><th>Priority</th><th>Status</th></tr></thead>
 <tbody><% cases.forEach(cs => { %>
-<tr><td><a class="mono" href="/cases/<%= cs.id %>"><%= cs.case_no %></a></td><td><%= cs.client_name %></td><td><%= cs.debtor_name %></td>
+<tr><td><a class="mono" href="/cases/<%= cs.id %>"><%= cs.case_no %></a></td><td><%= cs.debtor_name %></td>
 <td><%= cs.agent_name||'—' %></td><td class="num"><%= h.money(cs.outstanding_amount) %></td>
 <td><span class="badge <%= cs.priority==='urgent'||cs.priority==='high'?'is-red':cs.priority==='low'?'is-neutral':'is-gold' %>"><%= cs.priority %></span></td>
 <td><%- include('../partials/statusBadge', { status: cs.status }) %></td></tr>

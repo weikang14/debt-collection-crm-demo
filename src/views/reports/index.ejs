@@ -8,21 +8,6 @@
 </form>
 
 <div class="card">
-  <h2>Collections by Client <span><%= from %> to <%= to %></span></h2>
-  <% if (!collection.length) { %><%- include('../partials/empty', { msg: 'No payments in this range.' }) %><% } else { %>
-  <% const cTotals = collection.reduce((a, r) => ({ cnt: a.cnt + r.cnt, total: a.total + r.total }), { cnt: 0, total: 0 }); %>
-  <table class="data"><thead><tr><th>Company</th><th class="num">Payments</th><th class="num">Total</th></tr></thead>
-  <tbody>
-  <% collection.forEach(row => { %>
-  <tr><td><%= row.company_name %></td><td class="num"><%= row.cnt %></td><td class="num"><%= h.money(row.total) %></td></tr>
-  <% }) %>
-  </tbody>
-  <tfoot><tr><td>Total</td><td class="num"><%= cTotals.cnt %></td><td class="num"><%= h.money(cTotals.total) %></td></tr></tfoot>
-  </table>
-  <% } %>
-</div>
-
-<div class="card">
   <h2>Outstanding by Status</h2>
   <% if (!outstanding.length) { %><%- include('../partials/empty', { msg: 'No open cases.' }) %><% } else { %>
   <% const oTotals = outstanding.reduce((a, r) => ({ cnt: a.cnt + r.cnt, total: a.total + r.total }), { cnt: 0, total: 0 }); %>

@@ -3,7 +3,6 @@
   <div class="brand">Debt Collection <span>CRM</span></div>
   <nav>
     <a href="/" class="<%= path==='/'?'active':'' %>"><%- h.icon('dashboard') %> Dashboard</a>
-    <% if (can(['admin','manager','finance','auditor'])) { %><a href="/clients" class="<%= path.startsWith('/clients')?'active':'' %>"><%- h.icon('clients') %> Clients</a><% } %>
     <% if (can(['admin','manager','agent','finance','auditor'])) { %><a href="/debtors" class="<%= path.startsWith('/debtors')?'active':'' %>"><%- h.icon('debtors') %> Debtors</a><% } %>
     <a href="/cases" class="<%= path.startsWith('/cases')?'active':'' %>"><%- h.icon('cases') %> Cases</a>
     <% if (can(['admin','manager','auditor'])) { %><a href="/agents" class="<%= path.startsWith('/agents')?'active':'' %>"><%- h.icon('agents') %> Agents</a><% } %>

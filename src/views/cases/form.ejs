@@ -1,10 +1,6 @@
 <% layout('layout'); -%>
 <div class="page-head"><h1><%= title %></h1></div>
 <form class="card form" method="post" action="<%= action %>">
-  <label>Client <select name="client_id" required>
-    <option value="">— Select client —</option>
-    <% clients.forEach(cl => { %><option value="<%= cl.id %>" <%= c.client_id===cl.id?'selected':'' %>><%= cl.company_name %></option><% }) %>
-  </select></label>
   <label>Debtor <select name="debtor_id" required>
     <option value="">— Select debtor —</option>
     <% debtors.forEach(d => { %><option value="<%= d.id %>" <%= c.debtor_id===d.id?'selected':'' %>><%= d.name %></option><% }) %>

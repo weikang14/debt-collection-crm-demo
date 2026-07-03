@@ -22,6 +22,18 @@ function loadCase(req, res) {
   return c;
 }
 
+// Internal-only business: cases don't pick an external client. Every case is
+// assigned to a single built-in "自营" (in-house) client so the schema's
+// NOT NULL client_id stays satisfied without exposing Clients in the UI.
+// ponytail: get-or-create keeps this reversible — re-add the client picker and
+// the sidebar link to bring the Clients module back.
+function internalClientId() {
+  const c = get('SELECT id FROM clients WHERE company_name = ?', ['自营业务']);
+  if (c) return c.id;
+  const r = run('INSERT INTO clients (company_name, commission_rate) VALUES (?, 0)', ['自营业务']);
+  return r.lastInsertRowid;
+}
+
 router.get('/', requireLogin, (req, res) => {
   const w = caseWhere(req.session.user);
   const filters = [w.clause]; const params = [...w.params];
@@ -36,21 +48,20 @@ router.get('/', requireLogin, (req, res) => {
 
 router.get('/new', requireLogin, noAgentCreate, (req, res) => {
   res.render('cases/form', { title: 'New Case', c: {}, action: '/cases',
-    clients: all('SELECT id,company_name FROM clients ORDER BY company_name'),
     debtors: all('SELECT id,name FROM debtors ORDER BY name'),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     statuses: CASE_STATUSES, priorities: PRIORITIES });
 });
 router.post('/', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
-  if (!b.client_id || !b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
-    return res.redirect('/cases/new?err=Client,+debtor+and+principal+are+required');
+  if (!b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
+    return res.redirect('/cases/new?err=Debtor+and+principal+are+required');
   }
   const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
   const case_no = nextCaseNo();
   const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark)
     VALUES (?,?,?,?,?,?,?,?,?,?)`,
-    [case_no, b.client_id, b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark]);
+    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null]);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)', [r.lastInsertRowid,'note',`Case ${case_no} created`,req.session.user.full_name]);
   logAction(req,'create','case',r.lastInsertRowid,`Created case ${case_no}`);
   res.redirect(`/cases/${r.lastInsertRowid}?ok=Case+created`);
@@ -58,19 +69,18 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
 router.get('/:id/edit', requireLogin, noAgentCreate, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   res.render('cases/form', { title: 'Edit Case', c, action: `/cases/${c.id}`,
-    clients: all('SELECT id,company_name FROM clients ORDER BY company_name'),
     debtors: all('SELECT id,name FROM debtors ORDER BY name'),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     statuses: CASE_STATUSES, priorities: PRIORITIES });
 });
 router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
-  if (!b.client_id || !b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
-    return res.redirect('/cases/'+req.params.id+'/edit?err=Client,+debtor+and+principal+are+required');
+  if (!b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
+    return res.redirect('/cases/'+req.params.id+'/edit?err=Debtor+and+principal+are+required');
   }
   const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
-  run(`UPDATE cases SET client_id=?,debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,updated_at=datetime('now') WHERE id=?`,
-    [b.client_id,b.debtor_id,b.agent_id||null,principal,interest,b.priority,b.remark,req.params.id]);
+  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,updated_at=datetime('now') WHERE id=?`,
+    [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,req.params.id]);
   recomputeOutstanding(Number(req.params.id));
   logAction(req,'update','case',Number(req.params.id),`Updated case ${req.params.id}`);
   res.redirect(`/cases/${req.params.id}?ok=Saved`);

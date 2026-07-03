@@ -11,9 +11,9 @@
 <% } else { %>
   <div class="card">
     <p><strong><%= results.length %></strong> result<%= results.length === 1 ? '' : 's' %> found.</p>
-    <table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>IC</th><th>Phone</th><th>Client</th><th>Status</th></tr></thead>
+    <table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>IC</th><th>Phone</th><th>Status</th></tr></thead>
     <tbody><% results.forEach(r => { %>
-    <tr><td><a class="mono" href="/cases/<%= r.id %>"><%= r.case_no %></a></td><td><%= r.debtor_name %></td><td class="mono"><%= r.ic_passport || '—' %></td><td class="mono"><%= r.debtor_phone || '—' %></td><td><%= r.client_name %></td><td><%- include('../partials/statusBadge', { status: r.status }) %></td></tr>
+    <tr><td><a class="mono" href="/cases/<%= r.id %>"><%= r.case_no %></a></td><td><%= r.debtor_name %></td><td class="mono"><%= r.ic_passport || '—' %></td><td class="mono"><%= r.debtor_phone || '—' %></td><td><%- include('../partials/statusBadge', { status: r.status }) %></td></tr>
     <% }) %></tbody></table>
   </div>
 <% } %>
