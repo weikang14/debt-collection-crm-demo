@@ -20,6 +20,15 @@ app.use(session({
 
 app.get('/health', (req, res) => res.type('text').send('ok'));
 
+app.get('/demo-accounts', (req, res) => res.render('demo-accounts', { accounts: [
+  ['admin','admin123','Full access + user mgmt + audit'],
+  ['manager','manager123','Cases/clients/debtors/agents + reports'],
+  ['agent1','agent123','Only own cases (agent2/agent3 too)'],
+  ['finance','finance123','Record payments, view reports'],
+  ['auditor','auditor123','Read-only everything + audit log'],
+  ['client1','client123','Only own company cases (read-only)'],
+] }));
+
 // ROUTE MOUNT POINT — later tasks insert app.use(...) here
 const { attachUser } = require('./middleware/auth');
 app.use(attachUser);

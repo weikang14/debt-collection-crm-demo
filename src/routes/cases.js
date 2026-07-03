@@ -43,6 +43,9 @@ router.get('/new', requireLogin, noAgentCreate, (req, res) => {
 });
 router.post('/', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
+  if (!b.client_id || !b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
+    return res.redirect('/cases/new?err=Client,+debtor+and+principal+are+required');
+  }
   const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
   const case_no = nextCaseNo();
   const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark)
@@ -62,6 +65,9 @@ router.get('/:id/edit', requireLogin, noAgentCreate, (req, res) => {
 });
 router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
+  if (!b.client_id || !b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
+    return res.redirect('/cases/'+req.params.id+'/edit?err=Client,+debtor+and+principal+are+required');
+  }
   const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
   run(`UPDATE cases SET client_id=?,debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,updated_at=datetime('now') WHERE id=?`,
     [b.client_id,b.debtor_id,b.agent_id||null,principal,interest,b.priority,b.remark,req.params.id]);
