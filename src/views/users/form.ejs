@@ -1,0 +1,38 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>New User</h1></div>
+<form class="card form" method="post" action="/users">
+  <label>Username <input name="username" required autocomplete="off"></label>
+  <label>Full Name <input name="full_name" required></label>
+  <label>Password <input name="password" type="password" required autocomplete="new-password"></label>
+  <label>Role
+    <select name="role" id="role-select">
+      <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
+    </select>
+  </label>
+  <label id="agent-field" style="display:none">Linked Agent <span class="hint">(required for agent accounts)</span>
+    <select name="agent_id">
+      <option value="">— select agent —</option>
+      <% agents.forEach(a => { %><option value="<%= a.id %>"><%= a.name %></option><% }) %>
+    </select>
+  </label>
+  <label id="client-field" style="display:none">Linked Client <span class="hint">(required for client accounts)</span>
+    <select name="client_id">
+      <option value="">— select client —</option>
+      <% clients.forEach(c => { %><option value="<%= c.id %>"><%= c.company_name %></option><% }) %>
+    </select>
+  </label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Create User</button><a class="btn" href="/users">Cancel</a></div>
+</form>
+<script>
+  (function () {
+    var sel = document.getElementById('role-select');
+    var af = document.getElementById('agent-field');
+    var cf = document.getElementById('client-field');
+    function sync() {
+      af.style.display = sel.value === 'agent' ? '' : 'none';
+      cf.style.display = sel.value === 'client' ? '' : 'none';
+    }
+    sel.addEventListener('change', sync);
+    sync();
+  })();
+</script>

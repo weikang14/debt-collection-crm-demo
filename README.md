@@ -29,7 +29,10 @@ Then open http://localhost:3000
 
 ## Demo accounts
 
-Also viewable in-app at `/demo-accounts` (linked from the login page).
+These are for demo/testing only. The login page does **not** link to them; the
+reference table is reachable directly at `/demo-accounts`. For real use, an
+**admin** creates internal accounts under **Users** (see the user guide,
+`docs/使用手册.md`) and disables/changes the demo passwords.
 
 | Username | Password    | Access                                          |
 |----------|-------------|--------------------------------------------------|

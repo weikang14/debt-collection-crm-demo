@@ -41,6 +41,7 @@ app.use('/debtors', require('./routes/debtors'));
 app.use('/cases', require('./routes/cases').router);
 app.use('/ptps', require('./routes/ptps'));
 app.use('/agents', require('./routes/agents'));
+app.use('/users', require('./routes/users'));
 app.use('/tasks', require('./routes/tasks'));
 app.use('/reports', require('./routes/reports'));
 app.use('/search', require('./routes/search'));
