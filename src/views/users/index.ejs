@@ -15,12 +15,14 @@
       <td><%= u.agent_name || u.client_name || '—' %></td>
       <td><% if (u.active) { %><span class="badge is-green">active</span><% } else { %><span class="badge is-neutral">disabled</span><% } %></td>
       <td>
-        <% if (u.id === currentUser.id) { %><span class="hint">you</span>
-        <% } else { %>
-        <form method="post" action="/users/<%= u.id %>/toggle" style="margin:0;">
-          <button class="btn btn-sm" type="submit"><%= u.active ? 'Disable' : 'Enable' %></button>
-        </form>
-        <% } %>
+        <div style="display:flex; gap:0.5rem; align-items:center;">
+          <a class="btn btn-sm" href="/users/<%= u.id %>/password">Reset PW</a>
+          <% if (u.id !== currentUser.id) { %>
+          <form method="post" action="/users/<%= u.id %>/toggle" style="margin:0;">
+            <button class="btn btn-sm" type="submit"><%= u.active ? 'Disable' : 'Enable' %></button>
+          </form>
+          <% } %>
+        </div>
       </td>
     </tr>
   <% }) %>

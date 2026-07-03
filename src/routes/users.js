@@ -50,6 +50,22 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
   }
 });
 
+// reset password — admin sets a new password for any account (incl. their own)
+router.get('/:id/password', requireLogin, adminOnly, (req, res) => {
+  const u = get('SELECT id, username, full_name FROM users WHERE id=?', [req.params.id]);
+  if (!u) return res.redirect('/users?err=User+not+found');
+  res.render('users/password', { title: 'Reset Password', u });
+});
+router.post('/:id/password', requireLogin, adminOnly, (req, res) => {
+  const u = get('SELECT id, username FROM users WHERE id=?', [req.params.id]);
+  if (!u) return res.redirect('/users?err=User+not+found');
+  const password = req.body.password || '';
+  if (password.length < 4) return res.redirect('/users/' + u.id + '/password?err=Password+must+be+at+least+4+characters');
+  run('UPDATE users SET password_hash=? WHERE id=?', [bcrypt.hashSync(password, 8), u.id]);
+  logAction(req, 'update', 'user', u.id, `Reset password for ${u.username}`);
+  res.redirect('/users?ok=Password+updated+for+' + encodeURIComponent(u.username));
+});
+
 // activate / deactivate — disable staff instead of deleting (keeps audit trail intact)
 router.post('/:id/toggle', requireLogin, adminOnly, (req, res) => {
   const u = get('SELECT * FROM users WHERE id=?', [req.params.id]);
