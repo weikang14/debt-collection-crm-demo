@@ -1,0 +1,20 @@
+# One-click deploy config for Render (https://render.com) — a Blueprint.
+# In Render: New + → Blueprint → connect this repo → it reads this file.
+# Gives a fixed public URL like https://debt-collection-crm.onrender.com
+#
+# Note: the free plan's disk is ephemeral, so the database is re-seeded on
+# every deploy/restart (startCommand runs `npm run seed`). For a demo this is
+# a feature — it always resets to clean sample data and can't be permanently
+# broken by visitors.
+services:
+  - type: web
+    name: debt-collection-crm
+    runtime: node
+    plan: free
+    buildCommand: npm ci
+    startCommand: npm run seed && npm start
+    envVars:
+      - key: NODE_VERSION
+        value: "22.20.0"
+      - key: SESSION_SECRET
+        generateValue: true

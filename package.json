@@ -2,6 +2,9 @@
   "name": "debt-collection-crm",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "start": "node --no-warnings src/app.js",
     "seed": "node --no-warnings src/db/seed.js",

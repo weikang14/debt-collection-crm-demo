@@ -13,7 +13,7 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 app.use(session({
-  secret: 'debt-collection-crm-demo-secret',
+  secret: process.env.SESSION_SECRET || 'debt-collection-crm-demo-secret',
   resave: false,
   saveUninitialized: false,
 }));
