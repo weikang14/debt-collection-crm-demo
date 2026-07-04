@@ -2,26 +2,29 @@
 <div class="page-head"><h1>Tasks</h1>
 </div>
 <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
-<form class="card form" method="post" action="/tasks/new">
-  <label>Case <select name="case_id">
-    <option value="">—</option>
-    <% cases.forEach(c => { %><option value="<%= c.id %>"><%= c.case_no %></option><% }) %>
-  </select></label>
-  <label>Agent <select name="agent_id">
-    <option value="">—</option>
-    <% agents.forEach(a => { %><option value="<%= a.id %>"><%= a.name %></option><% }) %>
-  </select></label>
-  <label>Type <select name="type">
-    <option value="follow_up">follow_up</option>
-    <option value="visit">visit</option>
-    <option value="legal">legal</option>
-    <option value="reminder">reminder</option>
-  </select></label>
-  <label>Title <input type="text" name="title" required></label>
-  <label>Due Date <input type="date" name="due_date"></label>
-  <label>Notes <input type="text" name="notes"></label>
-  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button></div>
-</form>
+<details class="new-panel">
+  <summary class="btn btn-gold">+ New Task</summary>
+  <form class="card form" method="post" action="/tasks/new">
+    <label>Case <select name="case_id">
+      <option value="">—</option>
+      <% cases.forEach(c => { %><option value="<%= c.id %>"><%= c.case_no %></option><% }) %>
+    </select></label>
+    <label>Agent <select name="agent_id">
+      <option value="">—</option>
+      <% agents.forEach(a => { %><option value="<%= a.id %>"><%= a.name %></option><% }) %>
+    </select></label>
+    <label>Type <select name="type">
+      <option value="follow_up">follow_up</option>
+      <option value="visit">visit</option>
+      <option value="legal">legal</option>
+      <option value="reminder">reminder</option>
+    </select></label>
+    <label>Title <input type="text" name="title" required></label>
+    <label>Due Date <input type="date" name="due_date"></label>
+    <label>Notes <input type="text" name="notes"></label>
+    <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button></div>
+  </form>
+</details>
 <% } %>
 <% if (!tasks.length) { %><%- include('../partials/empty', { msg: 'No tasks yet.' }) %><% } else { %>
 <table class="data"><thead><tr><th>Title</th><th>Case No</th><th>Type</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
