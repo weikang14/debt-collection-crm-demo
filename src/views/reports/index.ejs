@@ -7,6 +7,8 @@
   <button class="btn btn-gold" type="submit">Apply</button>
 </form>
 
+<p><a class="btn" href="/reports?export=cases">Export detailed cases (CSV)</a></p>
+
 <div class="card">
   <h2>Outstanding by Status <a class="btn btn-sm" style="float:right" href="/reports?from=<%= from %>&to=<%= to %>&export=outstanding">Export CSV</a></h2>
   <% if (!outstanding.length) { %><%- include('../partials/empty', { msg: 'No open cases.' }) %><% } else { %>

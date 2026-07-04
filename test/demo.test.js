@@ -65,3 +65,11 @@ test('reload (deleteDemo + insertDemoRows) restores demo and keeps customer data
   // no duplicate demo debtors
   assert.strictEqual(db.get('SELECT COUNT(*) c FROM debtors WHERE is_demo=1').c, 12);
 });
+
+test('per-case paid subquery sums a case\'s payments', () => {
+  seed.seedDemo();
+  db.run("INSERT INTO payments (case_id,receipt_no,payment_date,amount) VALUES (7,'RCPT-T-1','2026-07-04',30)");
+  db.run("INSERT INTO payments (case_id,receipt_no,payment_date,amount) VALUES (7,'RCPT-T-2','2026-07-04',20)");
+  const row = db.get("SELECT (SELECT COALESCE(SUM(amount),0) FROM payments WHERE case_id=cases.id) AS paid FROM cases WHERE id=7");
+  assert.strictEqual(row.paid, 50);
+});
