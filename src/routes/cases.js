@@ -42,12 +42,13 @@ router.get('/', requireLogin, (req, res) => {
   if (req.query.status) { filters.push('cases.status = ?'); params.push(req.query.status); }
   if (req.query.priority) { filters.push('cases.priority = ?'); params.push(req.query.priority); }
   if (req.query.q) { filters.push('(cases.case_no LIKE ? OR debtors.name LIKE ?)'); params.push('%'+req.query.q+'%','%'+req.query.q+'%'); }
-  const cases = all(`SELECT cases.*, clients.company_name AS client_name, debtors.name AS debtor_name, agents.name AS agent_name
+  const cases = all(`SELECT cases.*, clients.company_name AS client_name, debtors.name AS debtor_name, debtors.phone AS debtor_phone, agents.name AS agent_name,
+    (SELECT COALESCE(SUM(amount),0) FROM payments WHERE case_id=cases.id) AS paid
     FROM cases JOIN clients ON clients.id=cases.client_id JOIN debtors ON debtors.id=cases.debtor_id
     LEFT JOIN agents ON agents.id=cases.agent_id WHERE ${filters.join(' AND ')} ORDER BY cases.opened_at DESC`, params);
   if (req.query.format === 'csv') {
-    const rows = cases.map(c => [c.case_no, c.debtor_name, c.agent_name || '', c.outstanding_amount, c.priority, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
-    return sendCsv(res, 'cases.csv', toCsv(['Case No', 'Debtor', 'Agent', 'Outstanding', 'Priority', 'Status', 'Opened'], rows));
+    const rows = cases.map(c => [c.case_no, c.debtor_name, c.debtor_phone || '', c.agent_name || '', c.outstanding_amount, c.paid, c.priority, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
+    return sendCsv(res, 'cases.csv', toCsv(['Case No', 'Debtor', 'Debtor Phone', 'Agent', 'Outstanding', 'Paid', 'Priority', 'Status', 'Opened'], rows));
   }
   res.render('cases/list', { title: 'Cases', cases, statuses: CASE_STATUSES, priorities: PRIORITIES });
 });
