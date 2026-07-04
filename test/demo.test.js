@@ -73,3 +73,17 @@ test('per-case paid subquery sums a case\'s payments', () => {
   const row = db.get("SELECT (SELECT COALESCE(SUM(amount),0) FROM payments WHERE case_id=cases.id) AS paid FROM cases WHERE id=7");
   assert.strictEqual(row.paid, 50);
 });
+
+test('reload does not collide when a trial case reused a demo-looking case_no', () => {
+  // Repro of the real bug: delete demo -> trial case grabs "CASE-YYYY-0001" ->
+  // reload must not crash on a case_no UNIQUE conflict + FK on its timeline row.
+  seed.seedDemo();
+  seed.deleteDemo();
+  const year = new Date().getFullYear();
+  const cl = db.run("INSERT INTO clients (company_name,commission_rate) VALUES ('自营业务',0)");
+  const dbt = db.run("INSERT INTO debtors (name,risk_level) VALUES ('Trial Debtor','low')");
+  db.run(`INSERT INTO cases (case_no,client_id,debtor_id,principal_amount,interest_amount,outstanding_amount,status) VALUES ('CASE-${year}-0001', ?, ?, 100, 0, 100, 'new')`, [cl.lastInsertRowid, dbt.lastInsertRowid]);
+  assert.doesNotThrow(() => seed.insertDemoRows());   // was: FOREIGN KEY constraint failed
+  assert.strictEqual(db.get('SELECT COUNT(*) c FROM cases WHERE is_demo=1').c, 20);   // full demo restored
+  assert.ok(db.get(`SELECT id FROM cases WHERE case_no='CASE-${year}-0001'`));         // trial case kept
+});

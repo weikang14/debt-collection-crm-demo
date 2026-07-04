@@ -55,7 +55,11 @@ function insertDemoRows() {
   const year = dayjs().year();
   STATUSES.forEach((st, i) => {
     const id = i + 1;
-    const case_no = `CASE-${year}-${String(id).padStart(4, '0')}`;
+    // Demo case numbers use a "D" namespace (CASE-YYYY-D001) that customer
+    // numbering (CASE-YYYY-0001) never generates. This keeps the two data sets
+    // disjoint so "reload demo" can't collide with a trial case that reused a
+    // low number after the demo was deleted (was a UNIQUE+FK crash).
+    const case_no = `CASE-${year}-D${String(id).padStart(3, '0')}`;
     const client_id = (i % 5) + 1;
     const debtor_id = (i % 12) + 1;
     const agent_id = st === 'new' ? null : (i % 4) + 1;
