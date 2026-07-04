@@ -2,23 +2,22 @@
 <div class="page-head"><h1>Demo Data</h1></div>
 
 <div class="card">
-  <p>Tools for trialling the system. <strong>Demo data is generated from a built-in
-  template, so it can always be regenerated — clearing never permanently loses it.</strong></p>
+  <p>Manage the sample data separately from anything you create while trying the
+  system. <strong>Your trial data is never touched by these buttons, and the demo
+  data can always be reloaded.</strong></p>
 
-  <h3 style="margin-top:8px">Start fresh</h3>
-  <p class="hint">Removes all clients, debtors, cases, payments, agents, tasks and history
-  so you can walk through the whole flow from an empty system. Login accounts are kept.</p>
-  <form method="post" action="/demo-tools/clear"
-        onsubmit="return confirm('Clear ALL current data and start from an empty system? Demo data can be reloaded anytime.')">
-    <button class="btn" type="submit">Clear all data</button>
+  <h3 style="margin-top:8px">Delete demo data</h3>
+  <p class="hint">Removes the sample clients, debtors, cases, payments and history
+  so you see only what you create. Anything you added during the trial stays.</p>
+  <form method="post" action="/demo-tools/delete-demo"
+        onsubmit="return confirm('Delete the demo sample data? Your own trial data is kept, and demo data can be reloaded anytime.')">
+    <button class="btn" type="submit">Delete demo data</button>
   </form>
 
   <h3 style="margin-top:22px">Reload demo data</h3>
-  <p class="hint">Wipes the current data and restores the standard demo dataset
-  (agents, debtors, 20 sample cases, payments, etc.). Use this to get the showcase
-  back after clearing or experimenting.</p>
-  <form method="post" action="/demo-tools/reload"
-        onsubmit="return confirm('Reset everything and reload the standard demo data?')">
+  <p class="hint">Restores the standard demo dataset. Your trial data is left as-is.</p>
+  <form method="post" action="/demo-tools/reload-demo"
+        onsubmit="return confirm('Reload the standard demo data? Your trial data is kept.')">
     <button class="btn btn-gold" type="submit">Reload demo data</button>
   </form>
 </div>
