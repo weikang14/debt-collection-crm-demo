@@ -584,3 +584,15 @@ table.data td.num, table.data th.num {
 }
 .new-panel > summary::-webkit-details-marker { display: none; }
 .new-panel[open] > summary { margin-bottom: 12px; }
+
+/* Task status bar */
+.taskbar {
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  font-size: 13.5px;
+  border: 1px solid transparent;
+}
+.taskbar.is-red { background: #f7e9e8; color: var(--red); border-color: #edc7c4; }
+.taskbar.is-gold { background: #f7ecd9; color: var(--gold); border-color: #ecd8b3; }
+.taskbar.is-green { background: #e8f3ec; color: var(--green); border-color: #c3e0cd; }

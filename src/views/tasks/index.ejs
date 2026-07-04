@@ -1,6 +1,13 @@
 <% layout('layout') -%>
 <div class="page-head"><h1>Tasks</h1>
 </div>
+<% const pending = tasks.filter(t => t.status === 'pending');
+   const overdue = pending.filter(t => t.due_date && h.daysOverdue(t.due_date) > 0);
+   const barCls = overdue.length ? 'is-red' : pending.length ? 'is-gold' : 'is-green'; %>
+<div class="taskbar <%= barCls %>">
+  <% if (!pending.length) { %>All tasks handled — nothing pending.
+  <% } else { %><strong><%= pending.length %></strong> pending<% if (overdue.length) { %> · <strong><%= overdue.length %></strong> overdue<% } %><% } %>
+</div>
 <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
 <details class="new-panel">
   <summary class="btn btn-gold">+ New Task</summary>
