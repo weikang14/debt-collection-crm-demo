@@ -2,6 +2,7 @@ const express = require('express');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
+const { parseActive } = require('../utils/forms');
 const router = express.Router();
 const canView = requireRole('admin','manager','auditor');
 const canEdit = requireRole('admin','manager');
@@ -23,7 +24,7 @@ router.post('/', requireLogin, canEdit, (req, res) => {
   const name = S(b.name);
   if (!name) return res.redirect('/agents/new?err=Name+is+required');
   const r = run('INSERT INTO agents (name,contact,department,target_amount,commission_rate,active) VALUES (?,?,?,?,?,?)',
-    [name,S(b.contact),S(b.department),Number(b.target_amount)||0,Number(b.commission_rate)||5, b.active?1:0]);
+    [name,S(b.contact),S(b.department),Number(b.target_amount)||0,Number(b.commission_rate)||5, parseActive(b.active)]);
   logAction(req,'create','agent',r.lastInsertRowid,`Created agent ${name}`);
   res.redirect('/agents?ok=Agent+created');
 });
@@ -44,7 +45,7 @@ router.post('/:id', requireLogin, canEdit, (req, res) => {
   const name = S(b.name);
   if (!name) return res.redirect(`/agents/${req.params.id}/edit?err=Name+is+required`);
   run('UPDATE agents SET name=?,contact=?,department=?,target_amount=?,commission_rate=?,active=? WHERE id=?',
-    [name,S(b.contact),S(b.department),Number(b.target_amount)||0,Number(b.commission_rate)||5, b.active?1:0, req.params.id]);
+    [name,S(b.contact),S(b.department),Number(b.target_amount)||0,Number(b.commission_rate)||5, parseActive(b.active), req.params.id]);
   logAction(req,'update','agent',Number(req.params.id),`Updated agent ${name}`);
   res.redirect(`/agents/${req.params.id}?ok=Saved`);
 });
