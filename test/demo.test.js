@@ -30,3 +30,38 @@ test('insertDemoRows is idempotent (no duplicate parents)', () => {
   assert.strictEqual(db.get('SELECT COUNT(*) c FROM debtors').c, before);
   assert.strictEqual(db.get('SELECT COUNT(*) c FROM cases').c, 20);
 });
+
+test('deleteDemo removes demo data but keeps customer rows', () => {
+  seed.seedDemo();
+  // a customer (is_demo=0) debtor + case, independent of demo data
+  const d = db.run("INSERT INTO debtors (name,risk_level) VALUES ('My Debtor','low')");
+  const c = db.run("INSERT INTO cases (case_no,client_id,debtor_id,principal_amount,interest_amount,outstanding_amount,status) VALUES ('CASE-9999-0001',1,?,100,0,100,'new')", [d.lastInsertRowid]);
+  seed.deleteDemo();
+  // demo gone
+  assert.strictEqual(db.get('SELECT COUNT(*) c FROM cases WHERE is_demo=1').c > 0, false);
+  // customer case + debtor survive
+  assert.ok(db.get('SELECT id FROM cases WHERE id=?', [c.lastInsertRowid]));
+  assert.ok(db.get('SELECT id FROM debtors WHERE id=?', [d.lastInsertRowid]));
+});
+
+test('deleteDemo keeps a demo case referenced by customer data', () => {
+  seed.seedDemo();
+  // customer (is_demo=0) payment on demo case 5
+  db.run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,is_demo) VALUES (5,'RCPT-9999-0001','2026-07-04',50,0)");
+  seed.deleteDemo();
+  // demo case 5 kept because a customer payment references it
+  assert.ok(db.get('SELECT id FROM cases WHERE id=5'));
+  // an unreferenced demo case (e.g. 1) is gone
+  assert.strictEqual(db.get('SELECT id FROM cases WHERE id=1'), undefined);
+});
+
+test('reload (deleteDemo + insertDemoRows) restores demo and keeps customer data', () => {
+  seed.seedDemo();
+  const d = db.run("INSERT INTO debtors (name,risk_level) VALUES ('Keep Me','low')");
+  seed.deleteDemo();
+  seed.insertDemoRows();               // = reload
+  assert.strictEqual(db.get('SELECT COUNT(*) c FROM cases WHERE is_demo=1').c, 20);   // demo back
+  assert.ok(db.get('SELECT id FROM debtors WHERE id=?', [d.lastInsertRowid]));         // customer row kept
+  // no duplicate demo debtors
+  assert.strictEqual(db.get('SELECT COUNT(*) c FROM debtors WHERE is_demo=1').c, 12);
+});

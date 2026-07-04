@@ -110,7 +110,26 @@ function seedDemo() {
   insertDemoUsers();
 }
 
-module.exports = { seedDemo, clearAllTables, insertDemoRows };
+// Delete demo (is_demo=1) rows child->parent, but keep any demo parent still
+// referenced by non-demo (customer) rows so nothing breaks. Does NOT reset
+// sqlite_sequence, so customer IDs stay above the demo ID range.
+function deleteDemo() {
+  init();
+  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments']) {
+    run(`DELETE FROM ${t} WHERE is_demo=1`);
+  }
+  run(`DELETE FROM cases WHERE is_demo=1
+    AND id NOT IN (SELECT case_id FROM payments)
+    AND id NOT IN (SELECT case_id FROM ptps)
+    AND id NOT IN (SELECT case_id FROM tasks WHERE case_id IS NOT NULL)
+    AND id NOT IN (SELECT case_id FROM call_logs)
+    AND id NOT IN (SELECT case_id FROM timeline_events)`);
+  run(`DELETE FROM debtors WHERE is_demo=1 AND id NOT IN (SELECT debtor_id FROM cases)`);
+  run(`DELETE FROM agents  WHERE is_demo=1 AND id NOT IN (SELECT agent_id FROM cases WHERE agent_id IS NOT NULL)`);
+  run(`DELETE FROM clients WHERE is_demo=1 AND id NOT IN (SELECT client_id FROM cases)`);
+}
+
+module.exports = { seedDemo, clearAllTables, insertDemoRows, deleteDemo };
 
 if (require.main === module) {
   seedDemo();
