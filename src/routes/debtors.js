@@ -8,6 +8,9 @@ const router = express.Router();
 const canView = requireRole('admin','manager','agent','finance','auditor');
 const canEdit = requireRole('admin','manager','agent');
 
+// Optional text -> trimmed string or null (never undefined, which SQLite rejects).
+const S = (v) => { const s = (v == null ? '' : String(v)).trim(); return s === '' ? null : s; };
+
 router.get('/', requireLogin, canView, (req, res) => {
   const ids = reachableDebtorIds(req.session.user); // null = unrestricted
   let debtors;
@@ -19,10 +22,12 @@ router.get('/', requireLogin, canView, (req, res) => {
 router.get('/new', requireLogin, canEdit, (req, res) => res.render('debtors/form', { title: 'New Debtor', debtor: {}, action: '/debtors' }));
 router.post('/', requireLogin, canEdit, (req, res) => {
   const b = req.body;
+  const name = S(b.name);
+  if (!name) return res.redirect('/debtors/new?err=Name+is+required');
   const r = run(`INSERT INTO debtors (name,ic_passport,company,phone,email,address,employer,salary,risk_level,guarantor_name,guarantor_phone,remark)
                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [b.name,b.ic_passport,b.company,b.phone,b.email,b.address,b.employer,Number(b.salary)||null,b.risk_level||'medium',b.guarantor_name,b.guarantor_phone,b.remark]);
-  logAction(req,'create','debtor',r.lastInsertRowid,`Created debtor ${b.name}`);
+    [name,S(b.ic_passport),S(b.company),S(b.phone),S(b.email),S(b.address),S(b.employer),Number(b.salary)||null,b.risk_level||'medium',S(b.guarantor_name),S(b.guarantor_phone),S(b.remark)]);
+  logAction(req,'create','debtor',r.lastInsertRowid,`Created debtor ${name}`);
   res.redirect('/debtors?ok=Debtor+created');
 });
 router.get('/:id', requireLogin, canView, (req, res) => {
@@ -45,9 +50,11 @@ router.post('/:id', requireLogin, canEdit, (req, res) => {
   const ids = reachableDebtorIds(req.session.user);
   if (ids !== null && !ids.includes(Number(req.params.id))) return res.status(403).render('error', { message: 'Forbidden' });
   const b = req.body;
+  const name = S(b.name);
+  if (!name) return res.redirect(`/debtors/${req.params.id}/edit?err=Name+is+required`);
   run(`UPDATE debtors SET name=?,ic_passport=?,company=?,phone=?,email=?,address=?,employer=?,salary=?,risk_level=?,guarantor_name=?,guarantor_phone=?,remark=? WHERE id=?`,
-    [b.name,b.ic_passport,b.company,b.phone,b.email,b.address,b.employer,Number(b.salary)||null,b.risk_level||'medium',b.guarantor_name,b.guarantor_phone,b.remark,req.params.id]);
-  logAction(req,'update','debtor',Number(req.params.id),`Updated debtor ${b.name}`);
+    [name,S(b.ic_passport),S(b.company),S(b.phone),S(b.email),S(b.address),S(b.employer),Number(b.salary)||null,b.risk_level||'medium',S(b.guarantor_name),S(b.guarantor_phone),S(b.remark),req.params.id]);
+  logAction(req,'update','debtor',Number(req.params.id),`Updated debtor ${name}`);
   res.redirect(`/debtors/${req.params.id}?ok=Saved`);
 });
 module.exports = router;

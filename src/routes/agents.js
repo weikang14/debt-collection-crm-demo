@@ -6,6 +6,9 @@ const router = express.Router();
 const canView = requireRole('admin','manager','auditor');
 const canEdit = requireRole('admin','manager');
 
+// Optional text -> trimmed string or null (never undefined, which SQLite rejects).
+const S = (v) => { const s = (v == null ? '' : String(v)).trim(); return s === '' ? null : s; };
+
 const STAT = `SELECT a.*,
   (SELECT COUNT(*) FROM cases WHERE agent_id=a.id) AS case_count,
   (SELECT COALESCE(SUM(p.amount),0) FROM payments p JOIN cases c ON c.id=p.case_id WHERE c.agent_id=a.id) AS collected`;
@@ -17,9 +20,11 @@ router.get('/', requireLogin, canView, (req, res) => {
 router.get('/new', requireLogin, canEdit, (req, res) => res.render('agents/form', { title: 'New Agent', agent: {}, action: '/agents' }));
 router.post('/', requireLogin, canEdit, (req, res) => {
   const b = req.body;
+  const name = S(b.name);
+  if (!name) return res.redirect('/agents/new?err=Name+is+required');
   const r = run('INSERT INTO agents (name,contact,department,target_amount,commission_rate,active) VALUES (?,?,?,?,?,?)',
-    [b.name,b.contact,b.department,Number(b.target_amount)||0,Number(b.commission_rate)||5, b.active?1:0]);
-  logAction(req,'create','agent',r.lastInsertRowid,`Created agent ${b.name}`);
+    [name,S(b.contact),S(b.department),Number(b.target_amount)||0,Number(b.commission_rate)||5, b.active?1:0]);
+  logAction(req,'create','agent',r.lastInsertRowid,`Created agent ${name}`);
   res.redirect('/agents?ok=Agent+created');
 });
 router.get('/:id', requireLogin, canView, (req, res) => {
@@ -36,9 +41,11 @@ router.get('/:id/edit', requireLogin, canEdit, (req, res) => {
 });
 router.post('/:id', requireLogin, canEdit, (req, res) => {
   const b = req.body;
+  const name = S(b.name);
+  if (!name) return res.redirect(`/agents/${req.params.id}/edit?err=Name+is+required`);
   run('UPDATE agents SET name=?,contact=?,department=?,target_amount=?,commission_rate=?,active=? WHERE id=?',
-    [b.name,b.contact,b.department,Number(b.target_amount)||0,Number(b.commission_rate)||5, b.active?1:0, req.params.id]);
-  logAction(req,'update','agent',Number(req.params.id),`Updated agent ${b.name}`);
+    [name,S(b.contact),S(b.department),Number(b.target_amount)||0,Number(b.commission_rate)||5, b.active?1:0, req.params.id]);
+  logAction(req,'update','agent',Number(req.params.id),`Updated agent ${name}`);
   res.redirect(`/agents/${req.params.id}?ok=Saved`);
 });
 module.exports = router;
