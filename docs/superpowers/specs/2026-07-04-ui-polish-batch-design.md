@@ -9,18 +9,25 @@
 3. **Cases 列表的 CSV 导出也补足明细列**（与 #2 同一套列，保持一致）。
 4. **新建任务表单默认收起**，用可展开的「+ New Task」呈现，让任务表格更清晰。
 
-全部为现有页面的小改，放一个 spec / 一个实现计划一起做。已确认的取舍：Reports 保留现有 3 个汇总导出，**新增**一个逐案明细导出；agent active 改成 Status 下拉。
+全部为现有页面的小改，放一个 spec / 一个实现计划一起做。已确认的取舍：Reports 保留现有 3 个汇总导出，**新增**一个逐案明细导出；agent active 改成 Status 下拉。**Reports 与 Cases 的明细列各自按用途设计，不强求相同**（Reports 偏财务视角，Cases 偏案件运营视角）。
 
-## 统一的明细列（#2 与 #3 共用）
+> **利息模型（用户新增的第 5 点）暂缓** —— 见文末「待定：利息计算模型」。当前利息仍为建案时手填的固定金额，本批 CSV 只读取已存金额，不受利息模型影响，可独立先做。
 
-一行一个案件，列顺序：
-`Case No, Debtor, Agent, Principal, Interest, Paid, Outstanding, Priority, Status, Opened`
+## 明细列的取值口径（公用工具）
 
 - **Paid（已还）** = 该案件所有还款之和，用相关子查询取，保证准确：
   `(SELECT COALESCE(SUM(amount),0) FROM payments WHERE case_id=cases.id) AS paid`
 - Principal/Interest/Outstanding 直接取 `cases.*`。金额在 CSV 里输出**原始数值**（不加千分位，方便 Excel 计算）。
-- Agent 为空时输出空字符串。Status 用 `caseStatusLabel(status)` 的可读文案。Opened 用 `dateFmt`（MYT 日期）。
+- Agent 为空输出空字符串。Status 用 `caseStatusLabel(status)` 可读文案。日期用 `dateFmt`（MYT）。
 - 全部经 `caseWhere` 行级过滤（催收员/客户只导出自己范围内的案件）。CSV 走现有 `src/utils/csv.js` 的 `toCsv`/`sendCsv`（已带 UTF-8 BOM，Excel 中文不乱码）。
+
+### 两套明细列（各自合理，不相同）
+
+- **Reports 逐案明细（财务视角）**：
+  `Case No, Debtor, Agent, Principal, Interest, Paid, Outstanding, Status, Opened`
+- **Cases 列表导出（运营视角）**：
+  `Case No, Debtor, Debtor Phone, Agent, Outstanding, Paid, Priority, Status, Opened`
+  （运营更关心联系方式和优先级，故加 Debtor Phone、保留 Priority；本金/利息在财务报表里看，这里从简。）
 
 ## 各项设计
 
@@ -31,12 +38,12 @@
 
 ### #2 Reports 逐案明细导出
 
-- **路由** `src/routes/reports.js`：在现有两个 `export` 分支旁，新增 `if (req.query.export === 'cases')` 分支：查询本用户 `caseWhere` 范围内的所有案件（带 debtor/agent 名和 paid 子查询），用统一明细列导出 `cases-detailed.csv`。此明细为**当前快照**（非日期范围），与「按状态欠款」报表口径一致。
+- **路由** `src/routes/reports.js`：在现有两个 `export` 分支旁，新增 `if (req.query.export === 'cases')` 分支：查询本用户 `caseWhere` 范围内的所有案件（带 debtor/agent 名和 paid 子查询），用 **Reports 财务视角列** 导出 `cases-detailed.csv`。此明细为**当前快照**（非日期范围），与「按状态欠款」报表口径一致。
 - **视图** `src/views/reports/index.ejs`：在页面顶部（日期筛选表单附近）加「Export detailed cases (CSV)」按钮，链接 `/reports?export=cases`。现有 3 个汇总导出按钮保留不变。
 
 ### #3 Cases 列表 CSV 补明细
 
-- **路由** `src/routes/cases.js` 的 `format === 'csv'` 分支：把 paid 子查询并入导出查询，改用统一明细列，文件名 `cases.csv` 不变。导出**继续遵守当前筛选**（status/priority/q）与行级范围。
+- **路由** `src/routes/cases.js` 的 `format === 'csv'` 分支：把 paid 子查询并入导出查询，改用 **Cases 运营视角列**（含 Debtor Phone、Paid），文件名 `cases.csv` 不变。导出**继续遵守当前筛选**（status/priority/q）与行级范围。
 - **视图** `src/views/cases/list.ejs`：现有「Export CSV」按钮已带上筛选参数，不用改。
 
 ### #4 新建任务表单收起（原生 `<details>`）
@@ -61,7 +68,7 @@
 
 - **单元/集成**（`node:test`，隔离临时库 via CRM_DB_PATH）：
   1. `parseActive(v)`：`'0'`→0；`'1'`/`undefined`/`'on'`→1。
-  2. 明细行映射：给一个案件加两笔还款后，导出行的 Paid 等于两笔之和、Outstanding 等于 `cases.outstanding_amount`。（抽一个 `caseDetailRow(row)` 纯函数映射，便于断言。）
+  2. Paid 取值：给一个案件加两笔还款后，查询返回的 `paid` 等于两笔之和（子查询正确）。测一个小函数 `caseCsvRow(row)`（把一行数据映射成 CSV 列数组）以覆盖两套列的取值/顺序。
 - **手动冒烟**：
   - 新建催收员：Status 默认 Active；选 Inactive 保存后显示停用；编辑回 Active 正常。
   - Reports：点「Export detailed cases」下载 CSV 含 Paid/Outstanding 等列且数值正确；催收员登录只导出自己范围。
@@ -71,3 +78,15 @@
 ## 迁移
 
 无 schema 变更，无需迁移。
+
+---
+
+## 待定：利息计算模型（用户第 5 点，等确认后单独做）
+
+现状：利息是建案时**手填的固定金额**（`cases.interest_amount`），不随时间变。用户希望改为「按月计息，利息由本金算出」。这是业务模型变更，比本批 UI 优化影响大（涉及建案表单、余额重算 `recomputeOutstanding`、显示层），需先由用户在下列模型中选一个，再单独出 spec/plan：
+
+- **A. 按月自动计息（随时间增长）**：建案填「月利率%」，利息 = 本金 × 月利率 × 已过月数；欠款随时间变大。最贴近真实借贷，改动最大（余额需按当前日期动态算或定时结算）。
+- **B. 建案时按利率算一次（之后固定）**：建案填「月利率%」和「月数」，当场算出 `interest_amount = 本金 × 月利率 × 月数` 存下来，之后不变。改动小，仅建案表单 + 一处计算。
+- **C. 维持现状**：继续手填固定利息金额。
+
+本批（#1–#4）不依赖此决定，先行实现。
