@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS clients (
   agreement_no TEXT,
   commission_rate REAL NOT NULL DEFAULT 15,
   remark TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS debtors (
   risk_level TEXT NOT NULL DEFAULT 'medium' CHECK (risk_level IN ('low','medium','high')),
   guarantor_name TEXT, guarantor_phone TEXT,
   remark TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -37,6 +39,7 @@ CREATE TABLE IF NOT EXISTS agents (
   target_amount REAL NOT NULL DEFAULT 0,
   commission_rate REAL NOT NULL DEFAULT 5,
   active INTEGER NOT NULL DEFAULT 1,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -54,6 +57,7 @@ CREATE TABLE IF NOT EXISTS cases (
     ('new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased')),
   opened_at TEXT NOT NULL DEFAULT (datetime('now')),
   closed_at TEXT, remark TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -64,6 +68,7 @@ CREATE TABLE IF NOT EXISTS timeline_events (
   event_type TEXT NOT NULL CHECK (event_type IN
     ('call','whatsapp','email','payment','ptp_created','ptp_fulfilled','ptp_broken','note','status_change','legal')),
   content TEXT NOT NULL, created_by TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -74,6 +79,7 @@ CREATE TABLE IF NOT EXISTS payments (
   payment_date TEXT NOT NULL, amount REAL NOT NULL,
   method TEXT NOT NULL DEFAULT 'bank_transfer',
   reference TEXT, bank TEXT, remark TEXT, created_by TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -83,6 +89,7 @@ CREATE TABLE IF NOT EXISTS ptps (
   amount REAL NOT NULL, due_date TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','fulfilled','broken')),
   remark TEXT, created_by TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -94,6 +101,7 @@ CREATE TABLE IF NOT EXISTS tasks (
   title TEXT NOT NULL, due_date TEXT,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','done')),
   notes TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
@@ -105,6 +113,7 @@ CREATE TABLE IF NOT EXISTS call_logs (
   duration_seconds INTEGER NOT NULL DEFAULT 0,
   result TEXT NOT NULL DEFAULT 'no_answer' CHECK (result IN ('answered','no_answer','busy','wrong_number','refused')),
   notes TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
