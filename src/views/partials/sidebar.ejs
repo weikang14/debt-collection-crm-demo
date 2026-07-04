@@ -7,6 +7,7 @@
     <a href="/cases" class="<%= path.startsWith('/cases')?'active':'' %>"><%- h.icon('cases') %> Cases</a>
     <% if (can(['admin','manager','auditor'])) { %><a href="/agents" class="<%= path.startsWith('/agents')?'active':'' %>"><%- h.icon('agents') %> Agents</a><% } %>
     <% if (can(['admin'])) { %><a href="/users" class="<%= path.startsWith('/users')?'active':'' %>"><%- h.icon('users') %> Users</a><% } %>
+    <% if (can(['admin'])) { %><a href="/demo-tools" class="<%= path.startsWith('/demo-tools')?'active':'' %>"><%- h.icon('demo') %> Demo Data</a><% } %>
     <a href="/tasks" class="<%= path.startsWith('/tasks')?'active':'' %>"><%- h.icon('tasks') %> Tasks</a>
     <a href="/reports" class="<%= path.startsWith('/reports')?'active':'' %>"><%- h.icon('reports') %> Reports</a>
     <% if (can(['admin','auditor'])) { %><a href="/audit-log" class="<%= path.startsWith('/audit')?'active':'' %>"><%- h.icon('audit') %> Audit Log</a><% } %>

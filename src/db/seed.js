@@ -2,6 +2,9 @@ const bcrypt = require('bcryptjs');
 const dayjs = require('dayjs');
 const { db, init, run, get } = require('./index');
 
+// Full demo dataset generator. Wipes all tables and inserts the sample data.
+// Used by `npm run seed`, `npm run reset`, and the in-app "Reload demo data" button.
+function seedDemo() {
 init();
 // Clear (respect FK order)
 for (const t of ['audit_logs','call_logs','tasks','ptps','payments','timeline_events','cases','debtors','agents','clients','users']) {
@@ -107,4 +110,12 @@ run('INSERT INTO users (username,password_hash,full_name,role,agent_id,client_id
 
 // --- Audit sample ---
 run("INSERT INTO audit_logs (username,action,entity_type,entity_id,details) VALUES ('admin','seed','system',NULL,'Demo data seeded')");
-console.log('Seed complete: 6 users, 5 clients, 12 debtors, 4 agents, 20 cases + related data.');
+}
+
+module.exports = { seedDemo };
+
+// Run directly as a CLI script: `node src/db/seed.js`
+if (require.main === module) {
+  seedDemo();
+  console.log('Seed complete: 6 users, 5 clients, 12 debtors, 4 agents, 20 cases + related data.');
+}

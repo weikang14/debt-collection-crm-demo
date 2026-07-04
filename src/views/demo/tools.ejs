@@ -1,0 +1,24 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Demo Data</h1></div>
+
+<div class="card">
+  <p>Tools for trialling the system. <strong>Demo data is generated from a built-in
+  template, so it can always be regenerated — clearing never permanently loses it.</strong></p>
+
+  <h3 style="margin-top:8px">Start fresh</h3>
+  <p class="hint">Removes all clients, debtors, cases, payments, agents, tasks and history
+  so you can walk through the whole flow from an empty system. Login accounts are kept.</p>
+  <form method="post" action="/demo-tools/clear"
+        onsubmit="return confirm('Clear ALL current data and start from an empty system? Demo data can be reloaded anytime.')">
+    <button class="btn" type="submit">Clear all data</button>
+  </form>
+
+  <h3 style="margin-top:22px">Reload demo data</h3>
+  <p class="hint">Wipes the current data and restores the standard demo dataset
+  (agents, debtors, 20 sample cases, payments, etc.). Use this to get the showcase
+  back after clearing or experimenting.</p>
+  <form method="post" action="/demo-tools/reload"
+        onsubmit="return confirm('Reset everything and reload the standard demo data?')">
+    <button class="btn btn-gold" type="submit">Reload demo data</button>
+  </form>
+</div>
