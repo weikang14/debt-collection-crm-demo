@@ -12,6 +12,16 @@ db.exec('PRAGMA foreign_keys = ON;');
 function init() {
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   db.exec(schema);
+
+  // Migration: add is_demo columns to existing tables if missing
+  const tables = ['agents', 'clients', 'debtors', 'cases', 'timeline_events', 'payments', 'ptps', 'tasks', 'call_logs'];
+  for (const t of tables) {
+    try {
+      db.prepare(`ALTER TABLE ${t} ADD COLUMN is_demo INTEGER NOT NULL DEFAULT 0`).run();
+    } catch (e) {
+      // Column already exists, ignore
+    }
+  }
 }
 function get(sql, params = []) { return db.prepare(sql).get(...params); }
 function all(sql, params = []) { return db.prepare(sql).all(...params); }
