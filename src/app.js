@@ -20,6 +20,9 @@ app.use(session({
 
 app.get('/health', (req, res) => res.type('text').send('ok'));
 
+const { VERSION, CHANGELOG } = require('./version');
+app.get('/version', (req, res) => res.render('version', { version: VERSION, changelog: CHANGELOG }));
+
 app.get('/demo-accounts', (req, res) => res.render('demo-accounts', { accounts: [
   ['admin','admin123','Full access + user mgmt + audit'],
   ['manager','manager123','Cases/debtors/agents + reports'],
