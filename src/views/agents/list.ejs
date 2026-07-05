@@ -2,6 +2,18 @@
 <div class="page-head"><h1>Agents</h1>
   <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/agents/new">+ New Agent</a><% } %>
 </div>
+<form class="card filters" method="get" action="/agents">
+  <label>Department <select name="department">
+    <option value="" <%= !query.department?'selected':'' %>>All</option>
+    <% departments.forEach(d => { %><option value="<%= d %>" <%= query.department===d?'selected':'' %>><%= d %></option><% }) %>
+  </select></label>
+  <label>Status <select name="status">
+    <option value="" <%= !query.status?'selected':'' %>>All</option>
+    <option value="active" <%= query.status==='active'?'selected':'' %>>Active</option>
+    <option value="inactive" <%= query.status==='inactive'?'selected':'' %>>Inactive</option>
+  </select></label>
+  <button class="btn btn-gold" type="submit">Filter</button>
+</form>
 <% if (!agents.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
 <table class="data"><thead><tr><th>Name</th><th>Department</th><th class="num">Case Count</th><th class="num">Collected</th><th class="num">Target</th><th>Attainment</th></tr></thead>
 <tbody><% agents.forEach(a => {

@@ -15,8 +15,15 @@ const STAT = `SELECT a.*,
   (SELECT COALESCE(SUM(p.amount),0) FROM payments p JOIN cases c ON c.id=p.case_id WHERE c.agent_id=a.id) AS collected`;
 
 router.get('/', requireLogin, canView, (req, res) => {
-  const agents = all(`${STAT} FROM agents a ORDER BY collected DESC`);
-  res.render('agents/list', { title: 'Agents', agents });
+  const where = [];
+  const params = [];
+  if (req.query.department) { where.push('a.department = ?'); params.push(req.query.department); }
+  if (req.query.status === 'active') where.push('a.active = 1');
+  else if (req.query.status === 'inactive') where.push('a.active = 0');
+  const clause = where.length ? 'WHERE ' + where.join(' AND ') : '';
+  const agents = all(`${STAT} FROM agents a ${clause} ORDER BY collected DESC`, params);
+  const departments = all("SELECT DISTINCT department FROM agents WHERE department IS NOT NULL AND department <> '' ORDER BY department").map(r => r.department);
+  res.render('agents/list', { title: 'Agents', agents, departments });
 });
 router.get('/new', requireLogin, canEdit, (req, res) => res.render('agents/form', { title: 'New Agent', agent: {}, action: '/agents' }));
 router.post('/', requireLogin, canEdit, (req, res) => {
