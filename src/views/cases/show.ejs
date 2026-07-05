@@ -1,7 +1,10 @@
 <% layout('layout'); -%>
 <div class="page-head">
   <h1><%= c.case_no %> <%- include('../partials/statusBadge', { status: c.status }) %></h1>
-  <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
+  <div style="display:flex; gap:0.5rem;">
+    <a class="btn" href="/cases/<%= c.id %>/statement" target="_blank">Print statement</a>
+    <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
+  </div>
 </div>
 
 <div class="detail-grid">
