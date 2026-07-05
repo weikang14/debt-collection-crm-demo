@@ -597,13 +597,6 @@ table.data td.num, table.data th.num {
 .taskbar.is-gold { background: #f7ecd9; color: var(--gold); border-color: #ecd8b3; }
 .taskbar.is-green { background: #e8f3ec; color: var(--green); border-color: #c3e0cd; }
 
-/* Action buttons inside the case facts card */
-.kv-actions {
-  display: flex; flex-wrap: wrap; gap: 8px;
-  margin-top: 14px; padding-top: 14px;
-  border-top: 1px solid var(--paper-line);
-}
-
 /* Native dialog modals for case actions */
 dialog.modal {
   border: none; border-radius: var(--radius); padding: 0;
