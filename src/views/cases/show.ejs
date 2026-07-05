@@ -11,13 +11,14 @@
     <% } %>
     <a class="btn" href="/cases/<%= c.id %>/statement" target="_blank">Print statement</a>
     <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
+    <button type="button" class="btn" onclick="dlg('dlg-records')">&#9776; Records</button>
   </div>
 </div>
 
 <div class="case-main">
     <div class="card kv">
+      <% if (!readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
       <div class="kv-head">
-        <% if (!readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
         <form method="post" action="/cases/<%= c.id %>/status" class="status-inline">
           <label>Status
             <select name="status" onchange="this.form.submit()">
@@ -25,9 +26,8 @@
             </select>
           </label>
         </form>
-        <% } else { %><span></span><% } %>
-        <button type="button" class="btn icon-btn" title="Records" aria-label="Records" onclick="dlg('dlg-records')">&#9776;</button>
       </div>
+      <% } %>
       <div><span>Debtor</span><a href="/debtors/<%= c.debtor_id %>"><%= c.debtor_name %></a></div>
       <div><span>Debtor Phone</span><span class="mono"><%= c.debtor_phone||'—' %></span></div>
       <div><span>IC/Passport</span><span class="mono"><%= c.ic_passport||'—' %></span></div>
@@ -54,15 +54,9 @@
     <% const canEditNote = !readOnly && ['admin','manager','agent'].includes(currentUser.role); %>
     <% timeline.forEach(ev => { %><li><span class="badge <%= evClass[ev.event_type]||'is-neutral' %>"><%= ev.event_type %></span>
       <% if (ev.event_type==='note' && canEditNote) { %>
-        <span class="note-view"><%= ev.content %>
-          <button type="button" class="btn btn-sm" onclick="this.closest('li').querySelector('.note-edit').hidden=false; this.closest('.note-view').hidden=true;">Edit</button>
-          <form class="inline-form" method="post" action="/cases/<%= c.id %>/notes/<%= ev.id %>/delete" onsubmit="return confirm('Delete this note?')"><button class="btn btn-sm" type="submit">Delete</button></form>
-        </span>
-        <form class="note-edit" method="post" action="/cases/<%= c.id %>/notes/<%= ev.id %>" hidden>
-          <input name="content" value="<%= ev.content %>" required>
-          <button class="btn btn-sm btn-gold" type="submit">Save</button>
-          <button type="button" class="btn btn-sm" onclick="var li=this.closest('li'); li.querySelector('.note-edit').hidden=true; li.querySelector('.note-view').hidden=false;">Cancel</button>
-        </form>
+        <%= ev.content %>
+        <button type="button" class="btn btn-sm" onclick="editNote(this)" data-id="<%= ev.id %>" data-content="<%= ev.content %>">Edit</button>
+        <form class="inline-form" method="post" action="/cases/<%= c.id %>/notes/<%= ev.id %>/delete" onsubmit="return confirm('Delete this note?')"><button class="btn btn-sm" type="submit">Delete</button></form>
       <% } else { %><%= ev.content %><% } %>
       <span class="meta"><%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
     </ul>
@@ -145,10 +139,21 @@
   <label>Method <select name="method"><option>bank_transfer</option><option>cash</option><option>cheque</option><option>online</option></select></label>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Confirm &amp; Record</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
+<dialog id="dlg-note-edit" class="modal"><form class="form" id="note-edit-form" method="post" action="">
+  <h3>Edit Note</h3>
+  <label>Note <textarea name="content" id="ne-content" required></textarea></label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
+</form></dialog>
 <% } %>
 <% } %>
 <script>
   function dlg(id){ document.getElementById(id).showModal(); }
+  function editNote(btn){
+    var f = document.getElementById('note-edit-form');
+    f.action = '/cases/<%= c.id %>/notes/' + btn.dataset.id;
+    document.getElementById('ne-content').value = btn.dataset.content;
+    dlg('dlg-note-edit');
+  }
   function openFulfill(id, amount){
     var f = document.getElementById('fulfill-form');
     f.action = '/ptps/' + id + '/fulfill';
