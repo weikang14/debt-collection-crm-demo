@@ -47,4 +47,14 @@ router.post('/:id/complete', requireLogin, requireRole('admin','manager','agent'
   run("UPDATE tasks SET status='done' WHERE id=?", [req.params.id]);
   res.redirect('/tasks?ok=Task+completed');
 });
+router.post('/:id', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+  const u = req.session.user;
+  const task = get('SELECT * FROM tasks WHERE id=?', [req.params.id]);
+  if (!task) return res.redirect('/tasks?err=Not+found');
+  if (u.role === 'agent' && task.agent_id !== u.agent_id) return res.redirect('/tasks?err=Forbidden');
+  const b = req.body;
+  run('UPDATE tasks SET title=?, type=?, due_date=?, notes=? WHERE id=?',
+    [b.title, b.type || 'follow_up', b.due_date || null, b.notes || null, req.params.id]);
+  res.redirect('/tasks?ok=Task+updated');
+});
 module.exports = router;
