@@ -8,7 +8,7 @@ const router = express.Router();
 
 // User management is an admin-only capability (no public self-registration:
 // this is an internal system, so accounts are provisioned by an admin).
-const ROLES = ['admin', 'manager', 'agent', 'finance', 'auditor', 'client'];
+const ROLES = ['admin', 'manager', 'agent', 'finance', 'auditor'];
 const adminOnly = requireRole('admin');
 
 // Prevent an admin from locking themselves out when editing their own account.

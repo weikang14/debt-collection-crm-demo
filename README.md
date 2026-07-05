@@ -43,7 +43,6 @@ reference table is reachable directly at `/demo-accounts`. For real use, an
 | agent3   | agent123    | Only own cases                                    |
 | finance  | finance123  | Record payments, view reports                     |
 | auditor  | auditor123  | Read-only everything + audit log                  |
-| client1  | client123   | Only own company's cases (read-only)              |
 
 ## Reset data
 

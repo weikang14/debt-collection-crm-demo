@@ -104,7 +104,6 @@ function insertDemoUsers() {
   ['agent1','agent2','agent3'].forEach((u,i)=>run('INSERT INTO users (username,password_hash,full_name,role,agent_id,client_id) VALUES (?,?,?,?,?,?)', [u,hash('agent123'),AGENTS[i][0],'agent',i+1,null]));
   run('INSERT INTO users (username,password_hash,full_name,role,agent_id,client_id) VALUES (?,?,?,?,?,?)', ['finance',hash('finance123'),'Finance Officer','finance',null,null]);
   run('INSERT INTO users (username,password_hash,full_name,role,agent_id,client_id) VALUES (?,?,?,?,?,?)', ['auditor',hash('auditor123'),'Compliance Auditor','auditor',null,null]);
-  run('INSERT INTO users (username,password_hash,full_name,role,agent_id,client_id) VALUES (?,?,?,?,?,?)', ['client1',hash('client123'),'Sinar Consumer Credit','client',null,1]);
   run("INSERT INTO audit_logs (username,action,entity_type,entity_id,details) VALUES ('admin','seed','system',NULL,'Demo data seeded')");
 }
 
@@ -137,5 +136,5 @@ module.exports = { seedDemo, clearAllTables, insertDemoRows, deleteDemo };
 
 if (require.main === module) {
   seedDemo();
-  console.log('Seed complete: 6 users, 5 clients, 12 debtors, 4 agents, 20 cases + related data.');
+  console.log('Seed complete: 7 users, 5 clients, 12 debtors, 4 agents, 20 cases + related data.');
 }
