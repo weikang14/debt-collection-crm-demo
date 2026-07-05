@@ -1,15 +1,33 @@
 <% layout('layout'); -%>
 <div class="page-head">
   <h1><%= c.case_no %> <%- include('../partials/statusBadge', { status: c.status }) %></h1>
-  <div style="display:flex; gap:0.5rem;">
+  <div class="head-actions">
+    <% if (!readOnly) { %>
+      <% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %><button type="button" class="btn btn-gold" onclick="dlg('dlg-payment')">Record Payment</button><% } %>
+      <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+        <button type="button" class="btn" onclick="dlg('dlg-ptp')">New PTP</button>
+        <button type="button" class="btn" onclick="dlg('dlg-call')">Log Call</button>
+      <% } %>
+    <% } %>
     <a class="btn" href="/cases/<%= c.id %>/statement" target="_blank">Print statement</a>
     <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
   </div>
 </div>
 
-<div class="detail-grid">
-  <div>
+<div class="case-main">
     <div class="card kv">
+      <div class="kv-head">
+        <% if (!readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
+        <form method="post" action="/cases/<%= c.id %>/status" class="status-inline">
+          <label>Status
+            <select name="status" onchange="this.form.submit()">
+              <% statuses.forEach(s => { %><option value="<%= s %>" <%= c.status===s?'selected':'' %>><%= h.caseStatusLabel(s) %></option><% }) %>
+            </select>
+          </label>
+        </form>
+        <% } else { %><span></span><% } %>
+        <button type="button" class="btn icon-btn" title="Records" aria-label="Records" onclick="dlg('dlg-records')">&#9776;</button>
+      </div>
       <div><span>Debtor</span><a href="/debtors/<%= c.debtor_id %>"><%= c.debtor_name %></a></div>
       <div><span>Debtor Phone</span><span class="mono"><%= c.debtor_phone||'—' %></span></div>
       <div><span>IC/Passport</span><span class="mono"><%= c.ic_passport||'—' %></span></div>
@@ -20,17 +38,6 @@
       <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
       <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
       <div><span>Remark</span><%= c.remark||'—' %></div>
-      <% if (!readOnly) { %>
-      <div class="kv-actions">
-        <% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %><button type="button" class="btn btn-gold" onclick="dlg('dlg-payment')">Record Payment</button><% } %>
-        <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
-        <button type="button" class="btn" onclick="dlg('dlg-ptp')">Add PTP</button>
-        <button type="button" class="btn" onclick="dlg('dlg-call')">Log Call</button>
-        <button type="button" class="btn" onclick="dlg('dlg-note')">Add Note</button>
-        <button type="button" class="btn" onclick="dlg('dlg-status')">Change Status</button>
-        <% } %>
-      </div>
-      <% } %>
     </div>
 
     <h2>Timeline</h2>
@@ -41,9 +48,14 @@
     <span class="meta"><%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
     </ul>
     <% } %>
-  </div>
+</div>
 
-  <div>
+<dialog id="dlg-records" class="modal modal-wide">
+  <div class="modal-head">
+    <h3>Records</h3>
+    <button type="button" class="btn icon-btn" onclick="this.closest('dialog').close()" aria-label="Close">&times;</button>
+  </div>
+  <div class="modal-body">
     <h2>Payments</h2>
     <% if (!payments.length) { %><%- include('../partials/empty', { msg: 'No payments recorded.' }) %><% } else { %>
     <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th></tr></thead>
@@ -78,7 +90,7 @@
     <td><span class="badge <%= t.status==='done'?'is-green':'is-gold' %>"><%= t.status %></span></td></tr><% }) %></tbody></table>
     <% } %>
   </div>
-</div>
+</dialog>
 
 <% if (!readOnly) { %>
 <% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %>

@@ -612,4 +612,14 @@ dialog.modal {
 }
 dialog.modal::backdrop { background: rgba(16,21,31,0.45); }
 dialog.modal .form { margin: 0; padding: 20px 22px; }
+
+.head-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.kv-head { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; padding-bottom: 8px; border-bottom: 1px solid var(--paper-line, #e5e5e5); margin-bottom: 8px; }
+.kv-head .status-inline { margin: 0; }
+.kv-head .status-inline label { margin: 0; }
+.icon-btn { font-size: 1.15rem; line-height: 1; padding: 4px 10px; }
+.case-main { max-width: 900px; }
+.modal-wide { width: min(920px, 94vw); max-width: 94vw; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; }
+.modal-body { max-height: 72vh; overflow-y: auto; }
 dialog.modal h3 { margin-bottom: 12px; }
