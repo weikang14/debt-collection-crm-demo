@@ -1,13 +1,19 @@
 <% layout('layout') -%>
 <div class="page-head"><h1>Tasks</h1>
 </div>
-<% const pending = tasks.filter(t => t.status === 'pending');
-   const overdue = pending.filter(t => t.due_date && h.daysOverdue(t.due_date) > 0);
-   const barCls = overdue.length ? 'is-red' : pending.length ? 'is-gold' : 'is-green'; %>
-<div class="taskbar <%= barCls %>">
-  <% if (!pending.length) { %>All tasks handled — nothing pending.
-  <% } else { %><strong><%= pending.length %></strong> pending<% if (overdue.length) { %> · <strong><%= overdue.length %></strong> overdue<% } %><% } %>
-</div>
+<form class="card filters" method="get" action="/tasks">
+  <label>Status <select name="status">
+    <option value="" <%= !query.status?'selected':'' %>>All</option>
+    <option value="pending" <%= query.status==='pending'?'selected':'' %>>Pending</option>
+    <option value="done" <%= query.status==='done'?'selected':'' %>>Done</option>
+  </select></label>
+  <label>Type <select name="type">
+    <option value="" <%= !query.type?'selected':'' %>>All</option>
+    <% ['follow_up','visit','legal','reminder'].forEach(tp => { %><option value="<%= tp %>" <%= query.type===tp?'selected':'' %>><%= tp %></option><% }) %>
+  </select></label>
+  <label>Overdue only <input type="checkbox" name="overdue" value="1" <%= query.overdue==='1'?'checked':'' %>></label>
+  <button class="btn btn-gold" type="submit">Filter</button>
+</form>
 <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
 <details class="new-panel">
   <summary class="btn btn-gold">+ New Task</summary>

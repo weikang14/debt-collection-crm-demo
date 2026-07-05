@@ -10,6 +10,9 @@ router.get('/', requireLogin, (req, res) => {
   if (u.role === 'agent') { where.push('tasks.agent_id = ?'); params.push(u.agent_id); }
   else if (u.role === 'client') { const w = caseWhere(u); where.push(`tasks.case_id IN (SELECT id FROM cases WHERE ${w.clause})`); params.push(...w.params); }
   if (req.query.status) { where.push('tasks.status=?'); params.push(req.query.status); }
+  if (req.query.type) { where.push('tasks.type=?'); params.push(req.query.type); }
+  // Overdue = still pending and past its due date (in Malaysia time, UTC+8).
+  if (req.query.overdue === '1') where.push("tasks.status='pending' AND tasks.due_date IS NOT NULL AND date(tasks.due_date) < date('now','+8 hours')");
   const clause = where.length ? 'WHERE ' + where.join(' AND ') : '';
   const tasks = all(`SELECT tasks.*, cases.case_no FROM tasks LEFT JOIN cases ON cases.id=tasks.case_id ${clause} ORDER BY tasks.status, tasks.due_date`, params);
   const scoped = isScoped(u);
