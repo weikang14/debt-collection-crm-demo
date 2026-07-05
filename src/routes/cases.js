@@ -146,6 +146,18 @@ router.post('/:id/notes', requireLogin, requireRole('admin','manager','agent'), 
   run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'note',req.body.content||'',req.session.user.full_name]);
   res.redirect(`/cases/${c.id}?ok=Note+added`);
 });
+router.post('/:id/notes/:noteId', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  run("UPDATE timeline_events SET content=? WHERE id=? AND case_id=? AND event_type='note'",
+    [req.body.content || '', req.params.noteId, c.id]);
+  res.redirect(`/cases/${c.id}?ok=Note+updated`);
+});
+router.post('/:id/notes/:noteId/delete', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  run("DELETE FROM timeline_events WHERE id=? AND case_id=? AND event_type='note'",
+    [req.params.noteId, c.id]);
+  res.redirect(`/cases/${c.id}?ok=Note+deleted`);
+});
 router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const ns = req.body.status;

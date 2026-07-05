@@ -48,6 +48,41 @@
   <td><%= t.type %></td>
   <td><% if (t.status==='pending' && t.due_date && h.daysOverdue(t.due_date) > 0) { %><span class="badge is-red"><%= h.dateFmt(t.due_date) %> · overdue</span><% } else if (t.due_date) { %><%= h.dateFmt(t.due_date) %><% } else { %>—<% } %></td>
   <td><span class="badge <%= t.status==='done'?'is-green':'is-gold' %>"><%= t.status %></span></td>
-  <td><% if (t.status==='pending' && ['admin','manager','agent'].includes(currentUser.role)) { %><form class="inline-form" method="post" action="/tasks/<%= t.id %>/complete"><button class="btn" type="submit">Complete</button></form><% } else { %>—<% } %></td>
+  <td>
+    <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+    <div class="row-actions">
+      <button type="button" class="btn btn-sm" onclick="editTask(this)"
+        data-id="<%= t.id %>" data-title="<%= t.title %>" data-type="<%= t.type %>"
+        data-due="<%= t.due_date || '' %>" data-notes="<%= t.notes || '' %>">Edit</button>
+      <% if (t.status==='pending') { %><form class="inline-form" method="post" action="/tasks/<%= t.id %>/complete"><button class="btn btn-sm" type="submit">Complete</button></form><% } %>
+    </div>
+    <% } else { %>—<% } %>
+  </td>
 </tr>
 <% }) %></tbody></table><% } %>
+<% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+<dialog id="dlg-task-edit" class="modal"><form class="form" id="task-edit-form" method="post" action="">
+  <h3>Edit Task</h3>
+  <label>Title <input type="text" name="title" id="te-title" required></label>
+  <label>Type <select name="type" id="te-type">
+    <% ['follow_up','visit','legal','reminder'].forEach(tp => { %><option value="<%= tp %>"><%= tp %></option><% }) %>
+  </select></label>
+  <label>Due Date <input type="date" name="due_date" id="te-due"></label>
+  <label>Notes <input type="text" name="notes" id="te-notes"></label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
+</form></dialog>
+<script>
+  function editTask(btn){
+    var f = document.getElementById('task-edit-form');
+    f.action = '/tasks/' + btn.dataset.id;
+    document.getElementById('te-title').value = btn.dataset.title;
+    document.getElementById('te-type').value = btn.dataset.type;
+    document.getElementById('te-due').value = btn.dataset.due;
+    document.getElementById('te-notes').value = btn.dataset.notes;
+    document.getElementById('dlg-task-edit').showModal();
+  }
+  document.querySelectorAll('dialog.modal').forEach(function(d){
+    d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
+  });
+</script>
+<% } %>
