@@ -5,6 +5,9 @@ dayjs.extend(utc);
 const money = (n) =>
   Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// Agent commission = amount collected × commission rate (a percentage).
+const commission = (collected, rate) => (Number(collected) || 0) * (Number(rate) || 0) / 100;
+
 // Stored datetimes are UTC (SQLite datetime('now')). Display in Malaysia time
 // (MYT = UTC+8, no daylight saving). dayjs.utc parses the SQLite string as UTC
 // reliably regardless of the server's own timezone (local dev or Render/UTC).
@@ -50,4 +53,4 @@ const ICONS = {
 };
 const icon = (name) => ICONS[name] || '';
 
-module.exports = { money, dateFmt, dateTimeFmt, daysOverdue, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon };
+module.exports = { money, commission, dateFmt, dateTimeFmt, daysOverdue, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon };

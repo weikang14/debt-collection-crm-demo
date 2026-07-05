@@ -15,12 +15,14 @@
   <button class="btn btn-gold" type="submit">Filter</button>
 </form>
 <% if (!agents.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
-<table class="data"><thead><tr><th>Name</th><th>Department</th><th class="num">Case Count</th><th class="num">Collected</th><th class="num">Target</th><th>Attainment</th></tr></thead>
+<table class="data"><thead><tr><th>Name</th><th>Department</th><th class="num">Case Count</th><th class="num">Collected</th><th class="num">Rate %</th><th class="num">Commission</th><th class="num">Target</th><th>Attainment</th></tr></thead>
 <tbody><% agents.forEach(a => {
   const pct = a.target_amount > 0 ? Math.min(100, Math.round(a.collected / a.target_amount * 100)) : 0;
   const cls = pct >= 100 ? 'is-green' : pct >= 50 ? '' : 'is-red';
 %>
 <tr><td><a href="/agents/<%= a.id %>"><%= a.name %></a></td><td><%= a.department||'' %></td>
-<td class="num"><%= a.case_count %></td><td class="num"><%= h.money(a.collected) %></td><td class="num"><%= h.money(a.target_amount) %></td>
+<td class="num"><%= a.case_count %></td><td class="num"><%= h.money(a.collected) %></td>
+<td class="num"><%= a.commission_rate %></td><td class="num"><%= h.money(h.commission(a.collected, a.commission_rate)) %></td>
+<td class="num"><%= h.money(a.target_amount) %></td>
 <td><div class="bar"><div class="fill <%= cls %>" style="width: <%= pct %>%"></div></div> <%= pct %>%</td></tr>
 <% }) %></tbody></table><% } %>

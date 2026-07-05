@@ -16,6 +16,12 @@ test('caseStatusClass maps semantics', () => {
 test('icon returns inline svg string', () => {
   assert.match(h.icon('dashboard'), /^<svg/);
 });
+test('commission = collected × rate%', () => {
+  assert.strictEqual(h.commission(10000, 5), 500);
+  assert.strictEqual(h.commission(0, 5), 0);
+  assert.strictEqual(h.commission(2000, 0), 0);
+  assert.strictEqual(h.commission(null, 5), 0);
+});
 test('dateTimeFmt converts stored UTC to MYT (+8)', () => {
   // SQLite stores UTC; Malaysia is UTC+8
   assert.strictEqual(h.dateTimeFmt('2026-07-03 14:30:00'), '2026-07-03 22:30');

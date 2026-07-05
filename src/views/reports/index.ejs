@@ -31,11 +31,13 @@
 <div class="card">
   <h2>Agent Performance (<%= from %> to <%= to %>) <a class="btn btn-sm" style="float:right" href="/reports?from=<%= from %>&to=<%= to %>&export=performance">Export CSV</a></h2>
   <% if (!performance.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
-  <table class="data"><thead><tr><th>Agent</th><th class="num">Collected</th><th class="num">Target</th><th>Attainment</th></tr></thead>
+  <table class="data"><thead><tr><th>Agent</th><th class="num">Collected</th><th class="num">Rate %</th><th class="num">Commission</th><th class="num">Target</th><th>Attainment</th></tr></thead>
   <tbody>
   <% performance.forEach(row => { const pct = row.target_amount > 0 ? Math.min(100, Math.round(row.collected / row.target_amount * 100)) : 0;
      const fillClass = pct >= 100 ? 'is-green' : pct < 50 ? 'is-red' : ''; %>
-  <tr><td><%= row.name %></td><td class="num"><%= h.money(row.collected) %></td><td class="num"><%= h.money(row.target_amount) %></td>
+  <tr><td><%= row.name %></td><td class="num"><%= h.money(row.collected) %></td>
+  <td class="num"><%= row.commission_rate %></td><td class="num"><%= h.money(h.commission(row.collected, row.commission_rate)) %></td>
+  <td class="num"><%= h.money(row.target_amount) %></td>
   <td><div class="bar"><div class="fill <%= fillClass %>" style="width: <%= pct %>%"></div></div> <%= pct %>%</td></tr>
   <% }) %>
   </tbody>
