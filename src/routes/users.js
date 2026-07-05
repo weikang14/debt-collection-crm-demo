@@ -3,12 +3,21 @@ const bcrypt = require('bcryptjs');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
+const { parseActive } = require('../utils/forms');
 const router = express.Router();
 
 // User management is an admin-only capability (no public self-registration:
 // this is an internal system, so accounts are provisioned by an admin).
 const ROLES = ['admin', 'manager', 'agent', 'finance', 'auditor', 'client'];
 const adminOnly = requireRole('admin');
+
+// Prevent an admin from locking themselves out when editing their own account.
+function userEditGuard(sessionUser, targetId, newRole, newActive) {
+  if (sessionUser.id !== Number(targetId)) return null;
+  if (newRole !== 'admin') return 'You cannot change your own admin role';
+  if (Number(newActive) === 0) return 'You cannot deactivate your own account';
+  return null;
+}
 
 router.get('/', requireLogin, adminOnly, (req, res) => {
   const users = all(`SELECT u.*, a.name AS agent_name, c.company_name AS client_name
@@ -77,4 +86,42 @@ router.post('/:id/toggle', requireLogin, adminOnly, (req, res) => {
   res.redirect('/users?ok=User+updated');
 });
 
+router.get('/:id/edit', requireLogin, adminOnly, (req, res) => {
+  const u = get('SELECT * FROM users WHERE id=?', [req.params.id]);
+  if (!u) return res.redirect('/users?err=User+not+found');
+  res.render('users/edit', {
+    title: 'Edit User', u, roles: ROLES,
+    agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
+    clients: all('SELECT id,company_name FROM clients ORDER BY company_name'),
+  });
+});
+
+router.post('/:id', requireLogin, adminOnly, (req, res) => {
+  const u = get('SELECT id FROM users WHERE id=?', [req.params.id]);
+  if (!u) return res.redirect('/users?err=User+not+found');
+  const b = req.body;
+  const username = (b.username || '').trim();
+  const full_name = (b.full_name || '').trim();
+  const role = ROLES.includes(b.role) ? b.role : null;
+  const active = parseActive(b.active);
+  if (!username || !full_name || !role) {
+    return res.redirect(`/users/${u.id}/edit?err=Username,+full+name+and+role+are+required`);
+  }
+  const guard = userEditGuard(req.session.user, u.id, role, active);
+  if (guard) return res.redirect(`/users/${u.id}/edit?err=${encodeURIComponent(guard)}`);
+  const agent_id = role === 'agent' ? (Number(b.agent_id) || null) : null;
+  const client_id = role === 'client' ? (Number(b.client_id) || null) : null;
+  if (role === 'agent' && !agent_id) return res.redirect(`/users/${u.id}/edit?err=Agent+accounts+must+be+linked+to+an+agent`);
+  if (role === 'client' && !client_id) return res.redirect(`/users/${u.id}/edit?err=Client+accounts+must+be+linked+to+a+client`);
+  try {
+    run('UPDATE users SET username=?,full_name=?,role=?,agent_id=?,client_id=?,active=? WHERE id=?',
+      [username, full_name, role, agent_id, client_id, active, u.id]);
+    logAction(req, 'update', 'user', u.id, `Updated user ${username} (${role})`);
+    res.redirect('/users?ok=User+updated');
+  } catch (e) {
+    res.redirect(`/users/${u.id}/edit?err=Could+not+save+(username+may+already+exist)`);
+  }
+});
+
 module.exports = router;
+module.exports.userEditGuard = userEditGuard;

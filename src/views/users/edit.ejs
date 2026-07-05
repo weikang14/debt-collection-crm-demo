@@ -1,0 +1,45 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Edit User</h1></div>
+<form class="card form" method="post" action="/users/<%= u.id %>">
+  <label>Username <input name="username" value="<%= u.username %>" required autocomplete="off"></label>
+  <label>Full Name <input name="full_name" value="<%= u.full_name %>" required></label>
+  <label>Role
+    <select name="role" id="role-select">
+      <% roles.forEach(r => { %><option value="<%= r %>" <%= u.role===r?'selected':'' %>><%= r %></option><% }) %>
+    </select>
+  </label>
+  <label id="agent-field" style="display:none">Linked Agent
+    <select name="agent_id">
+      <option value="">— select agent —</option>
+      <% agents.forEach(a => { %><option value="<%= a.id %>" <%= u.agent_id===a.id?'selected':'' %>><%= a.name %></option><% }) %>
+    </select>
+  </label>
+  <label id="client-field" style="display:none">Linked Client
+    <select name="client_id">
+      <option value="">— select client —</option>
+      <% clients.forEach(c => { %><option value="<%= c.id %>" <%= u.client_id===c.id?'selected':'' %>><%= c.company_name %></option><% }) %>
+    </select>
+  </label>
+  <label>Status <select name="active">
+    <option value="1" <%= u.active===0 ? '' : 'selected' %>>Active</option>
+    <option value="0" <%= u.active===0 ? 'selected' : '' %>>Inactive</option>
+  </select></label>
+  <div class="form-actions">
+    <button class="btn btn-gold" type="submit">Save</button>
+    <a class="btn" href="/users">Cancel</a>
+    <a class="btn" href="/users/<%= u.id %>/password">Reset password</a>
+  </div>
+</form>
+<script>
+  (function () {
+    var sel = document.getElementById('role-select');
+    var af = document.getElementById('agent-field');
+    var cf = document.getElementById('client-field');
+    function sync() {
+      af.style.display = sel.value === 'agent' ? '' : 'none';
+      cf.style.display = sel.value === 'client' ? '' : 'none';
+    }
+    sel.addEventListener('change', sync);
+    sync();
+  })();
+</script>
