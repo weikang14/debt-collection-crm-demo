@@ -139,6 +139,7 @@
   <div class="form-actions"><button class="btn btn-gold" type="submit">Confirm &amp; Record</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
 <% } %>
+<% } %>
 <script>
   function dlg(id){ document.getElementById(id).showModal(); }
   function openFulfill(id, amount){
@@ -155,4 +156,3 @@
     document.querySelectorAll('dialog.modal input[type=date]').forEach(function(i){ if(!i.value) i.value = today; });
   })();
 </script>
-<% } %>
