@@ -40,12 +40,31 @@
       <div><span>Remark</span><%= c.remark||'—' %></div>
     </div>
 
+    <% if (!readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
+    <form class="add-note" method="post" action="/cases/<%= c.id %>/notes">
+      <input name="content" placeholder="Add a note…" required>
+      <button class="btn btn-gold" type="submit">Add</button>
+    </form>
+    <% } %>
+
     <h2>Timeline</h2>
     <% if (!timeline.length) { %><%- include('../partials/empty', { msg: 'No activity yet.' }) %><% } else { %>
     <% const evClass = { payment:'is-green', ptp_fulfilled:'is-green', ptp_broken:'is-red', ptp_created:'is-gold', status_change:'is-blue', legal:'is-red', call:'is-blue' }; %>
     <ul class="timeline">
-    <% timeline.forEach(ev => { %><li><span class="badge <%= evClass[ev.event_type]||'is-neutral' %>"><%= ev.event_type %></span> <%= ev.content %>
-    <span class="meta"><%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
+    <% const canEditNote = !readOnly && ['admin','manager','agent'].includes(currentUser.role); %>
+    <% timeline.forEach(ev => { %><li><span class="badge <%= evClass[ev.event_type]||'is-neutral' %>"><%= ev.event_type %></span>
+      <% if (ev.event_type==='note' && canEditNote) { %>
+        <span class="note-view"><%= ev.content %>
+          <button type="button" class="btn btn-sm" onclick="this.closest('li').querySelector('.note-edit').hidden=false; this.closest('.note-view').hidden=true;">Edit</button>
+          <form class="inline-form" method="post" action="/cases/<%= c.id %>/notes/<%= ev.id %>/delete" onsubmit="return confirm('Delete this note?')"><button class="btn btn-sm" type="submit">Delete</button></form>
+        </span>
+        <form class="note-edit" method="post" action="/cases/<%= c.id %>/notes/<%= ev.id %>" hidden>
+          <input name="content" value="<%= ev.content %>" required>
+          <button class="btn btn-sm btn-gold" type="submit">Save</button>
+          <button type="button" class="btn btn-sm" onclick="var li=this.closest('li'); li.querySelector('.note-edit').hidden=true; li.querySelector('.note-view').hidden=false;">Cancel</button>
+        </form>
+      <% } else { %><%= ev.content %><% } %>
+      <span class="meta"><%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
     </ul>
     <% } %>
 </div>
@@ -118,18 +137,6 @@
   <label>Duration (s) <input type="number" name="duration_seconds" min="0" value="0"></label>
   <label>Notes <input name="notes"></label>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Log Call</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
-</form></dialog>
-<dialog id="dlg-note" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/notes">
-  <h3>Add Note</h3>
-  <label>Note <textarea name="content" required></textarea></label>
-  <div class="form-actions"><button class="btn btn-gold" type="submit">Add Note</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
-</form></dialog>
-<dialog id="dlg-status" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/status">
-  <h3>Change Status</h3>
-  <label>Status <select name="status">
-    <% statuses.forEach(s => { %><option value="<%= s %>" <%= c.status===s?'selected':'' %>><%= h.caseStatusLabel(s) %></option><% }) %>
-  </select></label>
-  <div class="form-actions"><button class="btn btn-gold" type="submit">Update Status</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
 <dialog id="dlg-ptp-fulfill" class="modal"><form class="form" id="fulfill-form" method="post" action="">
   <h3>Fulfill PTP — Record Payment</h3>

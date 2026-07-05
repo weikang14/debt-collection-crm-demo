@@ -623,3 +623,7 @@ dialog.modal .form { margin: 0; padding: 20px 22px; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; }
 .modal-body { max-height: 72vh; overflow-y: auto; }
 dialog.modal h3 { margin-bottom: 12px; }
+
+.add-note { display: flex; gap: 0.5rem; margin: 8px 0 16px; }
+.add-note input { flex: 1; }
+.note-view, .note-edit { display: inline-flex; gap: 0.4rem; align-items: center; }
