@@ -2,6 +2,16 @@
 <div class="page-head"><h1>Debtors</h1>
   <% if (['admin','manager','agent'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/debtors/new">+ New Debtor</a><% } %>
 </div>
+<form class="card filters" method="get" action="/debtors">
+  <label>Risk <select name="risk">
+    <option value="" <%= !query.risk?'selected':'' %>>All</option>
+    <option value="low" <%= query.risk==='low'?'selected':'' %>>Low</option>
+    <option value="medium" <%= query.risk==='medium'?'selected':'' %>>Medium</option>
+    <option value="high" <%= query.risk==='high'?'selected':'' %>>High</option>
+  </select></label>
+  <label>Search <input name="q" value="<%= query.q||'' %>" placeholder="Name, IC, or phone"></label>
+  <button class="btn btn-gold" type="submit">Filter</button>
+</form>
 <% if (!debtors.length) { %><%- include('../partials/empty', { msg: 'No debtors yet.' }) %><% } else { %>
 <table class="data"><thead><tr><th>Name</th><th>IC/Passport</th><th>Phone</th><th>Employer</th><th class="num">Salary</th><th>Risk</th></tr></thead>
 <tbody><% debtors.forEach(debtor => { %>

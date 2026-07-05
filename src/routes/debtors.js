@@ -3,6 +3,7 @@ const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { reachableDebtorIds, caseWhere } = require('../utils/scope');
+const { debtorFilter } = require('../utils/debtorFilter');
 const router = express.Router();
 
 const canView = requireRole('admin','manager','agent','finance','auditor');
@@ -13,10 +14,8 @@ const S = (v) => { const s = (v == null ? '' : String(v)).trim(); return s === '
 
 router.get('/', requireLogin, canView, (req, res) => {
   const ids = reachableDebtorIds(req.session.user); // null = unrestricted
-  let debtors;
-  if (ids === null) debtors = all('SELECT * FROM debtors ORDER BY name');
-  else if (ids.length === 0) debtors = [];
-  else debtors = all(`SELECT * FROM debtors WHERE id IN (${ids.map(()=>'?').join(',')}) ORDER BY name`, ids);
+  const f = debtorFilter(ids, req.query);
+  const debtors = all(`SELECT * FROM debtors WHERE ${f.where} ORDER BY name`, f.params);
   res.render('debtors/list', { title: 'Debtors', debtors });
 });
 router.get('/new', requireLogin, canEdit, (req, res) => res.render('debtors/form', { title: 'New Debtor', debtor: {}, action: '/debtors' }));
