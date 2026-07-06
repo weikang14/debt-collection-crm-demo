@@ -113,9 +113,12 @@ router.get('/:id', requireLogin, (req, res) => {
 });
 
 const { applyPayment } = require('../services/payments');
+const { validatePayment } = require('../utils/forms');
 router.post('/:id/payments', requireLogin, requireRole('admin','manager','finance','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
-  const r = applyPayment(c.id, req.body, req);
+  const v = validatePayment(req.body.amount, c.outstanding_amount);
+  if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
+  const r = applyPayment(c.id, { ...req.body, amount: v.amount }, req);
   res.redirect(`/cases/${c.id}?ok=Payment+${r.receipt_no}+recorded`);
 });
 

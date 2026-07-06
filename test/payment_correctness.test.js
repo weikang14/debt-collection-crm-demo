@@ -25,3 +25,18 @@ test('payment amount is stored exactly, not rounded', () => {
   const pay = db.get('SELECT amount FROM payments WHERE case_id=? ORDER BY id DESC LIMIT 1', [c.id]);
   assert.strictEqual(pay.amount, 12.345);
 });
+
+const { recordFulfillment } = require('../src/routes/ptps');
+
+test('recordFulfillment blocks overpayment and records nothing', () => {
+  const c = db.get('SELECT id FROM cases ORDER BY id DESC LIMIT 1');
+  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation' WHERE id=?", [c.id]);
+  const ptp = db.run("INSERT INTO ptps (case_id, amount, due_date, status, created_by) VALUES (?,?,?,?,?)",
+    [c.id, 500, '2026-08-01', 'pending', 'Tester']);
+  const before = db.get('SELECT COUNT(*) n FROM payments WHERE case_id=?', [c.id]).n;
+  const r = recordFulfillment(ptp.lastInsertRowid, {}, req);
+  assert.deepStrictEqual(r, { ok: false, error: 'Amount exceeds outstanding' });
+  const after = db.get('SELECT COUNT(*) n FROM payments WHERE case_id=?', [c.id]).n;
+  assert.strictEqual(after, before);
+  assert.strictEqual(db.get('SELECT status FROM ptps WHERE id=?', [ptp.lastInsertRowid]).status, 'pending');
+});
