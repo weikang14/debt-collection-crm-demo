@@ -12,16 +12,24 @@ dashboard timezone.
 
 ## Decisions
 
+- **Payment amounts are never rounded or altered.** This is a *collection*
+  system — the amount a debtor pays is recorded exactly as entered, to the
+  digit. No rounding, no truncation, no "snap to cents" on the payment. (User
+  decision, 2026-07-06.)
+- **Only the *derived* outstanding balance is rounded to the cent.**
+  `outstanding = principal + interest − paid` is a computed value that cannot
+  legitimately be a fraction of a cent; the float residue it accumulates
+  (e.g. `5.5e-17`) is a computer artifact, not money. Rounding this derived
+  number to 2 decimals is not "changing a payment" — payments stay exact.
 - **Overpayment policy (#2):** *allowed*. A payment larger than the current
   outstanding is accepted; outstanding floors at 0 and the case becomes
-  `fully_paid`. The full payment amount is still recorded. (Rationale:
-  real collections overpay via rounding/extra; blocking legitimate slight
-  overpayment is worse than allowing it. The floor already existed via
-  `Math.max(0, …)`.) Chosen as default when the user was away; revisit if the
-  user prefers strict blocking.
+  `fully_paid`. The full payment amount is still recorded exactly. (Rationale:
+  real collections overpay; blocking legitimate overpayment is worse than
+  allowing it. The floor already existed via `Math.max(0, …)`.) Chosen as
+  default when the user was away; revisit if the user prefers strict blocking.
 - **No integer-cents migration.** Money stays `REAL`; correctness is enforced
-  by rounding at the compute/insert boundary. This fixes the observable bug
-  with a far smaller change than migrating every amount column and all reads.
+  by rounding only the *derived outstanding* at the compute boundary. Far
+  smaller than migrating every amount column and all reads.
 
 ## Fix 1 — Float money → fully-paid detection (`src/services/payments.js`)
 
@@ -31,10 +39,11 @@ fully-paid case stays `partial_paid` forever.
 
 **Fix:**
 - Add `round2(n) = Math.round((Number(n) || 0) * 100) / 100`.
-- `recomputeOutstanding`: `outstanding = round2(Math.max(0, (principal + interest) - paid))`.
+- `recomputeOutstanding`: `outstanding = round2(Math.max(0, (principal + interest) - paid))`
+  — rounds only the **derived balance**, not any payment.
 - `statusAfterPayment`: change `outstanding === 0` → `outstanding <= 0`.
-- `applyPayment`: insert `round2(Number(p.amount))` for the amount so float
-  noise never accumulates across payments.
+- **Payment `amount` is inserted exactly as entered — no rounding.** (See
+  Decisions.)
 
 ## Fix 2 — Payment amount validation (`src/utils/forms.js` helper + `src/routes/cases.js`, `src/routes/ptps.js`)
 
@@ -43,9 +52,9 @@ went *up* to 1500); zero accepted; non-numeric (`"abc"`) → `NaN` → 500 crash
 (`NOT NULL constraint failed`).
 
 **Fix:**
-- Add a pure helper `parseAmount(x)`: returns a positive number rounded to 2
-  decimals, or `null` if `x` is not a finite number `> 0`.
-  - Implementation: `const n = Number(x); return Number.isFinite(n) && n > 0 ? Math.round(n*100)/100 : null;`
+- Add a pure helper `parseAmount(x)`: returns the amount **exactly as given**
+  (no rounding) if it is a finite number `> 0`, else `null`.
+  - Implementation: `const n = Number(x); return Number.isFinite(n) && n > 0 ? n : null;`
   - Location: `src/utils/forms.js` (existing small helper module) — exported and unit-tested.
 - `POST /cases/:id/payments` (`cases.js`): parse `req.body.amount` with
   `parseAmount`; if `null`, `redirect('/cases/'+c.id+'?err=Invalid+amount')`
@@ -89,9 +98,9 @@ tasks with no `case_id`.
   `principal+interest` that triggers float residue (e.g. 0.1 + 0.2); apply a
   payment of the exact total; assert `outstanding_amount === 0` and
   `status === 'fully_paid'`.
-- **Fix 2 (`test/forms.test.js` additions):** unit-test `parseAmount` — `"abc"`,
-  `""`, `0`, `-5`, `"12.345"` (→ 12.35 or 12.34 per rounding), `100` → assert
-  `null` for the invalid cases and correct 2-dp number for valid ones.
+- **Fix 2 (`test/forms.test.js` additions):** unit-test `parseAmount` — invalid
+  cases `"abc"`, `""`, `0`, `-5` → `null`; valid cases `"100"` → `100`,
+  `"12.34"` → `12.34`, `"12.345"` → `12.345` (returned exactly, **not** rounded).
 - **Fix 3:** covered indirectly by Fix 1's `applyPayment` test (the happy path
   still commits all four writes); no separate rollback test (would require
   fault injection the repo has no harness for).
