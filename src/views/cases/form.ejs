@@ -20,5 +20,5 @@
   </select></label>
   <% } %>
   <label>Remark <textarea name="remark"><%= c.remark||'' %></textarea></label>
-  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="/cases">Cancel</a></div>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="<%= c.id ? '/cases/'+c.id : '/cases' %>">Back</a></div>
 </form>

@@ -11,7 +11,7 @@
     <% } %>
     <a class="btn" href="/cases/<%= c.id %>/statement" target="_blank">Print statement</a>
     <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
-    <button type="button" class="btn" onclick="dlg('dlg-records')">&#9776; Records</button>
+    <button type="button" class="btn icon-btn" title="Records" aria-label="Records" onclick="dlg('dlg-records')">&#9776;</button>
   </div>
 </div>
 
@@ -55,8 +55,10 @@
     <% timeline.forEach(ev => { %><li><span class="badge <%= evClass[ev.event_type]||'is-neutral' %>"><%= ev.event_type %></span>
       <% if (ev.event_type==='note' && canEditNote) { %>
         <%= ev.content %>
-        <button type="button" class="btn btn-sm" onclick="editNote(this)" data-id="<%= ev.id %>" data-content="<%= ev.content %>">Edit</button>
-        <form class="inline-form" method="post" action="/cases/<%= c.id %>/notes/<%= ev.id %>/delete" onsubmit="return confirm('Delete this note?')"><button class="btn btn-sm" type="submit">Delete</button></form>
+        <span class="note-actions">
+          <button type="button" class="btn btn-sm" onclick="editNote(this)" data-id="<%= ev.id %>" data-content="<%= ev.content %>">Edit</button>
+          <form method="post" action="/cases/<%= c.id %>/notes/<%= ev.id %>/delete" onsubmit="return confirm('Delete this note?')"><button class="btn btn-sm" type="submit">Delete</button></form>
+        </span>
       <% } else { %><%= ev.content %><% } %>
       <span class="meta"><%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
     </ul>
@@ -69,13 +71,16 @@
     <button type="button" class="btn icon-btn" onclick="this.closest('dialog').close()" aria-label="Close">&times;</button>
   </div>
   <div class="modal-body">
+    <section class="rec-section">
     <h2>Payments</h2>
     <% if (!payments.length) { %><%- include('../partials/empty', { msg: 'No payments recorded.' }) %><% } else { %>
     <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th></tr></thead>
     <tbody><% payments.forEach(p => { %><tr><td class="mono"><%= p.receipt_no %></td><td><%= h.dateFmt(p.payment_date) %></td>
     <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td></tr><% }) %></tbody></table>
     <% } %>
+    </section>
 
+    <section class="rec-section">
     <h2>Promise to Pay</h2>
     <% if (!ptps.length) { %><%- include('../partials/empty', { msg: 'No PTPs recorded.' }) %><% } else { %>
     <table class="data"><thead><tr><th class="num">Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
@@ -88,20 +93,25 @@
     </div>
     <% } else { %>—<% } %></td></tr><% }) %></tbody></table>
     <% } %>
+    </section>
 
+    <section class="rec-section">
     <h2>Calls</h2>
     <% if (!calls.length) { %><%- include('../partials/empty', { msg: 'No calls logged.' }) %><% } else { %>
     <table class="data"><thead><tr><th>Time</th><th>Duration</th><th>Result</th><th>Notes</th></tr></thead>
     <tbody><% calls.forEach(call => { %><tr><td><%= h.dateTimeFmt(call.call_time) %></td><td><%= call.duration_seconds %>s</td>
     <td><span class="badge <%= call.result==='answered'?'is-green':'is-neutral' %>"><%= call.result %></span></td><td><%= call.notes||'' %></td></tr><% }) %></tbody></table>
     <% } %>
+    </section>
 
+    <section class="rec-section">
     <h2>Tasks</h2>
     <% if (!tasks.length) { %><%- include('../partials/empty', { msg: 'No tasks for this case.' }) %><% } else { %>
     <table class="data"><thead><tr><th>Title</th><th>Due Date</th><th>Status</th></tr></thead>
     <tbody><% tasks.forEach(t => { %><tr><td><%= t.title %></td><td><%= h.dateFmt(t.due_date) %></td>
     <td><span class="badge <%= t.status==='done'?'is-green':'is-gold' %>"><%= t.status %></span></td></tr><% }) %></tbody></table>
     <% } %>
+    </section>
   </div>
 </dialog>
 
