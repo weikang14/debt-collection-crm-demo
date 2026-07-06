@@ -54,7 +54,7 @@
       <button type="button" class="btn btn-sm" onclick="editTask(this)"
         data-id="<%= t.id %>" data-title="<%= t.title %>" data-type="<%= t.type %>"
         data-due="<%= t.due_date || '' %>" data-notes="<%= t.notes || '' %>">Edit</button>
-      <% if (t.status==='pending') { %><form class="inline-form" method="post" action="/tasks/<%= t.id %>/complete"><button class="btn btn-sm" type="submit">Complete</button></form><% } %>
+      <% if (t.status==='pending') { %><form method="post" action="/tasks/<%= t.id %>/complete"><button class="btn btn-sm" type="submit">Complete</button></form><% } %>
     </div>
     <% } else { %>—<% } %>
   </td>
