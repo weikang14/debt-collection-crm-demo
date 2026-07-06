@@ -4,19 +4,21 @@
    ========================================================================== */
 
 :root {
-  --ink: #10151f;
-  --paper: #faf6ee;
+  --ink: #141a24;
+  --paper: #f4f5f3;
   --gold: #b7842a;
-  --green: #1e7a4c;
-  --red: #a8342c;
+  --green: #1f7a4d;
+  --red: #b23a30;
   --blue: #395a80;
+  --accent: #0f5b52;
+  --accent-ink: #0b4a43;
 
   --ink-soft: #1b2230;
-  --ink-line: #2a3242;
-  --paper-line: #e6ddc9;
-  --paper-soft: #f1ead9;
-  --ink-text: #2a2620;
-  --muted: #7a7566;
+  --ink-line: #253040;
+  --paper-line: #e4e6e2;
+  --paper-soft: #eceee9;
+  --ink-text: #242a31;
+  --muted: #6d7480;
 
   --font-display: Georgia, 'Iowan Old Style', serif;
   --font-body: -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -220,14 +222,14 @@ body.app {
   text-decoration: none;
 }
 .btn-gold, button, input[type="submit"] {
-  background: var(--gold);
-  border-color: var(--gold);
+  background: var(--accent);
+  border-color: var(--accent);
   color: #fff;
   font-weight: 600;
 }
 .btn-gold:hover, button:hover, input[type="submit"]:hover {
-  background: #a2761f;
-  border-color: #a2761f;
+  background: var(--accent-ink);
+  border-color: var(--accent-ink);
 }
 /* ---------- Forms ---------- */
 
@@ -251,8 +253,8 @@ input, select, textarea {
 }
 input:focus, select:focus, textarea:focus {
   outline: none;
-  border-color: var(--gold);
-  box-shadow: 0 0 0 2px rgba(183, 132, 42, 0.18);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(15, 91, 82, 0.18);
 }
 
 /* ---------- Login page ---------- */
@@ -620,6 +622,23 @@ dialog.modal.modal-wide { width: min(960px, 92vw); max-width: 92vw; }
 .rec-section table.data { width: 100%; }
 .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px 0; }
 .modal-body { max-height: 50vh; overflow-y: auto; padding: 8px 22px 20px; }
+
+/* ---------- Case ledger strip (signature) ---------- */
+.ledger { background: #fff; border: 1px solid var(--paper-line); border-radius: 12px; padding: 20px 24px;
+  margin: 18px 0 22px; display: grid; grid-template-columns: minmax(240px, 1.1fr) 1px 1fr; gap: 26px; align-items: center; }
+.ledger-vr { background: var(--paper-line); align-self: stretch; }
+.ledger-lbl { font-size: 10.5px; letter-spacing: 0.8px; text-transform: uppercase; color: var(--muted); }
+.ledger-amt { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 36px; line-height: 1.05;
+  color: var(--ink); margin: 4px 0 12px; letter-spacing: -0.5px; }
+.ledger-cur { font-size: 18px; color: var(--muted); margin-right: 6px; }
+.ledger-bar { height: 9px; border-radius: 6px; background: #e9ebe6; overflow: hidden; }
+.ledger-bar > i { display: block; height: 100%; background: linear-gradient(90deg, var(--green), #2f9463); border-radius: 6px; }
+.ledger-meta { margin-top: 7px; font-size: 12px; color: var(--muted); display: flex; gap: 8px; flex-wrap: wrap; }
+.ledger-meta b { color: var(--green); font-weight: 600; font-variant-numeric: tabular-nums; }
+.ledger-break { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+.ledger-val { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 18px; color: var(--ink-text); margin-top: 3px; }
+.ledger-val.pos { color: var(--green); }
+@media (max-width: 720px) { .ledger { grid-template-columns: 1fr; } .ledger-vr { display: none; } }
 dialog.modal h3 { margin-bottom: 12px; }
 
 .add-note { display: flex; gap: 0.5rem; margin: 8px 0 16px; }
