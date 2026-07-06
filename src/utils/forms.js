@@ -4,4 +4,14 @@
 function parseActive(v) {
   return v === '0' ? 0 : 1;
 }
-module.exports = { parseActive };
+
+// Validate a payment amount against the case's current outstanding balance.
+// Returns { amount } (exact, never rounded — this is a collection system) or
+// { error }. Overpayment is blocked; a sub-cent tolerance absorbs float noise.
+function validatePayment(rawAmount, outstanding) {
+  const n = Number(rawAmount);
+  if (!Number.isFinite(n) || n <= 0) return { error: 'Invalid amount' };
+  if (n > Number(outstanding) + 0.005) return { error: 'Amount exceeds outstanding' };
+  return { amount: n };
+}
+module.exports = { parseActive, validatePayment };
