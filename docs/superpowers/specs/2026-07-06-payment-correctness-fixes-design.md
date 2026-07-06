@@ -21,12 +21,11 @@ dashboard timezone.
   legitimately be a fraction of a cent; the float residue it accumulates
   (e.g. `5.5e-17`) is a computer artifact, not money. Rounding this derived
   number to 2 decimals is not "changing a payment" — payments stay exact.
-- **Overpayment policy (#2):** *allowed*. A payment larger than the current
-  outstanding is accepted; outstanding floors at 0 and the case becomes
-  `fully_paid`. The full payment amount is still recorded exactly. (Rationale:
-  real collections overpay; blocking legitimate overpayment is worse than
-  allowing it. The floor already existed via `Math.max(0, …)`.) Chosen as
-  default when the user was away; revisit if the user prefers strict blocking.
+- **Overpayment policy (#2):** *blocked*. A payment greater than the current
+  outstanding balance is rejected with an error; nothing is written. A payment
+  equal to the outstanding (pays the case off) is allowed. (User decision,
+  2026-07-06.) Comparison tolerates sub-cent float noise: reject when
+  `amount > outstanding + 0.005`.
 - **No integer-cents migration.** Money stays `REAL`; correctness is enforced
   by rounding only the *derived outstanding* at the compute boundary. Far
   smaller than migrating every amount column and all reads.
@@ -45,26 +44,33 @@ fully-paid case stays `partial_paid` forever.
 - **Payment `amount` is inserted exactly as entered — no rounding.** (See
   Decisions.)
 
-## Fix 2 — Payment amount validation (`src/utils/forms.js` helper + `src/routes/cases.js`, `src/routes/ptps.js`)
+## Fix 2 — Payment amount validation + overpayment block (`src/utils/forms.js` helper + `src/routes/cases.js`, `src/routes/ptps.js`)
 
 **Problem (verified):** no validation. Negative amount accepted (outstanding
 went *up* to 1500); zero accepted; non-numeric (`"abc"`) → `NaN` → 500 crash
-(`NOT NULL constraint failed`).
+(`NOT NULL constraint failed`); and any amount over the balance was silently
+accepted.
 
-**Fix:**
-- Add a pure helper `parseAmount(x)`: returns the amount **exactly as given**
-  (no rounding) if it is a finite number `> 0`, else `null`.
-  - Implementation: `const n = Number(x); return Number.isFinite(n) && n > 0 ? n : null;`
-  - Location: `src/utils/forms.js` (existing small helper module) — exported and unit-tested.
-- `POST /cases/:id/payments` (`cases.js`): parse `req.body.amount` with
-  `parseAmount`; if `null`, `redirect('/cases/'+c.id+'?err=Invalid+amount')`
-  before calling `applyPayment`. Pass the parsed number through.
-- `POST /ptps/:id/fulfill` (`ptps.js` → `recordFulfillment`): same guard. When
-  the fulfill form omits an amount, fall back to the PTP's own amount (existing
-  behavior); only reject when an explicit amount is present and invalid.
+**Fix — one pure, testable validator used by both payment entry points:**
+- Add `validatePayment(rawAmount, outstanding)` to `src/utils/forms.js`:
+  - `const n = Number(rawAmount);`
+  - not a finite number, or `n <= 0` → `{ error: 'Invalid amount' }`
+  - `n > outstanding + 0.005` → `{ error: 'Amount exceeds outstanding' }`
+  - otherwise → `{ amount: n }` (exact, **not** rounded)
+  - Exported and unit-tested.
+- `POST /cases/:id/payments` (`cases.js`): call
+  `validatePayment(req.body.amount, c.outstanding_amount)` (`c` from `loadCase`);
+  on `error`, `redirect('/cases/'+c.id+'?err='+encodeURIComponent(error))`
+  before touching `applyPayment`. Pass `result.amount` through.
+- `POST /ptps/:id/fulfill` (`ptps.js` → `recordFulfillment`): the fulfill
+  amount is `body.amount` when present, else the PTP's own `amount`. Validate
+  that value against the case's current `outstanding_amount` via
+  `validatePayment`; on `error`, return `{ ok: false, error }` (the route
+  already redirects with `?err=`). This also blocks fulfilling a PTP whose
+  amount now exceeds the (already partly paid down) balance.
 
-**Note:** `applyPayment` still applies `round2` defensively (Fix 1), so it is
-safe even if a future caller forgets to pre-validate.
+**Note:** `applyPayment` records the amount exactly (no rounding); the derived
+outstanding is rounded by Fix 1.
 
 ## Fix 3 — Transaction wrap (`src/services/payments.js`)
 
@@ -98,9 +104,11 @@ tasks with no `case_id`.
   `principal+interest` that triggers float residue (e.g. 0.1 + 0.2); apply a
   payment of the exact total; assert `outstanding_amount === 0` and
   `status === 'fully_paid'`.
-- **Fix 2 (`test/forms.test.js` additions):** unit-test `parseAmount` — invalid
-  cases `"abc"`, `""`, `0`, `-5` → `null`; valid cases `"100"` → `100`,
-  `"12.34"` → `12.34`, `"12.345"` → `12.345` (returned exactly, **not** rounded).
+- **Fix 2 (`test/forms.test.js` additions):** unit-test `validatePayment` —
+  invalid amount `("abc", 100)`, `("", 100)`, `(0, 100)`, `(-5, 100)` → `{error:'Invalid amount'}`;
+  overpayment `(150, 100)` → `{error:'Amount exceeds outstanding'}`;
+  exact payoff `(100, 100)` → `{amount:100}`; partial `(30, 100)` → `{amount:30}`;
+  exact-but-fractional `(12.345, 100)` → `{amount:12.345}` (returned exactly, not rounded).
 - **Fix 3:** covered indirectly by Fix 1's `applyPayment` test (the happy path
   still commits all four writes); no separate rollback test (would require
   fault injection the repo has no harness for).
@@ -111,9 +119,9 @@ tasks with no `case_id`.
 ## Files touched
 
 - `src/services/payments.js` — round2, `<= 0`, transaction.
-- `src/utils/forms.js` — `parseAmount` helper.
-- `src/routes/cases.js` — validate payment amount.
-- `src/routes/ptps.js` — validate fulfill amount.
+- `src/utils/forms.js` — `validatePayment(rawAmount, outstanding)` helper.
+- `src/routes/cases.js` — validate payment amount + overpayment block.
+- `src/routes/ptps.js` — validate fulfill amount + overpayment block.
 - `src/routes/dashboard.js` — MYT `date('now','+8 hours')`.
 - `test/payments.test.js`, `test/forms.test.js` — new assertions.
 
