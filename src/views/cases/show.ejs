@@ -15,6 +15,27 @@
   </div>
 </div>
 
+<%
+  const paid = payments.reduce((s, p) => s + p.amount, 0);
+  const total = (c.principal_amount || 0) + (c.interest_amount || 0);
+  const recovered = total > 0 ? Math.round(paid / total * 100) : 0;
+  const daysOpen = Math.max(0, Math.floor((Date.now() - new Date(c.opened_at).getTime()) / 86400000));
+%>
+<section class="ledger">
+  <div class="ledger-lead">
+    <div class="ledger-lbl">Outstanding</div>
+    <div class="ledger-amt"><span class="ledger-cur">RM</span><%= h.money(c.outstanding_amount) %></div>
+    <div class="ledger-bar"><i style="width:<%= Math.min(recovered, 100) %>%"></i></div>
+    <div class="ledger-meta"><b><%= recovered %>% recovered</b><span>RM <%= h.money(paid) %> of <%= h.money(total) %> paid · opened <%= daysOpen %> <%= daysOpen === 1 ? 'day' : 'days' %> ago</span></div>
+  </div>
+  <div class="ledger-vr"></div>
+  <div class="ledger-break">
+    <div><div class="ledger-lbl">Principal</div><div class="ledger-val"><%= h.money(c.principal_amount) %></div></div>
+    <div><div class="ledger-lbl">Interest</div><div class="ledger-val"><%= h.money(c.interest_amount) %></div></div>
+    <div><div class="ledger-lbl">Paid</div><div class="ledger-val pos"><%= h.money(paid) %></div></div>
+  </div>
+</section>
+
 <div class="case-main">
     <div class="card kv">
       <% if (!readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
@@ -32,9 +53,6 @@
       <div><span>Debtor Phone</span><span class="mono"><%= c.debtor_phone||'—' %></span></div>
       <div><span>IC/Passport</span><span class="mono"><%= c.ic_passport||'—' %></span></div>
       <div><span>Agent</span><%= c.agent_name||'—' %></div>
-      <div><span>Principal</span><span class="num"><%= h.money(c.principal_amount) %></span></div>
-      <div><span>Interest</span><span class="num"><%= h.money(c.interest_amount) %></span></div>
-      <div><span>Outstanding</span><span class="num"><%= h.money(c.outstanding_amount) %></span></div>
       <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
       <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
       <div><span>Remark</span><%= c.remark||'—' %></div>
