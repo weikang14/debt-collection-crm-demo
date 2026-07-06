@@ -615,11 +615,11 @@ dialog.modal .form { margin: 0; padding: 20px 22px; }
 .btn-sm { padding: 3px 10px; font-size: 12px; }
 .note-actions { display: inline-flex; gap: 6px; align-items: center; margin-left: 8px; vertical-align: middle; }
 .note-actions form, .row-actions form { margin: 0; }
-dialog.modal.modal-wide { width: min(1280px, 96vw); max-width: 96vw; }
+dialog.modal.modal-wide { width: min(960px, 92vw); max-width: 92vw; }
 .rec-section { min-width: 0; overflow-x: auto; }
 .rec-section table.data { width: 100%; }
-.modal-head { display: flex; align-items: center; justify-content: space-between; }
-.modal-body { max-height: 78vh; overflow-y: auto; }
+.modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px 0; }
+.modal-body { max-height: 50vh; overflow-y: auto; padding: 8px 22px 20px; }
 dialog.modal h3 { margin-bottom: 12px; }
 
 .add-note { display: flex; gap: 0.5rem; margin: 8px 0 16px; }
