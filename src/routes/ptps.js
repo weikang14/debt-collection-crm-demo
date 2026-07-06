@@ -4,6 +4,7 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { applyPayment } = require('../services/payments');
+const { validatePayment } = require('../utils/forms');
 const router = express.Router();
 
 // Fulfilling a PTP means the promised money was actually paid, so we record a
@@ -13,11 +14,14 @@ function recordFulfillment(ptpId, body, req) {
   const ptp = get('SELECT * FROM ptps WHERE id=?', [ptpId]);
   if (!ptp) return { ok: false, error: 'PTP not found' };
   if (ptp.status !== 'pending') return { ok: false, error: 'PTP already resolved' };
+  const rawAmount = (body.amount !== undefined && body.amount !== '') ? body.amount : ptp.amount;
+  const cs = get('SELECT outstanding_amount FROM cases WHERE id=?', [ptp.case_id]);
+  const v = validatePayment(rawAmount, cs.outstanding_amount);
+  if (v.error) return { ok: false, error: v.error };
   run("UPDATE ptps SET status='fulfilled' WHERE id=?", [ptp.id]);
-  const amount = Number(body.amount) || ptp.amount;
   const payment_date = body.payment_date || new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
   const method = body.method || 'bank_transfer';
-  applyPayment(ptp.case_id, { payment_date, amount, method, remark: `PTP fulfilled` }, req);
+  applyPayment(ptp.case_id, { payment_date, amount: v.amount, method, remark: `PTP fulfilled` }, req);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)',
     [ptp.case_id, 'ptp_fulfilled', `PTP fulfilled (RM ${ptp.amount.toFixed(2)})`, req.session.user.full_name]);
   logAction(req, 'ptp_fulfilled', 'case', ptp.case_id, `PTP ${ptp.id} fulfilled`);

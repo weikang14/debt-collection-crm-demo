@@ -9,6 +9,20 @@ const DB_PATH = process.env.CRM_DB_PATH || path.join(DATA_DIR, 'crm.db');
 const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON;');
 
+// Transaction wrapper: returns a function that executes fn within a transaction
+db.transaction = function(fn) {
+  return () => {
+    try {
+      this.exec('BEGIN TRANSACTION');
+      fn();
+      this.exec('COMMIT');
+    } catch (e) {
+      this.exec('ROLLBACK');
+      throw e;
+    }
+  };
+};
+
 function init() {
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   db.exec(schema);
