@@ -133,10 +133,12 @@ router.post('/:id/payments', requireLogin, requireRole('admin','manager','financ
 
 router.post('/:id/ptps', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
+  const v = validatePayment(req.body.amount, c.outstanding_amount);
+  if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
   const by = req.session.user.full_name;
-  run('INSERT INTO ptps (case_id,amount,due_date,remark,created_by) VALUES (?,?,?,?,?)', [c.id, Number(req.body.amount), req.body.due_date, req.body.remark||null, by]);
+  run('INSERT INTO ptps (case_id,amount,due_date,remark,created_by) VALUES (?,?,?,?,?)', [c.id, v.amount, req.body.due_date, req.body.remark||null, by]);
   if (!TERMINAL_STATUSES.includes(c.status)) run("UPDATE cases SET status='ptp' WHERE id=?", [c.id]);
-  run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'ptp_created',`PTP RM ${Number(req.body.amount).toFixed(2)} due ${req.body.due_date}`,by]);
+  run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'ptp_created',`PTP RM ${v.amount.toFixed(2)} due ${req.body.due_date}`,by]);
   logAction(req,'ptp_create','case',c.id,`PTP created for case ${c.case_no}`);
   res.redirect(`/cases/${c.id}?ok=PTP+created`);
 });
