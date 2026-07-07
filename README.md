@@ -67,10 +67,10 @@ This is a demo; the following are intentionally not implemented (see
   lists and holds, debtor dispute/complaint handling, call-recording
   compliance (consent + access control), data-retention/deletion requests,
   collector licensing fields.
-- **Business scope**: installment repayment plans (PTPs support only a single
-  promise), automatic case assignment rules, automatic commission
+- **Business scope**: automatic case assignment rules, automatic commission
   calculation/settlement, a legal-case sub-module (hearing dates, counsel,
-  litigation progress), multi-creditor debtor↔case relationships.
+  litigation progress), multi-creditor debtor↔case relationships. (Installment
+  repayment plans are now supported: a plan is N grouped PTP rows.)
 - **Data & architecture**: production-grade `Decimal` money type (instead of
   float), partial/duplicate-payment and refund-reversal logic, attachment
   storage lifecycle, encryption at rest/in transit, MFA, backup/disaster
