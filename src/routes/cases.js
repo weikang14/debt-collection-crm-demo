@@ -99,7 +99,11 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const outstanding = recomputeOutstanding(cid);
   const paidCount = get('SELECT COUNT(*) c FROM payments WHERE case_id=?', [cid]).c;
   const cur = get('SELECT status FROM cases WHERE id=?', [cid]).status;
-  const next = statusAfterPayment(cur, outstanding, paidCount);
+  let next = statusAfterPayment(cur, outstanding, paidCount);
+  if (next === 'partial_paid' && cur === 'ptp') {
+    const stillPending = get("SELECT COUNT(*) c FROM ptps WHERE case_id=? AND status='pending'", [cid]).c;
+    if (stillPending > 0) next = cur; // a live promise-to-pay outranks partial_paid
+  }
   if (next !== cur) {
     run('UPDATE cases SET status=? WHERE id=?', [next, cid]);
     run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
