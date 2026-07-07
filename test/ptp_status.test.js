@@ -27,3 +27,19 @@ test('breaking one PTP while another is still pending keeps status ptp', () => {
   breakPtp(p1.lastInsertRowid, req);
   assert.strictEqual(db.get('SELECT status FROM cases WHERE id=?', [c.id]).status, 'ptp');
 });
+
+const { applyPayment, recomputeOutstanding, statusAfterPayment } = require('../src/services/payments');
+
+test('lowering principal below amount already paid flips status to fully_paid', () => {
+  const c = db.get('SELECT id FROM cases ORDER BY id DESC LIMIT 1');
+  db.run("UPDATE cases SET principal_amount=1000, interest_amount=0, outstanding_amount=1000, status='negotiation' WHERE id=?", [c.id]);
+  applyPayment(c.id, { payment_date: '2026-07-07', amount: 600, method: 'cash' }, req); // -> partial_paid, outstanding 400
+  assert.strictEqual(db.get('SELECT status FROM cases WHERE id=?', [c.id]).status, 'partial_paid');
+  // simulate the edit route's post-update recompute+status logic (principal lowered to 500 < 600 paid):
+  db.run("UPDATE cases SET principal_amount=500 WHERE id=?", [c.id]);
+  const outstanding = recomputeOutstanding(c.id);
+  const paidCount = db.get('SELECT COUNT(*) c FROM payments WHERE case_id=?', [c.id]).c;
+  const cur = db.get('SELECT status FROM cases WHERE id=?', [c.id]).status;
+  const next = statusAfterPayment(cur, outstanding, paidCount);
+  assert.strictEqual(next, 'fully_paid');
+});

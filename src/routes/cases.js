@@ -4,7 +4,7 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
-const { recomputeOutstanding, TERMINAL_STATUSES } = require('../services/payments');
+const { recomputeOutstanding, statusAfterPayment, TERMINAL_STATUSES } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { caseStatusLabel, dateFmt } = require('../utils/helpers');
 const router = express.Router();
@@ -95,9 +95,18 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
   run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,updated_at=datetime('now') WHERE id=?`,
     [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,req.params.id]);
-  recomputeOutstanding(Number(req.params.id));
-  logAction(req,'update','case',Number(req.params.id),`Updated case ${req.params.id}`);
-  res.redirect(`/cases/${req.params.id}?ok=Saved`);
+  const cid = Number(req.params.id);
+  const outstanding = recomputeOutstanding(cid);
+  const paidCount = get('SELECT COUNT(*) c FROM payments WHERE case_id=?', [cid]).c;
+  const cur = get('SELECT status FROM cases WHERE id=?', [cid]).status;
+  const next = statusAfterPayment(cur, outstanding, paidCount);
+  if (next !== cur) {
+    run('UPDATE cases SET status=? WHERE id=?', [next, cid]);
+    run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
+      [cid, 'status_change', `Status changed ${cur} → ${next}`, req.session.user.full_name]);
+  }
+  logAction(req,'update','case',cid,`Updated case ${cid}`);
+  res.redirect(`/cases/${cid}?ok=Saved`);
 });
 
 router.get('/:id', requireLogin, (req, res) => {
