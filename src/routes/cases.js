@@ -7,6 +7,8 @@ const { nextCaseNo } = require('../utils/numbering');
 const { resyncCaseStatus, TERMINAL_STATUSES } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { caseStatusLabel, dateFmt } = require('../utils/helpers');
+const { splitInstallments, dueDates } = require('../utils/installments');
+const crypto = require('node:crypto');
 const router = express.Router();
 
 const CASE_STATUSES = ['new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased'];
@@ -173,6 +175,42 @@ router.post('/:id/ptps', requireLogin, requireRole('admin','manager','agent'), (
   res.redirect(`/cases/${c.id}?ok=PTP+created`);
 });
 
+// Generate an installment plan: split a total into N monthly PTP rows sharing a
+// plan_id. Each row is a normal PTP — existing fulfill/break/status logic applies
+// per installment. Returns { ok, error?, planId?, count? } for testability.
+function createPtpPlan(caseId, body, req) {
+  const c = get('SELECT id, outstanding_amount, status FROM cases WHERE id=?', [caseId]);
+  if (!c) return { ok: false, error: 'Case not found' };
+  const v = validatePayment(body.total_amount, c.outstanding_amount);
+  if (v.error) return { ok: false, error: v.error };
+  const n = Number(body.num_installments);
+  if (!Number.isInteger(n) || n < 2 || n > 60) return { ok: false, error: 'Installments must be 2–60' };
+  if (!body.first_due_date) return { ok: false, error: 'First due date is required' };
+  if (v.amount < n * 0.01) return { ok: false, error: 'Total too small for the number of installments' };
+  const amounts = splitInstallments(v.amount, n);
+  const dates = dueDates(body.first_due_date, n);
+  const planId = crypto.randomUUID();
+  const by = req.session.user.full_name;
+  db.transaction(() => {
+    for (let i = 0; i < n; i++) {
+      run('INSERT INTO ptps (case_id,amount,due_date,status,remark,created_by,plan_id,installment_no,plan_size) VALUES (?,?,?,?,?,?,?,?,?)',
+        [caseId, amounts[i], dates[i], 'pending', `Installment ${i + 1}/${n}`, by, planId, i + 1, n]);
+    }
+    if (!TERMINAL_STATUSES.includes(c.status)) run("UPDATE cases SET status='ptp' WHERE id=?", [caseId]);
+    run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
+      [caseId, 'ptp_created', `Installment plan created: RM ${v.amount.toFixed(2)} in ${n} installments`, by]);
+  })();
+  logAction(req, 'ptp_plan_create', 'case', caseId, `Installment plan (${n}) for case ${caseId}`);
+  return { ok: true, planId, count: n };
+}
+
+router.post('/:id/ptp-plans', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const r = createPtpPlan(c.id, req.body, req);
+  if (!r.ok) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(r.error)}`);
+  res.redirect(`/cases/${c.id}?ok=Installment+plan+created`);
+});
+
 router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const by = req.session.user.full_name;
@@ -212,4 +250,4 @@ router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'),
   res.redirect(`/cases/${c.id}?ok=Status+updated`);
 });
 
-module.exports = { router, loadCase };
+module.exports = { router, loadCase, createPtpPlan };
