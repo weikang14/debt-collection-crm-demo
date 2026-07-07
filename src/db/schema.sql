@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS cases (
     ('new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased')),
   opened_at TEXT NOT NULL DEFAULT (datetime('now')),
   closed_at TEXT, remark TEXT,
+  next_action_at TEXT,
   is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))

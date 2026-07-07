@@ -12,6 +12,10 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
+// In production a real secret is mandatory; the demo fallback is dev-only.
+if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
+  throw new Error('SESSION_SECRET must be set in production');
+}
 app.use(session({
   secret: process.env.SESSION_SECRET || 'debt-collection-crm-demo-secret',
   resave: false,

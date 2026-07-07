@@ -1,10 +1,10 @@
 const express = require('express');
-const { all, get, run } = require('../db');
+const { db, all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
-const { recomputeOutstanding, statusAfterPayment, TERMINAL_STATUSES } = require('../services/payments');
+const { resyncCaseStatus, TERMINAL_STATUSES } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { caseStatusLabel, dateFmt } = require('../utils/helpers');
 const router = express.Router();
@@ -66,9 +66,9 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
   }
   const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
   const case_no = nextCaseNo();
-  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark)
-    VALUES (?,?,?,?,?,?,?,?,?,?)`,
-    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null]);
+  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark,next_action_at)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
+    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, b.next_action_at||null]);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)', [r.lastInsertRowid,'note',`Case ${case_no} created`,req.session.user.full_name]);
   logAction(req,'create','case',r.lastInsertRowid,`Created case ${case_no}`);
   res.redirect(`/cases/${r.lastInsertRowid}?ok=Case+created`);
@@ -93,22 +93,10 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
     return res.redirect('/cases/'+req.params.id+'/edit?err=Debtor+and+principal+are+required');
   }
   const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
-  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,updated_at=datetime('now') WHERE id=?`,
-    [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,req.params.id]);
+  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,next_action_at=?,updated_at=datetime('now') WHERE id=?`,
+    [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,b.next_action_at||null,req.params.id]);
   const cid = Number(req.params.id);
-  const outstanding = recomputeOutstanding(cid);
-  const paidCount = get('SELECT COUNT(*) c FROM payments WHERE case_id=?', [cid]).c;
-  const cur = get('SELECT status FROM cases WHERE id=?', [cid]).status;
-  let next = statusAfterPayment(cur, outstanding, paidCount);
-  if (next === 'partial_paid' && cur === 'ptp') {
-    const stillPending = get("SELECT COUNT(*) c FROM ptps WHERE case_id=? AND status='pending'", [cid]).c;
-    if (stillPending > 0) next = cur; // a live promise-to-pay outranks partial_paid
-  }
-  if (next !== cur) {
-    run('UPDATE cases SET status=? WHERE id=?', [next, cid]);
-    run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
-      [cid, 'status_change', `Status changed ${cur} → ${next}`, req.session.user.full_name]);
-  }
+  resyncCaseStatus(cid, req.session.user.full_name);
   logAction(req,'update','case',cid,`Updated case ${cid}`);
   res.redirect(`/cases/${cid}?ok=Saved`);
 });
@@ -133,6 +121,44 @@ router.post('/:id/payments', requireLogin, requireRole('admin','manager','financ
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
   const r = applyPayment(c.id, { ...req.body, amount: v.amount }, req);
   res.redirect(`/cases/${c.id}?ok=Payment+${r.receipt_no}+recorded`);
+});
+
+// Correct a recorded payment. New amount is validated against what outstanding
+// WOULD be without this payment (current outstanding + this payment's amount).
+router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','finance'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
+  if (!pay) return res.redirect(`/cases/${c.id}?err=Payment+not+found`);
+  const v = validatePayment(req.body.amount, c.outstanding_amount + pay.amount);
+  if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
+  const by = req.session.user.full_name;
+  db.transaction(() => {
+    run('UPDATE payments SET amount=?, payment_date=?, method=?, reference=?, bank=? WHERE id=?',
+      [v.amount, req.body.payment_date || pay.payment_date, req.body.method || pay.method, req.body.reference || null, req.body.bank || null, pay.id]);
+    resyncCaseStatus(c.id, by);
+    run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
+      [c.id, 'payment', `Payment ${pay.receipt_no} edited: RM ${pay.amount.toFixed(2)} → RM ${v.amount.toFixed(2)}`, by]);
+  })();
+  logAction(req, 'payment_edit', 'case', c.id, `Edited payment ${pay.receipt_no}`);
+  res.redirect(`/cases/${c.id}?ok=Payment+updated`);
+});
+
+// Void (delete) a recorded payment. MAX+1 numbering (#8) means the freed receipt
+// number is never wrongly reused. The timeline + audit keep the paper trail.
+// ponytail: hard delete; add a `voided` flag only if an immutable ledger is required.
+router.post('/:id/payments/:pid/void', requireLogin, requireRole('admin','manager','finance'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
+  if (!pay) return res.redirect(`/cases/${c.id}?err=Payment+not+found`);
+  const by = req.session.user.full_name;
+  db.transaction(() => {
+    run('DELETE FROM payments WHERE id=?', [pay.id]);
+    resyncCaseStatus(c.id, by);
+    run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
+      [c.id, 'payment', `Payment ${pay.receipt_no} voided (RM ${pay.amount.toFixed(2)})`, by]);
+  })();
+  logAction(req, 'payment_void', 'case', c.id, `Voided payment ${pay.receipt_no}`);
+  res.redirect(`/cases/${c.id}?ok=Payment+voided`);
 });
 
 router.post('/:id/ptps', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
