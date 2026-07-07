@@ -17,6 +17,17 @@ function statusAfterPayment(current, outstanding, paymentCount) {
   if (current === 'fully_paid') return 'negotiation';
   return current;
 }
+// A pending PTP outranks partial_paid: a live promise-to-pay case shouldn't
+// flip to partial_paid just because one installment/PTP among several was
+// paid. Shared by every write path (paymentWrites, resyncCaseStatus) so the
+// invariant holds regardless of which route recorded the payment.
+function livePtpGuard(cur, next, caseId) {
+  if (next === 'partial_paid' && cur === 'ptp') {
+    const pending = get("SELECT COUNT(*) c FROM ptps WHERE case_id=? AND status='pending'", [caseId]).c;
+    if (pending > 0) return cur;
+  }
+  return next;
+}
 function recomputeOutstanding(caseId) {
   const c = get('SELECT principal_amount, interest_amount FROM cases WHERE id = ?', [caseId]);
   const paid = get('SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE case_id = ?', [caseId]).s;
@@ -37,7 +48,7 @@ function paymentWrites(caseId, p) {
   const outstanding = recomputeOutstanding(caseId);
   const cnt = get('SELECT COUNT(*) AS c FROM payments WHERE case_id = ?', [caseId]).c;
   const cur = get('SELECT status FROM cases WHERE id = ?', [caseId]).status;
-  const next = statusAfterPayment(cur, outstanding, cnt);
+  const next = livePtpGuard(cur, statusAfterPayment(cur, outstanding, cnt), caseId);
   if (next !== cur) run('UPDATE cases SET status = ? WHERE id = ?', [next, caseId]);
   run(`INSERT INTO timeline_events (case_id, event_type, content, created_by) VALUES (?,?,?,?)`,
     [caseId, 'payment', `Payment ${receipt_no}: RM ${Number(p.amount).toFixed(2)} via ${p.method || 'bank_transfer'}`, by]);
@@ -57,11 +68,7 @@ function resyncCaseStatus(caseId, by) {
   const outstanding = recomputeOutstanding(caseId);
   const cnt = get('SELECT COUNT(*) AS c FROM payments WHERE case_id = ?', [caseId]).c;
   const cur = get('SELECT status FROM cases WHERE id = ?', [caseId]).status;
-  let next = statusAfterPayment(cur, outstanding, cnt);
-  if (next === 'partial_paid' && cur === 'ptp') {
-    const pending = get("SELECT COUNT(*) c FROM ptps WHERE case_id=? AND status='pending'", [caseId]).c;
-    if (pending > 0) next = cur; // a live promise-to-pay outranks partial_paid
-  }
+  const next = livePtpGuard(cur, statusAfterPayment(cur, outstanding, cnt), caseId);
   if (next !== cur) {
     run('UPDATE cases SET status=? WHERE id=?', [next, caseId]);
     run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
