@@ -107,7 +107,7 @@ router.get('/:id', requireLogin, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const timeline = all('SELECT * FROM timeline_events WHERE case_id=? ORDER BY created_at DESC', [c.id]);
   const payments = all('SELECT * FROM payments WHERE case_id=? ORDER BY payment_date DESC', [c.id]);
-  const ptps = all('SELECT * FROM ptps WHERE case_id=? ORDER BY due_date DESC', [c.id]);
+  const ptps = all('SELECT * FROM ptps WHERE case_id=? ORDER BY (plan_id IS NULL), plan_id, installment_no, due_date DESC', [c.id]);
   const tasks = all('SELECT * FROM tasks WHERE case_id=? ORDER BY due_date', [c.id]);
   const calls = all('SELECT * FROM call_logs WHERE case_id=? ORDER BY call_time DESC', [c.id]);
   res.render('cases/show', { title: c.case_no, c, timeline, payments, ptps, tasks, calls,

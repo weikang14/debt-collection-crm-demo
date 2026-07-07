@@ -6,6 +6,7 @@
       <% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %><button type="button" class="btn btn-gold" onclick="dlg('dlg-payment')">Record Payment</button><% } %>
       <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
         <button type="button" class="btn" onclick="dlg('dlg-ptp')">New PTP</button>
+        <button type="button" class="btn" onclick="dlg('dlg-plan')">New Plan</button>
         <button type="button" class="btn" onclick="dlg('dlg-call')">Log Call</button>
       <% } %>
     <% } %>
@@ -107,15 +108,35 @@
     <section class="rec-section">
     <h2>Promise to Pay</h2>
     <% if (!ptps.length) { %><%- include('../partials/empty', { msg: 'No PTPs recorded.' }) %><% } else { %>
-    <table class="data"><thead><tr><th class="num">Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
-    <tbody><% ptps.forEach(p => { %><tr><td class="num"><%= h.money(p.amount) %></td><td><%= h.dateFmt(p.due_date) %></td>
-    <td><span class="badge <%= p.status==='fulfilled'?'is-green':p.status==='broken'?'is-red':'is-gold' %>"><%= p.status %></span></td>
-    <td><% if (p.status==='pending' && !readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
-    <div style="display:flex; gap:0.5rem;">
-      <button type="button" class="btn btn-sm" onclick="openFulfill(<%= p.id %>, <%= p.amount %>)">Fulfill</button>
-      <form method="post" action="/ptps/<%= p.id %>/break" style="margin:0;"><button class="btn btn-sm" type="submit">Break</button></form>
-    </div>
-    <% } else { %>—<% } %></td></tr><% }) %></tbody></table>
+    <%
+      // Group by plan_id for headers/progress. Nulls (standalone PTPs) stay ungrouped.
+      const planGroups = {};
+      ptps.forEach(p => { if (p.plan_id) { (planGroups[p.plan_id] ||= []).push(p); } });
+      const canManagePtp = !readOnly && ['admin','manager','agent'].includes(currentUser.role);
+      let lastPlan = undefined;
+    %>
+    <table class="data"><thead><tr><th>Installment</th><th class="num">Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
+    <tbody><% ptps.forEach(p => { %>
+      <% if (p.plan_id && p.plan_id !== lastPlan) { lastPlan = p.plan_id;
+           const g = planGroups[p.plan_id];
+           const paid = g.filter(x => x.status==='fulfilled').length;
+           const total = g.reduce((s,x)=>s+x.amount,0);
+           const hasPending = g.some(x => x.status==='pending'); %>
+      <tr class="plan-head"><td colspan="4"><b>Installment Plan</b> · RM <%= h.money(total) %> · <%= paid %>/<%= g[0].plan_size %> paid</td>
+        <td><% if (hasPending && canManagePtp) { %>
+          <form method="post" action="/cases/<%= c.id %>/ptp-plans/<%= p.plan_id %>/cancel" style="margin:0;" onsubmit="return confirm('Cancel this installment plan? All pending installments will be broken.')"><button class="btn btn-sm" type="submit">Cancel plan</button></form>
+        <% } %></td></tr>
+      <% } %>
+      <tr><td><%= p.plan_id ? (p.installment_no + '/' + p.plan_size) : '—' %></td>
+      <td class="num"><%= h.money(p.amount) %></td><td><%= h.dateFmt(p.due_date) %></td>
+      <td><span class="badge <%= p.status==='fulfilled'?'is-green':p.status==='broken'?'is-red':'is-gold' %>"><%= p.status %></span></td>
+      <td><% if (p.status==='pending' && canManagePtp) { %>
+      <div style="display:flex; gap:0.5rem;">
+        <button type="button" class="btn btn-sm" onclick="openFulfill(<%= p.id %>, <%= p.amount %>)">Fulfill</button>
+        <form method="post" action="/ptps/<%= p.id %>/break" style="margin:0;"><button class="btn btn-sm" type="submit">Break</button></form>
+      </div>
+      <% } else { %>—<% } %></td></tr>
+    <% }) %></tbody></table>
     <% } %>
     </section>
 
@@ -169,6 +190,13 @@
   <label>Due Date <input type="date" name="due_date" required></label>
   <label>Remark <input name="remark"></label>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Add PTP</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
+</form></dialog>
+<dialog id="dlg-plan" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/ptp-plans">
+  <h3>New Installment Plan</h3>
+  <label>Total Amount (RM) <input type="number" step="0.01" min="0" name="total_amount" required></label>
+  <label>Number of Installments <input type="number" min="2" max="60" step="1" name="num_installments" value="3" required></label>
+  <label>First Due Date <input type="date" name="first_due_date" required></label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Create Plan</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
 <dialog id="dlg-call" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/calls">
   <h3>Log Call</h3>
