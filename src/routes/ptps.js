@@ -28,6 +28,23 @@ function recordFulfillment(ptpId, body, req) {
   return { ok: true, caseId: ptp.case_id };
 }
 
+function breakPtp(ptpId, req) {
+  const ptp = get('SELECT * FROM ptps WHERE id=?', [ptpId]);
+  if (!ptp) return { ok: false, error: 'PTP not found' };
+  run("UPDATE ptps SET status='broken' WHERE id=?", [ptp.id]);
+  run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)',
+    [ptp.case_id, 'ptp_broken', `PTP broken (RM ${ptp.amount.toFixed(2)})`, req.session.user.full_name]);
+  logAction(req, 'ptp_broken', 'case', ptp.case_id, `PTP ${ptp.id} broken`);
+  const cur = get('SELECT status FROM cases WHERE id=?', [ptp.case_id]).status;
+  const pending = get("SELECT COUNT(*) c FROM ptps WHERE case_id=? AND status='pending'", [ptp.case_id]).c;
+  if (cur === 'ptp' && pending === 0) {
+    run("UPDATE cases SET status='negotiation', updated_at=datetime('now') WHERE id=?", [ptp.case_id]);
+    run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
+      [ptp.case_id, 'status_change', 'Status changed ptp → negotiation', req.session.user.full_name]);
+  }
+  return { ok: true, caseId: ptp.case_id };
+}
+
 // scope check shared by fulfill + break
 function loadScopedCaseId(req, res) {
   const ptp = get('SELECT case_id FROM ptps WHERE id=?', [req.params.id]);
@@ -47,13 +64,10 @@ router.post('/:id/fulfill', requireLogin, requireRole('admin', 'manager', 'agent
 
 router.post('/:id/break', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {
   const caseId = loadScopedCaseId(req, res); if (caseId === null) return;
-  const ptp = get('SELECT * FROM ptps WHERE id=?', [req.params.id]);
-  run("UPDATE ptps SET status='broken' WHERE id=?", [ptp.id]);
-  run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)',
-    [caseId, 'ptp_broken', `PTP broken (RM ${ptp.amount.toFixed(2)})`, req.session.user.full_name]);
-  logAction(req, 'ptp_broken', 'case', caseId, `PTP ${ptp.id} broken`);
+  breakPtp(req.params.id, req);
   res.redirect(`/cases/${caseId}?ok=PTP+broken`);
 });
 
 module.exports = router;
 module.exports.recordFulfillment = recordFulfillment;
+module.exports.breakPtp = breakPtp;
