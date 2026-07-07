@@ -38,6 +38,10 @@ function init() {
   }
   // Migration: next follow-up date on cases (nullable, no default)
   try { db.prepare('ALTER TABLE cases ADD COLUMN next_action_at TEXT').run(); } catch (e) { /* exists */ }
+  // Migration: installment-plan grouping on ptps (nullable; NULL = standalone PTP)
+  try { db.prepare('ALTER TABLE ptps ADD COLUMN plan_id TEXT').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE ptps ADD COLUMN installment_no INTEGER').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE ptps ADD COLUMN plan_size INTEGER').run(); } catch (e) { /* exists */ }
 }
 function get(sql, params = []) { return db.prepare(sql).get(...params); }
 function all(sql, params = []) { return db.prepare(sql).all(...params); }
