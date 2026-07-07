@@ -79,8 +79,12 @@ function insertDemoRows() {
   db.prepare("SELECT id,principal_amount,interest_amount,status FROM cases WHERE is_demo=1 AND status IN ('partial_paid','fully_paid')").all().forEach((c, idx) => {
     const total = c.principal_amount + c.interest_amount;
     const amt = c.status === 'fully_paid' ? total : Math.round(total * 0.5);
+    // Demo receipts use a "D" namespace (RCPT-YYYY-D001) so they can't collide
+    // with customer receipts. nextReceiptNo (MAX+1) reads substr→INTEGER, and
+    // 'D001' casts to 0, so demo rows never inflate the customer sequence —
+    // exactly how demo case numbers (CASE-YYYY-D001) work.
     run('INSERT OR IGNORE INTO payments (case_id,receipt_no,payment_date,amount,method,reference,bank,created_by,is_demo) VALUES (?,?,?,?,?,?,?,?,1)',
-      [c.id, `RCPT-${year}-${String(idx + 1).padStart(4, '0')}`, ago(10), amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer']);
+      [c.id, `RCPT-${year}-D${String(idx + 1).padStart(3, '0')}`, ago(10), amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer']);
     run('INSERT OR IGNORE INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [c.id, 'payment', `Payment received RM ${amt.toFixed(2)}`, 'Finance Officer']);
   });
 

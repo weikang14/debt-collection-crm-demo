@@ -36,6 +36,8 @@ function init() {
       // Column already exists, ignore
     }
   }
+  // Migration: next follow-up date on cases (nullable, no default)
+  try { db.prepare('ALTER TABLE cases ADD COLUMN next_action_at TEXT').run(); } catch (e) { /* exists */ }
 }
 function get(sql, params = []) { return db.prepare(sql).get(...params); }
 function all(sql, params = []) { return db.prepare(sql).all(...params); }

@@ -5,6 +5,28 @@ const { logAction } = require('../utils/audit');
 const { VERSION } = require('../version');
 const router = express.Router();
 
+// A bcrypt hash of a random string, compared against when the username is
+// unknown so a missing user costs the same time as a wrong password → no
+// username enumeration via response timing.
+const DUMMY_HASH = bcrypt.hashSync('no-such-user', 10);
+
+// Per-IP login throttle. In-memory: resets on restart, per-process — fine for a
+// single-process node:sqlite app.
+// ponytail: in-memory Map, swap for a shared store only if run multi-process.
+const MAX_FAILS = 5, LOCK_MS = 15 * 60 * 1000;
+const attempts = new Map(); // ip -> { fails, until }
+function throttleState(ip) {
+  const a = attempts.get(ip);
+  if (a && a.until && a.until > Date.now()) return a;
+  return null;
+}
+function recordFail(ip) {
+  const a = attempts.get(ip) || { fails: 0, until: 0 };
+  a.fails += 1;
+  if (a.fails >= MAX_FAILS) { a.until = Date.now() + LOCK_MS; a.fails = 0; }
+  attempts.set(ip, a);
+}
+
 router.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
   res.render('auth/login', { error: null, version: VERSION });
@@ -12,10 +34,16 @@ router.get('/login', (req, res) => {
 
 router.post('/login', (req, res) => {
   const { username, password } = req.body;
+  if (throttleState(req.ip)) {
+    return res.status(429).render('auth/login', { error: 'Too many attempts. Try again later.', version: VERSION });
+  }
   const u = get('SELECT * FROM users WHERE username = ? AND active = 1', [username]);
-  if (!u || !bcrypt.compareSync(password || '', u.password_hash)) {
+  const ok = bcrypt.compareSync(password || '', u ? u.password_hash : DUMMY_HASH);
+  if (!u || !ok) {
+    recordFail(req.ip);
     return res.status(401).render('auth/login', { error: 'Invalid username or password', version: VERSION });
   }
+  attempts.delete(req.ip);
   req.session.user = { id: u.id, username: u.username, full_name: u.full_name, role: u.role, agent_id: u.agent_id, client_id: u.client_id };
   logAction(req, 'login', 'user', u.id, `User ${u.username} logged in`);
   res.redirect('/');

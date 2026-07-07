@@ -55,6 +55,7 @@
       <div><span>Agent</span><%= c.agent_name||'—' %></div>
       <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
       <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
+      <div><span>Next Action</span><%= c.next_action_at ? h.dateFmt(c.next_action_at) : '—' %></div>
       <div><span>Remark</span><%= c.remark||'—' %></div>
     </div>
 
@@ -90,11 +91,16 @@
   </div>
   <div class="modal-body">
     <section class="rec-section">
+    <% const canEditPay = !readOnly && ['admin','manager','finance'].includes(currentUser.role); %>
     <h2>Payments</h2>
     <% if (!payments.length) { %><%- include('../partials/empty', { msg: 'No payments recorded.' }) %><% } else { %>
-    <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th></tr></thead>
+    <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th><% if (canEditPay) { %><th>Actions</th><% } %></tr></thead>
     <tbody><% payments.forEach(p => { %><tr><td class="mono"><%= p.receipt_no %></td><td><%= h.dateFmt(p.payment_date) %></td>
-    <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td></tr><% }) %></tbody></table>
+    <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td>
+    <% if (canEditPay) { %><td><div style="display:flex; gap:0.5rem;">
+      <button type="button" class="btn btn-sm" onclick="openEditPayment(<%= p.id %>, <%= p.amount %>, '<%= p.payment_date %>', '<%= p.method %>', '<%= p.reference||'' %>', '<%= p.bank||'' %>')">Edit</button>
+      <form method="post" action="/cases/<%= c.id %>/payments/<%= p.id %>/void" style="margin:0;" onsubmit="return confirm('Void payment <%= p.receipt_no %>?')"><button class="btn btn-sm" type="submit">Void</button></form>
+    </div></td><% } %></tr><% }) %></tbody></table>
     <% } %>
     </section>
 
@@ -145,6 +151,17 @@
   <div class="form-actions"><button class="btn btn-gold" type="submit">Add Payment</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
 <% } %>
+<% if (['admin','manager','finance'].includes(currentUser.role)) { %>
+<dialog id="dlg-payment-edit" class="modal"><form class="form" id="payment-edit-form" method="post" action="">
+  <h3>Edit Payment</h3>
+  <label>Date <input type="date" name="payment_date" id="pe-date" required></label>
+  <label>Amount (RM) <input type="number" step="0.01" name="amount" id="pe-amount" required></label>
+  <label>Method <select name="method" id="pe-method"><option>bank_transfer</option><option>cash</option><option>cheque</option><option>online</option></select></label>
+  <label>Reference <input name="reference" id="pe-ref"></label>
+  <label>Bank <input name="bank" id="pe-bank"></label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
+</form></dialog>
+<% } %>
 <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
 <dialog id="dlg-ptp" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/ptps">
   <h3>New PTP</h3>
@@ -187,6 +204,16 @@
     f.action = '/ptps/' + id + '/fulfill';
     document.getElementById('fulfill-amount').value = amount;
     dlg('dlg-ptp-fulfill');
+  }
+  function openEditPayment(id, amount, date, method, ref, bank){
+    var f = document.getElementById('payment-edit-form');
+    f.action = '/cases/<%= c.id %>/payments/' + id;
+    document.getElementById('pe-amount').value = amount;
+    document.getElementById('pe-date').value = date;
+    document.getElementById('pe-method').value = method;
+    document.getElementById('pe-ref').value = ref;
+    document.getElementById('pe-bank').value = bank;
+    dlg('dlg-payment-edit');
   }
   document.querySelectorAll('dialog.modal').forEach(function(d){
     d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
