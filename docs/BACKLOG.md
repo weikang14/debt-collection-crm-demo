@@ -17,22 +17,6 @@ Priority: 🔴 correctness/robustness · 🟠 logic · 🟡 hardening · 💡 fe
 
 ---
 
-## 🟡 Robustness (newly noted)
-
-### Receipt numbers share one namespace across demo + customer（收据号命名空间共用）
-- **What:** Case numbers isolate demo data with a `D` namespace
-  (`CASE-YYYY-D001`), but **receipts do not** — both demo seed
-  (`RCPT-YYYY-0001..`) and customer payments (`nextReceiptNo` = `MAX+1`) draw
-  from the same `RCPT-YYYY-NNNN` space. Normally fine (customer numbers land
-  above demo via MAX+1), but a "reload demo" after a customer took a low number,
-  or a restore, can re-mint a demo `RCPT` that a customer row already holds.
-- **中文:** 案件号用 `D` 命名空间隔离演示数据，但收据号没有——演示与客户付款共用
-  `RCPT-YYYY-NNNN`，重载演示或恢复数据时可能撞号。
-- **Fix sketch:** give demo receipts a `D` namespace too (`RCPT-YYYY-D001`),
-  mirroring the case-number fix, so the two sets can never collide.
-
----
-
 ## ✅ Done (for reference)
 
 - **#1 Float money** → derived outstanding rounded to cents; `<= 0` status
@@ -66,6 +50,8 @@ Priority: 🔴 correctness/robustness · 🟠 logic · 🟡 hardening · 💡 fe
   `resyncCaseStatus`; a voided payment reverts a stale `fully_paid`.
 - **Feature: Next follow-up date** → `next_action_at` on cases (form + case
   detail); dashboard "Due for Follow-up" list of active cases due today/overdue.
+- **Receipt namespace** → demo receipts use a `D` namespace (`RCPT-YYYY-D001`)
+  like demo case numbers, so demo/customer receipt numbers can never collide.
 
 Specs & plans for the done work live in `docs/superpowers/specs/` and
 `docs/superpowers/plans/` (dated `2026-07-06` and `2026-07-07`).
