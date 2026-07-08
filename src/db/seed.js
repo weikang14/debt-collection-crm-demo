@@ -38,7 +38,7 @@ const PRIOS = ['low','medium','high','urgent'];
 
 function clearAllTables() {
   init();
-  for (const t of ['audit_logs','call_logs','tasks','ptps','payments','timeline_events','cases','debtors','agents','clients','users']) {
+  for (const t of ['audit_logs','call_logs','commission_settlements','tasks','ptps','payments','timeline_events','cases','debtors','agents','clients','users']) {
     db.exec(`DELETE FROM ${t}`);
     db.exec(`DELETE FROM sqlite_sequence WHERE name='${t}'`);
   }
@@ -99,6 +99,10 @@ function insertDemoRows() {
 
   const taskSeed = [[2,1,'follow_up','Call debtor re: overdue',inDays(1),'pending'],[3,2,'visit','Field visit to address',ago(1),'pending'],[7,3,'legal','Prepare LOD',inDays(3),'pending'],[5,1,'reminder','Send WhatsApp reminder',inDays(0),'done']];
   taskSeed.forEach((t) => run('INSERT INTO tasks (case_id,agent_id,type,title,due_date,status,is_demo) VALUES (?,?,?,?,?,?,1)', t));
+
+  const period = dayjs().format('YYYY-MM');
+  run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by,is_demo) VALUES (?,?,?,?,?,1)', [1, period, 300, 'Partial payout', 'Collection Manager']);
+  run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by,is_demo) VALUES (?,?,?,?,?,1)', [3, period, 150, 'Advance', 'Collection Manager']);
 }
 
 function insertDemoUsers() {
@@ -122,7 +126,7 @@ function seedDemo() {
 // sqlite_sequence, so customer IDs stay above the demo ID range.
 function deleteDemo() {
   init();
-  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments']) {
+  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments', 'commission_settlements']) {
     run(`DELETE FROM ${t} WHERE is_demo=1`);
   }
   run(`DELETE FROM cases WHERE is_demo=1
