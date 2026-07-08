@@ -7,7 +7,7 @@ and EJS (via `ejs-mate`). It has session-based authentication, role-based access
 control (RBAC) across six roles, and row-level scoping (agents only see their own
 cases, clients only see their own company's cases). Modules cover clients,
 debtors, cases (with timeline, payments, PTPs, call logs, status), agents +
-performance, tasks, a dashboard, reports, global search, and an audit log.
+performance, tasks, a dashboard, reports, commission settlement (earned/settled/pending per agent), global search, and an audit log.
 
 ## Requirements
 

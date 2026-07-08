@@ -126,6 +126,17 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS commission_settlements (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  agent_id INTEGER NOT NULL REFERENCES agents(id),
+  period TEXT NOT NULL,
+  amount REAL NOT NULL,
+  note TEXT, settled_by TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_commission_agent_period ON commission_settlements(agent_id, period);
 CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(status);
 CREATE INDEX IF NOT EXISTS idx_cases_agent ON cases(agent_id);
 CREATE INDEX IF NOT EXISTS idx_cases_client ON cases(client_id);
