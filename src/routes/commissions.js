@@ -72,14 +72,14 @@ router.get('/', requireLogin, canView, (req, res) => {
 router.post('/settle', requireLogin, canSettle, (req, res) => {
   const r = recordSettlement(req.body, req);
   const month = req.body.period || currentMonth();
-  if (!r.ok) return res.redirect(`/commissions?month=${month}&err=${encodeURIComponent(r.error)}`);
-  res.redirect(`/commissions?month=${month}&ok=Settlement+recorded`);
+  if (!r.ok) return res.redirect(`/commissions?month=${encodeURIComponent(month)}&err=${encodeURIComponent(r.error)}`);
+  res.redirect(`/commissions?month=${encodeURIComponent(month)}&ok=Settlement+recorded`);
 });
 
 router.post('/:id/void', requireLogin, canSettle, (req, res) => {
   const row = get('SELECT period FROM commission_settlements WHERE id=?', [req.params.id]);
   voidSettlement(req.params.id, req);
-  res.redirect(`/commissions?month=${row ? row.period : currentMonth()}&ok=Settlement+voided`);
+  res.redirect(`/commissions?month=${encodeURIComponent(row ? row.period : currentMonth())}&ok=Settlement+voided`);
 });
 
 module.exports = { router, commissionRows, round2, recordSettlement, voidSettlement };

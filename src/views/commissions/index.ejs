@@ -17,7 +17,7 @@
     <td class="num"><%= h.money(r.earned) %></td>
     <td class="num"><%= h.money(r.settled) %></td>
     <td class="num <%= r.pending < 0 ? 'is-red' : '' %>"><%= h.money(r.pending) %></td>
-    <% if (canSettle) { %><td><button type="button" class="btn btn-sm" onclick="openSettle(<%= r.agent_id %>, '<%= r.name %>', <%= r.pending %>)">Settle</button></td><% } %>
+    <% if (canSettle) { %><td><button type="button" class="btn btn-sm" data-agent-id="<%= r.agent_id %>" data-name="<%= r.name %>" data-pending="<%= r.pending %>" onclick="openSettle(this.dataset.agentId, this.dataset.name, this.dataset.pending)">Settle</button></td><% } %>
   </tr><% }) %></tbody>
   </table>
   <% } %>
@@ -51,7 +51,8 @@
     document.getElementById('st-agent').value = agentId;
     document.getElementById('st-who').textContent = name + ' · ' + '<%= month %>';
     var amt = document.getElementById('st-amount');
-    amt.value = pending > 0 ? pending.toFixed(2) : '';
+    var p = Number(pending);
+    amt.value = p > 0 ? p.toFixed(2) : '';
     document.getElementById('dlg-settle').showModal();
   }
   document.querySelectorAll('dialog.modal').forEach(function(d){
