@@ -1,0 +1,61 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Commissions</h1></div>
+
+<form class="card filters" method="get" action="/commissions">
+  <label>Month <input type="month" name="month" value="<%= month %>"></label>
+  <button class="btn btn-gold" type="submit">Apply</button>
+</form>
+
+<div class="card">
+  <h2>Commission — <%= month %></h2>
+  <% if (!rows.length) { %><%- include('../partials/empty', { msg: 'No agents in scope.' }) %><% } else { %>
+  <table class="data"><thead><tr><th>Agent</th><th class="num">Collected</th><th class="num">Rate %</th><th class="num">Earned</th><th class="num">Settled</th><th class="num">Pending</th><% if (canSettle) { %><th>Action</th><% } %></tr></thead>
+  <tbody><% rows.forEach(r => { %><tr>
+    <td><%= r.name %></td>
+    <td class="num"><%= h.money(r.collected) %></td>
+    <td class="num"><%= r.rate %></td>
+    <td class="num"><%= h.money(r.earned) %></td>
+    <td class="num"><%= h.money(r.settled) %></td>
+    <td class="num <%= r.pending < 0 ? 'is-red' : '' %>"><%= h.money(r.pending) %></td>
+    <% if (canSettle) { %><td><button type="button" class="btn btn-sm" onclick="openSettle(<%= r.agent_id %>, '<%= r.name %>', <%= r.pending %>)">Settle</button></td><% } %>
+  </tr><% }) %></tbody>
+  </table>
+  <% } %>
+</div>
+
+<div class="card">
+  <h2>Settlement history — <%= month %></h2>
+  <% if (!history.length) { %><%- include('../partials/empty', { msg: 'No settlements this month.' }) %><% } else { %>
+  <table class="data"><thead><tr><th>Agent</th><th class="num">Amount</th><th>Note</th><th>When</th><th>By</th><% if (canSettle) { %><th></th><% } %></tr></thead>
+  <tbody><% history.forEach(s => { %><tr>
+    <td><%= s.agent_name %></td><td class="num"><%= h.money(s.amount) %></td>
+    <td><%= s.note || '' %></td><td><%= h.dateTimeFmt(s.created_at) %></td><td><%= s.settled_by || '' %></td>
+    <% if (canSettle) { %><td><form method="post" action="/commissions/<%= s.id %>/void" style="margin:0;" onsubmit="return confirm('Void this settlement?')"><button class="btn btn-sm" type="submit">Void</button></form></td><% } %>
+  </tr><% }) %></tbody>
+  </table>
+  <% } %>
+</div>
+
+<% if (canSettle) { %>
+<dialog id="dlg-settle" class="modal"><form class="form" method="post" action="/commissions/settle">
+  <h3>Record Settlement</h3>
+  <input type="hidden" name="agent_id" id="st-agent">
+  <input type="hidden" name="period" value="<%= month %>">
+  <p id="st-who" class="muted"></p>
+  <label>Amount (RM) <input type="number" step="0.01" min="0.01" name="amount" id="st-amount" required></label>
+  <label>Note <input name="note"></label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Record</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
+</form></dialog>
+<script>
+  function openSettle(agentId, name, pending){
+    document.getElementById('st-agent').value = agentId;
+    document.getElementById('st-who').textContent = name + ' · ' + '<%= month %>';
+    var amt = document.getElementById('st-amount');
+    amt.value = pending > 0 ? pending.toFixed(2) : '';
+    document.getElementById('dlg-settle').showModal();
+  }
+  document.querySelectorAll('dialog.modal').forEach(function(d){
+    d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
+  });
+</script>
+<% } %>

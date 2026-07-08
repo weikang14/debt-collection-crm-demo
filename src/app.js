@@ -53,6 +53,7 @@ app.use('/users', require('./routes/users'));
 app.use('/demo-tools', require('./routes/demo'));
 app.use('/tasks', require('./routes/tasks'));
 app.use('/reports', require('./routes/reports'));
+app.use('/commissions', require('./routes/commissions').router);
 app.use('/search', require('./routes/search'));
 app.use('/audit-log', require('./routes/audit'));
 

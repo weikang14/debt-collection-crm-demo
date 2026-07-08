@@ -6,7 +6,7 @@ const fs = require('node:fs');
 
 process.env.CRM_DB_PATH = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'crm-comm-')), 'crm.db');
 const { init, run, get } = require('../src/db');
-const { commissionRows } = require('../src/routes/commissions');
+const { commissionRows, recordSettlement, voidSettlement } = require('../src/routes/commissions');
 
 // Seed: 2 agents (rate 5% and 6%), each a case, agent A has 2 payments in
 // 2026-07 (10000 total), agent B one payment in 2026-07 (5000).
@@ -53,4 +53,33 @@ test('settled + pending reflect a recorded settlement', () => {
   const a = commissionRows(admin, '2026-07').find(r => r.agent_id === 1);
   assert.strictEqual(a.settled, 300);
   assert.strictEqual(a.pending, 200);
+});
+
+const fakeReq = (body) => ({ body, session: { user: { full_name: 'Boss', role: 'manager' } }, ip: '::1' });
+
+test('recordSettlement inserts and rejects bad amounts', () => {
+  const bad = recordSettlement({ agent_id: 2, period: '2026-07', amount: '0' }, fakeReq({}));
+  assert.strictEqual(bad.ok, false);
+  const bad2 = recordSettlement({ agent_id: 2, period: '2026-07', amount: 'abc' }, fakeReq({}));
+  assert.strictEqual(bad2.ok, false);
+  const ok = recordSettlement({ agent_id: 2, period: '2026-07', amount: '180', note: 'partial' }, fakeReq({}));
+  assert.strictEqual(ok.ok, true);
+  const b = commissionRows({ role: 'admin' }, '2026-07').find(r => r.agent_id === 2);
+  assert.strictEqual(b.settled, 180);
+  assert.strictEqual(b.pending, 120); // earned 300 - 180
+});
+
+test('over-settlement allowed (pending goes negative)', () => {
+  recordSettlement({ agent_id: 2, period: '2026-07', amount: '500' }, fakeReq({}));
+  const b = commissionRows({ role: 'admin' }, '2026-07').find(r => r.agent_id === 2);
+  assert.strictEqual(b.settled, 680);   // 180 + 500
+  assert.strictEqual(b.pending, -380);  // 300 - 680
+});
+
+test('voidSettlement removes a payout', () => {
+  const row = get("SELECT id FROM commission_settlements WHERE agent_id=2 AND amount=500");
+  const r = voidSettlement(row.id, fakeReq({}));
+  assert.strictEqual(r.ok, true);
+  const b = commissionRows({ role: 'admin' }, '2026-07').find(r => r.agent_id === 2);
+  assert.strictEqual(b.settled, 180);
 });
