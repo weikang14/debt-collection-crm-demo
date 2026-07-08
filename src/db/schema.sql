@@ -52,6 +52,15 @@ CREATE TABLE IF NOT EXISTS cases (
   principal_amount REAL NOT NULL DEFAULT 0,
   interest_amount REAL NOT NULL DEFAULT 0,
   outstanding_amount REAL NOT NULL DEFAULT 0,
+  -- Interest model, per case. 'fixed': interest_amount is a manual lump (default,
+  -- unchanged behaviour). 'daily': interest_rate is an ANNUAL % accrued /365 on
+  -- remaining principal. 'monthly': interest_rate is a MONTHLY % accrued /30.
+  -- daily/monthly use interest-first (先息后本) allocation; interest_amount then
+  -- caches the total interest charged to date. interest_from = accrual start
+  -- (falls back to opened_at when null).
+  interest_mode TEXT NOT NULL DEFAULT 'fixed' CHECK (interest_mode IN ('fixed','monthly','daily')),
+  interest_rate REAL NOT NULL DEFAULT 0,
+  interest_from TEXT,
   priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low','medium','high','urgent')),
   status TEXT NOT NULL DEFAULT 'new' CHECK (status IN
     ('new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased')),

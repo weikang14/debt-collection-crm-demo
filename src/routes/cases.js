@@ -4,7 +4,7 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
-const { resyncCaseStatus, TERMINAL_STATUSES } = require('../services/payments');
+const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { caseStatusLabel, dateFmt } = require('../utils/helpers');
 const { splitInstallments, dueDates } = require('../utils/installments');
@@ -17,6 +17,11 @@ const noAgentCreate = requireRole('admin','manager'); // who can create/edit cas
 
 // shared loader with scope enforcement
 function loadCase(req, res) {
+  // Freshen the accrual balance before every single-case read, so displayed
+  // outstanding/interest and payment-validation ceilings reflect interest up to
+  // now. No-op for fixed cases; skips silently if the id is missing/out of scope.
+  // ponytail: recompute-on-load in lieu of a nightly accrual job — fine at this scale.
+  recomputeOutstanding(req.params.id);
   const w = caseWhere(req.session.user);
   const c = get(`SELECT cases.*, clients.company_name AS client_name, debtors.name AS debtor_name,
     debtors.phone AS debtor_phone, debtors.ic_passport, agents.name AS agent_name
@@ -24,6 +29,15 @@ function loadCase(req, res) {
     LEFT JOIN agents ON agents.id=cases.agent_id WHERE cases.id=? AND ${w.clause}`, [req.params.id, ...w.params]);
   if (!c) { res.status(404).render('error', { message: 'Case not found or access denied' }); return null; }
   return c;
+}
+
+// Parse the interest-model form fields. Unknown mode falls back to 'fixed';
+// rate/from only matter for accrual modes (blanked otherwise so a mode switch
+// back to fixed doesn't leave stale values).
+function interestFields(b) {
+  const mode = ['fixed', 'monthly', 'daily'].includes(b.interest_mode) ? b.interest_mode : 'fixed';
+  if (mode === 'fixed') return { mode, rate: 0, from: null };
+  return { mode, rate: Number(b.interest_rate) || 0, from: b.interest_from || null };
 }
 
 // Internal-only business: cases don't pick an external client. Every case is
@@ -66,11 +80,14 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
   if (!b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
     return res.redirect('/cases/new?err=Debtor+and+principal+are+required');
   }
-  const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
+  const principal = Number(b.principal_amount)||0;
+  const { mode, rate, from } = interestFields(b);
+  // Accrual modes start with ~0 interest; the manual interest field only applies to fixed.
+  const interest = mode === 'fixed' ? (Number(b.interest_amount)||0) : 0;
   const case_no = nextCaseNo();
-  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark,next_action_at)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?)`,
-    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, b.next_action_at||null]);
+  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark,next_action_at,interest_mode,interest_rate,interest_from)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, b.next_action_at||null, mode, rate, from]);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)', [r.lastInsertRowid,'note',`Case ${case_no} created`,req.session.user.full_name]);
   logAction(req,'create','case',r.lastInsertRowid,`Created case ${case_no}`);
   res.redirect(`/cases/${r.lastInsertRowid}?ok=Case+created`);
@@ -94,9 +111,11 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   if (!b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
     return res.redirect('/cases/'+req.params.id+'/edit?err=Debtor+and+principal+are+required');
   }
-  const principal = Number(b.principal_amount)||0, interest = Number(b.interest_amount)||0;
-  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,next_action_at=?,updated_at=datetime('now') WHERE id=?`,
-    [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,b.next_action_at||null,req.params.id]);
+  const principal = Number(b.principal_amount)||0;
+  const { mode, rate, from } = interestFields(b);
+  const interest = mode === 'fixed' ? (Number(b.interest_amount)||0) : 0;
+  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,next_action_at=?,interest_mode=?,interest_rate=?,interest_from=?,updated_at=datetime('now') WHERE id=?`,
+    [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,b.next_action_at||null,mode,rate,from,req.params.id]);
   const cid = Number(req.params.id);
   resyncCaseStatus(cid, req.session.user.full_name);
   logAction(req,'update','case',cid,`Updated case ${cid}`);

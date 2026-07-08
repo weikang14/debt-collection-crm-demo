@@ -42,6 +42,10 @@ function init() {
   try { db.prepare('ALTER TABLE ptps ADD COLUMN plan_id TEXT').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE ptps ADD COLUMN installment_no INTEGER').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE ptps ADD COLUMN plan_size INTEGER').run(); } catch (e) { /* exists */ }
+  // Migration: per-case interest model (see schema.sql). Default keeps old cases fixed.
+  try { db.prepare("ALTER TABLE cases ADD COLUMN interest_mode TEXT NOT NULL DEFAULT 'fixed'").run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE cases ADD COLUMN interest_rate REAL NOT NULL DEFAULT 0').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE cases ADD COLUMN interest_from TEXT').run(); } catch (e) { /* exists */ }
 }
 function get(sql, params = []) { return db.prepare(sql).get(...params); }
 function all(sql, params = []) { return db.prepare(sql).all(...params); }

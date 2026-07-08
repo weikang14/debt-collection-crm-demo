@@ -1,4 +1,4 @@
-const { db, get, run } = require('../db');
+const { db, get, all, run } = require('../db');
 const { nextReceiptNo } = require('../utils/numbering');
 const { logAction } = require('../utils/audit');
 
@@ -28,12 +28,61 @@ function livePtpGuard(cur, next, caseId) {
   }
   return next;
 }
+const MS_DAY = 86400000;
+const daysBetween = (a, b) => Math.max(0, (new Date(b) - new Date(a)) / MS_DAY);
+
+// Per-day interest rate for accrual modes. daily: annual rate /365 (bank-contract
+// convention). monthly: rate /30 (pro-rata by days — a part-month accrues its
+// fraction). fixed returns 0 (no accrual).
+// ponytail: monthly is day/30 pro-rata; switch to whole-month steps only if a
+// lender demands it.
+function dailyRate(c) {
+  if (c.interest_mode === 'daily') return (c.interest_rate || 0) / 100 / 365;
+  if (c.interest_mode === 'monthly') return (c.interest_rate || 0) / 100 / 30;
+  return 0;
+}
+
+// Interest-first (先息后本) balance. Walks payments in date order: between events
+// interest accrues on the *remaining* principal, and each payment clears accrued
+// interest before it touches principal — so paying down principal shrinks all
+// future interest. Pure; asOf is injectable for tests. `payments` MUST be sorted
+// ascending by payment_date. `interest` returned is total interest charged to
+// asOf, so the identity outstanding = principal + interest − paid still holds.
+function caseBalance(c, payments, asOf = new Date()) {
+  const paid = payments.reduce((s, p) => s + p.amount, 0);
+  if (c.interest_mode !== 'daily' && c.interest_mode !== 'monthly') {
+    // fixed: interest is a lump, allocation order can't change the totals.
+    const interest = c.interest_amount || 0;
+    return { principal: c.principal_amount, interest, paid,
+      outstanding: round2(Math.max(0, c.principal_amount + interest - paid)) };
+  }
+  const r = dailyRate(c);
+  let remP = c.principal_amount, unpaidInt = 0, paidInt = 0, last = c.interest_from || c.opened_at;
+  for (const p of payments) {
+    unpaidInt += remP * r * daysBetween(last, p.payment_date);
+    let amt = p.amount;
+    const toInt = Math.min(amt, unpaidInt); unpaidInt -= toInt; amt -= toInt; paidInt += toInt;
+    remP = Math.max(0, remP - amt); // remainder pays principal; any overpay is dropped (validatePayment blocks it)
+    last = p.payment_date;
+  }
+  unpaidInt += remP * r * daysBetween(last, asOf);
+  return { principal: c.principal_amount, interest: round2(paidInt + unpaidInt), paid,
+    outstanding: round2(Math.max(0, remP + unpaidInt)) };
+}
+
 function recomputeOutstanding(caseId) {
-  const c = get('SELECT principal_amount, interest_amount FROM cases WHERE id = ?', [caseId]);
-  const paid = get('SELECT COALESCE(SUM(amount),0) AS s FROM payments WHERE case_id = ?', [caseId]).s;
-  const outstanding = round2(Math.max(0, (c.principal_amount + c.interest_amount) - paid));
-  run('UPDATE cases SET outstanding_amount = ?, updated_at = datetime(\'now\') WHERE id = ?', [outstanding, caseId]);
-  return outstanding;
+  const c = get('SELECT principal_amount, interest_amount, interest_mode, interest_rate, interest_from, opened_at FROM cases WHERE id = ?', [caseId]);
+  if (!c) return 0; // case gone (e.g. recompute-on-load of an out-of-scope/missing id)
+  const payments = all('SELECT amount, payment_date FROM payments WHERE case_id = ? ORDER BY payment_date, id', [caseId]);
+  const b = caseBalance(c, payments);
+  // Accrual modes: cache the derived interest too, so views reading cases.interest_amount
+  // (statement, reports) stay consistent. Fixed mode leaves the user-entered interest alone.
+  if (c.interest_mode === 'daily' || c.interest_mode === 'monthly') {
+    run("UPDATE cases SET outstanding_amount=?, interest_amount=?, updated_at=datetime('now') WHERE id=?", [b.outstanding, b.interest, caseId]);
+  } else {
+    run("UPDATE cases SET outstanding_amount=?, updated_at=datetime('now') WHERE id=?", [b.outstanding, caseId]);
+  }
+  return b.outstanding;
 }
 // The 4 DB writes of a payment, WITHOUT a transaction wrapper or audit log, so a
 // caller (recordFulfillment) can run them inside its own larger transaction —
@@ -76,4 +125,4 @@ function resyncCaseStatus(caseId, by) {
   }
   return outstanding;
 }
-module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, applyPayment, paymentWrites, resyncCaseStatus };
+module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, caseBalance, applyPayment, paymentWrites, resyncCaseStatus };
