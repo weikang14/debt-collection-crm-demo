@@ -5,6 +5,11 @@ dayjs.extend(utc);
 const money = (n) =>
   Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+// Round a money value to whole cents. Use at any boundary where a derived/aggregate
+// amount is stored or exported as a raw number (on-screen money already goes through
+// money()). Absorbs float residue like 0.1 + 0.2.
+const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+
 // Agent commission = amount collected × commission rate (a percentage).
 const commission = (collected, rate) => (Number(collected) || 0) * (Number(rate) || 0) / 100;
 
@@ -53,4 +58,4 @@ const ICONS = {
 };
 const icon = (name) => ICONS[name] || '';
 
-module.exports = { money, commission, dateFmt, dateTimeFmt, daysOverdue, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon };
+module.exports = { money, round2, commission, dateFmt, dateTimeFmt, daysOverdue, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon };

@@ -1,14 +1,12 @@
 const express = require('express');
 const { all, get, run } = require('../db');
-const { commission } = require('../utils/helpers');
+const { commission, round2 } = require('../utils/helpers');
 const { logAction } = require('../utils/audit');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
 dayjs.extend(utc);
 const router = express.Router();
-
-const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 // One row per in-scope agent for the given 'YYYY-MM' month.
 // agent role → only own agent_id; everyone else → all agents.
@@ -33,7 +31,7 @@ function commissionRows(user, month) {
 function currentMonth() { return dayjs.utc().add(8, 'hour').format('YYYY-MM'); }
 
 function recordSettlement(body, req) {
-  const amount = Number(body.amount);
+  const amount = round2(Number(body.amount));
   if (!Number.isFinite(amount) || amount <= 0) return { ok: false, error: 'Invalid amount' };
   const agent = get('SELECT id FROM agents WHERE id=?', [body.agent_id]);
   if (!agent) return { ok: false, error: 'Agent not found' };

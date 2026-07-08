@@ -1,12 +1,9 @@
 const { db, get, all, run } = require('../db');
 const { nextReceiptNo } = require('../utils/numbering');
 const { logAction } = require('../utils/audit');
+const { round2 } = require('../utils/helpers');
 
 const TERMINAL_STATUSES = ['legal', 'closed', 'cancelled', 'bankruptcy', 'deceased'];
-
-// Round a *derived* money value (a computed balance) to whole cents. Payments
-// themselves are never rounded — only this balance is.
-const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
 function statusAfterPayment(current, outstanding, paymentCount) {
   if (TERMINAL_STATUSES.includes(current)) return current;

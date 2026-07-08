@@ -4,7 +4,7 @@ const dayjs = require('dayjs');
 const { requireLogin } = require('../middleware/auth');
 const { caseWhere } = require('../utils/scope');
 const { toCsv, sendCsv } = require('../utils/csv');
-const { caseStatusLabel, dateFmt, commission } = require('../utils/helpers');
+const { caseStatusLabel, dateFmt, commission, round2 } = require('../utils/helpers');
 const router = express.Router();
 
 router.get('/', requireLogin, (req, res) => {
@@ -26,11 +26,11 @@ router.get('/', requireLogin, (req, res) => {
       FROM cases JOIN debtors ON debtors.id=cases.debtor_id
       LEFT JOIN agents ON agents.id=cases.agent_id
       WHERE ${w.clause} ORDER BY cases.opened_at DESC`, w.params)
-      .map(c => [c.case_no, c.debtor_name, c.agent_name || '', c.principal_amount, c.interest_amount, c.paid, c.outstanding_amount, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
+      .map(c => [c.case_no, c.debtor_name, c.agent_name || '', c.principal_amount, c.interest_amount, round2(c.paid), c.outstanding_amount, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
     return sendCsv(res, 'cases-detailed.csv', toCsv(['Case No', 'Debtor', 'Agent', 'Principal', 'Interest', 'Paid', 'Outstanding', 'Status', 'Opened'], rows));
   }
   if (req.query.export === 'outstanding') {
-    const rows = outstanding.map(r => [caseStatusLabel(r.status), r.cnt, r.total]);
+    const rows = outstanding.map(r => [caseStatusLabel(r.status), r.cnt, round2(r.total)]);
     return sendCsv(res, 'outstanding-by-status.csv', toCsv(['Status', 'Cases', 'Outstanding'], rows));
   }
   if (req.query.export === 'performance' && !['agent', 'client'].includes(req.session.user.role)) {
