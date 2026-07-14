@@ -10,9 +10,12 @@
     <% agents.forEach(a => { %><option value="<%= a.id %>" <%= c.agent_id===a.id?'selected':'' %>><%= a.name %></option><% }) %>
   </select></label>
   <label>Principal Amount <input name="principal_amount" type="number" step="0.01" min="0" value="<%= c.principal_amount||'' %>" required></label>
-  <label>Interest Mode <select name="interest_mode" id="interest_mode">
+  <label>Interest Mode
+    <span id="interest_help" title="View formula" style="cursor:pointer;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;">!</span>
+    <select name="interest_mode" id="interest_mode">
     <% ['fixed','monthly','daily'].forEach(m => { %><option value="<%= m %>" <%= (c.interest_mode||'fixed')===m?'selected':'' %>><%= {fixed:'Fixed amount',monthly:'Monthly rate %',daily:'Annual rate % (÷365 daily)'}[m] %></option><% }) %>
   </select></label>
+  <div id="interest_formula" style="display:none;margin:-4px 0 8px;padding:10px 12px;background:#f6f2e8;border-left:3px solid var(--gold);border-radius:4px;font-size:13px;line-height:1.6;"></div>
   <label class="if-fixed">Interest Amount <input name="interest_amount" type="number" step="0.01" value="<%= c.interest_amount||'' %>"></label>
   <label class="if-accrual">Interest Rate % <input name="interest_rate" type="number" step="0.01" min="0" value="<%= c.interest_rate||'' %>"></label>
   <label class="if-accrual">Interest From <input type="date" name="interest_from" value="<%= c.interest_from || (c.id ? '' : new Date(Date.now()+8*3600*1000).toISOString().slice(0,10)) %>"> <small>defaults to case opened date</small></label>
@@ -20,10 +23,20 @@
     // Show only the fields relevant to the chosen mode (fixed vs. rate-based accrual).
     (function(){
       var sel=document.getElementById('interest_mode');
+      var box=document.getElementById('interest_formula');
+      // Formulas mirror src/services/payments.js (dailyRate + 先息后本 caseBalance).
+      var F={
+        fixed:'<b>固定金额 Fixed</b><br>欠款 = 本金 + 利息 − 已还<br>outstanding = principal + interest − paid',
+        monthly:'<b>月利率 Monthly（先息后本）</b><br>日利率 = 月利率% ÷ 100 ÷ 30<br>利息 = Σ（剩余本金 × 日利率 × 天数）<br>每笔还款先冲利息、再冲本金 → 本金越还越少，后续利息越少',
+        daily:'<b>年利率 Daily（先息后本）</b><br>日利率 = 年利率% ÷ 100 ÷ 365<br>利息 = Σ（剩余本金 × 日利率 × 天数）<br>每笔还款先冲利息、再冲本金 → 本金越还越少，后续利息越少'
+      };
       function sync(){var acc=sel.value!=='fixed';
         document.querySelectorAll('.if-fixed').forEach(function(e){e.style.display=acc?'none':'';});
-        document.querySelectorAll('.if-accrual').forEach(function(e){e.style.display=acc?'':'none';});}
+        document.querySelectorAll('.if-accrual').forEach(function(e){e.style.display=acc?'':'none';});
+        box.innerHTML=F[sel.value]||F.fixed;}
       sel.addEventListener('change',sync); sync();
+      document.getElementById('interest_help').addEventListener('click',function(){
+        box.style.display=box.style.display==='none'?'':'none';});
     })();
   </script>
   <label>Priority <select name="priority">
