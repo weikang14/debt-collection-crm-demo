@@ -39,6 +39,18 @@ test('monthly mode accrues rate /30 per day (pro-rata)', () => {
   near(b.interest, 30, 'interest');
 });
 
+test('same-day case accrues 0 and does not creep with wall-clock time', () => {
+  // Regression: daysBetween must count whole local days, not fractional hours.
+  const c = { interest_mode: 'monthly', principal_amount: 50000, interest_rate: 5, interest_from: '2026-07-14' };
+  const noon = caseBalance(c, [], new Date('2026-07-14T04:00:00Z'));   // Malaysia noon, same day
+  const eve  = caseBalance(c, [], new Date('2026-07-14T14:00:00Z'));   // Malaysia 10pm, same day
+  near(noon.interest, 0, 'same-day interest is 0');
+  assert.strictEqual(noon.interest, eve.interest);                     // no creep within the day
+  // Next day steps by exactly one full day: 50000 * 5%/30 = 83.33.
+  const next = caseBalance(c, [], new Date('2026-07-15T04:00:00Z'));
+  near(next.interest, 83.33, 'one whole day accrues one day of interest');
+});
+
 test('recomputeOutstanding caches derived interest for accrual cases', () => {
   db.run("INSERT INTO clients (id,company_name,commission_rate) VALUES (1,'X',0)");
   db.run("INSERT INTO debtors (id,name) VALUES (1,'D')");

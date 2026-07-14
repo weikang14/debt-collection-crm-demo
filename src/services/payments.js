@@ -26,7 +26,13 @@ function livePtpGuard(cur, next, caseId) {
   return next;
 }
 const MS_DAY = 86400000;
-const daysBetween = (a, b) => Math.max(0, (new Date(b) - new Date(a)) / MS_DAY);
+const TZ_OFFSET = 8 * 3600000; // dates are entered/stored in Malaysia local time (UTC+8)
+// Whole calendar days between two dates, in local time. Fractional wall-clock
+// time is dropped, so a case opened today accrues 0 (not a slice of a day that
+// creeps up every second the page is reloaded), and interest steps once per day.
+// ponytail: +8 offset hardcoded; lift to config/env if this ever runs off-Malaysia.
+const localDay = t => Math.floor((new Date(t).getTime() + TZ_OFFSET) / MS_DAY);
+const daysBetween = (a, b) => Math.max(0, localDay(b) - localDay(a));
 
 // Per-day interest rate for accrual modes. daily: annual rate /365 (bank-contract
 // convention). monthly: rate /30 (pro-rata by days — a part-month accrues its
