@@ -17,7 +17,15 @@
     <a class="btn" href="/cases/<%= c.id %>">&larr; Back</a>
   </div>
   <div class="stmt-head">
-    <div><h1>Debt Collection <span style="color:var(--gold)">CRM</span></h1><div>Case Statement</div></div>
+    <div>
+      <% if (company.logo) { %><img src="<%= company.logo %>" alt="" style="max-height:48px;display:block;margin-bottom:6px"><% } %>
+      <h1><%= company.company_name || 'Debt Collection CRM' %></h1>
+      <% if (company.address) { %><div><%= company.address %></div><% } %>
+      <% if (company.phone) { %><div>Tel: <%= company.phone %></div><% } %>
+      <% if (company.email) { %><div><%= company.email %></div><% } %>
+      <% if (company.reg_no) { %><div>Reg No: <%= company.reg_no %></div><% } %>
+      <div style="margin-top:4px">Case Statement</div>
+    </div>
     <div style="text-align:right"><div class="mono"><%= c.case_no %></div><div><%= today %></div></div>
   </div>
   <div class="stmt-grid">
