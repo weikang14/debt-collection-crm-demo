@@ -104,7 +104,8 @@ router.get('/:id/statement', requireLogin, (req, res) => {
   const payments = all('SELECT * FROM payments WHERE case_id=? ORDER BY payment_date', [c.id]);
   const paid = payments.reduce((s, p) => s + p.amount, 0);
   const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-  res.render('cases/statement', { c, payments, paid, today });
+  const company = get('SELECT * FROM settings WHERE id=1') || {};
+  res.render('cases/statement', { c, payments, paid, today, company });
 });
 router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
