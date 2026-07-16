@@ -1,0 +1,20 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Company Settings</h1></div>
+<p class="hint">This company info appears on the printed case statement header.</p>
+<form class="card form" method="post" action="/settings" enctype="multipart/form-data">
+  <label>Company Name <input name="company_name" value="<%= s.company_name || '' %>"></label>
+  <label>Address <textarea name="address" rows="2"><%= s.address || '' %></textarea></label>
+  <label>Phone <input name="phone" value="<%= s.phone || '' %>"></label>
+  <label>Email <input name="email" type="email" value="<%= s.email || '' %>"></label>
+  <label>Registration No <input name="reg_no" value="<%= s.reg_no || '' %>"></label>
+  <label>Logo <span class="hint">(PNG/JPEG/SVG/WebP, max 512KB)</span>
+    <input name="logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp">
+  </label>
+  <% if (s.logo) { %>
+    <div>
+      <img src="<%= s.logo %>" alt="Current logo" style="max-height:64px;display:block;margin:6px 0">
+      <label class="inline"><input type="checkbox" name="remove_logo" value="1"> Remove current logo</label>
+    </div>
+  <% } %>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="/">Cancel</a></div>
+</form>
