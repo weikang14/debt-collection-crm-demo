@@ -24,11 +24,11 @@
     (function(){
       var sel=document.getElementById('interest_mode');
       var box=document.getElementById('interest_formula');
-      // Formulas mirror src/services/payments.js (dailyRate + 先息后本 caseBalance).
+      // Formulas mirror src/services/payments.js (dailyRate + interest-first caseBalance).
       var F={
-        fixed:'<b>固定金额 Fixed</b><br>欠款 = 本金 + 利息 − 已还<br>outstanding = principal + interest − paid',
-        monthly:'<b>月利率 Monthly（先息后本）</b><br>日利率 = 月利率% ÷ 100 ÷ 30<br>利息 = Σ（剩余本金 × 日利率 × 天数）<br>天数自「借贷开始时间 / Interest From」整天起算（当天 = 0 天）<br>每笔还款先冲利息、再冲本金 → 本金越还越少，后续利息越少',
-        daily:'<b>年利率 Daily（先息后本）</b><br>日利率 = 年利率% ÷ 100 ÷ 365<br>利息 = Σ（剩余本金 × 日利率 × 天数）<br>天数自「借贷开始时间 / Interest From」整天起算（当天 = 0 天）<br>每笔还款先冲利息、再冲本金 → 本金越还越少，后续利息越少'
+        fixed:'<b>Fixed amount</b><br>outstanding = principal + interest − paid',
+        monthly:'<b>Monthly rate (interest-first)</b><br>daily rate = monthly% ÷ 100 ÷ 30<br>interest = Σ(remaining principal × daily rate × days)<br>days counted in whole days from Interest From (same day = 0)<br>each payment clears interest first, then principal → paying principal shrinks later interest',
+        daily:'<b>Annual rate (interest-first)</b><br>daily rate = annual% ÷ 100 ÷ 365<br>interest = Σ(remaining principal × daily rate × days)<br>days counted in whole days from Interest From (same day = 0)<br>each payment clears interest first, then principal → paying principal shrinks later interest'
       };
       function sync(){var acc=sel.value!=='fixed';
         document.querySelectorAll('.if-fixed').forEach(function(e){e.style.display=acc?'none':'';});

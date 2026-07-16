@@ -57,8 +57,8 @@
       <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
       <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
       <% if (c.interest_mode === 'monthly' || c.interest_mode === 'daily') { %>
-      <div><span>借贷开始 / Interest From</span><%= h.dateFmt(c.interest_from || c.opened_at) %>
-        <small style="color:var(--muted)">· 利息由此日起算<% if (!c.interest_from) { %>（未设，默认建案日）<% } %></small></div>
+      <div><span>Interest From</span><%= h.dateFmt(c.interest_from || c.opened_at) %>
+        <small style="color:var(--muted)">· interest accrues from this date<% if (!c.interest_from) { %> (unset, defaults to opened)<% } %></small></div>
       <% } %>
       <div><span>Next Action</span><%= c.next_action_at ? h.dateFmt(c.next_action_at) : '—' %></div>
       <div><span>Remark</span><%= c.remark||'—' %></div>
