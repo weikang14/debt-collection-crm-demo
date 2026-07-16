@@ -153,3 +153,14 @@ CREATE INDEX IF NOT EXISTS idx_cases_debtor ON cases(debtor_id);
 CREATE INDEX IF NOT EXISTS idx_timeline_case ON timeline_events(case_id);
 CREATE INDEX IF NOT EXISTS idx_payments_case ON payments(case_id);
 CREATE INDEX IF NOT EXISTS idx_ptps_case_status ON ptps(case_id, status);
+
+CREATE TABLE IF NOT EXISTS settings (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  company_name TEXT NOT NULL DEFAULT '',
+  address TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  reg_no TEXT NOT NULL DEFAULT '',
+  logo TEXT NOT NULL DEFAULT '',
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

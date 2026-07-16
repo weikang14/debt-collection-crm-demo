@@ -27,6 +27,9 @@ function init() {
   const schema = fs.readFileSync(path.join(__dirname, 'schema.sql'), 'utf8');
   db.exec(schema);
 
+  // Single-row company profile for statement branding (see routes/settings.js)
+  db.prepare('INSERT OR IGNORE INTO settings (id) VALUES (1)').run();
+
   // Migration: add is_demo columns to existing tables if missing
   const tables = ['agents', 'clients', 'debtors', 'cases', 'timeline_events', 'payments', 'ptps', 'tasks', 'call_logs'];
   for (const t of tables) {
