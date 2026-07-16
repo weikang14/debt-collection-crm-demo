@@ -24,3 +24,17 @@ test('settings update round-trips', () => {
   assert.strictEqual(s.company_name, 'Acme Recovery');
   assert.strictEqual(s.phone, '03-1234');
 });
+
+const logo = require('../src/utils/logo');
+
+test('toDataUrl builds a base64 data URL', () => {
+  const url = logo.toDataUrl('image/png', Buffer.from('hi'));
+  assert.strictEqual(url, 'data:image/png;base64,aGk=');
+});
+
+test('LOGO_MIME allows png/jpeg/svg/webp only', () => {
+  assert.deepStrictEqual(
+    [...logo.LOGO_MIME].sort(),
+    ['image/jpeg', 'image/png', 'image/svg+xml', 'image/webp']);
+  assert.strictEqual(logo.MAX_LOGO_BYTES, 512 * 1024);
+});
