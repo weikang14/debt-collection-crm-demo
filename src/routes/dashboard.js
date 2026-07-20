@@ -15,7 +15,8 @@ router.get('/', requireLogin, (req, res) => {
   const openedToday = cq("AND date(opened_at)=date('now','+8 hours')").c;
   const closedToday = cq("AND date(closed_at)=date('now','+8 hours')").c;
   // payments today (join to scoped cases)
-  const collectedToday = get(`SELECT COALESCE(SUM(p.amount),0) s FROM payments p JOIN cases c ON c.id=p.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} AND date(p.payment_date)=date('now','+8 hours')`, w.params).s;
+  const paid = get(`SELECT COALESCE(SUM(p.amount),0) s, COUNT(p.id) n FROM payments p JOIN cases c ON c.id=p.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} AND date(p.payment_date)=date('now','+8 hours')`, w.params);
+  const collectedToday = paid.s, paymentsToday = paid.n;
   const ptpToday = get(`SELECT COUNT(*) c FROM ptps t JOIN cases c ON c.id=t.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} AND t.status='pending' AND date(t.due_date)=date('now','+8 hours')`, w.params).c;
   const brokenPtp = get(`SELECT COUNT(*) c FROM ptps t JOIN cases c ON c.id=t.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} AND t.status='broken'`, w.params).c;
   const overduePtp = get(`SELECT COUNT(*) c FROM ptps t JOIN cases c ON c.id=t.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} AND t.status='pending' AND date(t.due_date) < date('now','+8 hours')`, w.params).c;
@@ -27,8 +28,11 @@ router.get('/', requireLogin, (req, res) => {
   const agingRows = all(`SELECT CAST(julianday('now','+8 hours') - julianday(opened_at) AS INTEGER) age, outstanding_amount amt
     FROM cases WHERE ${w.clause} AND outstanding_amount > 0 AND status NOT IN (${tph})`, [...w.params, ...TERMINAL_STATUSES]);
   const aging = bucketAging(agingRows);
+  const activeCases = get(`SELECT COUNT(*) c FROM cases WHERE ${w.clause} AND status NOT IN (${tph})`, [...w.params, ...TERMINAL_STATUSES]).c;
   // Due for follow-up: active cases whose next_action_at is today or past.
-  const followups = all(`SELECT cases.id, cases.case_no, cases.next_action_at, debtors.name debtor_name
+  const followups = all(`SELECT cases.id, cases.case_no, cases.next_action_at, cases.outstanding_amount,
+    CAST(julianday(date('now','+8 hours')) - julianday(date(cases.next_action_at)) AS INTEGER) days_over,
+    debtors.name debtor_name
     FROM cases JOIN debtors ON debtors.id=cases.debtor_id
     WHERE ${w.clause} AND cases.next_action_at IS NOT NULL AND date(cases.next_action_at) <= date('now','+8 hours')
     AND cases.status NOT IN (${tph}) ORDER BY cases.next_action_at LIMIT 10`, [...w.params, ...TERMINAL_STATUSES]);
@@ -39,6 +43,6 @@ router.get('/', requireLogin, (req, res) => {
       LEFT JOIN cases c ON c.agent_id=a.id LEFT JOIN payments p ON p.case_id=c.id
       GROUP BY a.id ORDER BY collected DESC LIMIT 5`);
   }
-  res.render('dashboard/index', { title: 'Dashboard', kpi: { outstanding, legalCount, openedToday, closedToday, collectedToday, ptpToday, brokenPtp, overduePtp, overdueTasks }, aging, agingLabels: BUCKET_LABELS, followups, leaderboard, recent });
+  res.render('dashboard/index', { title: 'Dashboard', kpi: { outstanding, legalCount, openedToday, closedToday, collectedToday, paymentsToday, activeCases, ptpToday, brokenPtp, overduePtp, overdueTasks }, aging, agingLabels: BUCKET_LABELS, followups, leaderboard, recent });
 });
 module.exports = router;

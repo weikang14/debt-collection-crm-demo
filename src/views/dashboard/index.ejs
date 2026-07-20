@@ -1,55 +1,95 @@
 <% layout('layout') -%>
 <div class="page-head">
   <h1>Dashboard</h1>
-  <span>Welcome, <%= currentUser.full_name %></span>
+  <span class="meta">Welcome, <%= currentUser.full_name %></span>
 </div>
 
-<div class="kpi">
-  <div class="tile"><div class="label">Collected Today</div><div class="value">RM <%= h.money(kpi.collectedToday) %></div></div>
-  <div class="tile"><div class="label">Total Outstanding</div><div class="value">RM <%= h.money(kpi.outstanding) %></div></div>
-  <div class="tile"><div class="label">PTP Due Today</div><div class="value"><%= kpi.ptpToday %></div></div>
-  <div class="tile"><div class="label">Broken PTP</div><div class="value"><%= kpi.brokenPtp %></div></div>
-  <div class="tile"><div class="label">Overdue PTP</div><div class="value"><%= kpi.overduePtp %></div></div>
-  <div class="tile"><div class="label">Legal Cases</div><div class="value"><%= kpi.legalCount %></div></div>
-  <div class="tile"><div class="label">Opened Today</div><div class="value"><%= kpi.openedToday %></div></div>
-  <div class="tile"><div class="label">Closed Today</div><div class="value"><%= kpi.closedToday %></div></div>
-  <div class="tile"><div class="label">Overdue Tasks</div><div class="value"><%= kpi.overdueTasks %></div></div>
+<div class="ledger dash-ledger">
+  <div>
+    <div class="ledger-lbl">Collected Today</div>
+    <div class="ledger-amt pos"><span class="ledger-cur">RM</span><%= h.money(kpi.collectedToday) %></div>
+    <div class="ledger-meta"><%= kpi.paymentsToday %> payment<%= kpi.paymentsToday === 1 ? '' : 's' %> today</div>
+  </div>
+  <div class="ledger-vr"></div>
+  <div class="ledger-break">
+    <div><span class="ledger-lbl">Total Outstanding</span><div class="ledger-val">RM <%= h.money(kpi.outstanding) %></div></div>
+    <div><span class="ledger-lbl">Active Cases</span><div class="ledger-val"><%= kpi.activeCases %></div></div>
+    <div><span class="ledger-lbl">Legal Cases</span><div class="ledger-val"><%= kpi.legalCount %></div></div>
+  </div>
+</div>
+
+<div class="chiprow">
+  <span class="grp">PTP</span>
+  <span class="chip<%= kpi.ptpToday ? ' is-gold' : '' %>"><span class="dot"></span>Due today <b><%= kpi.ptpToday %></b></span>
+  <span class="chip<%= kpi.overduePtp ? ' is-red' : '' %>"><span class="dot"></span>Overdue <b><%= kpi.overduePtp %></b></span>
+  <span class="chip<%= kpi.brokenPtp ? ' is-red' : '' %>"><span class="dot"></span>Broken <b><%= kpi.brokenPtp %></b></span>
+  <span class="vsep"></span>
+  <span class="grp">Cases</span>
+  <span class="chip<%= kpi.openedToday ? ' is-green' : '' %>"><span class="dot"></span>Opened today <b><%= kpi.openedToday %></b></span>
+  <span class="chip"><span class="dot"></span>Closed today <b><%= kpi.closedToday %></b></span>
+  <span class="chip<%= kpi.overdueTasks ? ' is-gold' : '' %>"><span class="dot"></span>Overdue tasks <b><%= kpi.overdueTasks %></b></span>
 </div>
 
 <h2>Aging <span class="meta">outstanding by debt age (days)</span></h2>
-<div class="kpi">
-  <% agingLabels.forEach((lbl, i) => { %>
-  <div class="tile"><div class="label"><%= lbl %> days</div><div class="value">RM <%= h.money(aging[i]) %></div></div>
-  <% }) %>
+<% const AG = ['#f2dcb3', '#cf9a4c', '#b7842a', '#653f16']; %>
+<div class="panel">
+  <% if (aging.some(a => a > 0)) { %>
+  <div class="stackbar">
+    <% aging.forEach((amt, i) => { if (amt > 0) { %><i style="flex:<%= amt %>;background:<%= AG[i] %>"></i><% } }) %>
+  </div>
+  <% } %>
+  <div class="aleg">
+    <% agingLabels.forEach((lbl, i) => { %>
+    <span class="it"><span class="sw" style="background:<%= AG[i] %>"></span><%= lbl %> d <span class="v">RM <%= h.money(aging[i]) %></span></span>
+    <% }) %>
+  </div>
 </div>
 
-<h2>Due for Follow-up</h2>
-<% if (!followups.length) { %><%- include('../partials/empty', { msg: 'Nothing due for follow-up.' }) %><% } else { %>
-<table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Next Action</th></tr></thead>
-<tbody>
-<% followups.forEach(f => { %><tr><td><a href="/cases/<%= f.id %>"><%= f.case_no %></a></td><td><%= f.debtor_name %></td><td><%= h.dateFmt(f.next_action_at) %></td></tr><% }) %>
-</tbody></table>
-<% } %>
+<div class="dash-two">
+  <div>
+    <h2>Due for Follow-up</h2>
+    <% if (!followups.length) { %><%- include('../partials/empty', { msg: 'Nothing due for follow-up.' }) %><% } else { %>
+    <div class="panel flush">
+      <table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Status</th><th class="num">Outstanding</th></tr></thead>
+      <tbody>
+      <% followups.forEach(f => { %>
+      <tr><td><a href="/cases/<%= f.id %>"><%= f.case_no %></a></td><td><%= f.debtor_name %></td>
+      <td><% if (f.days_over > 0) { %><span class="badge is-red"><%= f.days_over %>d late</span><% } else { %><span class="badge is-gold">Today</span><% } %></td>
+      <td class="num"><%= h.money(f.outstanding_amount) %></td></tr>
+      <% }) %>
+      </tbody></table>
+    </div>
+    <% } %>
 
-<% if (leaderboard) { %>
-<h2>Agent Leaderboard</h2>
-<% if (!leaderboard.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
-<% const max = leaderboard.length ? leaderboard[0].collected : 0; %>
-<table class="data"><thead><tr><th>Agent</th><th class="num">Collected</th><th>Attainment</th></tr></thead>
-<tbody>
-<% leaderboard.forEach(row => { const pct = max > 0 ? Math.round(row.collected / max * 100) : 0; %>
-<tr><td><%= row.name %></td><td class="num"><%= h.money(row.collected) %></td>
-<td><div class="bar"><div class="fill is-green" style="width: <%= pct %>%"></div></div></td></tr>
-<% }) %>
-</tbody></table>
-<% } %>
-<% } %>
+    <% if (leaderboard) { %>
+    <h2>Agent Leaderboard</h2>
+    <% if (!leaderboard.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
+    <% const max = leaderboard.length ? leaderboard[0].collected : 0; %>
+    <div class="panel flush">
+      <table class="data"><thead><tr><th>Agent</th><th class="num">Collected</th><th>Attainment</th></tr></thead>
+      <tbody>
+      <% leaderboard.forEach(row => { const pct = max > 0 ? Math.round(row.collected / max * 100) : 0; %>
+      <tr><td><%= row.name %></td><td class="num"><%= h.money(row.collected) %></td>
+      <td><div class="bar"><div class="fill is-green" style="width: <%= pct %>%"></div></div></td></tr>
+      <% }) %>
+      </tbody></table>
+    </div>
+    <% } %>
+    <% } %>
+  </div>
 
-<h2>Recent Activity</h2>
-<% if (!recent.length) { %><%- include('../partials/empty', { msg: 'No activity yet.' }) %><% } else { %>
-<% const evClass = { payment:'is-green', ptp_fulfilled:'is-green', ptp_broken:'is-red', ptp_created:'is-gold', status_change:'is-blue', legal:'is-red', call:'is-blue' }; %>
-<ul class="timeline">
-<% recent.forEach(ev => { %><li><span class="badge <%= evClass[ev.event_type]||'is-neutral' %>"><%= ev.event_type %></span> <%= ev.content %>
-<span class="meta"><% if (ev.case_id) { %><a href="/cases/<%= ev.case_id %>"><%= ev.case_no %></a><% } else { %><%= ev.case_no %><% } %> · <%= ev.created_by||'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></li><% }) %>
-</ul>
-<% } %>
+  <div>
+    <h2>Recent Activity</h2>
+    <% if (!recent.length) { %><%- include('../partials/empty', { msg: 'No activity yet.' }) %><% } else { %>
+    <% const tick = { payment: 'g', ptp_fulfilled: 'g', ptp_broken: 'r', ptp_created: 'y', status_change: 'b', legal: 'r', call: 'b' }; %>
+    <div class="panel flush">
+      <ul class="feed">
+      <% recent.forEach(ev => { %>
+      <li><span class="tk <%= tick[ev.event_type] || '' %>"></span><div><%= ev.content %>
+      <span class="m"><% if (ev.case_id) { %><a href="/cases/<%= ev.case_id %>"><%= ev.case_no %></a><% } else { %><%= ev.case_no %><% } %> · <%= ev.created_by || 'system' %> · <%= h.dateTimeFmt(ev.created_at) %></span></div></li>
+      <% }) %>
+      </ul>
+    </div>
+    <% } %>
+  </div>
+</div>
