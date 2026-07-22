@@ -7,7 +7,7 @@ const { nextCaseNo } = require('../utils/numbering');
 const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { caseStatusLabel, dateFmt, round2 } = require('../utils/helpers');
-const { splitInstallments, dueDates } = require('../utils/installments');
+const { splitInstallments, dueDates, maturityDate } = require('../utils/installments');
 const crypto = require('node:crypto');
 const router = express.Router();
 
@@ -38,6 +38,17 @@ function interestFields(b) {
   const mode = ['fixed', 'monthly', 'daily'].includes(b.interest_mode) ? b.interest_mode : 'fixed';
   if (mode === 'fixed') return { mode, rate: 0, from: null };
   return { mode, rate: Number(b.interest_rate) || 0, from: b.interest_from || null };
+}
+
+// Parse the loan-tenure form fields. maturity_date is only derived when both
+// loan_start_date and tenure are present; otherwise it's left null so the UI
+// hides the Maturity Date display rather than showing a bogus computed date.
+function tenureFields(b) {
+  const unit = ['days', 'months', 'years'].includes(b.tenure_unit) ? b.tenure_unit : 'months';
+  const start = b.loan_start_date || null;
+  const tenure = (b.tenure !== undefined && b.tenure !== '') ? Number(b.tenure) : null;
+  const maturity = (start && tenure) ? maturityDate(start, tenure, unit) : null;
+  return { start, tenure, unit, maturity };
 }
 
 // Internal-only business: cases don't pick an external client. Every case is
@@ -84,10 +95,11 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
   const { mode, rate, from } = interestFields(b);
   // Accrual modes start with ~0 interest; the manual interest field only applies to fixed.
   const interest = mode === 'fixed' ? (Number(b.interest_amount)||0) : 0;
+  const { start: loanStart, tenure, unit: tenureUnit, maturity } = tenureFields(b);
   const case_no = nextCaseNo();
-  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark,next_action_at,interest_mode,interest_rate,interest_from)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, b.next_action_at||null, mode, rate, from]);
+  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark,next_action_at,interest_mode,interest_rate,interest_from,loan_start_date,tenure,tenure_unit,maturity_date)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, b.next_action_at||null, mode, rate, from, loanStart, tenure, tenureUnit, maturity]);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)', [r.lastInsertRowid,'note',`Case ${case_no} created`,req.session.user.full_name]);
   logAction(req,'create','case',r.lastInsertRowid,`Created case ${case_no}`);
   res.redirect(`/cases/${r.lastInsertRowid}?ok=Case+created`);
@@ -115,8 +127,9 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const principal = Number(b.principal_amount)||0;
   const { mode, rate, from } = interestFields(b);
   const interest = mode === 'fixed' ? (Number(b.interest_amount)||0) : 0;
-  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,next_action_at=?,interest_mode=?,interest_rate=?,interest_from=?,updated_at=datetime('now') WHERE id=?`,
-    [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,b.next_action_at||null,mode,rate,from,req.params.id]);
+  const { start: loanStart, tenure, unit: tenureUnit, maturity } = tenureFields(b);
+  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,next_action_at=?,interest_mode=?,interest_rate=?,interest_from=?,loan_start_date=?,tenure=?,tenure_unit=?,maturity_date=?,updated_at=datetime('now') WHERE id=?`,
+    [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,b.next_action_at||null,mode,rate,from,loanStart,tenure,tenureUnit,maturity,req.params.id]);
   const cid = Number(req.params.id);
   resyncCaseStatus(cid, req.session.user.full_name);
   logAction(req,'update','case',cid,`Updated case ${cid}`);
