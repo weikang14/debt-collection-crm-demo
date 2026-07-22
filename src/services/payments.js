@@ -48,10 +48,14 @@ function dailyRate(c) {
 // Interest-first (先息后本) balance. Walks payments in date order: between events
 // interest accrues on the *remaining* principal, and each payment clears accrued
 // interest before it touches principal — so paying down principal shrinks all
-// future interest. Pure; asOf is injectable for tests. `payments` MUST be sorted
-// ascending by payment_date. `interest` returned is total interest charged to
-// asOf, so the identity outstanding = principal + interest − paid still holds.
-function caseBalance(c, payments, asOf = new Date()) {
+// future interest. Pure; asOf is injectable for tests, and otherwise defaults to
+// the case's maturity_date — the loan's fixed term, not "today" — so displayed
+// interest is the full start-to-end figure and doesn't drift as days pass.
+// Falls back to today when there's no maturity_date (tenure not set). `payments`
+// MUST be sorted ascending by payment_date. `interest` returned is total interest
+// charged to asOf, so the identity outstanding = principal + interest − paid still holds.
+function caseBalance(c, payments, asOf) {
+  const end = asOf || c.maturity_date || new Date();
   const paid = payments.reduce((s, p) => s + p.amount, 0);
   if (c.interest_mode !== 'daily' && c.interest_mode !== 'monthly') {
     // fixed: interest is a lump, allocation order can't change the totals.
@@ -68,13 +72,13 @@ function caseBalance(c, payments, asOf = new Date()) {
     remP = Math.max(0, remP - amt); // remainder pays principal; any overpay is dropped (validatePayment blocks it)
     last = p.payment_date;
   }
-  unpaidInt += remP * r * daysBetween(last, asOf);
+  unpaidInt += remP * r * daysBetween(last, end);
   return { principal: c.principal_amount, interest: round2(paidInt + unpaidInt), paid,
     outstanding: round2(Math.max(0, remP + unpaidInt)) };
 }
 
 function recomputeOutstanding(caseId) {
-  const c = get('SELECT principal_amount, interest_amount, interest_mode, interest_rate, interest_from, opened_at FROM cases WHERE id = ?', [caseId]);
+  const c = get('SELECT principal_amount, interest_amount, interest_mode, interest_rate, interest_from, opened_at, maturity_date FROM cases WHERE id = ?', [caseId]);
   if (!c) return 0; // case gone (e.g. recompute-on-load of an out-of-scope/missing id)
   const payments = all('SELECT amount, payment_date FROM payments WHERE case_id = ? ORDER BY payment_date, id', [caseId]);
   const b = caseBalance(c, payments);

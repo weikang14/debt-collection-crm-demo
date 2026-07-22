@@ -24,7 +24,7 @@
 %>
 <section class="ledger">
   <div class="ledger-lead">
-    <div class="ledger-lbl">Outstanding</div>
+    <div class="ledger-lbl">Total Outstanding</div>
     <div class="ledger-amt"><span class="ledger-cur">RM</span><%= h.money(c.outstanding_amount) %></div>
     <div class="ledger-bar"><i style="width:<%= Math.min(recovered, 100) %>%"></i></div>
     <div class="ledger-meta"><b><%= recovered %>% recovered</b><span>RM <%= h.money(paid) %> of <%= h.money(total) %> paid · opened <%= daysOpen %> <%= daysOpen === 1 ? 'day' : 'days' %> ago</span></div>

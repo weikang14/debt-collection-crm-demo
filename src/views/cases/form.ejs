@@ -11,10 +11,29 @@
   </select></label>
   <label>Principal Amount <input name="principal_amount" type="number" step="0.01" min="0" value="<%= c.principal_amount||'' %>" required></label>
   <label>Loan Start Date <input type="date" name="loan_start_date" value="<%= c.loan_start_date||'' %>"></label>
-  <label>Tenure <input name="tenure" type="number" step="1" min="1" value="<%= c.tenure||'' %>"></label>
-  <label>Tenure Unit <select name="tenure_unit">
+  <label>Tenure <span id="tenure_unit_hint">(<%= c.tenure_unit||'months' %>)</span> <input name="tenure" type="number" step="1" min="1" list="tenure_options" value="<%= c.tenure||'' %>"></label>
+  <datalist id="tenure_options"></datalist>
+  <label>Tenure Unit <select name="tenure_unit" id="tenure_unit">
     <% ['days','months','years'].forEach(u => { %><option value="<%= u %>" <%= (c.tenure_unit||'months')===u?'selected':'' %>><%= u %></option><% }) %>
   </select></label>
+  <script>
+    // Keep the Tenure label's unit hint and the clickable preset list (native
+    // <datalist>, still lets you type any value) in sync with Tenure Unit.
+    (function(){
+      var sel=document.getElementById('tenure_unit');
+      var hint=document.getElementById('tenure_unit_hint');
+      var list=document.getElementById('tenure_options');
+      var PRESETS={ days:[7,14,30,60,90,180,270,365], months:[3,6,9,12,18,24,36,48,60], years:[1,2,3,4,5,10] };
+      function sync(){
+        hint.textContent='('+sel.value+')';
+        list.innerHTML='';
+        (PRESETS[sel.value]||[]).forEach(function(v){
+          var o=document.createElement('option'); o.value=v; list.appendChild(o);
+        });
+      }
+      sel.addEventListener('change',sync); sync();
+    })();
+  </script>
   <label>Interest Mode
     <span id="interest_help" title="View formula" style="cursor:pointer;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;">!</span>
     <select name="interest_mode" id="interest_mode">
