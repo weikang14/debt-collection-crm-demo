@@ -2,7 +2,8 @@ process.env.CRM_DB_PATH = require('node:path').join(require('node:os').tmpdir(),
 const { test } = require('node:test');
 const assert = require('node:assert');
 const { repaymentSchedule } = require('../src/utils/schedule');
-const { caseBalance } = require('../src/services/payments');
+const { caseBalance, dailyRate } = require('../src/services/payments');
+const { round2 } = require('../src/utils/helpers');
 
 const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 0.005, `${msg}: ${a} vs ${b}`);
 
@@ -83,4 +84,30 @@ test('identity: sum of expected_amount (zero payments) matches caseBalance at ma
   const sumExpected = rows.reduce((s, r) => s + r.expected_amount, 0);
   const b = caseBalance(c, [], rows[rows.length - 1].due_date);
   near(sumExpected, b.interest + c.principal_amount, 'schedule total agrees with ledger total');
+});
+
+test('interest_from different from loan_start_date: period 1 accrues from interest_from, not loan_start_date', () => {
+  // Loan disbursed 2026-01-01 but collection/interest only starts 2026-01-10
+  // (a case opened for collection long after the loan was disbursed).
+  const c = baseCase({ loan_start_date: '2026-01-01', interest_from: '2026-01-10' });
+  const rows = repaymentSchedule(c, []);
+  // period 1 due date is still driven off loan_start_date's month boundary
+  assert.strictEqual(rows[0].due_date, '2026-02-01');
+  const daysAccrued = 22; // 2026-01-10 -> 2026-02-01
+  near(rows[0].expected_amount, round2(c.principal_amount * dailyRate(c) * daysAccrued), 'period 1 accrues only from interest_from (22d), not full loan_start_date span (31d)');
+
+  // The real point of the fix: schedule total must never silently disagree with caseBalance.
+  const sumExpected = rows.reduce((s, r) => s + r.expected_amount, 0);
+  const b = caseBalance(c, [], rows[rows.length - 1].due_date);
+  near(sumExpected, b.interest + c.principal_amount, 'schedule total still agrees with ledger total when interest_from != loan_start_date');
+});
+
+test('interest_rate 0: every non-final period is paid with nothing owed, even with zero actual payment (documented contract)', () => {
+  const rows = repaymentSchedule(baseCase({ interest_rate: 0 }), []);
+  rows.forEach((r, i) => {
+    if (i === rows.length - 1) return; // final period bundles principal, not expected to be 0
+    assert.strictEqual(r.expected_amount, 0, `period ${i} expected_amount`);
+    assert.strictEqual(r.paid_amount, 0, `period ${i} paid_amount`);
+    assert.strictEqual(r.status, 'paid', `period ${i} status`);
+  });
 });

@@ -27,7 +27,12 @@ function repaymentSchedule(c, payments) {
   const rate = dailyRate(c);
   const dates = dueDates(c.loan_start_date, c.tenure + 1).slice(1);
   let pool = payments.reduce((s, p) => s + p.amount, 0);
-  let periodStart = c.loan_start_date;
+  // Match caseBalance()'s accrual origin (src/services/payments.js) so period 1's
+  // "Expected" interest never disagrees with the ledger's interest figure shown
+  // elsewhere on the case page. Trailing `|| c.loan_start_date` is a fallback for
+  // pure-function callers/tests that don't set opened_at; never triggers on real
+  // DB rows since opened_at is NOT NULL in schema.
+  let periodStart = c.interest_from || c.opened_at || c.loan_start_date;
   const today = todayStr();
   return dates.map((due, i) => {
     const isLast = i === dates.length - 1;
@@ -37,6 +42,9 @@ function repaymentSchedule(c, payments) {
     pool -= paid;
     periodStart = due;
     const outstanding = round2(Math.max(0, expected - paid));
+    // A period with expected_amount === 0 (e.g. interest_rate: 0) has nothing owed,
+    // so paid(0) >= expected(0) is intentionally 'paid' even with zero actual payment —
+    // 0 owed = nothing outstanding = satisfied, not a bug.
     const status = paid >= expected ? 'paid'
       : due < today ? 'overdue'
       : paid > 0 ? 'partial'
