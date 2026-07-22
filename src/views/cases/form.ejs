@@ -10,6 +10,11 @@
     <% agents.forEach(a => { %><option value="<%= a.id %>" <%= c.agent_id===a.id?'selected':'' %>><%= a.name %></option><% }) %>
   </select></label>
   <label>Principal Amount <input name="principal_amount" type="number" step="0.01" min="0" value="<%= c.principal_amount||'' %>" required></label>
+  <label>Loan Start Date <input type="date" name="loan_start_date" value="<%= c.loan_start_date||'' %>"></label>
+  <label>Tenure <input name="tenure" type="number" step="1" min="1" value="<%= c.tenure||'' %>"></label>
+  <label>Tenure Unit <select name="tenure_unit">
+    <% ['days','months','years'].forEach(u => { %><option value="<%= u %>" <%= (c.tenure_unit||'months')===u?'selected':'' %>><%= u %></option><% }) %>
+  </select></label>
   <label>Interest Mode
     <span id="interest_help" title="View formula" style="cursor:pointer;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;">!</span>
     <select name="interest_mode" id="interest_mode">
