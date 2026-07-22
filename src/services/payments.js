@@ -132,4 +132,4 @@ function resyncCaseStatus(caseId, by) {
   }
   return outstanding;
 }
-module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, caseBalance, applyPayment, paymentWrites, resyncCaseStatus };
+module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, caseBalance, applyPayment, paymentWrites, resyncCaseStatus, dailyRate, daysBetween };
