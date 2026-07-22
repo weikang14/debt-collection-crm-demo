@@ -34,6 +34,9 @@
     <div><div class="ledger-lbl">Principal</div><div class="ledger-val"><%= h.money(c.principal_amount) %></div></div>
     <div><div class="ledger-lbl">Interest</div><div class="ledger-val"><%= h.money(c.interest_amount) %></div></div>
     <div><div class="ledger-lbl">Paid</div><div class="ledger-val pos"><%= h.money(paid) %></div></div>
+    <% if (c.maturity_date) { %>
+    <div><div class="ledger-lbl">Maturity Date</div><div class="ledger-val"><%= h.dateFmt(c.maturity_date) %></div></div>
+    <% } %>
   </div>
 </section>
 
