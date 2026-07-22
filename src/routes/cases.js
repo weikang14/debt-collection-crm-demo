@@ -46,7 +46,8 @@ function interestFields(b) {
 function tenureFields(b) {
   const unit = ['days', 'months', 'years'].includes(b.tenure_unit) ? b.tenure_unit : 'months';
   const start = b.loan_start_date || null;
-  const tenure = (b.tenure !== undefined && b.tenure !== '') ? Number(b.tenure) : null;
+  const parsedTenure = Number(b.tenure);
+  const tenure = Number.isFinite(parsedTenure) && parsedTenure > 0 ? parsedTenure : null;
   const maturity = (start && tenure) ? maturityDate(start, tenure, unit) : null;
   return { start, tenure, unit, maturity };
 }
