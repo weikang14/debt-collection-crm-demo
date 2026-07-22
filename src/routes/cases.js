@@ -8,6 +8,7 @@ const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES } = require('.
 const { toCsv, sendCsv } = require('../utils/csv');
 const { caseStatusLabel, dateFmt, round2 } = require('../utils/helpers');
 const { splitInstallments, dueDates, maturityDate } = require('../utils/installments');
+const { repaymentSchedule } = require('../utils/schedule');
 const crypto = require('node:crypto');
 const router = express.Router();
 
@@ -144,7 +145,8 @@ router.get('/:id', requireLogin, (req, res) => {
   const ptps = all('SELECT * FROM ptps WHERE case_id=? ORDER BY (plan_id IS NULL), plan_id, installment_no, due_date DESC', [c.id]);
   const tasks = all('SELECT * FROM tasks WHERE case_id=? ORDER BY due_date', [c.id]);
   const calls = all('SELECT * FROM call_logs WHERE case_id=? ORDER BY call_time DESC', [c.id]);
-  res.render('cases/show', { title: c.case_no, c, timeline, payments, ptps, tasks, calls,
+  const schedule = repaymentSchedule(c, payments);
+  res.render('cases/show', { title: c.case_no, c, timeline, payments, ptps, tasks, calls, schedule,
     statuses: CASE_STATUSES, terminal: TERMINAL_STATUSES,
     readOnly: ['auditor','client'].includes(req.session.user.role) });
 });
