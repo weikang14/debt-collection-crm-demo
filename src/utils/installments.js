@@ -23,4 +23,11 @@ function dueDates(firstDate, n) {
   return Array.from({ length: n }, (_, k) => start.add(k, 'month').format('YYYY-MM-DD'));
 }
 
-module.exports = { splitInstallments, dueDates };
+// Loan maturity date: startDate + tenure, in the given unit. Unknown/missing
+// unit falls back to months (same default as tenure_unit's DB column default).
+function maturityDate(startDate, tenure, unit) {
+  const u = unit === 'years' ? 'year' : unit === 'days' ? 'day' : 'month';
+  return dayjs(startDate).add(tenure, u).format('YYYY-MM-DD');
+}
+
+module.exports = { splitInstallments, dueDates, maturityDate };
