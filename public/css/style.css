@@ -257,6 +257,36 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 2px rgba(15, 91, 82, 0.18);
 }
 
+/* ---------- Chip row (e.g. Tenure quick-fill presets) ---------- */
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: -8px 0 14px;
+}
+.chip {
+  font-family: var(--font-body);
+  font-size: 12px;
+  border: 1px solid var(--paper-line);
+  background: #fff;
+  color: var(--muted);
+  border-radius: 999px;
+  padding: 4px 12px;
+  cursor: pointer;
+  line-height: 1.4;
+}
+.chip:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.chip.is-active {
+  background: #f7ecd9;
+  border-color: var(--gold);
+  color: var(--gold);
+  font-weight: 600;
+}
+
 /* ---------- Login page ---------- */
 
 .login-page {

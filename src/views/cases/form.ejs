@@ -11,10 +11,26 @@
   </select></label>
   <label>Principal Amount <input name="principal_amount" type="number" step="0.01" min="0" value="<%= c.principal_amount||'' %>" required></label>
   <label>Loan Start Date <input type="date" name="loan_start_date" value="<%= c.loan_start_date||'' %>"></label>
-  <label>Tenure (months) <input name="tenure" type="number" step="1" min="1" list="tenure_options" value="<%= c.tenure||'' %>"></label>
-  <datalist id="tenure_options">
-    <% [3,6,9,12,18,24,36,48,60].forEach(v => { %><option value="<%= v %>"><% }) %>
-  </datalist>
+  <label>Tenure (months) <input name="tenure" type="number" step="1" min="1" id="tenure" value="<%= c.tenure||'' %>"></label>
+  <div class="chip-row" role="group" aria-label="Common tenures">
+    <% [3,6,9,12,18,24,36,48,60].forEach(v => { %><button type="button" class="chip" data-val="<%= v %>"><%= v %>mo</button><% }) %>
+  </div>
+  <script>
+    // Quick-fill presets for Tenure. Still a plain number input underneath —
+    // these just save typing for the common cases, they don't replace it.
+    (function(){
+      var input = document.getElementById('tenure');
+      var chips = document.querySelectorAll('.chip-row .chip');
+      function mark(){
+        chips.forEach(function(b){ b.classList.toggle('is-active', b.dataset.val === input.value); });
+      }
+      chips.forEach(function(btn){
+        btn.addEventListener('click', function(){ input.value = btn.dataset.val; mark(); });
+      });
+      input.addEventListener('input', mark);
+      mark();
+    })();
+  </script>
   <label>Interest Mode
     <span id="interest_help" title="View formula" style="cursor:pointer;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;">!</span>
     <select name="interest_mode" id="interest_mode">
