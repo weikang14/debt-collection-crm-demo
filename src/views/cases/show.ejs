@@ -98,6 +98,22 @@
     <button type="button" class="btn icon-btn" onclick="this.closest('dialog').close()" aria-label="Close">&times;</button>
   </div>
   <div class="modal-body">
+    <% if (schedule.length) { %>
+    <section class="rec-section">
+    <h2>Repayment Schedule</h2>
+    <% const schedClass = { paid:'is-green', overdue:'is-red', partial:'is-gold', pending:'is-neutral' }; %>
+    <% const schedLabel = { paid:'Paid', overdue:'Overdue', partial:'Partially Paid', pending:'Pending' }; %>
+    <table class="data"><thead><tr><th>Due Date</th><th class="num">Expected</th><th class="num">Paid</th><th class="num">Outstanding</th><th>Status</th></tr></thead>
+    <tbody><% schedule.forEach(row => { %><tr>
+      <td><%= h.dateFmt(row.due_date) %></td>
+      <td class="num"><%= h.money(row.expected_amount) %></td>
+      <td class="num"><%= h.money(row.paid_amount) %></td>
+      <td class="num"><%= h.money(row.outstanding_amount) %></td>
+      <td><span class="badge <%= schedClass[row.status] %>"><%= schedLabel[row.status] %></span></td>
+    </tr><% }) %></tbody></table>
+    </section>
+    <% } %>
+
     <section class="rec-section">
     <% const canEditPay = !readOnly && ['admin','manager','finance'].includes(currentUser.role); %>
     <h2>Payments</h2>
