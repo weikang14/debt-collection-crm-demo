@@ -61,6 +61,10 @@ CREATE TABLE IF NOT EXISTS cases (
   interest_mode TEXT NOT NULL DEFAULT 'fixed' CHECK (interest_mode IN ('fixed','monthly','daily')),
   interest_rate REAL NOT NULL DEFAULT 0,
   interest_from TEXT,
+  loan_start_date TEXT,
+  tenure INTEGER,
+  tenure_unit TEXT NOT NULL DEFAULT 'months' CHECK (tenure_unit IN ('days','months','years')),
+  maturity_date TEXT,
   priority TEXT NOT NULL DEFAULT 'medium' CHECK (priority IN ('low','medium','high','urgent')),
   status TEXT NOT NULL DEFAULT 'new' CHECK (status IN
     ('new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased')),

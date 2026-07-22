@@ -49,6 +49,12 @@ function init() {
   try { db.prepare("ALTER TABLE cases ADD COLUMN interest_mode TEXT NOT NULL DEFAULT 'fixed'").run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE cases ADD COLUMN interest_rate REAL NOT NULL DEFAULT 0').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE cases ADD COLUMN interest_from TEXT').run(); } catch (e) { /* exists */ }
+  // Migration: loan tenure & maturity date on cases (nullable; both start_date and
+  // tenure must be present for maturity_date to be computed — see tenureFields()).
+  try { db.prepare('ALTER TABLE cases ADD COLUMN loan_start_date TEXT').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE cases ADD COLUMN tenure INTEGER').run(); } catch (e) { /* exists */ }
+  try { db.prepare("ALTER TABLE cases ADD COLUMN tenure_unit TEXT NOT NULL DEFAULT 'months'").run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE cases ADD COLUMN maturity_date TEXT').run(); } catch (e) { /* exists */ }
 }
 function get(sql, params = []) { return db.prepare(sql).get(...params); }
 function all(sql, params = []) { return db.prepare(sql).all(...params); }
