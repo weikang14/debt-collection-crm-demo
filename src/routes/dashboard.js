@@ -4,6 +4,7 @@ const { requireLogin } = require('../middleware/auth');
 const { caseWhere, isScoped } = require('../utils/scope');
 const { bucketAging, BUCKET_LABELS } = require('../utils/aging');
 const { TERMINAL_STATUSES } = require('../services/payments');
+const { followupTasks } = require('../utils/followups');
 const router = express.Router();
 
 router.get('/', requireLogin, (req, res) => {
@@ -29,13 +30,12 @@ router.get('/', requireLogin, (req, res) => {
     FROM cases WHERE ${w.clause} AND outstanding_amount > 0 AND status NOT IN (${tph})`, [...w.params, ...TERMINAL_STATUSES]);
   const aging = bucketAging(agingRows);
   const activeCases = get(`SELECT COUNT(*) c FROM cases WHERE ${w.clause} AND status NOT IN (${tph})`, [...w.params, ...TERMINAL_STATUSES]).c;
-  // Due for follow-up: active cases whose next_action_at is today or past.
-  const followups = all(`SELECT cases.id, cases.case_no, cases.next_action_at, cases.outstanding_amount,
-    CAST(julianday(date('now','+8 hours')) - julianday(date(cases.next_action_at)) AS INTEGER) days_over,
-    debtors.name debtor_name
-    FROM cases JOIN debtors ON debtors.id=cases.debtor_id
-    WHERE ${w.clause} AND cases.next_action_at IS NOT NULL AND date(cases.next_action_at) <= date('now','+8 hours')
-    AND cases.status NOT IN (${tph}) ORDER BY cases.next_action_at LIMIT 10`, [...w.params, ...TERMINAL_STATUSES]);
+  // Upcoming follow-ups: pending tasks linked to a case, due within the next
+  // 14 days (including anything already overdue) — see utils/followups.js.
+  // followupCount is the full-window total; followups is the top 10 for display.
+  const followupRows = followupTasks(u, 14);
+  const followups = followupRows.slice(0, 10);
+  const followupCount = followupRows.length;
   const recent = all(`SELECT e.*, c.case_no FROM timeline_events e JOIN cases c ON c.id=e.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} ORDER BY e.created_at DESC LIMIT 12`, w.params);
   let leaderboard = null;
   if (!isScoped(u)) {
@@ -43,6 +43,6 @@ router.get('/', requireLogin, (req, res) => {
       LEFT JOIN cases c ON c.agent_id=a.id LEFT JOIN payments p ON p.case_id=c.id
       GROUP BY a.id ORDER BY collected DESC LIMIT 5`);
   }
-  res.render('dashboard/index', { title: 'Dashboard', kpi: { outstanding, legalCount, openedToday, closedToday, collectedToday, paymentsToday, activeCases, ptpToday, brokenPtp, overduePtp, overdueTasks }, aging, agingLabels: BUCKET_LABELS, followups, leaderboard, recent });
+  res.render('dashboard/index', { title: 'Dashboard', kpi: { outstanding, legalCount, openedToday, closedToday, collectedToday, paymentsToday, activeCases, ptpToday, brokenPtp, overduePtp, overdueTasks, followupCount }, aging, agingLabels: BUCKET_LABELS, followups, leaderboard, recent });
 });
 module.exports = router;

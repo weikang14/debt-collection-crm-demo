@@ -28,6 +28,7 @@
   <span class="chip<%= kpi.openedToday ? ' is-green' : '' %>"><span class="dot"></span>Opened today <b><%= kpi.openedToday %></b></span>
   <span class="chip"><span class="dot"></span>Closed today <b><%= kpi.closedToday %></b></span>
   <span class="chip<%= kpi.overdueTasks ? ' is-gold' : '' %>"><span class="dot"></span>Overdue tasks <b><%= kpi.overdueTasks %></b></span>
+  <span class="chip<%= kpi.followupCount ? ' is-gold' : '' %>"><span class="dot"></span>Upcoming (14d) <b><%= kpi.followupCount %></b></span>
 </div>
 
 <h2>Aging <span class="meta">outstanding by debt age (days)</span></h2>
@@ -47,14 +48,14 @@
 
 <div class="dash-two">
   <div>
-    <h2>Due for Follow-up</h2>
+    <h2>Upcoming Follow-ups <span class="meta">next 14 days</span></h2>
     <% if (!followups.length) { %><%- include('../partials/empty', { msg: 'Nothing due for follow-up.' }) %><% } else { %>
     <div class="panel flush">
-      <table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Status</th><th class="num">Outstanding</th></tr></thead>
+      <table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Task</th><th class="num">Outstanding</th></tr></thead>
       <tbody>
-      <% followups.forEach(f => { %>
-      <tr><td><a href="/cases/<%= f.id %>"><%= f.case_no %></a></td><td><%= f.debtor_name %></td>
-      <td><% if (f.days_over > 0) { %><span class="badge is-red"><%= f.days_over %>d late</span><% } else { %><span class="badge is-gold">Today</span><% } %></td>
+      <% followups.forEach(f => { const b = h.followupBadge(f.days_over); %>
+      <tr><td><a href="/cases/<%= f.case_id %>"><%= f.case_no %></a></td><td><%= f.debtor_name %></td>
+      <td><span class="badge <%= b.cls %>"><%= b.label %></span> <%= f.title %></td>
       <td class="num"><%= h.money(f.outstanding_amount) %></td></tr>
       <% }) %>
       </tbody></table>
