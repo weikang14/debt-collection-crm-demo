@@ -11,9 +11,10 @@ const { TERMINAL_STATUSES } = require('../services/payments');
 function followupTasks(user, windowDays) {
   const w = caseWhere(user);
   const tph = TERMINAL_STATUSES.map(() => '?').join(',');
-  const hasWindow = Number.isFinite(windowDays);
+  const hasWindow = windowDays !== null && windowDays !== undefined && Number.isFinite(Number(windowDays));
+  const winDays = hasWindow ? Number(windowDays) : null;
   const upperClause = hasWindow ? "AND date(tasks.due_date) <= date('now','+8 hours', ?)" : '';
-  const upperParam = hasWindow ? [`+${windowDays} days`] : [];
+  const upperParam = hasWindow ? [`+${winDays} days`] : [];
   return all(`SELECT tasks.id, tasks.title, tasks.due_date, cases.id case_id, cases.case_no,
       cases.outstanding_amount, debtors.name debtor_name,
       CAST(julianday(date('now','+8 hours')) - julianday(date(tasks.due_date)) AS INTEGER) days_over
