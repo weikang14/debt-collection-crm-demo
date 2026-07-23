@@ -37,3 +37,10 @@ test('date helpers return empty string for null/undefined', () => {
   assert.strictEqual(h.dateFmt(null), '');
   assert.strictEqual(h.dateTimeFmt(undefined), '');
 });
+test('followupBadge classifies overdue/today/upcoming', () => {
+  assert.deepStrictEqual(h.followupBadge(3), { cls: 'is-red', label: '3d late' });
+  assert.deepStrictEqual(h.followupBadge(1), { cls: 'is-red', label: '1d late' });
+  assert.deepStrictEqual(h.followupBadge(0), { cls: 'is-gold', label: 'Today' });
+  assert.deepStrictEqual(h.followupBadge(-1), { cls: 'is-neutral', label: 'in 1d' });
+  assert.deepStrictEqual(h.followupBadge(-14), { cls: 'is-neutral', label: 'in 14d' });
+});

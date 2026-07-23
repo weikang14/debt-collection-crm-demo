@@ -27,6 +27,15 @@ const daysOverdue = (iso) => {
   return Math.max(0, dayjs(todayMYT).diff(dayjs(String(iso).slice(0, 10)), 'day'));
 };
 
+// Classify a follow-up task's due date relative to today (MYT) for badge
+// display. daysOver > 0: overdue by that many days. 0: due today.
+// < 0: due in the future (upcoming, within whatever window the caller used).
+const followupBadge = (daysOver) => {
+  if (daysOver > 0) return { cls: 'is-red', label: `${daysOver}d late` };
+  if (daysOver === 0) return { cls: 'is-gold', label: 'Today' };
+  return { cls: 'is-neutral', label: `in ${-daysOver}d` };
+};
+
 const CASE_STATUS = {
   new: ['New', 'is-neutral'], assigned: ['Assigned', 'is-blue'],
   negotiation: ['Negotiation', 'is-blue'], ptp: ['PTP', 'is-gold'],
@@ -59,4 +68,4 @@ const ICONS = {
 };
 const icon = (name) => ICONS[name] || '';
 
-module.exports = { money, round2, commission, dateFmt, dateTimeFmt, daysOverdue, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon };
+module.exports = { money, round2, commission, dateFmt, dateTimeFmt, daysOverdue, followupBadge, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon };
