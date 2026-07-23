@@ -63,8 +63,8 @@
       <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
       <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
       <% if (c.interest_mode === 'monthly' || c.interest_mode === 'daily') { %>
-      <div><span>Interest From</span><%= h.dateFmt(c.interest_from || c.opened_at) %>
-        <small style="color:var(--muted)">· interest accrues from this date<% if (!c.interest_from) { %> (unset, defaults to opened)<% } %></small></div>
+      <div><span>Loan Start Date</span><%= h.dateFmt(c.loan_start_date || c.opened_at) %>
+        <small style="color:var(--muted)">· interest accrues from this date<% if (!c.loan_start_date) { %> (unset, defaults to opened)<% } %></small></div>
       <% } %>
       <div><span>Next Action</span><%= nextTask ? (h.dateFmt(nextTask.due_date) + ' · ' + nextTask.title) : '—' %></div>
       <div><span>Remark</span><%= c.remark||'—' %></div>

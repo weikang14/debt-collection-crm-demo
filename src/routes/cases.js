@@ -33,12 +33,14 @@ function loadCase(req, res) {
 }
 
 // Parse the interest-model form fields. Unknown mode falls back to 'fixed';
-// rate/from only matter for accrual modes (blanked otherwise so a mode switch
-// back to fixed doesn't leave stale values).
+// rate only matters for accrual modes (blanked otherwise so a mode switch
+// back to fixed doesn't leave stale values). Interest always starts accruing
+// on loan_start_date — there is no separate manual "interest from" input;
+// the loan starting IS what starts interest.
 function interestFields(b) {
   const mode = ['fixed', 'monthly', 'daily'].includes(b.interest_mode) ? b.interest_mode : 'fixed';
   if (mode === 'fixed') return { mode, rate: 0, from: null };
-  return { mode, rate: Number(b.interest_rate) || 0, from: b.interest_from || null };
+  return { mode, rate: Number(b.interest_rate) || 0, from: b.loan_start_date || null };
 }
 
 // Parse the loan-tenure form fields. maturity_date is only derived when both
