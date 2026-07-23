@@ -39,8 +39,22 @@ function init() {
       // Column already exists, ignore
     }
   }
-  // Migration: next follow-up date on cases (nullable, no default)
-  try { db.prepare('ALTER TABLE cases ADD COLUMN next_action_at TEXT').run(); } catch (e) { /* exists */ }
+  // Migration: fold next_action_at (a bare date on the case) into a
+  // follow_up task per case, then drop the column. tasks is now the single
+  // source of truth for follow-ups. One-time: once the column is gone, the
+  // SELECT below throws "no such column" and the whole block is a no-op,
+  // same idiom as the ALTERs above.
+  try {
+    const rows = db.prepare(
+      "SELECT id, agent_id, case_no, next_action_at FROM cases WHERE next_action_at IS NOT NULL"
+    ).all();
+    for (const r of rows) {
+      db.prepare(
+        `INSERT INTO tasks (case_id, agent_id, type, title, due_date, status) VALUES (?, ?, 'follow_up', ?, ?, 'pending')`
+      ).run(r.id, r.agent_id, `跟进 ${r.case_no}`, r.next_action_at);
+    }
+    db.prepare('ALTER TABLE cases DROP COLUMN next_action_at').run();
+  } catch (e) { /* already migrated, or column never existed */ }
   // Migration: installment-plan grouping on ptps (nullable; NULL = standalone PTP)
   try { db.prepare('ALTER TABLE ptps ADD COLUMN plan_id TEXT').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE ptps ADD COLUMN installment_no INTEGER').run(); } catch (e) { /* exists */ }
