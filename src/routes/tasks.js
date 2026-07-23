@@ -13,6 +13,13 @@ router.get('/', requireLogin, (req, res) => {
   if (req.query.type) { where.push('tasks.type=?'); params.push(req.query.type); }
   // Overdue = still pending and past its due date (in Malaysia time, UTC+8).
   if (req.query.overdue === '1') where.push("tasks.status='pending' AND tasks.due_date IS NOT NULL AND date(tasks.due_date) < date('now','+8 hours')");
+  // Due-date window: an upper bound on how far ahead to look, independent of
+  // the overdue flag above (a lower-bound signal). Unset/unknown = no cap.
+  const WINDOW_DAYS = { '1': 1, '7': 7, '14': 14, '30': 30 };
+  if (WINDOW_DAYS[req.query.window]) {
+    where.push("tasks.due_date IS NOT NULL AND date(tasks.due_date) <= date('now','+8 hours', ?)");
+    params.push(`+${WINDOW_DAYS[req.query.window]} days`);
+  }
   const clause = where.length ? 'WHERE ' + where.join(' AND ') : '';
   const tasks = all(`SELECT tasks.*, cases.case_no FROM tasks LEFT JOIN cases ON cases.id=tasks.case_id ${clause} ORDER BY tasks.status, tasks.due_date`, params);
   const scoped = isScoped(u);

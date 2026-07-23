@@ -12,6 +12,13 @@
     <% ['follow_up','visit','legal','reminder'].forEach(tp => { %><option value="<%= tp %>" <%= query.type===tp?'selected':'' %>><%= tp %></option><% }) %>
   </select></label>
   <label>Overdue only <input type="checkbox" name="overdue" value="1" <%= query.overdue==='1'?'checked':'' %>></label>
+  <label>Due within <select name="window">
+    <option value="" <%= !query.window?'selected':'' %>>All</option>
+    <option value="1" <%= query.window==='1'?'selected':'' %>>Today</option>
+    <option value="7" <%= query.window==='7'?'selected':'' %>>7 days</option>
+    <option value="14" <%= query.window==='14'?'selected':'' %>>14 days</option>
+    <option value="30" <%= query.window==='30'?'selected':'' %>>30 days</option>
+  </select></label>
   <button class="btn btn-gold" type="submit">Filter</button>
 </form>
 <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
