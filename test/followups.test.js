@@ -49,6 +49,14 @@ test('admin sees all pending tasks within the window, excludes done and out-of-w
   assert.ok(!titles.includes('Already done'), 'done tasks excluded');
 });
 
+test('rows carry the assigned agent name', () => {
+  const rows = followupTasks({ role: 'admin' }, 14);
+  const overdue = rows.find((r) => r.title === 'Overdue follow-up');
+  const today = rows.find((r) => r.title === 'Due today');
+  assert.strictEqual(overdue.agent_name, 'Agent A');
+  assert.strictEqual(today.agent_name, 'Agent B');
+});
+
 test('agent only sees own tasks', () => {
   const rows = followupTasks({ role: 'agent', agent_id: agentB }, 14);
   assert.deepStrictEqual(rows.map((r) => r.title), ['Due today']);

@@ -16,9 +16,10 @@ function followupTasks(user, windowDays) {
   const upperClause = hasWindow ? "AND date(tasks.due_date) <= date('now','+8 hours', ?)" : '';
   const upperParam = hasWindow ? [`+${winDays} days`] : [];
   return all(`SELECT tasks.id, tasks.title, tasks.due_date, cases.id case_id, cases.case_no,
-      cases.outstanding_amount, debtors.name debtor_name,
+      cases.outstanding_amount, debtors.name debtor_name, agents.name agent_name,
       CAST(julianday(date('now','+8 hours')) - julianday(date(tasks.due_date)) AS INTEGER) days_over
     FROM tasks JOIN cases ON cases.id=tasks.case_id JOIN debtors ON debtors.id=cases.debtor_id
+      LEFT JOIN agents ON agents.id=tasks.agent_id
     WHERE tasks.status='pending' AND tasks.due_date IS NOT NULL ${upperClause}
       AND ${w.clause} AND cases.status NOT IN (${tph})
     ORDER BY tasks.due_date`,

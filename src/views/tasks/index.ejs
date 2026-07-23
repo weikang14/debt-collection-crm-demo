@@ -25,11 +25,11 @@
 <details class="new-panel">
   <summary class="btn btn-gold">+ New Task</summary>
   <form class="card form" method="post" action="/tasks/new">
-    <label>Case <select name="case_id">
+    <label>Case <select name="case_id" id="new-task-case">
       <option value="">—</option>
-      <% cases.forEach(c => { %><option value="<%= c.id %>"><%= c.case_no %></option><% }) %>
+      <% cases.forEach(c => { %><option value="<%= c.id %>" data-agent="<%= c.agent_id||'' %>"><%= c.case_no %></option><% }) %>
     </select></label>
-    <label>Agent <select name="agent_id">
+    <label>Agent <select name="agent_id" id="new-task-agent">
       <option value="">—</option>
       <% agents.forEach(a => { %><option value="<%= a.id %>"><%= a.name %></option><% }) %>
     </select></label>
@@ -47,11 +47,12 @@
 </details>
 <% } %>
 <% if (!tasks.length) { %><%- include('../partials/empty', { msg: 'No tasks yet.' }) %><% } else { %>
-<table class="data"><thead><tr><th>Title</th><th>Case No</th><th>Type</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
+<table class="data"><thead><tr><th>Title</th><th>Case No</th><th>Agent</th><th>Type</th><th>Due</th><th>Status</th><th>Actions</th></tr></thead>
 <tbody><% tasks.forEach(t => { %>
 <tr>
   <td><%= t.title %></td>
   <td><% if (t.case_id) { %><a class="mono" href="/cases/<%= t.case_id %>"><%= t.case_no %></a><% } else { %>—<% } %></td>
+  <td><%= t.agent_name || '—' %></td>
   <td><%= t.type %></td>
   <td><% if (t.status==='pending' && t.due_date && h.daysOverdue(t.due_date) > 0) { %><span class="badge is-red"><%= h.dateFmt(t.due_date) %> · overdue</span><% } else if (t.due_date) { %><%= h.dateFmt(t.due_date) %><% } else { %>—<% } %></td>
   <td><span class="badge <%= t.status==='done'?'is-green':'is-gold' %>"><%= t.status %></span></td>
@@ -91,5 +92,20 @@
   document.querySelectorAll('dialog.modal').forEach(function(d){
     d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
   });
+  // A task's agent always follows its case (see tasks.js POST /new), so
+  // once a case is picked the Agent field just mirrors it and locks.
+  (function(){
+    var caseSel = document.getElementById('new-task-case');
+    var agentSel = document.getElementById('new-task-agent');
+    if (!caseSel || !agentSel) return;
+    function syncAgent(){
+      var opt = caseSel.options[caseSel.selectedIndex];
+      var agentId = opt ? opt.dataset.agent : '';
+      agentSel.disabled = !!agentId;
+      if (agentId) agentSel.value = agentId;
+    }
+    caseSel.addEventListener('change', syncAgent);
+    syncAgent();
+  })();
 </script>
 <% } %>
