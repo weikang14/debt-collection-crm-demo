@@ -21,6 +21,9 @@
   const total = (c.principal_amount || 0) + (c.interest_amount || 0);
   const recovered = total > 0 ? Math.round(paid / total * 100) : 0;
   const daysOpen = Math.max(0, Math.floor((Date.now() - new Date(c.opened_at).getTime()) / 86400000));
+  const nextTask = tasks
+    .filter(t => t.status === 'pending' && t.due_date)
+    .sort((a, b) => a.due_date < b.due_date ? -1 : (a.due_date > b.due_date ? 1 : 0))[0];
 %>
 <section class="ledger">
   <div class="ledger-lead">
@@ -63,7 +66,7 @@
       <div><span>Interest From</span><%= h.dateFmt(c.interest_from || c.opened_at) %>
         <small style="color:var(--muted)">· interest accrues from this date<% if (!c.interest_from) { %> (unset, defaults to opened)<% } %></small></div>
       <% } %>
-      <div><span>Next Action</span><%= c.next_action_at ? h.dateFmt(c.next_action_at) : '—' %></div>
+      <div><span>Next Action</span><%= nextTask ? (h.dateFmt(nextTask.due_date) + ' · ' + nextTask.title) : '—' %></div>
       <div><span>Remark</span><%= c.remark||'—' %></div>
     </div>
 
