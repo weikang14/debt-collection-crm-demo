@@ -4,18 +4,15 @@
   <span class="meta">Welcome, <%= currentUser.full_name %></span>
 </div>
 
-<div class="ledger dash-ledger">
-  <div>
-    <div class="ledger-lbl">Collected Today</div>
-    <div class="ledger-amt pos"><span class="ledger-cur">RM</span><%= h.money(kpi.collectedToday) %></div>
-    <div class="ledger-meta"><%= kpi.paymentsToday %> payment<%= kpi.paymentsToday === 1 ? '' : 's' %> today</div>
+<div class="qrow">
+  <div class="q hot">
+    <div class="lbl2">Collected Today</div>
+    <div class="v2">RM <%= h.money(kpi.collectedToday) %></div>
+    <div class="sub2"><%= kpi.paymentsToday %> payment<%= kpi.paymentsToday === 1 ? '' : 's' %> today</div>
   </div>
-  <div class="ledger-vr"></div>
-  <div class="ledger-break">
-    <div><span class="ledger-lbl">Total Outstanding</span><div class="ledger-val">RM <%= h.money(kpi.outstanding) %></div></div>
-    <div><span class="ledger-lbl">Active Cases</span><div class="ledger-val"><%= kpi.activeCases %></div></div>
-    <div><span class="ledger-lbl">Legal Cases</span><div class="ledger-val"><%= kpi.legalCount %></div></div>
-  </div>
+  <div class="q"><div class="lbl2">Total Outstanding</div><div class="v2">RM <%= h.money(kpi.outstanding) %></div></div>
+  <div class="q"><div class="lbl2">Active Cases</div><div class="v2"><%= kpi.activeCases %></div></div>
+  <div class="q"><div class="lbl2">Legal Cases</div><div class="v2"><%= kpi.legalCount %></div></div>
 </div>
 
 <div class="chiprow">

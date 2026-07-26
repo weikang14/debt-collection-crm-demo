@@ -689,6 +689,13 @@ h2 .meta, .page-head .meta { font-family: var(--font-body); font-size: 12px; col
 .ledger-amt.pos { color: var(--green); }
 .dash-ledger { margin: 0 0 16px; }
 
+.qrow { display: flex; flex-wrap: wrap; gap: 30px; margin-bottom: 22px; padding-bottom: 20px;
+  border-bottom: 1px solid var(--paper-line); }
+.qrow .lbl2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
+.qrow .v2 { font-family: var(--font-display); font-size: 22px; color: var(--ink); margin-top: 4px; }
+.qrow .q.hot .v2 { color: var(--gold); }
+.qrow .sub2 { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+
 .chiprow { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: baseline; margin-bottom: 24px;
   padding-bottom: 18px; border-bottom: 1px solid var(--paper-line); }
 .chiprow .grp { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-right: 2px; }
