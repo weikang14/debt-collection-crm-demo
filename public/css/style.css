@@ -75,8 +75,8 @@ body.app {
 }
 
 .sidebar {
-  width: 240px;
-  flex: 0 0 240px;
+  width: 64px;
+  flex: 0 0 64px;
   background: var(--sidebar-bg);
   color: var(--ink-text);
   display: flex;
@@ -86,14 +86,59 @@ body.app {
   left: 0;
   bottom: 0;
   border-right: 3px solid var(--gold);
+  overflow: hidden;
+  z-index: 50;
+  transition: width 0.16s ease;
+}
+.sidebar:hover {
+  width: 236px;
+  box-shadow: 4px 0 20px rgba(20, 26, 36, 0.18);
+}
+
+/* Labels are hidden in the collapsed 64px rail and fade in when the
+   sidebar expands on hover, so the content column never has to shift. */
+.sidebar .lbl {
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  transition: opacity 0.1s ease;
+}
+.sidebar:hover .lbl {
+  opacity: 1;
+  width: auto;
 }
 
 .sidebar .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-family: var(--font-display);
   color: var(--ink);
   font-size: 18px;
-  padding: 22px 20px;
+  padding: 22px 0;
+  justify-content: center;
   border-bottom: 1px solid var(--sidebar-line);
+}
+.sidebar:hover .brand {
+  padding: 22px 20px;
+  justify-content: flex-start;
+}
+.sidebar .brand .mark {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  border: 1px solid var(--gold);
+  border-radius: 6px;
+  font-size: 14px;
+}
+/* the label already spells out "Debt..." so drop the redundant D badge
+   once there's room to show the full wordmark */
+.sidebar:hover .brand .mark {
+  display: none;
 }
 .sidebar .brand span {
   color: var(--gold);
@@ -111,11 +156,16 @@ body.app {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 10px 20px;
+  padding: 10px 0;
+  justify-content: center;
   margin-bottom: 2px;
   color: #4b5563;
   font-size: 13.5px;
   border-left: 3px solid transparent;
+}
+.sidebar:hover nav a {
+  padding: 10px 20px;
+  justify-content: flex-start;
 }
 .sidebar nav a:hover {
   background: rgba(255, 255, 255, 0.55);
@@ -136,9 +186,81 @@ body.app {
   opacity: 1;
 }
 
+/* ---- collapsible Team / Admin groups ---- */
+.sidebar .grp-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  justify-content: center;
+  margin-bottom: 2px;
+  color: #4b5563;
+  font-size: 13.5px;
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  user-select: none;
+}
+.sidebar:hover .grp-head {
+  padding: 10px 20px;
+  justify-content: flex-start;
+}
+.sidebar .grp-head:hover {
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ink-text);
+}
+.sidebar .grp-head svg {
+  flex: 0 0 auto;
+  opacity: 0.7;
+}
+.sidebar .grp-head:hover svg,
+.sidebar .grp.open .grp-head svg {
+  opacity: 1;
+}
+.sidebar .grp.open .grp-head {
+  border-left-color: var(--gold);
+}
+.sidebar .grp-head .chev {
+  margin-left: auto;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0;
+  width: 0;
+  overflow: hidden;
+  transition: transform 0.15s ease;
+}
+.sidebar:hover .grp-head .chev {
+  opacity: 1;
+  width: auto;
+}
+.sidebar .grp.open .grp-head .chev {
+  transform: rotate(90deg);
+}
+.sidebar .grp-body {
+  display: flex;
+  flex-direction: column;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.18s ease;
+}
+.sidebar .grp.open .grp-body {
+  max-height: 160px;
+}
+.sidebar:not(:hover) .grp-body {
+  max-height: 0 !important;
+}
+.sidebar .grp-body a {
+  padding-left: 46px;
+  font-size: 12.5px;
+}
+
 .sidebar-foot {
   border-top: 1px solid var(--sidebar-line);
+  padding: 14px 0 18px;
+  text-align: center;
+}
+.sidebar:hover .sidebar-foot {
   padding: 14px 20px 18px;
+  text-align: left;
 }
 .sidebar-foot .who {
   display: flex;
@@ -161,8 +283,12 @@ body.app {
   display: flex;
   align-items: center;
   gap: 8px;
+  justify-content: center;
   color: var(--muted);
   font-size: 13px;
+}
+.sidebar:hover .sidebar-foot .logout {
+  justify-content: flex-start;
 }
 .sidebar-foot .logout:hover {
   color: var(--ink-text);
@@ -171,7 +297,7 @@ body.app {
 
 .content {
   flex: 1;
-  margin-left: 240px;
+  margin-left: 64px;
   background: var(--paper);
   padding: 28px;
   min-width: 0;
@@ -557,11 +683,26 @@ table.data td.num, table.data th.num {
     line-height: 1; padding: 2px 6px; width: auto; cursor: pointer;
   }
 
+  /* mobile drawer is a full slide-in panel, not the desktop hover-rail —
+     force it open-width with labels always on since touch has no :hover */
   .sidebar {
+    width: 240px;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
     z-index: 60;
   }
+  .sidebar .brand, .sidebar nav a, .sidebar-foot, .sidebar-foot .logout, .sidebar .grp-head {
+    justify-content: flex-start;
+    padding-left: 20px;
+    text-align: left;
+  }
+  .sidebar .lbl { opacity: 1; width: auto; }
+  .sidebar .brand .mark { display: none; }
+  .sidebar .grp-head .chev { opacity: 1; width: auto; }
+  /* accordion state on mobile is driven purely by the .open class (click,
+     not hover) since touch has no reliable :hover to gate it on */
+  .sidebar .grp-body { max-height: 0; }
+  .sidebar .grp.open .grp-body { max-height: 200px !important; }
   body.nav-open .sidebar { transform: translateX(0); }
   body.nav-open .nav-backdrop {
     display: block; position: fixed; inset: 0;
@@ -689,23 +830,14 @@ h2 .meta, .page-head .meta { font-family: var(--font-body); font-size: 12px; col
 .ledger-amt.pos { color: var(--green); }
 .dash-ledger { margin: 0 0 16px; }
 
-.qrow { display: flex; flex-wrap: wrap; gap: 30px; margin-bottom: 22px; padding-bottom: 20px;
-  border-bottom: 1px solid var(--paper-line); }
+.qrow { display: flex; flex-wrap: wrap; gap: 72px;
+  margin-bottom: 22px; padding-bottom: 20px; border-bottom: 1px solid var(--paper-line); }
+.qrow.qrow-top { border-bottom: none; padding-bottom: 0; margin-bottom: 14px; }
 .qrow .lbl2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--muted); }
 .qrow .v2 { font-family: var(--font-display); font-size: 22px; color: var(--ink); margin-top: 4px; }
+.qrow .v2 small { font-family: var(--font-body); font-size: 12px; color: var(--muted); font-weight: normal; margin-right: 2px; }
 .qrow .q.hot .v2 { color: var(--gold); }
 .qrow .sub2 { font-size: 11.5px; color: var(--muted); margin-top: 3px; }
-
-.chiprow { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: baseline; margin-bottom: 24px;
-  padding-bottom: 18px; border-bottom: 1px solid var(--paper-line); }
-.chiprow .grp { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-right: 2px; }
-.chiprow .vsep { width: 1px; height: 22px; background: var(--paper-line); margin: 0 8px; align-self: center; }
-.chiprow .chip { display: inline-flex; align-items: baseline; gap: 6px; font-size: 12.5px; color: var(--muted); }
-.chiprow .chip .dot { display: none; }
-.chiprow .chip b { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink-text); }
-.chiprow .chip.is-red b { color: var(--red); }
-.chiprow .chip.is-gold b { color: var(--gold); }
-.chiprow .chip.is-green b { color: var(--green); }
 
 .agelines { display: flex; flex-direction: column; gap: 11px; }
 .agelines .al { display: grid; grid-template-columns: 70px 1fr auto; gap: 12px; align-items: center; font-size: 12.5px; color: var(--muted); }

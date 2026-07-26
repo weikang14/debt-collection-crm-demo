@@ -4,23 +4,19 @@
   <span class="meta">Welcome, <%= currentUser.full_name %></span>
 </div>
 
-<div class="qrow">
+<div class="qrow qrow-top">
   <div class="q hot">
     <div class="lbl2">Collected Today</div>
     <div class="v2">RM <%= h.money(kpi.collectedToday) %></div>
     <div class="sub2"><%= kpi.paymentsToday %> payment<%= kpi.paymentsToday === 1 ? '' : 's' %> today</div>
   </div>
-  <div class="q"><div class="lbl2">Total Outstanding</div><div class="v2">RM <%= h.money(kpi.outstanding) %></div></div>
-  <div class="q"><div class="lbl2">Active / Legal</div><div class="v2"><%= kpi.activeCases %> / <%= kpi.legalCount %></div></div>
-  <div class="q"><div class="lbl2">PTP Due / Overdue / Broken</div><div class="v2"><%= kpi.ptpToday %> / <%= kpi.overduePtp %> / <%= kpi.brokenPtp %></div></div>
+  <div class="q"><div class="lbl2">Cases</div><div class="v2"><%= kpi.activeCases %> <small>active</small> · <%= kpi.legalCount %> <small>legal</small></div></div>
+  <div class="q"><div class="lbl2">PTP</div><div class="v2"><%= kpi.ptpToday %> <small>due</small> · <%= kpi.overduePtp %> <small>overdue</small> · <%= kpi.brokenPtp %> <small>broken</small></div></div>
 </div>
 
-<div class="chiprow">
-  <span class="grp">Cases</span>
-  <span class="chip<%= kpi.openedToday ? ' is-green' : '' %>"><span class="dot"></span>Opened today <b><%= kpi.openedToday %></b></span>
-  <span class="chip"><span class="dot"></span>Closed today <b><%= kpi.closedToday %></b></span>
-  <span class="chip<%= kpi.overdueTasks ? ' is-gold' : '' %>"><span class="dot"></span>Overdue tasks <b><%= kpi.overdueTasks %></b></span>
-  <span class="chip<%= kpi.followupCount ? ' is-gold' : '' %>"><span class="dot"></span>Upcoming (14d) <b><%= kpi.followupCount %></b></span>
+<div class="qrow">
+  <div class="q"><div class="lbl2">Total Outstanding</div><div class="v2">RM <%= h.money(kpi.outstanding) %></div></div>
+  <div class="q"><div class="lbl2">Case Activity</div><div class="v2"><%= kpi.openedToday %> <small>opened</small> · <%= kpi.closedToday %> <small>closed</small> · <%= kpi.overdueTasks %> <small>overdue</small> · <%= kpi.followupCount %> <small>upcoming</small></div></div>
 </div>
 
 <h2>Aging <span class="meta">outstanding by debt age (days)</span></h2>

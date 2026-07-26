@@ -1,0 +1,219 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sidebar Main/Sub 方案 A / B / C</title>
+<style>
+  :root{
+    --ink:#141a24; --paper:#f4f5f3; --gold:#b7842a; --green:#1f7a4d; --red:#b23a30;
+    --sidebar-bg:#c7ccd3; --sidebar-line:#b3bac3; --paper-line:#e4e6e2; --ink-text:#242a31; --muted:#6d7480;
+    --font-display:Georgia,'Iowan Old Style',serif; --font-body:-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  body{ margin:0; background:#0f1319; font-family:var(--font-body); font-size:14px; color:var(--ink-text); }
+
+  .switch{ position:sticky; top:0; z-index:200; background:var(--ink); color:#f4f5f3;
+    padding:12px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; border-bottom:3px solid var(--gold); }
+  .switch .t{ font-family:var(--font-display); font-size:16px; margin-right:6px; }
+  .switch .t span{ color:var(--gold); }
+  .switch button{ background:transparent; color:#b9c0cd; border:1px solid #3a4557; border-radius:6px;
+    padding:7px 14px; font-size:13px; cursor:pointer; font-family:inherit; }
+  .switch button:hover{ color:#fff; border-color:var(--gold); }
+  .switch button.on{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:600; }
+  .switch .desc{ font-size:12.5px; color:#98a0ac; flex-basis:100%; }
+  @media(min-width:900px){ .switch .desc{ flex-basis:auto; margin-left:auto; text-align:right; max-width:46ch; } }
+
+  .stage{ padding:26px; }
+  .frame{ display:none; max-width:1200px; margin:0 auto; background:var(--paper); border-radius:10px;
+    overflow:hidden; box-shadow:0 10px 34px rgba(0,0,0,.35); min-height:660px; position:relative; }
+  .frame.on{ display:flex; }
+
+  .side{ width:64px; flex:0 0 auto; background:var(--sidebar-bg); display:flex; flex-direction:column;
+    border-right:3px solid var(--gold); position:relative; overflow:hidden; transition:width .16s ease; }
+  .side:hover{ width:240px; box-shadow:4px 0 20px rgba(0,0,0,.25); z-index:10; }
+  .side .brand{ display:flex; align-items:center; gap:10px; font-family:var(--font-display); color:var(--ink);
+    font-size:17px; padding:20px 0; justify-content:center; border-bottom:1px solid var(--sidebar-line); }
+  .side:hover .brand{ padding:20px 18px; justify-content:flex-start; }
+  .side .brand .mark{ flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+    width:22px; height:22px; border:1px solid var(--gold); border-radius:6px; font-size:13px; }
+  .side:hover .brand .mark{ display:none; }
+  .side .brand span{ color:var(--gold); }
+  .side .lbl{ opacity:0; width:0; overflow:hidden; white-space:nowrap; }
+  .side:hover .lbl{ opacity:1; width:auto; }
+  .side nav{ display:flex; flex-direction:column; padding:8px 0; flex:1; overflow-y:auto; }
+  .side nav a{ display:flex; align-items:center; gap:12px; padding:9px 0; justify-content:center;
+    color:#4b5563; font-size:13.5px; border-left:3px solid transparent; white-space:nowrap; text-decoration:none; }
+  .side:hover nav a{ padding:9px 18px; justify-content:flex-start; }
+  .side nav a:hover{ background:rgba(255,255,255,.55); color:var(--ink-text); }
+  .side nav a.act{ background:rgba(255,255,255,.55); color:var(--ink-text); border-left-color:var(--gold); }
+  .side nav a i{ flex:0 0 18px; width:18px; text-align:center; font-style:normal; opacity:.75; }
+  .side nav a:hover i, .side nav a.act i{ opacity:1; }
+  .side-foot{ border-top:1px solid var(--sidebar-line); padding:12px 0; text-align:center; font-size:12.5px; color:var(--muted); }
+  .side:hover .side-foot{ padding:12px 18px; text-align:left; }
+
+  .main{ flex:1; min-width:0; padding:26px 30px; }
+  .main h1{ font-family:var(--font-display); font-weight:normal; font-size:24px; margin:0 0 6px; color:var(--ink); }
+  .main .meta{ font-size:12.5px; color:var(--muted); margin-bottom:22px; max-width:62ch; }
+  .ph{ background:#fff; border:1px solid var(--paper-line); border-radius:8px; padding:40px; text-align:center;
+    color:var(--muted); font-size:13px; }
+
+  /* ---- A: section labels, always expanded ---- */
+  .grp-lbl{ font-size:10px; text-transform:uppercase; letter-spacing:.7px; color:#6b7480; padding:14px 18px 4px;
+    white-space:nowrap; opacity:0; height:0; overflow:hidden; }
+  .side:hover .grp-lbl{ opacity:1; height:auto; padding:14px 18px 4px; }
+  #frA .side:not(:hover) .grp-lbl{ display:none; }
+  .side .sub{ font-size:12.5px; }
+  .side:hover .sub{ padding-left:18px; }
+
+  /* ---- B: accordion groups ---- */
+  .grp-head{ display:flex; align-items:center; gap:12px; padding:9px 0; justify-content:center;
+    color:#4b5563; font-size:13.5px; cursor:pointer; white-space:nowrap; user-select:none; }
+  #frB .side:hover .grp-head{ padding:9px 18px; justify-content:flex-start; }
+  .grp-head .chev{ margin-left:auto; font-size:10px; opacity:0; width:0; overflow:hidden; transition:transform .15s ease; }
+  #frB .side:hover .grp-head .chev{ opacity:1; width:auto; }
+  .grp-body{ display:flex; flex-direction:column; max-height:0; overflow:hidden; transition:max-height .18s ease; }
+  .grp.open .grp-body{ max-height:200px; }
+  .grp.open .grp-head .chev{ transform:rotate(90deg); }
+  #frB .side:not(:hover) .grp-body{ max-height:0 !important; }
+  .grp-body a{ padding-left:0; }
+  #frB .side:hover .grp-body a{ padding-left:46px; }
+
+  /* ---- C: flat, two-weight typography, no headers ---- */
+  #frC .side nav a.sub{ font-size:12px; color:#6b7480; }
+  #frC .side:hover nav a.sub{ padding-left:46px; }
+  #frC .side nav a.sub i{ opacity:.55; font-size:12px; }
+
+  /* sub items (A & C) are fully removed from the collapsed 64px rail —
+     not shrunk to an icon, just not there — and fade in on hover */
+  .side nav a.sub{ display:none; }
+  .side:hover nav a.sub{ display:flex; }
+</style>
+
+<div class="switch">
+  <span class="t">Sidebar <span>Main / Sub</span></span>
+  <button id="bA" class="on" onclick="show('A')">A · 分组小标题</button>
+  <button id="bB" onclick="show('B')">B · 可收合分组</button>
+  <button id="bC" onclick="show('C')">C · 扁平双层级</button>
+  <span class="desc" id="desc">收起时只留 6 个主项图标（Dashboard/Debtors/Cases/Tasks/Reports/Search），干净很多；展开后子项按 Team / Insights / Admin 分组，配小标题。</span>
+</div>
+
+<div class="stage">
+  <!-- ============ A：分组小标题，始终展开 ============ -->
+  <div class="frame on" id="frA">
+    <aside class="side">
+      <div class="brand"><span class="mark">D</span><span class="lbl">Debt Collection <span>CRM</span></span></div>
+      <nav>
+        <a class="act" href="#"><i>▦</i><span class="lbl">Dashboard</span></a>
+        <a href="#"><i>◍</i><span class="lbl">Debtors</span></a>
+        <a href="#"><i>▤</i><span class="lbl">Cases</span></a>
+        <a href="#"><i>☑</i><span class="lbl">Tasks</span></a>
+
+        <div class="grp-lbl">Team</div>
+        <a class="sub" href="#"><i>◍</i><span class="lbl">Agents</span></a>
+        <a class="sub" href="#"><i>◍</i><span class="lbl">Users</span></a>
+
+        <div class="grp-lbl">Insights</div>
+        <a href="#"><i>▧</i><span class="lbl">Reports</span></a>
+        <a class="sub" href="#"><i>▧</i><span class="lbl">Commissions</span></a>
+
+        <div class="grp-lbl">Admin</div>
+        <a class="sub" href="#"><i>⚙</i><span class="lbl">Settings</span></a>
+        <a class="sub" href="#"><i>▥</i><span class="lbl">Demo Data</span></a>
+        <a class="sub" href="#"><i>▤</i><span class="lbl">Audit Log</span></a>
+
+        <div class="grp-lbl">&nbsp;</div>
+        <a href="#"><i>⌕</i><span class="lbl">Search</span></a>
+      </nav>
+      <div class="side-foot"><span class="lbl">System Admin · Admin</span></div>
+    </aside>
+    <div class="main">
+      <h1>Dashboard</h1>
+      <div class="meta">收起时只留 6 个主项图标，子项完全隐藏（不是缩成小图标，是彻底不占位）。展开后每组子项上方有一行极小的分组标题（TEAM / INSIGHTS / ADMIN），不用点击，一次性看到全部。最接近"整理过的文件夹"的感觉。</div>
+      <div class="ph">把鼠标移到左边窄栏上试试（先看收起时只有 6 个图标）</div>
+    </div>
+  </div>
+
+  <!-- ============ B：可收合分组（点击展开） ============ -->
+  <div class="frame" id="frB">
+    <aside class="side">
+      <div class="brand"><span class="mark">D</span><span class="lbl">Debt Collection <span>CRM</span></span></div>
+      <nav>
+        <a class="act" href="#"><i>▦</i><span class="lbl">Dashboard</span></a>
+        <a href="#"><i>◍</i><span class="lbl">Debtors</span></a>
+        <a href="#"><i>▤</i><span class="lbl">Cases</span></a>
+        <a href="#"><i>☑</i><span class="lbl">Tasks</span></a>
+
+        <div class="grp" id="gTeam">
+          <div class="grp-head" onclick="toggleGrp('gTeam')"><i>◍</i><span class="lbl">Team</span><span class="chev">▸</span></div>
+          <div class="grp-body">
+            <a href="#"><span class="lbl">Agents</span></a>
+            <a href="#"><span class="lbl">Users</span></a>
+          </div>
+        </div>
+
+        <a href="#"><i>▧</i><span class="lbl">Reports</span></a>
+        <a href="#"><i>▧</i><span class="lbl">Commissions</span></a>
+
+        <div class="grp" id="gAdmin">
+          <div class="grp-head" onclick="toggleGrp('gAdmin')"><i>⚙</i><span class="lbl">Admin</span><span class="chev">▸</span></div>
+          <div class="grp-body">
+            <a href="#"><span class="lbl">Settings</span></a>
+            <a href="#"><span class="lbl">Demo Data</span></a>
+            <a href="#"><span class="lbl">Audit Log</span></a>
+          </div>
+        </div>
+
+        <a href="#"><i>⌕</i><span class="lbl">Search</span></a>
+      </nav>
+      <div class="side-foot"><span class="lbl">System Admin · Admin</span></div>
+    </aside>
+    <div class="main">
+      <h1>Dashboard</h1>
+      <div class="meta">Team、Admin 是可点击的分组行，带箭头，点一下才展开子项，默认收合，比方案 A 更省垂直空间。收起时图标从 12 个减到 9 个（Team/Admin 各用 1 个图标代表 2～3 个子项）。</div>
+      <div class="ph">先把鼠标移到左边窄栏上展开，再点 "Team" / "Admin" 试试收合</div>
+    </div>
+  </div>
+
+  <!-- ============ C：扁平双层级，不分组不折叠 ============ -->
+  <div class="frame" id="frC">
+    <aside class="side">
+      <div class="brand"><span class="mark">D</span><span class="lbl">Debt Collection <span>CRM</span></span></div>
+      <nav>
+        <a class="act" href="#"><i>▦</i><span class="lbl">Dashboard</span></a>
+        <a href="#"><i>◍</i><span class="lbl">Debtors</span></a>
+        <a href="#"><i>▤</i><span class="lbl">Cases</span></a>
+        <a class="sub" href="#"><i>◍</i><span class="lbl">Agents</span></a>
+        <a class="sub" href="#"><i>◍</i><span class="lbl">Users</span></a>
+        <a href="#"><i>☑</i><span class="lbl">Tasks</span></a>
+        <a href="#"><i>▧</i><span class="lbl">Reports</span></a>
+        <a class="sub" href="#"><i>▧</i><span class="lbl">Commissions</span></a>
+        <a class="sub" href="#"><i>⚙</i><span class="lbl">Settings</span></a>
+        <a class="sub" href="#"><i>▥</i><span class="lbl">Demo Data</span></a>
+        <a class="sub" href="#"><i>▤</i><span class="lbl">Audit Log</span></a>
+        <a href="#"><i>⌕</i><span class="lbl">Search</span></a>
+      </nav>
+      <div class="side-foot"><span class="lbl">System Admin · Admin</span></div>
+    </aside>
+    <div class="main">
+      <h1>Dashboard</h1>
+      <div class="meta">不分组、不加标题、不折叠——主项和子项混在同一条列表里，靠字号/颜色/缩进区分两级（子项更小更淡、缩进一点）。改动最小，没有交互成本，但分组感比 A/B 弱。</div>
+      <div class="ph">把鼠标移到左边窄栏上试试（收起时同样只留主项图标，子项完全不显示）</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var DESC = {
+    A: '收起时只留 6 个主项图标（Dashboard/Debtors/Cases/Tasks/Reports/Search），干净很多；展开后子项按 Team / Insights / Admin 分组，配小标题，一次性全部可见。',
+    B: '收起时图标从 12 个减到 9 个；展开后 Team / Admin 变成可点击的分组行，默认收合，点一下才展开子项，最省垂直空间。',
+    C: '不分组不折叠，主项和子项混排在一条列表里，只靠字号、颜色、缩进区分层级，改动最小最简单。'
+  };
+  function show(v){
+    ['A','B','C'].forEach(function(k){
+      document.getElementById('fr'+k).classList.toggle('on', k===v);
+      document.getElementById('b'+k).classList.toggle('on', k===v);
+    });
+    document.getElementById('desc').textContent = DESC[v];
+  }
+  function toggleGrp(id){
+    document.getElementById(id).classList.toggle('open');
+  }
+</script>

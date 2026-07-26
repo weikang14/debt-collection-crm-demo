@@ -1,22 +1,56 @@
-<% const u = currentUser; const can = (roles) => roles.includes(u.role); %>
+<% const u = currentUser; const can = (roles) => roles.includes(u.role);
+   const teamOpen = path.startsWith('/agents') || path.startsWith('/users');
+   const adminOpen = path.startsWith('/settings') || path.startsWith('/demo-tools') || path.startsWith('/audit'); %>
 <aside class="sidebar">
-  <div class="brand">Debt Collection <span>CRM</span></div>
+  <div class="brand"><span class="mark">D</span><span class="lbl">Debt Collection <span>CRM</span></span></div>
   <nav>
-    <a href="/" class="<%= path==='/'?'active':'' %>"><%- h.icon('dashboard') %> Dashboard</a>
-    <% if (can(['admin','manager','agent','finance','auditor'])) { %><a href="/debtors" class="<%= path.startsWith('/debtors')?'active':'' %>"><%- h.icon('debtors') %> Debtors</a><% } %>
-    <a href="/cases" class="<%= path.startsWith('/cases')?'active':'' %>"><%- h.icon('cases') %> Cases</a>
-    <% if (can(['admin','manager','auditor'])) { %><a href="/agents" class="<%= path.startsWith('/agents')?'active':'' %>"><%- h.icon('agents') %> Agents</a><% } %>
-    <% if (can(['admin'])) { %><a href="/users" class="<%= path.startsWith('/users')?'active':'' %>"><%- h.icon('users') %> Users</a><% } %>
-    <% if (can(['admin'])) { %><a href="/demo-tools" class="<%= path.startsWith('/demo-tools')?'active':'' %>"><%- h.icon('demo') %> Demo Data</a><% } %>
-    <% if (can(['admin'])) { %><a href="/settings" class="<%= path.startsWith('/settings')?'active':'' %>"><%- h.icon('settings') %> Settings</a><% } %>
-    <a href="/tasks" class="<%= path.startsWith('/tasks')?'active':'' %>"><%- h.icon('tasks') %> Tasks</a>
-    <a href="/reports" class="<%= path.startsWith('/reports')?'active':'' %>"><%- h.icon('reports') %> Reports</a>
-    <% if (can(['admin','manager','finance','auditor','agent'])) { %><a href="/commissions" class="<%= path.startsWith('/commissions')?'active':'' %>"><%- h.icon('reports') %> Commissions</a><% } %>
-    <% if (can(['admin','auditor'])) { %><a href="/audit-log" class="<%= path.startsWith('/audit')?'active':'' %>"><%- h.icon('audit') %> Audit Log</a><% } %>
-    <a href="/search" class="<%= path.startsWith('/search')?'active':'' %>"><%- h.icon('search') %> Search</a>
+    <a href="/" class="<%= path==='/'?'active':'' %>"><%- h.icon('dashboard') %><span class="lbl">Dashboard</span></a>
+    <% if (can(['admin','manager','agent','finance','auditor'])) { %><a href="/debtors" class="<%= path.startsWith('/debtors')?'active':'' %>"><%- h.icon('debtors') %><span class="lbl">Debtors</span></a><% } %>
+    <a href="/cases" class="<%= path.startsWith('/cases')?'active':'' %>"><%- h.icon('cases') %><span class="lbl">Cases</span></a>
+    <a href="/tasks" class="<%= path.startsWith('/tasks')?'active':'' %>"><%- h.icon('tasks') %><span class="lbl">Tasks</span></a>
+
+    <% if (can(['admin','manager','auditor'])) { %>
+    <div class="grp<%= teamOpen ? ' open' : '' %>" data-grp="team"<%= teamOpen ? ' data-active="1"' : '' %>>
+      <div class="grp-head" onclick="toggleGrp(this)"><%- h.icon('agents') %><span class="lbl">Team</span><span class="chev">&rsaquo;</span></div>
+      <div class="grp-body">
+        <a href="/agents" class="<%= path.startsWith('/agents')?'active':'' %>"><span class="lbl">Agents</span></a>
+        <% if (can(['admin'])) { %><a href="/users" class="<%= path.startsWith('/users')?'active':'' %>"><span class="lbl">Users</span></a><% } %>
+      </div>
+    </div>
+    <% } %>
+
+    <a href="/reports" class="<%= path.startsWith('/reports')?'active':'' %>"><%- h.icon('reports') %><span class="lbl">Reports</span></a>
+    <% if (can(['admin','manager','finance','auditor','agent'])) { %><a href="/commissions" class="<%= path.startsWith('/commissions')?'active':'' %>"><%- h.icon('reports') %><span class="lbl">Commissions</span></a><% } %>
+
+    <% if (can(['admin','auditor'])) { %>
+    <div class="grp<%= adminOpen ? ' open' : '' %>" data-grp="admin"<%= adminOpen ? ' data-active="1"' : '' %>>
+      <div class="grp-head" onclick="toggleGrp(this)"><%- h.icon('settings') %><span class="lbl">Admin</span><span class="chev">&rsaquo;</span></div>
+      <div class="grp-body">
+        <% if (can(['admin'])) { %><a href="/settings" class="<%= path.startsWith('/settings')?'active':'' %>"><span class="lbl">Settings</span></a><% } %>
+        <% if (can(['admin'])) { %><a href="/demo-tools" class="<%= path.startsWith('/demo-tools')?'active':'' %>"><span class="lbl">Demo Data</span></a><% } %>
+        <a href="/audit-log" class="<%= path.startsWith('/audit')?'active':'' %>"><span class="lbl">Audit Log</span></a>
+      </div>
+    </div>
+    <% } %>
+
+    <a href="/search" class="<%= path.startsWith('/search')?'active':'' %>"><%- h.icon('search') %><span class="lbl">Search</span></a>
   </nav>
   <div class="sidebar-foot">
-    <div class="who"><strong><%= u.full_name %></strong><small><%= u.role %></small></div>
-    <a class="logout" href="/logout"><%- h.icon('logout') %> Logout</a>
+    <div class="who lbl"><strong><%= u.full_name %></strong><small><%= u.role %></small></div>
+    <a class="logout" href="/logout"><%- h.icon('logout') %><span class="lbl">Logout</span></a>
   </div>
 </aside>
+<script>
+  (function(){
+    document.querySelectorAll('.sidebar .grp').forEach(function(g){
+      if (g.dataset.active) return;
+      var stored = localStorage.getItem('sidebar-grp-' + g.dataset.grp);
+      g.classList.toggle('open', stored === '1');
+    });
+  })();
+  function toggleGrp(head){
+    var g = head.closest('.grp');
+    g.classList.toggle('open');
+    localStorage.setItem('sidebar-grp-' + g.dataset.grp, g.classList.contains('open') ? '1' : '0');
+  }
+</script>

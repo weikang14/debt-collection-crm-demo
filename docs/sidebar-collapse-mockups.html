@@ -1,0 +1,198 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sidebar 收起方案 A / B / C</title>
+<style>
+  :root{
+    --ink:#141a24; --paper:#f4f5f3; --gold:#b7842a; --green:#1f7a4d; --red:#b23a30;
+    --sidebar-bg:#c7ccd3; --sidebar-line:#b3bac3; --paper-line:#e4e6e2; --ink-text:#242a31; --muted:#6d7480;
+    --font-display:Georgia,'Iowan Old Style',serif; --font-body:-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  body{ margin:0; background:#0f1319; font-family:var(--font-body); font-size:14px; color:var(--ink-text); }
+
+  .switch{ position:sticky; top:0; z-index:200; background:var(--ink); color:#f4f5f3;
+    padding:12px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap; border-bottom:3px solid var(--gold); }
+  .switch .t{ font-family:var(--font-display); font-size:16px; margin-right:6px; }
+  .switch .t span{ color:var(--gold); }
+  .switch button{ background:transparent; color:#b9c0cd; border:1px solid #3a4557; border-radius:6px;
+    padding:7px 14px; font-size:13px; cursor:pointer; font-family:inherit; }
+  .switch button:hover{ color:#fff; border-color:var(--gold); }
+  .switch button.on{ background:var(--gold); border-color:var(--gold); color:var(--ink); font-weight:600; }
+  .switch .desc{ font-size:12.5px; color:#98a0ac; flex-basis:100%; }
+  @media(min-width:900px){ .switch .desc{ flex-basis:auto; margin-left:auto; text-align:right; max-width:44ch; } }
+  .switch .hint{ font-size:12px; color:var(--gold); flex-basis:100%; }
+
+  .stage{ padding:26px; }
+  .frame{ display:none; max-width:1200px; margin:0 auto; background:var(--paper); border-radius:10px;
+    overflow:hidden; box-shadow:0 10px 34px rgba(0,0,0,.35); min-height:640px; position:relative; }
+  .frame.on{ display:flex; }
+
+  /* ---- shared sidebar look ---- */
+  .side{ background:var(--sidebar-bg); display:flex; flex-direction:column; flex:0 0 auto;
+    border-right:3px solid var(--gold); position:relative; transition:width .18s ease; overflow:hidden; }
+  .side .brand{ display:flex; align-items:center; gap:8px; font-family:var(--font-display); color:var(--ink);
+    font-size:17px; padding:20px 18px; border-bottom:1px solid var(--sidebar-line); white-space:nowrap; }
+  .side .brand span{ color:var(--gold); }
+  .side nav{ display:flex; flex-direction:column; padding:8px 0; flex:1; }
+  .side nav a{ display:flex; align-items:center; gap:12px; padding:9px 18px; color:#4b5563; font-size:13.5px;
+    border-left:3px solid transparent; white-space:nowrap; text-decoration:none; }
+  .side nav a:hover{ background:rgba(255,255,255,.55); color:var(--ink-text); }
+  .side nav a.act{ background:rgba(255,255,255,.55); color:var(--ink-text); border-left-color:var(--gold); }
+  .side nav a i{ flex:0 0 18px; width:18px; height:18px; display:inline-flex; align-items:center; justify-content:center; }
+  .side nav a i svg{ width:16px; height:16px; opacity:.75; }
+  .side nav a:hover i svg, .side nav a.act i svg{ opacity:1; }
+  .side-foot{ border-top:1px solid var(--sidebar-line); padding:12px 18px; font-size:12.5px; color:var(--muted); white-space:nowrap; }
+
+  .main{ flex:1; min-width:0; padding:26px 30px; }
+  .main h1{ font-family:var(--font-display); font-weight:normal; font-size:24px; margin:0 0 6px; color:var(--ink); }
+  .main .meta{ font-size:12.5px; color:var(--muted); margin-bottom:22px; }
+  .ph{ background:#fff; border:1px solid var(--paper-line); border-radius:8px; padding:40px; text-align:center;
+    color:var(--muted); font-size:13px; }
+
+  /* ---- A: icon rail, push content ---- */
+  #frA .side{ width:240px; }
+  #frA.collapsed .side{ width:64px; }
+  #frA .side .brand .t{ transition:opacity .12s ease; }
+  #frA.collapsed .side .brand .t{ opacity:0; width:0; }
+  #frA .side nav a .t{ transition:opacity .1s ease; }
+  #frA.collapsed .side nav a .t{ opacity:0; width:0; }
+  #frA.collapsed .side nav a{ justify-content:center; padding:9px 0; }
+  #frA.collapsed .side .brand{ justify-content:center; padding:20px 0; }
+  #frA.collapsed .side-foot{ text-align:center; padding:12px 4px; }
+  #frA.collapsed .side-foot .who{ display:none; }
+  .toggle-a{ position:absolute; top:16px; right:-13px; width:26px; height:26px; border-radius:50%;
+    background:#fff; border:1px solid var(--paper-line); box-shadow:0 1px 4px rgba(0,0,0,.2); cursor:pointer;
+    display:flex; align-items:center; justify-content:center; font-size:13px; color:var(--muted); z-index:5; }
+  .toggle-a:hover{ color:var(--ink-text); border-color:var(--gold); }
+
+  /* ---- B: full overlay drawer ---- */
+  #frB{ overflow:hidden; }
+  #frB .side{ width:240px; position:absolute; top:0; bottom:0; left:0; z-index:20;
+    transition:transform .2s ease; box-shadow:2px 0 12px rgba(0,0,0,.15); }
+  #frB.collapsed .side{ transform:translateX(-100%); }
+  #frB .main{ width:100%; margin-left:240px; transition:margin-left .2s ease; }
+  #frB.collapsed .main{ margin-left:0; }
+  #frB .topbar{ display:flex; align-items:center; gap:12px; padding:14px 20px; border-bottom:1px solid var(--paper-line); margin:-26px -30px 22px; background:#fff; }
+  #frB .topbar button{ background:none; border:1px solid var(--paper-line); border-radius:6px; width:34px; height:34px;
+    cursor:pointer; font-size:16px; color:var(--ink-text); }
+  #frB .topbar button:hover{ border-color:var(--gold); }
+  #frB .topbar .brand2{ font-family:var(--font-display); color:var(--ink); font-size:15px; }
+  #frB .topbar .brand2 span{ color:var(--gold); }
+
+  /* ---- C: icon rail, hover-expand overlay (content width never shifts) ---- */
+  #frC .side{ width:64px; flex:0 0 64px; }
+  #frC .side nav a{ justify-content:center; padding:9px 0; }
+  #frC .side .brand{ justify-content:center; padding:20px 0; }
+  #frC .side-foot{ display:none; }
+  #frC .side .t{ display:none; }
+  #frC .side.pinned{ position:absolute; top:0; bottom:0; left:0; width:220px; z-index:30; box-shadow:4px 0 20px rgba(0,0,0,.2); }
+  #frC .side.pinned nav a{ justify-content:flex-start; padding:9px 18px; }
+  #frC .side.pinned .brand{ justify-content:flex-start; padding:20px 18px; }
+  #frC .side.pinned .side-foot{ display:block; }
+  #frC .side.pinned .t{ display:inline; }
+  #frC .main{ width:100%; }
+</style>
+
+<div class="switch">
+  <span class="t">Sidebar <span>收起方案</span></span>
+  <button id="bA" class="on" onclick="show('A')">A · 图标窄栏</button>
+  <button id="bB" onclick="show('B')">B · 抽屉隐藏</button>
+  <button id="bC" onclick="show('C')">C · 悬停展开</button>
+  <span class="desc" id="desc">默认展开，点右侧圆形按钮收起成 64px 图标栏，内容区跟着让出空间。</span>
+</div>
+
+<div class="stage">
+  <!-- ============ A ============ -->
+  <div class="frame on" id="frA">
+    <aside class="side">
+      <div class="brand"><span>D</span><span class="t">ebt Collection <span>CRM</span></span></div>
+      <nav>
+        <a class="act" href="#"><i>▦</i><span class="t">Dashboard</span></a>
+        <a href="#"><i>◍</i><span class="t">Debtors</span></a>
+        <a href="#"><i>▤</i><span class="t">Cases</span></a>
+        <a href="#"><i>◍</i><span class="t">Agents</span></a>
+        <a href="#"><i>◍</i><span class="t">Users</span></a>
+        <a href="#"><i>▥</i><span class="t">Demo Data</span></a>
+        <a href="#"><i>⚙</i><span class="t">Settings</span></a>
+        <a href="#"><i>☑</i><span class="t">Tasks</span></a>
+        <a href="#"><i>▧</i><span class="t">Reports</span></a>
+        <a href="#"><i>▧</i><span class="t">Commissions</span></a>
+        <a href="#"><i>▤</i><span class="t">Audit Log</span></a>
+        <a href="#"><i>⌕</i><span class="t">Search</span></a>
+      </nav>
+      <div class="side-foot"><div class="who">System Admin<br><span style="color:var(--gold); text-transform:uppercase; font-size:10.5px;">Admin</span></div></div>
+      <button class="toggle-a" onclick="toggleA()">‹</button>
+    </aside>
+    <div class="main">
+      <h1>Dashboard</h1>
+      <div class="meta">图标窄栏：收起后侧栏固定 64px，只留图标，标签淡出；内容区宽度跟着变化。适合想常驻收起、腾出更宽内容区的用法。</div>
+      <div class="ph">Dashboard content 占位</div>
+    </div>
+  </div>
+
+  <!-- ============ B ============ -->
+  <div class="frame" id="frB">
+    <aside class="side">
+      <div class="brand">Debt Collection <span>CRM</span></div>
+      <nav>
+        <a class="act" href="#">Dashboard</a><a href="#">Debtors</a><a href="#">Cases</a><a href="#">Agents</a>
+        <a href="#">Users</a><a href="#">Demo Data</a><a href="#">Settings</a><a href="#">Tasks</a>
+        <a href="#">Reports</a><a href="#">Commissions</a><a href="#">Audit Log</a><a href="#">Search</a>
+      </nav>
+      <div class="side-foot">System Admin · Admin</div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <button onclick="toggleB()">☰</button>
+        <span class="brand2">Debt Collection <span>CRM</span></span>
+      </div>
+      <h1>Dashboard</h1>
+      <div class="meta">抽屉隐藏：收起后侧栏完全滑出画面，内容区占满全宽；靠顶部常驻的汉堡按钮呼出/收回。适合想要最大内容区、侧栏用得不频繁的用法。</div>
+      <div class="ph">Dashboard content 占位</div>
+    </div>
+  </div>
+
+  <!-- ============ C ============ -->
+  <div class="frame" id="frC">
+    <aside class="side" id="railC" onmouseenter="this.classList.add('pinned')" onmouseleave="this.classList.remove('pinned')">
+      <div class="brand"><span>D</span><span class="t">ebt Collection <span>CRM</span></span></div>
+      <nav>
+        <a class="act" href="#"><i>▦</i><span class="t">Dashboard</span></a>
+        <a href="#"><i>◍</i><span class="t">Debtors</span></a>
+        <a href="#"><i>▤</i><span class="t">Cases</span></a>
+        <a href="#"><i>◍</i><span class="t">Agents</span></a>
+        <a href="#"><i>◍</i><span class="t">Users</span></a>
+        <a href="#"><i>▥</i><span class="t">Demo Data</span></a>
+        <a href="#"><i>⚙</i><span class="t">Settings</span></a>
+        <a href="#"><i>☑</i><span class="t">Tasks</span></a>
+        <a href="#"><i>▧</i><span class="t">Reports</span></a>
+        <a href="#"><i>▧</i><span class="t">Commissions</span></a>
+        <a href="#"><i>▤</i><span class="t">Audit Log</span></a>
+        <a href="#"><i>⌕</i><span class="t">Search</span></a>
+      </nav>
+      <div class="side-foot">System Admin · Admin</div>
+    </aside>
+    <div class="main">
+      <h1>Dashboard</h1>
+      <div class="meta">悬停展开：侧栏永远只占 64px（内容区宽度恒定，不会跳动），鼠标移上去时临时浮层展开显示文字标签，移开自动收回。适合想要图标栏常驻、又不想每次都点按钮的用法。</div>
+      <div class="ph">Dashboard content 占位（把鼠标移到左边窄栏上试试）</div>
+    </div>
+  </div>
+</div>
+
+<script>
+  var DESC = {
+    A: '默认展开，点右侧圆形按钮收起成 64px 图标栏，内容区跟着让出空间。',
+    B: '默认展开，点顶部汉堡按钮把侧栏完全滑出画面，内容区占满全宽。',
+    C: '侧栏恒定 64px 图标栏，鼠标悬停时临时浮层展开，移开自动收回，内容区宽度不变。'
+  };
+  function show(v){
+    ['A','B','C'].forEach(function(k){
+      document.getElementById('fr'+k).classList.toggle('on', k===v);
+      document.getElementById('b'+k).classList.toggle('on', k===v);
+    });
+    document.getElementById('desc').textContent = DESC[v];
+  }
+  function toggleA(){ document.getElementById('frA').classList.toggle('collapsed'); }
+  function toggleB(){ document.getElementById('frB').classList.toggle('collapsed'); }
+</script>
