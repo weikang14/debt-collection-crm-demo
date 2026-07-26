@@ -10,13 +10,12 @@
     <div class="v2">RM <%= h.money(kpi.collectedToday) %></div>
     <div class="sub2"><%= kpi.paymentsToday %> payment<%= kpi.paymentsToday === 1 ? '' : 's' %> today</div>
   </div>
+  <div class="q"><div class="lbl2">Total Outstanding</div><div class="v2">RM <%= h.money(kpi.outstanding) %></div></div>
   <div class="q"><div class="lbl2">Active / Legal</div><div class="v2"><%= kpi.activeCases %> / <%= kpi.legalCount %></div></div>
   <div class="q"><div class="lbl2">PTP Due / Overdue / Broken</div><div class="v2"><%= kpi.ptpToday %> / <%= kpi.overduePtp %> / <%= kpi.brokenPtp %></div></div>
 </div>
 
 <div class="chiprow">
-  <div class="q"><div class="lbl2">Total Outstanding</div><div class="v2">RM <%= h.money(kpi.outstanding) %></div></div>
-  <span class="vsep"></span>
   <span class="grp">Cases</span>
   <span class="chip<%= kpi.openedToday ? ' is-green' : '' %>"><span class="dot"></span>Opened today <b><%= kpi.openedToday %></b></span>
   <span class="chip"><span class="dot"></span>Closed today <b><%= kpi.closedToday %></b></span>
