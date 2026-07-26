@@ -1,0 +1,942 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard 改版方案 A / B / C</title>
+<style>
+  :root{
+    --pg-bg:#eef0ec; --pg-ink:#242a31; --pg-muted:#6d7480; --pg-bar:#141a24; --pg-bar-ink:#f4f5f3;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --pg-bg:#10151d; --pg-ink:#e6e9ee; --pg-muted:#98a0ac; --pg-bar:#0b0f16; --pg-bar-ink:#f4f5f3; }
+  }
+  :root[data-theme="dark"]{ --pg-bg:#10151d; --pg-ink:#e6e9ee; --pg-muted:#98a0ac; --pg-bar:#0b0f16; --pg-bar-ink:#f4f5f3; }
+  :root[data-theme="light"]{ --pg-bg:#eef0ec; --pg-ink:#242a31; --pg-muted:#6d7480; --pg-bar:#141a24; --pg-bar-ink:#f4f5f3; }
+
+  body{ margin:0; background:var(--pg-bg); color:var(--pg-ink);
+    font-family:-apple-system,'Segoe UI',Roboto,sans-serif; font-size:14px; }
+
+  /* ---- version switcher (viewer chrome) ---- */
+  .switch{ position:sticky; top:0; z-index:100; background:var(--pg-bar); color:var(--pg-bar-ink);
+    padding:12px 20px; display:flex; align-items:center; gap:14px; flex-wrap:wrap;
+    border-bottom:3px solid #b7842a; }
+  .switch .t{ font-family:Georgia,serif; font-size:16px; margin-right:6px; }
+  .switch .t span{ color:#b7842a; }
+  .switch button{ background:transparent; color:#b9c0cd; border:1px solid #3a4557; border-radius:6px;
+    padding:7px 14px; font-size:13px; cursor:pointer; font-family:inherit; }
+  .switch button:hover{ color:#fff; border-color:#b7842a; }
+  .switch button.on{ background:#b7842a; border-color:#b7842a; color:#141a24; font-weight:600; }
+  .switch button:focus-visible{ outline:2px solid #b7842a; outline-offset:2px; }
+  .switch .desc{ font-size:12.5px; color:#98a0ac; flex-basis:100%; }
+  @media(min-width:900px){ .switch .desc{ flex-basis:auto; margin-left:auto; text-align:right; max-width:46ch; } }
+
+  /* ================= app mockup canvas (faithful to the light-only app) ================= */
+  .mock{ display:flex; max-width:1280px; margin:26px auto 60px; background:#f4f5f3; color:#242a31;
+    border-radius:10px; overflow:hidden; box-shadow:0 10px 34px rgba(0,0,0,.22); min-height:760px; }
+  .snav{ width:200px; flex:0 0 200px; background:#141a24; color:#b9c0cd; border-right:3px solid #b7842a;
+    display:flex; flex-direction:column; padding-bottom:16px; }
+  .snav .brand{ font-family:Georgia,serif; color:#fff; font-size:16px; padding:20px 18px; border-bottom:1px solid #253040; }
+  .snav .brand span{ color:#b7842a; }
+  .snav a{ display:block; padding:9px 18px; font-size:13px; color:#b9c0cd; text-decoration:none; border-left:3px solid transparent; }
+  .snav a.act{ background:#1b2230; color:#fff; border-left-color:#b7842a; }
+  .snav a:focus-visible{ outline:2px solid #b7842a; outline-offset:-2px; }
+  .main{ flex:1; min-width:0; padding:26px 28px 34px; }
+  @media(max-width:900px){ .snav{ display:none; } .mock{ margin:14px 10px 40px; } .main{ padding:18px 14px; } }
+
+  .main h1{ font-family:Georgia,serif; font-weight:normal; font-size:25px; margin:0; color:#141a24; }
+  .phead{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap; }
+  .phead .meta{ font-size:12.5px; color:#6d7480; }
+  .main h2{ font-family:Georgia,serif; font-weight:normal; font-size:17px; color:#141a24; margin:26px 0 10px; }
+  .main h2 small{ font-family:-apple-system,'Segoe UI',Roboto,sans-serif; font-size:11.5px; color:#6d7480; letter-spacing:.3px; }
+  .mono{ font-family:ui-monospace,'SF Mono','Roboto Mono',monospace; }
+
+  .card{ background:#fff; border:1px solid #e4e6e2; border-radius:6px;
+    box-shadow:0 1px 3px rgba(16,21,31,.1); }
+
+  /* labels & chips shared */
+  .lbl{ font-size:11.5px; text-transform:uppercase; letter-spacing:.7px; color:#565d66; }
+  .chip{ display:inline-flex; align-items:center; gap:8px; background:#fff; border:1px solid #e4e6e2;
+    border-radius:999px; padding:6px 14px 6px 10px; font-size:12.5px; color:#242a31; }
+  .chip b{ font-family:ui-monospace,'SF Mono',monospace; font-size:15px; font-weight:600; }
+  .chip .dot{ width:8px; height:8px; border-radius:50%; background:#9aa1ab; }
+  .chip.red   { border-color:#edc7c4; background:#fcf4f3; } .chip.red .dot{ background:#b23a30; }  .chip.red b{ color:#b23a30; }
+  .chip.gold  { border-color:#ecd8b3; background:#fdf8ee; } .chip.gold .dot{ background:#b7842a; } .chip.gold b{ color:#96601f; }
+  .chip.green { border-color:#c3e0cd; background:#f2f9f5; } .chip.green .dot{ background:#1f7a4d; }.chip.green b{ color:#1f7a4d; }
+
+  table.data{ width:100%; border-collapse:collapse; font-size:13px; }
+  table.data th{ font-size:11.5px; text-transform:uppercase; letter-spacing:.5px; color:#565d66;
+    background:#e2e4de; text-align:left; padding:7px 12px; font-weight:600; border-bottom:1px solid #d5d8d1; }
+  table.data td{ padding:8px 12px; border-bottom:1px solid #eceee9; }
+  table.data tr:last-child td{ border-bottom:0; }
+  table.data tbody tr:hover td{ background:#f7f8f5; }
+  table.data td.num, table.data th.num{ text-align:right; font-family:ui-monospace,'SF Mono',monospace; font-variant-numeric:tabular-nums; }
+  table.data a{ color:#395a80; text-decoration:none; }
+  table.data a:focus-visible{ outline:2px solid #b7842a; outline-offset:2px; border-radius:2px; }
+  .viewall{ display:block; padding:8px 12px; font-size:12px; color:#395a80; text-decoration:none; border-top:1px solid #eceee9; }
+  .viewall:focus-visible{ outline:2px solid #b7842a; outline-offset:-2px; }
+  .b-late{ display:inline-block; font-size:11px; font-weight:600; border-radius:999px; padding:2px 9px; background:#f7e9e8; color:#b23a30; }
+  .b-today{ display:inline-block; font-size:11px; font-weight:600; border-radius:999px; padding:2px 9px; background:#f7ecd9; color:#96601f; }
+
+  /* aging shared: stacked strip + legend */
+  .stackbar{ display:flex; height:26px; border-radius:6px; overflow:hidden; gap:2px; background:#fff; }
+  .stackbar i{ display:block; height:100%; }
+  .aleg{ display:flex; flex-wrap:wrap; gap:6px 22px; margin-top:12px; }
+  .aleg .it{ display:flex; align-items:center; gap:7px; font-size:12px; color:#242a31; }
+  .aleg .sw{ width:11px; height:11px; border-radius:3px; }
+  .aleg .v{ font-family:ui-monospace,'SF Mono',monospace; font-variant-numeric:tabular-nums; color:#242a31; }
+  .aleg .r{ color:#6d7480; }
+
+  .ver{ display:none; }
+  .ver.on{ display:block; }
+
+  /* ================= A · ledger ================= */
+  .ledger{ background:#fff; border:1px solid #e4e6e2; border-radius:12px; padding:22px 26px;
+    display:grid; grid-template-columns:minmax(250px,1.15fr) 1px 1fr; gap:28px; align-items:center; margin-bottom:18px; }
+  .ledger .vr{ background:#e4e6e2; align-self:stretch; }
+  .ledger .amt{ font-family:ui-monospace,'SF Mono',monospace; font-size:38px; letter-spacing:-.5px; color:#1f7a4d; margin:6px 0 2px; }
+  .ledger .amt .cur{ font-size:17px; color:#6d7480; margin-right:6px; letter-spacing:0; }
+  .ledger .sub{ font-size:12px; color:#6d7480; }
+  .ledger .right{ display:grid; grid-template-columns:repeat(3,1fr); gap:18px; }
+  .ledger .right .v{ font-family:ui-monospace,'SF Mono',monospace; font-size:19px; color:#242a31; margin-top:4px; }
+  @media(max-width:760px){ .ledger{ grid-template-columns:1fr; } .ledger .vr{ display:none; } }
+  .chiprow{ display:flex; flex-wrap:wrap; gap:8px 10px; align-items:center; margin:14px 0 4px; }
+  .chiprow .grp{ font-size:11.5px; text-transform:uppercase; letter-spacing:.7px; color:#565d66; margin-right:2px; }
+  .chiprow .sep{ width:1px; height:22px; background:#dcdfd9; margin:0 8px; }
+  .a-two{ display:grid; grid-template-columns:1.35fr 1fr; gap:18px; align-items:start; margin-top:8px; }
+  @media(max-width:900px){ .a-two{ grid-template-columns:1fr; } }
+
+  .feed{ list-style:none; margin:0; padding:4px 0; }
+  .feed li{ display:flex; gap:12px; padding:9px 16px; font-size:12.5px; line-height:1.45; border-bottom:1px solid #f0f1ed; }
+  .feed li:last-child{ border-bottom:0; }
+  .feed .tk{ flex:0 0 4px; border-radius:2px; margin:2px 0; background:#c9cdc5; }
+  .feed .tk.g{ background:#1f7a4d; } .feed .tk.r{ background:#b23a30; } .feed .tk.b{ background:#395a80; } .feed .tk.y{ background:#b7842a; }
+  .feed .m{ display:block; color:#6d7480; font-size:11.5px; margin-top:2px; }
+  .feed a{ color:#395a80; text-decoration:none; }
+
+  /* ================= B · triage ================= */
+  .alertbar{ display:flex; align-items:center; gap:10px; flex-wrap:wrap; background:#fcf4f3;
+    border:1px solid #edc7c4; border-radius:6px; padding:10px 14px; font-size:13px; color:#7c2822; margin-bottom:16px; }
+  .alertbar b{ font-weight:600; }
+  .alertbar .go{ margin-left:auto; font-size:12.5px; color:#b23a30; text-decoration:none; font-weight:600; }
+  .b-grid{ display:grid; grid-template-columns:1.7fr 1fr; gap:18px; align-items:start; }
+  @media(max-width:900px){ .b-grid{ grid-template-columns:1fr; } }
+  .b-queue h2{ margin-top:0; }
+  .rail .stat{ padding:14px 16px; margin-bottom:12px; }
+  .rail .stat .v{ font-family:ui-monospace,'SF Mono',monospace; font-size:24px; color:#141a24; margin-top:4px; }
+  .rail .stat .v.g{ color:#1f7a4d; }
+  .rail .stat .foot{ font-size:11.5px; color:#6d7480; margin-top:3px; }
+  .rowbars{ padding:14px 16px; margin-bottom:12px; }
+  .rowbars .rb{ display:grid; grid-template-columns:64px 1fr 74px; gap:10px; align-items:center; margin:8px 0; }
+  .rowbars .rb .n{ font-size:11.5px; color:#6d7480; font-family:ui-monospace,'SF Mono',monospace; }
+  .rowbars .rb .tr{ height:10px; border-radius:5px; background:#eceee9; overflow:hidden; }
+  .rowbars .rb .tr i{ display:block; height:100%; background:#b7842a; border-radius:0 4px 4px 0; }
+  .rowbars .rb .v{ font-size:11.5px; text-align:right; font-family:ui-monospace,'SF Mono',monospace; font-variant-numeric:tabular-nums; color:#242a31; }
+  .minilead{ padding:14px 16px; }
+  .minilead .row{ display:flex; align-items:center; gap:10px; margin:9px 0; font-size:12.5px; }
+  .minilead .row .nm{ flex:0 0 92px; }
+  .minilead .row .tr{ flex:1; height:8px; border-radius:4px; background:#eceee9; overflow:hidden; }
+  .minilead .row .tr i{ display:block; height:100%; background:#1f7a4d; border-radius:0 4px 4px 0; }
+  .minilead .row .v{ flex:0 0 74px; text-align:right; font-family:ui-monospace,'SF Mono',monospace; font-variant-numeric:tabular-nums; font-size:11.5px; }
+
+  /* ================= C · sections ================= */
+  .c-panels{ display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
+  @media(max-width:900px){ .c-panels{ grid-template-columns:1fr; } }
+  .panel{ padding:16px 18px; }
+  .panel h3{ font-family:Georgia,serif; font-weight:normal; font-size:15px; color:#141a24; margin:0 0 12px;
+    padding-bottom:8px; border-bottom:1px solid #eceee9; }
+  .panel .big{ font-family:ui-monospace,'SF Mono',monospace; font-size:28px; color:#1f7a4d; margin:2px 0 0; }
+  .panel .big.ink{ color:#141a24; font-size:20px; }
+  .panel .kvrow{ display:flex; justify-content:space-between; align-items:center; padding:7px 0; font-size:13px; border-bottom:1px solid #f0f1ed; }
+  .panel .kvrow:last-child{ border-bottom:0; }
+  .panel .kvrow .v{ font-family:ui-monospace,'SF Mono',monospace; font-variant-numeric:tabular-nums; font-weight:600; }
+  .panel .kvrow .v.r{ color:#b23a30; } .panel .kvrow .v.y{ color:#96601f; }
+  .panel .st{ display:inline-flex; align-items:center; gap:7px; }
+  .panel .st .dot{ width:8px; height:8px; border-radius:50%; }
+  .cols{ display:flex; align-items:flex-end; gap:26px; height:170px; padding:10px 18px 0; }
+  .cols .c{ flex:1; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; gap:6px; height:100%; }
+  .cols .c .bar{ width:22px; border-radius:4px 4px 0 0; }
+  .cols .c .cap{ font-size:11px; font-family:ui-monospace,'SF Mono',monospace; color:#242a31; }
+  .cols .c .ax{ font-size:11.5px; color:#565d66; letter-spacing:.3px; padding-top:6px; border-top:1px solid #e4e6e2; width:100%; text-align:center; }
+  .c-two{ display:grid; grid-template-columns:1.35fr 1fr; gap:18px; align-items:start; }
+  @media(max-width:900px){ .c-two{ grid-template-columns:1fr; } }
+
+  @media (prefers-reduced-motion: no-preference){
+    .ver.on{ animation:fade .18s ease; }
+    @keyframes fade{ from{ opacity:0; transform:translateY(4px);} to{ opacity:1; transform:none;} }
+  }
+
+  /* ================= bookmark-design palette (D/E/F) ================= */
+  .bm{ --c-bg:#eef0ec; --c-card:#ffffff; --c-ink:#242a31; --c-muted:#6d7480; --c-wood:#c7ccd3;
+    --c-wood-d:#838d99; --c-gold:#b7842a; --c-line:#e4e6e2; --c-red:#b23a30; --c-green:#1f7a4d; }
+  .bm h1,.bm h2,.bm h3{ font-family:Georgia,serif; font-weight:normal; color:var(--c-ink); margin:0; }
+  .bm .card2{ background:var(--c-card); border:1px solid var(--c-line); border-radius:8px; }
+  .bm table.data2{ width:100%; border-collapse:collapse; font-size:13px; }
+  .bm table.data2 th{ font-size:11px; text-transform:uppercase; letter-spacing:.6px; color:var(--c-muted);
+    text-align:left; padding:9px 14px; font-weight:600; border-bottom:1px solid var(--c-line); }
+  .bm table.data2 td{ padding:10px 14px; border-bottom:1px solid var(--c-line); color:var(--c-ink); }
+  .bm table.data2 tr:last-child td{ border-bottom:0; }
+  .bm table.data2 td.num, .bm table.data2 th.num{ text-align:right; font-family:ui-monospace,'SF Mono',monospace; font-variant-numeric:tabular-nums; }
+  .bm table.data2 a{ color:var(--c-ink); text-decoration:none; border-bottom:1px solid var(--c-wood); }
+  .bm .status{ font-size:11.5px; font-family:ui-monospace,'SF Mono',monospace; }
+  .bm .status.late{ color:var(--c-red); } .bm .status.today{ color:var(--c-gold); } .bm .status.ok{ color:var(--c-muted); }
+  .bm .bfeed{ list-style:none; margin:0; padding:0; }
+  .bm .bfeed li{ padding:12px 14px; font-size:12.5px; line-height:1.55; color:var(--c-ink); border-bottom:1px solid var(--c-line); }
+  .bm .bfeed li:last-child{ border-bottom:0; }
+  .bm .bfeed .m{ display:block; color:var(--c-muted); font-size:11.5px; margin-top:3px; }
+  .bm .amt2{ font-family:Georgia,serif; color:var(--c-ink); }
+  .bm .amt2 .cur{ color:var(--c-gold); }
+  .bm .lbl2{ font-size:11.5px; text-transform:uppercase; letter-spacing:1px; color:var(--c-muted); }
+
+  /* ---- D 晨光账簿：顶部通栏，无侧栏，账簿式大数字 ---- */
+  .mockD{ background:var(--c-bg); border-radius:10px; overflow:hidden; box-shadow:0 10px 34px rgba(20,26,36,.14); max-width:1280px; margin:26px auto 60px; }
+  .mockD .btop{ display:flex; align-items:center; justify-content:space-between; padding:20px 34px; border-bottom:2px solid var(--c-wood); }
+  .mockD .btop .brand{ font-family:Georgia,serif; font-size:17px; color:var(--c-ink); }
+  .mockD .btop .brand span{ color:var(--c-gold); }
+  .mockD .btop nav a{ margin-left:24px; font-size:13px; color:var(--c-muted); text-decoration:none; }
+  .mockD .btop nav a.act{ color:var(--c-ink); border-bottom:2px solid var(--c-gold); padding-bottom:5px; }
+  .mockD .bmain{ padding:8px 34px 40px; }
+  .mockD .bhero{ padding:26px 0 24px; border-bottom:1px solid var(--c-line); margin-bottom:26px; display:flex; gap:48px; flex-wrap:wrap; }
+  .mockD .bhero .amt2{ font-size:44px; margin:8px 0 4px; }
+  .mockD .bhero .amt2 .cur{ font-size:19px; margin-right:8px; }
+  .mockD .bhero .sub2{ font-size:12px; color:var(--c-muted); }
+  .mockD .bhero .side{ display:flex; gap:34px; align-self:flex-end; padding-bottom:6px; }
+  .mockD .bhero .side .v2{ font-family:Georgia,serif; font-size:20px; color:var(--c-ink); margin-top:4px; }
+  .mockD .shelf{ display:flex; gap:3px; height:34px; }
+  .mockD .shelf i{ display:block; height:100%; border-radius:3px 3px 0 0; }
+  .mockD .shelf-leg{ display:flex; flex-wrap:wrap; gap:5px 20px; margin-top:10px; font-size:11.5px; color:var(--c-muted); }
+  .mockD .two{ display:grid; grid-template-columns:1.4fr 1fr; gap:26px; margin-top:28px; align-items:start; }
+  @media(max-width:900px){ .mockD .two{ grid-template-columns:1fr; } .mockD .bhero{ flex-direction:column; gap:16px; } }
+
+  /* ---- E 安静工作台：原木色侧栏，克制配色，只留一处金色强调 ---- */
+  .mockE{ display:flex; max-width:1280px; margin:26px auto 60px; background:var(--c-bg); border-radius:10px;
+    overflow:hidden; box-shadow:0 10px 34px rgba(20,26,36,.14); min-height:720px; }
+  .mockE .enav{ width:196px; flex:0 0 196px; background:var(--c-wood); padding-bottom:16px; }
+  .mockE .enav .brand{ font-family:Georgia,serif; color:var(--c-ink); font-size:16px; padding:20px 18px; border-bottom:1px solid rgba(20,26,36,.15); }
+  .mockE .enav a{ display:block; padding:10px 18px; font-size:13px; color:#5c4830; text-decoration:none; }
+  .mockE .enav a.act{ background:rgba(255,253,248,.5); color:var(--c-ink); font-weight:600; }
+  .mockE .emain{ flex:1; min-width:0; padding:26px 30px 34px; }
+  @media(max-width:900px){ .mockE .enav{ display:none; } }
+  .bm .qrow{ display:flex; gap:36px; flex-wrap:wrap; padding:18px 0 22px; border-bottom:1px solid var(--c-line); margin-bottom:22px; }
+  .bm .qrow .q .v2{ font-family:Georgia,serif; font-size:21px; color:var(--c-ink); margin-top:3px; }
+  .bm .qrow .q.hot .v2{ color:var(--c-gold); }
+  .bm .agelines{ display:flex; flex-direction:column; gap:9px; }
+  .bm .agelines .al{ display:grid; grid-template-columns:60px 1fr 70px; gap:10px; align-items:center; font-size:12px; color:var(--c-muted); }
+  .bm .agelines .al .tr{ height:3px; background:var(--c-line); }
+  .bm .agelines .al .tr i{ display:block; height:100%; background:var(--c-wood-d); }
+  .mockE .two{ display:grid; grid-template-columns:1.4fr 1fr; gap:26px; margin-top:26px; align-items:start; }
+  @media(max-width:900px){ .mockE .two{ grid-template-columns:1fr; } }
+  .bm .plainlist{ padding:2px 0; }
+  .bm .plainlist .row{ display:flex; justify-content:space-between; padding:8px 14px; font-size:12.5px; color:var(--c-ink); border-bottom:1px solid var(--c-line); }
+  .bm .plainlist .row:last-child{ border-bottom:0; }
+
+  /* ---- F 编辑单栏：无侧栏，单栏叙事式排版 ---- */
+  .mockF{ background:var(--c-bg); border-radius:10px; box-shadow:0 10px 34px rgba(20,26,36,.14); max-width:1280px; margin:26px auto 60px; }
+  .mockF .fmain{ max-width:640px; margin:0 auto; padding:48px 24px 60px; }
+  .mockF .fmast{ text-align:center; padding-bottom:22px; border-bottom:1px solid var(--c-line); margin-bottom:30px; }
+  .mockF .fmast h1{ font-size:28px; }
+  .mockF .fmast .meta{ font-size:12px; color:var(--c-muted); margin-top:6px; }
+  .mockF .fhero{ text-align:center; margin-bottom:30px; }
+  .mockF .fhero .amt2{ font-size:40px; }
+  .mockF .fhero .amt2 .cur{ font-size:17px; }
+  .mockF .fhero .sub2{ font-size:12px; color:var(--c-muted); margin-top:4px; }
+  .mockF .rule{ text-align:center; color:var(--c-gold); font-size:12px; letter-spacing:8px; margin:34px 0 18px; }
+  .mockF .fsec h2{ font-size:16px; margin-bottom:12px; }
+  .mockF .fsent{ font-size:13.5px; line-height:1.9; color:var(--c-ink); }
+  .mockF .fsent b{ color:var(--c-gold); font-weight:600; }
+  .mockF .flist{ list-style:none; margin:0; padding:0; }
+  .mockF .flist li{ padding:11px 0; border-bottom:1px solid var(--c-line); font-size:13px; color:var(--c-ink); display:flex; justify-content:space-between; gap:14px; }
+  .mockF .flist li:last-child{ border-bottom:0; }
+  .mockF .flist .status{ flex:0 0 auto; }
+</style>
+
+<div class="switch">
+  <span class="t">Dashboard <span>改版方案</span></span>
+  <button id="bA" class="on" onclick="show('A')">A · 今日账簿</button>
+  <button id="bB" onclick="show('B')">B · 工作台</button>
+  <button id="bC" onclick="show('C')">C · 指标分区</button>
+  <button id="bD" onclick="show('D')">D · 晨光账簿</button>
+  <button id="bE" onclick="show('E')">E · 安静工作台</button>
+  <button id="bF" onclick="show('F')">F · 编辑单栏</button>
+  <button id="bG" onclick="show('G')">G · 顶栏工作台</button>
+  <button id="bH" onclick="show('H')">H · 任务优先</button>
+  <button id="bI" onclick="show('I')">I · 账龄优先</button>
+  <span class="desc" id="desc">钱是主角：今日回款做成大账簿横幅，其余指标收成小胶囊，账龄一条分段横条。</span>
+</div>
+
+<!-- ================================================== A ================================================== -->
+<div class="ver on" id="vA">
+<div class="mock">
+  <aside class="snav">
+    <div class="brand">Debt Collection <span>CRM</span></div>
+    <a class="act" href="#">Dashboard</a><a href="#">Cases</a><a href="#">Debtors</a><a href="#">Tasks</a><a href="#">Reports</a>
+  </aside>
+  <div class="main">
+    <div class="phead">
+      <h1>Dashboard</h1>
+      <span class="meta">2026年7月20日 · 欢迎，Admin</span>
+    </div>
+
+    <div class="ledger">
+      <div>
+        <div class="lbl">今日回款 Collected today</div>
+        <div class="amt"><span class="cur">RM</span>12,480.00</div>
+        <div class="sub">来自 5 笔付款 · 最近一笔 14:32</div>
+      </div>
+      <div class="vr"></div>
+      <div class="right">
+        <div><div class="lbl">未收总额</div><div class="v">RM 1,842,350</div></div>
+        <div><div class="lbl">在案数量</div><div class="v">247</div></div>
+        <div><div class="lbl">法务案件</div><div class="v">12</div></div>
+      </div>
+    </div>
+
+    <div class="chiprow">
+      <span class="grp">承诺还款</span>
+      <span class="chip gold"><span class="dot"></span>今日到期 <b>6</b></span>
+      <span class="chip red"><span class="dot"></span>已逾期 <b>3</b></span>
+      <span class="chip red"><span class="dot"></span>已违约 <b>4</b></span>
+      <span class="sep"></span>
+      <span class="grp">案件</span>
+      <span class="chip green"><span class="dot"></span>今日新开 <b>3</b></span>
+      <span class="chip"><span class="dot"></span>今日结案 <b>1</b></span>
+      <span class="chip gold"><span class="dot"></span>逾期任务 <b>5</b></span>
+    </div>
+
+    <h2>账龄分布 <small>未收金额 · 按开案天数</small></h2>
+    <div class="card" style="padding:16px 18px;">
+      <div class="stackbar">
+        <i style="flex:11.6; background:#f2dcb3"></i><i style="flex:21.1; background:#e0b877"></i>
+        <i style="flex:16.1; background:#cf9a4c"></i><i style="flex:24.6; background:#b7842a"></i>
+        <i style="flex:16.9; background:#916122"></i><i style="flex:9.7; background:#653f16"></i>
+      </div>
+      <div class="aleg">
+        <span class="it"><span class="sw" style="background:#f2dcb3"></span>0–30 天 <span class="v">RM 214K</span></span>
+        <span class="it"><span class="sw" style="background:#e0b877"></span>31–60 天 <span class="v">RM 388K</span></span>
+        <span class="it"><span class="sw" style="background:#cf9a4c"></span>61–90 天 <span class="v">RM 296K</span></span>
+        <span class="it"><span class="sw" style="background:#b7842a"></span>91–180 天 <span class="v">RM 453K</span></span>
+        <span class="it"><span class="sw" style="background:#916122"></span>181–365 天 <span class="v">RM 311K</span></span>
+        <span class="it"><span class="sw" style="background:#653f16"></span>365+ 天 <span class="v">RM 180K</span></span>
+      </div>
+    </div>
+
+    <div class="a-two">
+      <div>
+        <h2 style="margin-top:0;">今日跟进 <small>next action 已到期</small></h2>
+        <div class="card">
+          <table class="data">
+            <thead><tr><th>案件号</th><th>债务人</th><th>状态</th><th class="num">未收</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">DC-2024-0187</a></td><td>Tan Wei Ming</td><td><span class="b-late">逾期 3 天</span></td><td class="num">42,300.00</td></tr>
+              <tr><td><a href="#">DC-2025-0031</a></td><td>Siti Nurhaliza bt Ahmad</td><td><span class="b-late">逾期 1 天</span></td><td class="num">8,150.50</td></tr>
+              <tr><td><a href="#">DC-2024-0243</a></td><td>Rajesh a/l Kumar</td><td><span class="b-today">今天</span></td><td class="num">120,000.00</td></tr>
+              <tr><td><a href="#">DC-2025-0058</a></td><td>Lim Mei Ling</td><td><span class="b-today">今天</span></td><td class="num">15,720.00</td></tr>
+              <tr><td><a href="#">DC-2025-0072</a></td><td>Muhammad Faiz bin Osman</td><td><span class="b-today">今天</span></td><td class="num">6,480.25</td></tr>
+            </tbody>
+          </table>
+          <a class="viewall" href="#">查看全部（今日共 8 个）→</a>
+        </div>
+        <h2>回款排行</h2>
+        <div class="card minilead">
+          <div class="row"><span class="nm">Aisyah</span><span class="tr"><i style="width:100%"></i></span><span class="v">RM 86,400</span></div>
+          <div class="row"><span class="nm">Daniel Wong</span><span class="tr"><i style="width:78%"></i></span><span class="v">RM 67,150</span></div>
+          <div class="row"><span class="nm">Hafiz</span><span class="tr"><i style="width:55%"></i></span><span class="v">RM 47,900</span></div>
+          <div class="row"><span class="nm">Priya</span><span class="tr"><i style="width:34%"></i></span><span class="v">RM 29,300</span></div>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-top:0;">最近动态</h2>
+        <div class="card">
+          <ul class="feed">
+            <li><span class="tk g"></span><div>收到付款 RM 2,500.00（收据 R-0812）<span class="m"><a href="#">DC-2024-0187</a> · Aisyah · 14:32</span></div></li>
+            <li><span class="tk r"></span><div>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m"><a href="#">DC-2025-0031</a> · system · 09:00</span></div></li>
+            <li><span class="tk b"></span><div>致电债务人，约定周五前回复<span class="m"><a href="#">DC-2024-0243</a> · Daniel Wong · 昨天 17:05</span></div></li>
+            <li><span class="tk y"></span><div>新建 PTP：8月1日 前还款 RM 5,000<span class="m"><a href="#">DC-2025-0058</a> · Hafiz · 昨天 15:40</span></div></li>
+            <li><span class="tk b"></span><div>状态变更 active → legal<span class="m"><a href="#">DC-2024-0102</a> · Admin · 昨天 11:22</span></div></li>
+            <li><span class="tk g"></span><div>收到付款 RM 800.00（现金）<span class="m"><a href="#">DC-2025-0072</a> · Priya · 昨天 10:03</span></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================== B ================================================== -->
+<div class="ver" id="vB">
+<div class="mock">
+  <aside class="snav">
+    <div class="brand">Debt Collection <span>CRM</span></div>
+    <a class="act" href="#">Dashboard</a><a href="#">Cases</a><a href="#">Debtors</a><a href="#">Tasks</a><a href="#">Reports</a>
+  </aside>
+  <div class="main">
+    <div class="phead">
+      <h1>Dashboard</h1>
+      <span class="meta">2026年7月20日 · 欢迎，Aisyah</span>
+    </div>
+
+    <div class="alertbar">
+      需要处理：<b>3</b> 项逾期 PTP · <b>4</b> 项违约 PTP · <b>5</b> 项逾期任务
+      <a class="go" href="#">去处理 →</a>
+    </div>
+
+    <div class="b-grid">
+      <div class="b-queue">
+        <h2>今日跟进 <small>8 个案件 · next action 已到期</small></h2>
+        <div class="card">
+          <table class="data">
+            <thead><tr><th>案件号</th><th>债务人</th><th>跟进时间</th><th>状态</th><th class="num">未收</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">DC-2024-0187</a></td><td>Tan Wei Ming</td><td>7月17日</td><td><span class="b-late">逾期 3 天</span></td><td class="num">42,300.00</td></tr>
+              <tr><td><a href="#">DC-2025-0031</a></td><td>Siti Nurhaliza bt Ahmad</td><td>7月19日</td><td><span class="b-late">逾期 1 天</span></td><td class="num">8,150.50</td></tr>
+              <tr><td><a href="#">DC-2024-0243</a></td><td>Rajesh a/l Kumar</td><td>今天</td><td><span class="b-today">今天</span></td><td class="num">120,000.00</td></tr>
+              <tr><td><a href="#">DC-2025-0058</a></td><td>Lim Mei Ling</td><td>今天</td><td><span class="b-today">今天</span></td><td class="num">15,720.00</td></tr>
+              <tr><td><a href="#">DC-2025-0072</a></td><td>Muhammad Faiz bin Osman</td><td>今天</td><td><span class="b-today">今天</span></td><td class="num">6,480.25</td></tr>
+              <tr><td><a href="#">DC-2024-0099</a></td><td>Wong Kar Fai</td><td>今天</td><td><span class="b-today">今天</span></td><td class="num">33,900.00</td></tr>
+              <tr><td><a href="#">DC-2025-0104</a></td><td>Nurul Izzah bt Rahman</td><td>今天</td><td><span class="b-today">今天</span></td><td class="num">9,250.00</td></tr>
+              <tr><td><a href="#">DC-2025-0110</a></td><td>Chen Li Hua</td><td>今天</td><td><span class="b-today">今天</span></td><td class="num">4,600.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2>最近动态</h2>
+        <div class="card">
+          <ul class="feed">
+            <li><span class="tk g"></span><div>收到付款 RM 2,500.00（收据 R-0812）<span class="m"><a href="#">DC-2024-0187</a> · Aisyah · 14:32</span></div></li>
+            <li><span class="tk r"></span><div>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m"><a href="#">DC-2025-0031</a> · system · 09:00</span></div></li>
+            <li><span class="tk b"></span><div>致电债务人，约定周五前回复<span class="m"><a href="#">DC-2024-0243</a> · Daniel Wong · 昨天 17:05</span></div></li>
+            <li><span class="tk y"></span><div>新建 PTP：8月1日 前还款 RM 5,000<span class="m"><a href="#">DC-2025-0058</a> · Hafiz · 昨天 15:40</span></div></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="rail">
+        <div class="card stat">
+          <div class="lbl">今日回款</div>
+          <div class="v g">RM 12,480.00</div>
+          <div class="foot">5 笔付款</div>
+        </div>
+        <div class="card stat">
+          <div class="lbl">未收总额</div>
+          <div class="v">RM 1,842,350</div>
+          <div class="foot">247 个在案 · 法务 12</div>
+        </div>
+        <div class="card stat">
+          <div class="lbl">承诺还款 PTP</div>
+          <div style="display:flex; gap:16px; margin-top:8px;">
+            <div><div class="v" style="font-size:20px;">6</div><div class="foot">今日到期</div></div>
+            <div><div class="v" style="font-size:20px; color:#b23a30;">3</div><div class="foot">已逾期</div></div>
+            <div><div class="v" style="font-size:20px; color:#b23a30;">4</div><div class="foot">已违约</div></div>
+          </div>
+        </div>
+        <div class="card rowbars">
+          <div class="lbl" style="margin-bottom:4px;">账龄分布（未收）</div>
+          <div class="rb"><span class="n">0–30</span><span class="tr"><i style="width:47%"></i></span><span class="v">214K</span></div>
+          <div class="rb"><span class="n">31–60</span><span class="tr"><i style="width:86%"></i></span><span class="v">388K</span></div>
+          <div class="rb"><span class="n">61–90</span><span class="tr"><i style="width:65%"></i></span><span class="v">296K</span></div>
+          <div class="rb"><span class="n">91–180</span><span class="tr"><i style="width:100%"></i></span><span class="v">453K</span></div>
+          <div class="rb"><span class="n">181–365</span><span class="tr"><i style="width:69%"></i></span><span class="v">311K</span></div>
+          <div class="rb"><span class="n">365+</span><span class="tr"><i style="width:40%"></i></span><span class="v">180K</span></div>
+        </div>
+        <div class="card minilead">
+          <div class="lbl" style="margin-bottom:4px;">回款排行</div>
+          <div class="row"><span class="nm">Aisyah</span><span class="tr"><i style="width:100%"></i></span><span class="v">RM 86,400</span></div>
+          <div class="row"><span class="nm">Daniel Wong</span><span class="tr"><i style="width:78%"></i></span><span class="v">RM 67,150</span></div>
+          <div class="row"><span class="nm">Hafiz</span><span class="tr"><i style="width:55%"></i></span><span class="v">RM 47,900</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================== C ================================================== -->
+<div class="ver" id="vC">
+<div class="mock">
+  <aside class="snav">
+    <div class="brand">Debt Collection <span>CRM</span></div>
+    <a class="act" href="#">Dashboard</a><a href="#">Cases</a><a href="#">Debtors</a><a href="#">Tasks</a><a href="#">Reports</a>
+  </aside>
+  <div class="main">
+    <div class="phead">
+      <h1>Dashboard</h1>
+      <span class="meta">2026年7月20日 · 欢迎，Admin</span>
+    </div>
+
+    <div class="c-panels">
+      <div class="card panel">
+        <h3>资金</h3>
+        <div class="lbl">今日回款</div>
+        <div class="big">RM 12,480.00</div>
+        <div style="height:12px"></div>
+        <div class="lbl">未收总额</div>
+        <div class="big ink">RM 1,842,350</div>
+      </div>
+      <div class="card panel">
+        <h3>承诺还款 PTP</h3>
+        <div class="kvrow"><span class="st"><span class="dot" style="background:#b7842a"></span>今日到期</span><span class="v y">6</span></div>
+        <div class="kvrow"><span class="st"><span class="dot" style="background:#b23a30"></span>已逾期</span><span class="v r">3</span></div>
+        <div class="kvrow"><span class="st"><span class="dot" style="background:#b23a30"></span>已违约</span><span class="v r">4</span></div>
+      </div>
+      <div class="card panel">
+        <h3>案件</h3>
+        <div class="kvrow"><span>今日新开</span><span class="v">3</span></div>
+        <div class="kvrow"><span>今日结案</span><span class="v">1</span></div>
+        <div class="kvrow"><span>法务案件</span><span class="v">12</span></div>
+        <div class="kvrow"><span>逾期任务</span><span class="v y">5</span></div>
+      </div>
+    </div>
+
+    <h2>账龄分布 <small>未收金额 · 按开案天数</small></h2>
+    <div class="card">
+      <div class="cols">
+        <div class="c"><span class="cap">214K</span><span class="bar" style="height:33%; background:#f2dcb3"></span><span class="ax">0–30</span></div>
+        <div class="c"><span class="cap">388K</span><span class="bar" style="height:60%; background:#e0b877"></span><span class="ax">31–60</span></div>
+        <div class="c"><span class="cap">296K</span><span class="bar" style="height:46%; background:#cf9a4c"></span><span class="ax">61–90</span></div>
+        <div class="c"><span class="cap">453K</span><span class="bar" style="height:70%; background:#b7842a"></span><span class="ax">91–180</span></div>
+        <div class="c"><span class="cap">311K</span><span class="bar" style="height:48%; background:#916122"></span><span class="ax">181–365</span></div>
+        <div class="c"><span class="cap">180K</span><span class="bar" style="height:28%; background:#653f16"></span><span class="ax">365+</span></div>
+      </div>
+      <div style="padding:0 18px 14px; font-size:11.5px; color:#6d7480;">单位：RM · 仅统计活跃案件</div>
+    </div>
+
+    <div class="c-two" style="margin-top:8px;">
+      <div>
+        <h2 style="margin-top:0;">今日跟进</h2>
+        <div class="card">
+          <table class="data">
+            <thead><tr><th>案件号</th><th>债务人</th><th>状态</th><th class="num">未收</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">DC-2024-0187</a></td><td>Tan Wei Ming</td><td><span class="b-late">逾期 3 天</span></td><td class="num">42,300.00</td></tr>
+              <tr><td><a href="#">DC-2025-0031</a></td><td>Siti Nurhaliza bt Ahmad</td><td><span class="b-late">逾期 1 天</span></td><td class="num">8,150.50</td></tr>
+              <tr><td><a href="#">DC-2024-0243</a></td><td>Rajesh a/l Kumar</td><td><span class="b-today">今天</span></td><td class="num">120,000.00</td></tr>
+              <tr><td><a href="#">DC-2025-0058</a></td><td>Lim Mei Ling</td><td><span class="b-today">今天</span></td><td class="num">15,720.00</td></tr>
+            </tbody>
+          </table>
+          <a class="viewall" href="#">查看全部（今日共 8 个）→</a>
+        </div>
+        <h2>回款排行</h2>
+        <div class="card minilead">
+          <div class="row"><span class="nm">Aisyah</span><span class="tr"><i style="width:100%"></i></span><span class="v">RM 86,400</span></div>
+          <div class="row"><span class="nm">Daniel Wong</span><span class="tr"><i style="width:78%"></i></span><span class="v">RM 67,150</span></div>
+          <div class="row"><span class="nm">Hafiz</span><span class="tr"><i style="width:55%"></i></span><span class="v">RM 47,900</span></div>
+          <div class="row"><span class="nm">Priya</span><span class="tr"><i style="width:34%"></i></span><span class="v">RM 29,300</span></div>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-top:0;">最近动态</h2>
+        <div class="card">
+          <ul class="feed">
+            <li><span class="tk g"></span><div>收到付款 RM 2,500.00（收据 R-0812）<span class="m"><a href="#">DC-2024-0187</a> · Aisyah · 14:32</span></div></li>
+            <li><span class="tk r"></span><div>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m"><a href="#">DC-2025-0031</a> · system · 09:00</span></div></li>
+            <li><span class="tk b"></span><div>致电债务人，约定周五前回复<span class="m"><a href="#">DC-2024-0243</a> · Daniel Wong · 昨天 17:05</span></div></li>
+            <li><span class="tk y"></span><div>新建 PTP：8月1日 前还款 RM 5,000<span class="m"><a href="#">DC-2025-0058</a> · Hafiz · 昨天 15:40</span></div></li>
+            <li><span class="tk b"></span><div>状态变更 active → legal<span class="m"><a href="#">DC-2024-0102</a> · Admin · 昨天 11:22</span></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ================================================== D · 晨光账簿 ================================================== -->
+<div class="ver" id="vD">
+<div class="bm">
+<div class="mockD">
+  <div class="btop">
+    <div class="brand">Debt Collection <span>CRM</span></div>
+    <nav><a class="act" href="#">Dashboard</a><a href="#">Cases</a><a href="#">Debtors</a><a href="#">Tasks</a><a href="#">Reports</a></nav>
+  </div>
+  <div class="bmain">
+    <div class="bhero">
+      <div>
+        <div class="lbl2">今日回款 Collected today</div>
+        <div class="amt2"><span class="cur">RM</span>12,480.00</div>
+        <div class="sub2">来自 5 笔付款 · 最近一笔 14:32</div>
+      </div>
+      <div class="side">
+        <div><div class="lbl2">未收总额</div><div class="v2">RM 1,842,350</div></div>
+        <div><div class="lbl2">在案数量</div><div class="v2">247</div></div>
+        <div><div class="lbl2">法务案件</div><div class="v2">12</div></div>
+        <div><div class="lbl2">今日到期 PTP</div><div class="v2" style="color:var(--c-gold)">6</div></div>
+      </div>
+    </div>
+
+    <h2>账龄分布 <small style="font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--c-muted);">未收金额 · 按开案天数，色深代表越陈旧</small></h2>
+    <div style="margin-top:12px;">
+      <div class="shelf">
+        <i style="flex:11.6; background:#dfe2e8"></i><i style="flex:21.1; background:#b9c0cd"></i>
+        <i style="flex:16.1; background:#8f99a8"></i><i style="flex:24.6; background:#b7842a"></i>
+        <i style="flex:16.9; background:#5a6472"></i><i style="flex:9.7; background:#242a31"></i>
+      </div>
+      <div class="shelf-leg">
+        <span>0–30 天 · RM 214K</span><span>31–60 天 · RM 388K</span><span>61–90 天 · RM 296K</span>
+        <span>91–180 天 · RM 453K</span><span>181–365 天 · RM 311K</span><span>365+ 天 · RM 180K</span>
+      </div>
+    </div>
+
+    <div class="two">
+      <div>
+        <h2>今日跟进 <small style="font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--c-muted);">next action 已到期</small></h2>
+        <div class="card2" style="margin-top:12px;">
+          <table class="data2">
+            <thead><tr><th>案件号</th><th>债务人</th><th>状态</th><th class="num">未收</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">DC-2024-0187</a></td><td>Tan Wei Ming</td><td><span class="status late">逾期 3 天</span></td><td class="num">42,300.00</td></tr>
+              <tr><td><a href="#">DC-2025-0031</a></td><td>Siti Nurhaliza bt Ahmad</td><td><span class="status late">逾期 1 天</span></td><td class="num">8,150.50</td></tr>
+              <tr><td><a href="#">DC-2024-0243</a></td><td>Rajesh a/l Kumar</td><td><span class="status today">今天</span></td><td class="num">120,000.00</td></tr>
+              <tr><td><a href="#">DC-2025-0058</a></td><td>Lim Mei Ling</td><td><span class="status today">今天</span></td><td class="num">15,720.00</td></tr>
+              <tr><td><a href="#">DC-2025-0072</a></td><td>Muhammad Faiz bin Osman</td><td><span class="status today">今天</span></td><td class="num">6,480.25</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h2>本日纪事</h2>
+        <div class="card2" style="margin-top:12px;">
+          <ul class="bfeed">
+            <li>收到付款 RM 2,500.00（收据 R-0812）<span class="m">DC-2024-0187 · Aisyah · 14:32</span></li>
+            <li>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m">DC-2025-0031 · system · 09:00</span></li>
+            <li>致电债务人，约定周五前回复<span class="m">DC-2024-0243 · Daniel Wong · 昨天 17:05</span></li>
+            <li>新建 PTP：8月1日 前还款 RM 5,000<span class="m">DC-2025-0058 · Hafiz · 昨天 15:40</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ================================================== E · 安静工作台 ================================================== -->
+<div class="ver" id="vE">
+<div class="bm">
+<div class="mockE">
+  <aside class="enav">
+    <div class="brand">Debt Collection <span>CRM</span></div>
+    <a class="act" href="#">Dashboard</a><a href="#">Cases</a><a href="#">Debtors</a><a href="#">Tasks</a><a href="#">Reports</a>
+  </aside>
+  <div class="emain">
+    <h1>Dashboard</h1>
+    <div class="qrow">
+      <div class="q hot"><div class="lbl2">今日回款</div><div class="v2">RM 12,480</div></div>
+      <div class="q"><div class="lbl2">未收总额</div><div class="v2">RM 1,842,350</div></div>
+      <div class="q"><div class="lbl2">在案 / 法务</div><div class="v2">247 / 12</div></div>
+      <div class="q"><div class="lbl2">PTP 到期 / 逾期 / 违约</div><div class="v2">6 / 3 / 4</div></div>
+    </div>
+
+    <div class="two">
+      <div>
+        <h2 style="margin-bottom:12px;">今日跟进 <small style="font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--c-muted); font-weight:normal;">8 个案件</small></h2>
+        <div class="card2">
+          <table class="data2">
+            <thead><tr><th>案件号</th><th>债务人</th><th>状态</th><th class="num">未收</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">DC-2024-0187</a></td><td>Tan Wei Ming</td><td><span class="status late">逾期 3 天</span></td><td class="num">42,300.00</td></tr>
+              <tr><td><a href="#">DC-2025-0031</a></td><td>Siti Nurhaliza bt Ahmad</td><td><span class="status late">逾期 1 天</span></td><td class="num">8,150.50</td></tr>
+              <tr><td><a href="#">DC-2024-0243</a></td><td>Rajesh a/l Kumar</td><td><span class="status today">今天</span></td><td class="num">120,000.00</td></tr>
+              <tr><td><a href="#">DC-2025-0058</a></td><td>Lim Mei Ling</td><td><span class="status today">今天</span></td><td class="num">15,720.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h2 style="margin:22px 0 12px;">最近动态</h2>
+        <div class="card2">
+          <ul class="bfeed">
+            <li>收到付款 RM 2,500.00（收据 R-0812）<span class="m">DC-2024-0187 · Aisyah · 14:32</span></li>
+            <li>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m">DC-2025-0031 · system · 09:00</span></li>
+            <li>致电债务人，约定周五前回复<span class="m">DC-2024-0243 · Daniel Wong · 昨天 17:05</span></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:12px;">账龄分布</h2>
+        <div class="card2" style="padding:16px 18px;">
+          <div class="agelines">
+            <div class="al"><span>0–30</span><span class="tr"><i style="width:47%"></i></span><span>214K</span></div>
+            <div class="al"><span>31–60</span><span class="tr"><i style="width:86%"></i></span><span>388K</span></div>
+            <div class="al"><span>61–90</span><span class="tr"><i style="width:65%"></i></span><span>296K</span></div>
+            <div class="al"><span>91–180</span><span class="tr"><i style="width:100%"></i></span><span>453K</span></div>
+            <div class="al"><span>181–365</span><span class="tr"><i style="width:69%"></i></span><span>311K</span></div>
+            <div class="al"><span>365+</span><span class="tr"><i style="width:40%"></i></span><span>180K</span></div>
+          </div>
+        </div>
+        <h2 style="margin:22px 0 12px;">回款排行</h2>
+        <div class="card2 plainlist">
+          <div class="row"><span>Aisyah</span><span>RM 86,400</span></div>
+          <div class="row"><span>Daniel Wong</span><span>RM 67,150</span></div>
+          <div class="row"><span>Hafiz</span><span>RM 47,900</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ================================================== F · 编辑单栏 ================================================== -->
+<div class="ver" id="vF">
+<div class="bm">
+<div class="mockF">
+  <div class="fmain">
+    <div class="fmast">
+      <h1>Dashboard</h1>
+      <div class="meta">2026年7月20日 · 欢迎，Admin</div>
+    </div>
+
+    <div class="fhero">
+      <div class="lbl2">今日回款 Collected today</div>
+      <div class="amt2"><span class="cur">RM</span>12,480.00</div>
+      <div class="sub2">来自 5 笔付款 · 最近一笔 14:32</div>
+    </div>
+
+    <div class="fsent">
+      未收总额 <b>RM 1,842,350</b>，分布在 <b>247</b> 个在案案件中，其中 <b>12</b> 件已转法务。
+      今日有 <b>6</b> 笔承诺还款到期，另有 <b>3</b> 笔已逾期、<b>4</b> 笔已违约，需要优先跟进。
+    </div>
+
+    <div class="rule">✦ ✦ ✦</div>
+
+    <div class="fsec">
+      <h2>今日跟进</h2>
+      <ul class="flist">
+        <li><span><a href="#" style="color:var(--c-ink); text-decoration:none; border-bottom:1px solid var(--c-wood);">DC-2024-0187</a> · Tan Wei Ming</span><span class="status late">逾期 3 天 · 42,300.00</span></li>
+        <li><span><a href="#" style="color:var(--c-ink); text-decoration:none; border-bottom:1px solid var(--c-wood);">DC-2025-0031</a> · Siti Nurhaliza bt Ahmad</span><span class="status late">逾期 1 天 · 8,150.50</span></li>
+        <li><span><a href="#" style="color:var(--c-ink); text-decoration:none; border-bottom:1px solid var(--c-wood);">DC-2024-0243</a> · Rajesh a/l Kumar</span><span class="status today">今天 · 120,000.00</span></li>
+        <li><span><a href="#" style="color:var(--c-ink); text-decoration:none; border-bottom:1px solid var(--c-wood);">DC-2025-0058</a> · Lim Mei Ling</span><span class="status today">今天 · 15,720.00</span></li>
+      </ul>
+    </div>
+
+    <div class="rule">✦ ✦ ✦</div>
+
+    <div class="fsec">
+      <h2>本日纪事</h2>
+      <ul class="flist">
+        <li>收到付款 RM 2,500.00（收据 R-0812）<span class="m" style="color:var(--c-muted); font-size:12px;">14:32</span></li>
+        <li>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m" style="color:var(--c-muted); font-size:12px;">09:00</span></li>
+        <li>致电债务人，约定周五前回复<span class="m" style="color:var(--c-muted); font-size:12px;">昨天 17:05</span></li>
+        <li>新建 PTP：8月1日 前还款 RM 5,000<span class="m" style="color:var(--c-muted); font-size:12px;">昨天 15:40</span></li>
+      </ul>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ================================================== G · 顶栏工作台 (E 的配色/组件，去掉侧栏) ================================================== -->
+<div class="ver" id="vG">
+<div class="bm">
+<div class="mockD">
+  <div class="btop">
+    <div class="brand">Debt Collection <span>CRM</span></div>
+    <nav><a class="act" href="#">Dashboard</a><a href="#">Cases</a><a href="#">Debtors</a><a href="#">Tasks</a><a href="#">Reports</a></nav>
+  </div>
+  <div class="bmain">
+    <h1 style="padding-top:18px;">Dashboard</h1>
+    <div class="qrow">
+      <div class="q hot"><div class="lbl2">今日回款</div><div class="v2">RM 12,480</div></div>
+      <div class="q"><div class="lbl2">未收总额</div><div class="v2">RM 1,842,350</div></div>
+      <div class="q"><div class="lbl2">在案 / 法务</div><div class="v2">247 / 12</div></div>
+      <div class="q"><div class="lbl2">PTP 到期 / 逾期 / 违约</div><div class="v2">6 / 3 / 4</div></div>
+    </div>
+
+    <div class="two">
+      <div>
+        <h2 style="margin-bottom:12px;">今日跟进 <small style="font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--c-muted); font-weight:normal;">8 个案件</small></h2>
+        <div class="card2">
+          <table class="data2">
+            <thead><tr><th>案件号</th><th>债务人</th><th>状态</th><th class="num">未收</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">DC-2024-0187</a></td><td>Tan Wei Ming</td><td><span class="status late">逾期 3 天</span></td><td class="num">42,300.00</td></tr>
+              <tr><td><a href="#">DC-2025-0031</a></td><td>Siti Nurhaliza bt Ahmad</td><td><span class="status late">逾期 1 天</span></td><td class="num">8,150.50</td></tr>
+              <tr><td><a href="#">DC-2024-0243</a></td><td>Rajesh a/l Kumar</td><td><span class="status today">今天</span></td><td class="num">120,000.00</td></tr>
+              <tr><td><a href="#">DC-2025-0058</a></td><td>Lim Mei Ling</td><td><span class="status today">今天</span></td><td class="num">15,720.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h2 style="margin:22px 0 12px;">最近动态</h2>
+        <div class="card2">
+          <ul class="bfeed">
+            <li>收到付款 RM 2,500.00（收据 R-0812）<span class="m">DC-2024-0187 · Aisyah · 14:32</span></li>
+            <li>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m">DC-2025-0031 · system · 09:00</span></li>
+            <li>致电债务人，约定周五前回复<span class="m">DC-2024-0243 · Daniel Wong · 昨天 17:05</span></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:12px;">账龄分布</h2>
+        <div class="card2" style="padding:16px 18px;">
+          <div class="agelines">
+            <div class="al"><span>0–30</span><span class="tr"><i style="width:47%"></i></span><span>214K</span></div>
+            <div class="al"><span>31–60</span><span class="tr"><i style="width:86%"></i></span><span>388K</span></div>
+            <div class="al"><span>61–90</span><span class="tr"><i style="width:65%"></i></span><span>296K</span></div>
+            <div class="al"><span>91–180</span><span class="tr"><i style="width:100%"></i></span><span>453K</span></div>
+            <div class="al"><span>181–365</span><span class="tr"><i style="width:69%"></i></span><span>311K</span></div>
+            <div class="al"><span>365+</span><span class="tr"><i style="width:40%"></i></span><span>180K</span></div>
+          </div>
+        </div>
+        <h2 style="margin:22px 0 12px;">回款排行</h2>
+        <div class="card2 plainlist">
+          <div class="row"><span>Aisyah</span><span>RM 86,400</span></div>
+          <div class="row"><span>Daniel Wong</span><span>RM 67,150</span></div>
+          <div class="row"><span>Hafiz</span><span>RM 47,900</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ================================================== H · 侧栏 · 任务优先 ================================================== -->
+<div class="ver" id="vH">
+<div class="bm">
+<div class="mockE">
+  <aside class="enav">
+    <div class="brand">Debt Collection <span>CRM</span></div>
+    <a class="act" href="#">Dashboard</a><a href="#">Cases</a><a href="#">Debtors</a><a href="#">Tasks</a><a href="#">Reports</a>
+  </aside>
+  <div class="emain">
+    <h1>Dashboard</h1>
+    <div class="two" style="grid-template-columns:1.7fr 1fr; margin-top:18px;">
+      <div>
+        <h2 style="margin-bottom:12px;">今日跟进 <small style="font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--c-muted); font-weight:normal;">8 个案件 · next action 已到期</small></h2>
+        <div class="card2">
+          <table class="data2">
+            <thead><tr><th>案件号</th><th>债务人</th><th>跟进时间</th><th>状态</th><th class="num">未收</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">DC-2024-0187</a></td><td>Tan Wei Ming</td><td>7月17日</td><td><span class="status late">逾期 3 天</span></td><td class="num">42,300.00</td></tr>
+              <tr><td><a href="#">DC-2025-0031</a></td><td>Siti Nurhaliza bt Ahmad</td><td>7月19日</td><td><span class="status late">逾期 1 天</span></td><td class="num">8,150.50</td></tr>
+              <tr><td><a href="#">DC-2024-0243</a></td><td>Rajesh a/l Kumar</td><td>今天</td><td><span class="status today">今天</span></td><td class="num">120,000.00</td></tr>
+              <tr><td><a href="#">DC-2025-0058</a></td><td>Lim Mei Ling</td><td>今天</td><td><span class="status today">今天</span></td><td class="num">15,720.00</td></tr>
+              <tr><td><a href="#">DC-2025-0072</a></td><td>Muhammad Faiz bin Osman</td><td>今天</td><td><span class="status today">今天</span></td><td class="num">6,480.25</td></tr>
+              <tr><td><a href="#">DC-2024-0099</a></td><td>Wong Kar Fai</td><td>今天</td><td><span class="status today">今天</span></td><td class="num">33,900.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h2 style="margin:22px 0 12px;">最近动态</h2>
+        <div class="card2">
+          <ul class="bfeed">
+            <li>收到付款 RM 2,500.00（收据 R-0812）<span class="m">DC-2024-0187 · Aisyah · 14:32</span></li>
+            <li>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m">DC-2025-0031 · system · 09:00</span></li>
+            <li>致电债务人，约定周五前回复<span class="m">DC-2024-0243 · Daniel Wong · 昨天 17:05</span></li>
+          </ul>
+        </div>
+      </div>
+      <div>
+        <div class="card2 railstat" style="padding:14px 16px; margin-bottom:12px;">
+          <div class="lbl2">今日回款</div>
+          <div class="v2" style="font-family:Georgia,serif; font-size:22px; color:var(--c-gold); margin-top:4px;">RM 12,480</div>
+        </div>
+        <div class="card2 railstat" style="padding:14px 16px; margin-bottom:12px;">
+          <div class="lbl2">未收总额</div>
+          <div class="v2" style="font-family:Georgia,serif; font-size:22px; color:var(--c-ink); margin-top:4px;">RM 1,842,350</div>
+          <div style="font-size:11.5px; color:var(--c-muted); margin-top:3px;">247 个在案 · 法务 12</div>
+        </div>
+        <div class="card2 railstat" style="padding:14px 16px; margin-bottom:12px;">
+          <div class="lbl2">承诺还款 PTP</div>
+          <div style="display:flex; gap:16px; margin-top:8px;">
+            <div><div class="v2" style="font-size:18px; color:var(--c-ink);">6</div><div style="font-size:11px; color:var(--c-muted);">到期</div></div>
+            <div><div class="v2" style="font-size:18px; color:var(--c-ink);">3</div><div style="font-size:11px; color:var(--c-muted);">逾期</div></div>
+            <div><div class="v2" style="font-size:18px; color:var(--c-ink);">4</div><div style="font-size:11px; color:var(--c-muted);">违约</div></div>
+          </div>
+        </div>
+        <div class="card2" style="padding:14px 16px; margin-bottom:12px;">
+          <div class="lbl2" style="margin-bottom:8px;">账龄分布</div>
+          <div class="agelines">
+            <div class="al"><span>0–30</span><span class="tr"><i style="width:47%"></i></span><span>214K</span></div>
+            <div class="al"><span>31–60</span><span class="tr"><i style="width:86%"></i></span><span>388K</span></div>
+            <div class="al"><span>61–90</span><span class="tr"><i style="width:65%"></i></span><span>296K</span></div>
+          </div>
+        </div>
+        <div class="card2 plainlist">
+          <div class="row"><span>Aisyah</span><span>RM 86,400</span></div>
+          <div class="row"><span>Daniel Wong</span><span>RM 67,150</span></div>
+          <div class="row"><span>Hafiz</span><span>RM 47,900</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<!-- ================================================== I · 侧栏 · 账龄优先 ================================================== -->
+<div class="ver" id="vI">
+<div class="bm">
+<div class="mockE">
+  <aside class="enav">
+    <div class="brand">Debt Collection <span>CRM</span></div>
+    <a class="act" href="#">Dashboard</a><a href="#">Cases</a><a href="#">Debtors</a><a href="#">Tasks</a><a href="#">Reports</a>
+  </aside>
+  <div class="emain">
+    <h1>Dashboard</h1>
+    <h2 style="margin:22px 0 12px;">账龄分布 <small style="font-family:-apple-system,sans-serif; font-size:11.5px; color:var(--c-muted); font-weight:normal;">未收金额 · 按开案天数</small></h2>
+    <div class="card2" style="padding:20px 22px;">
+      <div class="agelines" style="gap:13px;">
+        <div class="al"><span>0–30</span><span class="tr"><i style="width:47%"></i></span><span>214K</span></div>
+        <div class="al"><span>31–60</span><span class="tr"><i style="width:86%"></i></span><span>388K</span></div>
+        <div class="al"><span>61–90</span><span class="tr"><i style="width:65%"></i></span><span>296K</span></div>
+        <div class="al"><span>91–180</span><span class="tr"><i style="width:100%"></i></span><span>453K</span></div>
+        <div class="al"><span>181–365</span><span class="tr"><i style="width:69%"></i></span><span>311K</span></div>
+        <div class="al"><span>365+</span><span class="tr"><i style="width:40%"></i></span><span>180K</span></div>
+      </div>
+    </div>
+
+    <div class="qrow">
+      <div class="q hot"><div class="lbl2">今日回款</div><div class="v2">RM 12,480</div></div>
+      <div class="q"><div class="lbl2">未收总额</div><div class="v2">RM 1,842,350</div></div>
+      <div class="q"><div class="lbl2">在案 / 法务</div><div class="v2">247 / 12</div></div>
+      <div class="q"><div class="lbl2">PTP 到期 / 逾期 / 违约</div><div class="v2">6 / 3 / 4</div></div>
+    </div>
+
+    <div class="two">
+      <div>
+        <h2 style="margin-bottom:12px;">今日跟进</h2>
+        <div class="card2">
+          <table class="data2">
+            <thead><tr><th>案件号</th><th>债务人</th><th>状态</th><th class="num">未收</th></tr></thead>
+            <tbody>
+              <tr><td><a href="#">DC-2024-0187</a></td><td>Tan Wei Ming</td><td><span class="status late">逾期 3 天</span></td><td class="num">42,300.00</td></tr>
+              <tr><td><a href="#">DC-2025-0031</a></td><td>Siti Nurhaliza bt Ahmad</td><td><span class="status late">逾期 1 天</span></td><td class="num">8,150.50</td></tr>
+              <tr><td><a href="#">DC-2024-0243</a></td><td>Rajesh a/l Kumar</td><td><span class="status today">今天</span></td><td class="num">120,000.00</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:12px;">最近动态</h2>
+        <div class="card2">
+          <ul class="bfeed">
+            <li>收到付款 RM 2,500.00（收据 R-0812）<span class="m">DC-2024-0187 · Aisyah · 14:32</span></li>
+            <li>PTP 违约：承诺 7月18日 还款 RM 1,200 未兑现<span class="m">DC-2025-0031 · system · 09:00</span></li>
+            <li>致电债务人，约定周五前回复<span class="m">DC-2024-0243 · Daniel Wong · 昨天 17:05</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+
+<script>
+  var DESC = {
+    A: '钱是主角：今日回款做成大账簿横幅，其余指标收成小胶囊，账龄一条分段横条。',
+    B: '任务是主角：今日跟进队列占主栏，所有数字收进右侧窄栏，开屏即干活。',
+    C: '保留指标砖的感觉，但按 资金 / 承诺还款 / 案件 分成三个面板，账龄改为柱状图。',
+    D: 'bookmark-design 风格：留白通栏，无深色侧栏，账龄改成灰阶到金色的分段条，动态改写成"纪事"口吻。',
+    E: 'bookmark-design 风格：浅灰蓝侧栏取代深色导航，胶囊/红绿配色收敛成安静的文字状态，只留一处金色强调今日回款。',
+    F: 'bookmark-design 风格：完全去网格化，单栏叙事排版，像杂志内页一样从上读到下，数据表格降级为清单句子。',
+    G: '在 E 的配色和组件基础上，把侧栏换成顶部通栏导航，内容全宽展开。',
+    H: '在 E 的基础上把任务队列放大成主栏（参考 B 的比例），指标收进右侧安静的堆叠卡片，不用胶囊。',
+    I: '在 E 的基础上把账龄分布提到最前面做成风险总览，其余指标和任务队列往下排。'
+  };
+  function show(v){
+    ['A','B','C','D','E','F','G','H','I'].forEach(function(k){
+      document.getElementById('v'+k).classList.toggle('on', k===v);
+      document.getElementById('b'+k).classList.toggle('on', k===v);
+    });
+    document.getElementById('desc').textContent = DESC[v];
+  }
+  var h = (location.hash || '').replace('#','').toUpperCase();
+  if (['B','C','D','E','F','G','H','I'].indexOf(h) !== -1) show(h);
+</script>

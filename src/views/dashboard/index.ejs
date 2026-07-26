@@ -32,16 +32,11 @@
 </div>
 
 <h2>Aging <span class="meta">outstanding by debt age (days)</span></h2>
-<% const AG = ['#f2dcb3', '#cf9a4c', '#b7842a', '#653f16']; %>
+<% const maxAge = Math.max(...aging, 1); %>
 <div class="panel">
-  <% if (aging.some(a => a > 0)) { %>
-  <div class="stackbar">
-    <% aging.forEach((amt, i) => { if (amt > 0) { %><i style="flex:<%= amt %>;background:<%= AG[i] %>"></i><% } }) %>
-  </div>
-  <% } %>
-  <div class="aleg">
+  <div class="agelines">
     <% agingLabels.forEach((lbl, i) => { %>
-    <span class="it"><span class="sw" style="background:<%= AG[i] %>"></span><%= lbl %> d <span class="v">RM <%= h.money(aging[i]) %></span></span>
+    <div class="al"><span><%= lbl %>d</span><span class="tr"><i style="width:<%= Math.round(aging[i] / maxAge * 100) %>%"></i></span><span class="v">RM <%= h.money(aging[i]) %></span></div>
     <% }) %>
   </div>
 </div>
@@ -66,15 +61,10 @@
     <% if (leaderboard) { %>
     <h2>Agent Leaderboard</h2>
     <% if (!leaderboard.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
-    <% const max = leaderboard.length ? leaderboard[0].collected : 0; %>
-    <div class="panel flush">
-      <table class="data"><thead><tr><th>Agent</th><th class="num">Collected</th><th>Attainment</th></tr></thead>
-      <tbody>
-      <% leaderboard.forEach(row => { const pct = max > 0 ? Math.round(row.collected / max * 100) : 0; %>
-      <tr><td><%= row.name %></td><td class="num"><%= h.money(row.collected) %></td>
-      <td><div class="bar"><div class="fill is-green" style="width: <%= pct %>%"></div></div></td></tr>
+    <div class="panel flush plainlist">
+      <% leaderboard.forEach(row => { %>
+      <div class="row"><span><%= row.name %></span><span class="num">RM <%= h.money(row.collected) %></span></div>
       <% }) %>
-      </tbody></table>
     </div>
     <% } %>
     <% } %>

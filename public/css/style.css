@@ -15,6 +15,8 @@
 
   --ink-soft: #1b2230;
   --ink-line: #253040;
+  --sidebar-bg: #c7ccd3;
+  --sidebar-line: #b3bac3;
   --paper-line: #e4e6e2;
   --paper-soft: #eceee9;
   --ink-text: #242a31;
@@ -75,8 +77,8 @@ body.app {
 .sidebar {
   width: 240px;
   flex: 0 0 240px;
-  background: var(--ink);
-  color: #cfd4de;
+  background: var(--sidebar-bg);
+  color: var(--ink-text);
   display: flex;
   flex-direction: column;
   position: fixed;
@@ -88,10 +90,10 @@ body.app {
 
 .sidebar .brand {
   font-family: var(--font-display);
-  color: #fff;
+  color: var(--ink);
   font-size: 18px;
   padding: 22px 20px;
-  border-bottom: 1px solid var(--ink-line);
+  border-bottom: 1px solid var(--sidebar-line);
 }
 .sidebar .brand span {
   color: var(--gold);
@@ -110,18 +112,18 @@ body.app {
   align-items: center;
   gap: 10px;
   padding: 10px 20px;
-  color: #b9c0cd;
+  color: var(--muted);
   font-size: 13.5px;
   border-left: 3px solid transparent;
 }
 .sidebar nav a:hover {
-  background: var(--ink-soft);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ink-text);
   text-decoration: none;
 }
 .sidebar nav a.active {
-  background: var(--ink-soft);
-  color: #fff;
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--ink-text);
   border-left-color: var(--gold);
 }
 .sidebar nav a svg {
@@ -130,7 +132,7 @@ body.app {
 }
 
 .sidebar-foot {
-  border-top: 1px solid var(--ink-line);
+  border-top: 1px solid var(--sidebar-line);
   padding: 14px 20px 18px;
 }
 .sidebar-foot .who {
@@ -139,7 +141,7 @@ body.app {
   margin-bottom: 10px;
 }
 .sidebar-foot .who strong {
-  color: #fff;
+  color: var(--ink-text);
   font-size: 13.5px;
   font-weight: 600;
 }
@@ -154,11 +156,11 @@ body.app {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: #b9c0cd;
+  color: var(--muted);
   font-size: 13px;
 }
 .sidebar-foot .logout:hover {
-  color: #fff;
+  color: var(--ink-text);
   text-decoration: none;
 }
 
@@ -540,13 +542,13 @@ table.data td.num, table.data th.num {
   .mobile-topbar {
     display: flex; align-items: center; gap: 12px;
     position: sticky; top: 0; z-index: 40;
-    background: var(--ink); color: #fff;
+    background: var(--sidebar-bg); color: var(--ink-text);
     padding: 12px 16px; border-bottom: 3px solid var(--gold);
   }
-  .mobile-topbar .brand { font-family: var(--font-display); font-size: 16px; color: #fff; }
+  .mobile-topbar .brand { font-family: var(--font-display); font-size: 16px; color: var(--ink); }
   .mobile-topbar .brand span { color: var(--gold); }
   .mobile-topbar .nav-toggle {
-    background: none; border: none; color: #fff; font-size: 22px;
+    background: none; border: none; color: var(--ink-text); font-size: 22px;
     line-height: 1; padding: 2px 6px; width: auto; cursor: pointer;
   }
 
@@ -682,26 +684,27 @@ h2 .meta, .page-head .meta { font-family: var(--font-body); font-size: 12px; col
 .ledger-amt.pos { color: var(--green); }
 .dash-ledger { margin: 0 0 16px; }
 
-.chiprow { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-bottom: 24px; }
+.chiprow { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: baseline; margin-bottom: 24px;
+  padding-bottom: 18px; border-bottom: 1px solid var(--paper-line); }
 .chiprow .grp { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); margin-right: 2px; }
-.chiprow .vsep { width: 1px; height: 22px; background: #dcdfd9; margin: 0 8px; }
-.chip { display: inline-flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--paper-line);
-  border-radius: 999px; padding: 6px 14px 6px 10px; font-size: 12.5px; color: var(--ink-text); }
-.chip b { font-family: var(--font-mono); font-size: 15px; font-weight: 600; }
-.chip .dot { width: 8px; height: 8px; border-radius: 50%; background: #9aa1ab; }
-.chip.is-red   { border-color: #edc7c4; background: #fcf4f3; }
-.chip.is-red .dot { background: var(--red); }   .chip.is-red b { color: var(--red); }
-.chip.is-gold  { border-color: #ecd8b3; background: #fdf8ee; }
-.chip.is-gold .dot { background: var(--gold); } .chip.is-gold b { color: #96601f; }
-.chip.is-green { border-color: #c3e0cd; background: #f2f9f5; }
-.chip.is-green .dot { background: var(--green); } .chip.is-green b { color: var(--green); }
+.chiprow .vsep { width: 1px; height: 22px; background: var(--paper-line); margin: 0 8px; align-self: center; }
+.chiprow .chip { display: inline-flex; align-items: baseline; gap: 6px; font-size: 12.5px; color: var(--muted); }
+.chiprow .chip .dot { display: none; }
+.chiprow .chip b { font-family: var(--font-mono); font-size: 15px; font-weight: 600; color: var(--ink-text); }
+.chiprow .chip.is-red b { color: var(--red); }
+.chiprow .chip.is-gold b { color: var(--gold); }
+.chiprow .chip.is-green b { color: var(--green); }
 
-.stackbar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; gap: 2px; }
-.stackbar i { display: block; height: 100%; }
-.aleg { display: flex; flex-wrap: wrap; gap: 6px 22px; margin-top: 12px; }
-.aleg .it { display: flex; align-items: center; gap: 7px; font-size: 12px; }
-.aleg .sw { width: 11px; height: 11px; border-radius: 3px; }
-.aleg .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.agelines { display: flex; flex-direction: column; gap: 11px; }
+.agelines .al { display: grid; grid-template-columns: 70px 1fr auto; gap: 12px; align-items: center; font-size: 12.5px; color: var(--muted); }
+.agelines .al .tr { height: 3px; background: var(--paper-line); }
+.agelines .al .tr i { display: block; height: 100%; background: var(--gold); }
+.agelines .al .v { font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--ink-text); }
+
+.plainlist { padding: 2px 0; }
+.plainlist .row { display: flex; justify-content: space-between; padding: 9px 16px; font-size: 12.5px; color: var(--ink-text); border-bottom: 1px solid var(--paper-line); }
+.plainlist .row:last-child { border-bottom: 0; }
+.plainlist .row .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 .dash-two { display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; align-items: start; margin-top: 6px; }
 @media (max-width: 900px) { .dash-two { grid-template-columns: 1fr; } }
