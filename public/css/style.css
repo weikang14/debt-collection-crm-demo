@@ -112,7 +112,8 @@ body.app {
   align-items: center;
   gap: 10px;
   padding: 10px 20px;
-  color: var(--muted);
+  margin-bottom: 2px;
+  color: #4b5563;
   font-size: 13.5px;
   border-left: 3px solid transparent;
 }
@@ -128,7 +129,11 @@ body.app {
 }
 .sidebar nav a svg {
   flex: 0 0 auto;
-  opacity: 0.85;
+  opacity: 0.7;
+}
+.sidebar nav a:hover svg,
+.sidebar nav a.active svg {
+  opacity: 1;
 }
 
 .sidebar-foot {
