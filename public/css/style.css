@@ -220,17 +220,14 @@ body.app {
   border-left-color: var(--gold);
 }
 .sidebar .grp-head .chev {
+  display: none;
   margin-left: auto;
   font-size: 16px;
   line-height: 1;
-  opacity: 0;
-  width: 0;
-  overflow: hidden;
   transition: transform 0.15s ease;
 }
 .sidebar:hover .grp-head .chev {
-  opacity: 1;
-  width: auto;
+  display: inline-block;
 }
 .sidebar .grp.open .grp-head .chev {
   transform: rotate(90deg);
@@ -698,7 +695,7 @@ table.data td.num, table.data th.num {
   }
   .sidebar .lbl { opacity: 1; width: auto; }
   .sidebar .brand .mark { display: none; }
-  .sidebar .grp-head .chev { opacity: 1; width: auto; }
+  .sidebar .grp-head .chev { display: inline-block; }
   /* accordion state on mobile is driven purely by the .open class (click,
      not hover) since touch has no reliable :hover to gate it on */
   .sidebar .grp-body { max-height: 0; }
