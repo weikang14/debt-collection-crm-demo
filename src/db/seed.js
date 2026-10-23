@@ -75,12 +75,15 @@ function insertDemoRows() {
       [id, case_no, client_id, debtor_id, agent_id, principal, interest, outstanding, PRIOS[i % 4], st, ago(60 - i),
        ['fully_paid','closed','cancelled'].includes(st) ? ago(5) : null]);
     run('INSERT INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [id, 'note', `Case opened, status ${st}`, 'System']);
-    // A few open, payment-free cases get a monthly-rate 12-month loan so the
-    // Repayment Schedule (src/utils/schedule.js) has demo data to show.
+    // A few open, payment-free cases get a 12-month loan so the Repayment
+    // Schedule (src/utils/schedule.js) has demo data to show — one of each
+    // interest mode: 4 = daily (18% p.a.), 12 = fixed (equal instalments of the
+    // seeded 8% lump), the rest monthly (1.5%/month).
     if (id % 2 === 0 && ['new', 'assigned', 'negotiation', 'ptp'].includes(st)) {
       const start = ago(60 - i).slice(0, 10);
-      run(`UPDATE cases SET interest_mode='monthly', interest_rate=1.5, interest_from=?, loan_start_date=?, tenure=12, tenure_unit='months', maturity_date=? WHERE id=?`,
-        [start, start, maturityDate(start, 12, 'months'), id]);
+      const mode = id === 4 ? 'daily' : id === 12 ? 'fixed' : 'monthly';
+      run(`UPDATE cases SET interest_mode=?, interest_rate=?, interest_from=?, loan_start_date=?, tenure=12, tenure_unit='months', maturity_date=? WHERE id=?`,
+        [mode, { daily: 18, fixed: 0, monthly: 1.5 }[mode], mode === 'fixed' ? null : start, start, maturityDate(start, 12, 'months'), id]);
       recomputeOutstanding(id);
     }
   });

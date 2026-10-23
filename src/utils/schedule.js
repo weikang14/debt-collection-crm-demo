@@ -11,41 +11,64 @@ function todayStr() {
   return new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
 }
 
-// Projects caseBalance()'s interest-first (先息后本) model (src/services/payments.js)
-// onto a monthly schedule: assuming on-time payment, periods 1..n-1 are
-// interest-only and period n (maturity) also clears the full principal.
-// Only generated for interest_mode='monthly' + tenure_unit='months' — daily
-// accrual has no natural period boundary, fixed has no periodic rate, and
-// days/years tenure would need an arbitrary conversion into monthly periods.
+// Monthly repayment schedule over the loan tenure, one row per month.
+// - monthly / daily (accrual modes): projects caseBalance()'s interest-first
+//   (先息后本) model (src/services/payments.js) — assuming on-time payment,
+//   periods 1..n-1 are interest-only and period n (maturity) also clears the
+//   full principal. Repayment is monthly either way; the mode only changes the
+//   per-day rate (dailyRate: monthly ÷30, annual ÷365).
+// - fixed: principal + the lump interest split into n equal instalments (等额分期).
+// days/years tenure gets no schedule — it would need an arbitrary conversion
+// into monthly periods (legacy rows only; the form now always saves months).
 // Paid/outstanding/status are derived live from `payments` (a FIFO waterfall
 // in schedule order, independent of each payment's actual date) — nothing
 // here is persisted, so editing tenure/rate takes effect on the next read.
 function repaymentSchedule(c, payments) {
-  if (c.interest_mode !== 'monthly' || c.tenure_unit !== 'months' || !c.tenure || !c.loan_start_date) {
+  if (c.tenure_unit !== 'months' || !c.tenure || !c.loan_start_date) {
     return [];
   }
-  const rate = dailyRate(c);
   const dates = dueDates(c.loan_start_date, c.tenure + 1).slice(1);
+  const n = dates.length;
+  let expectedList;
+  if (c.interest_mode === 'monthly' || c.interest_mode === 'daily') {
+    const rate = dailyRate(c);
+    // Match caseBalance()'s accrual origin (src/services/payments.js) so period 1's
+    // "Expected" interest never disagrees with the ledger's interest figure shown
+    // elsewhere on the case page. Trailing `|| c.loan_start_date` is a fallback for
+    // pure-function callers/tests that don't set opened_at; never triggers on real
+    // DB rows since opened_at is NOT NULL in schema.
+    let periodStart = c.interest_from || c.opened_at || c.loan_start_date;
+    expectedList = dates.map((due, i) => {
+      let expected = round2(c.principal_amount * rate * daysBetween(periodStart, due));
+      if (i === n - 1) expected = round2(expected + c.principal_amount);
+      periodStart = due;
+      return expected;
+    });
+  } else {
+    // Same cent-exact split as splitInstallments() (last row absorbs the
+    // remainder), inlined because that one enforces the PTP plan's 2..60 limit
+    // and a 1- or 72-month loan must not throw on the case page.
+    const total = round2(c.principal_amount + (c.interest_amount || 0));
+    const base = Math.floor((total / n) * 100) / 100;
+    expectedList = dates.map((_, i) => (i === n - 1 ? round2(total - base * (n - 1)) : base));
+  }
   let pool = payments.reduce((s, p) => s + p.amount, 0);
-  // Match caseBalance()'s accrual origin (src/services/payments.js) so period 1's
-  // "Expected" interest never disagrees with the ledger's interest figure shown
-  // elsewhere on the case page. Trailing `|| c.loan_start_date` is a fallback for
-  // pure-function callers/tests that don't set opened_at; never triggers on real
-  // DB rows since opened_at is NOT NULL in schema.
-  let periodStart = c.interest_from || c.opened_at || c.loan_start_date;
+  // The schedule projects on-time payment, but the ledger accrues by actual
+  // payment date — paying early cuts interest below the projection. Once the
+  // ledger is settled, nothing is owed on any row (paid_amount stays truthful).
+  // ponytail: only the fully-settled case is reconciled; re-projecting the
+  // remaining rows after a partial prepayment is the Restructure feature.
+  const settled = c.outstanding_amount <= 0;
   const today = todayStr();
   return dates.map((due, i) => {
-    const isLast = i === dates.length - 1;
-    let expected = round2(c.principal_amount * rate * daysBetween(periodStart, due));
-    if (isLast) expected = round2(expected + c.principal_amount);
+    const expected = expectedList[i];
     const paid = round2(Math.min(expected, Math.max(0, pool)));
     pool -= paid;
-    periodStart = due;
-    const outstanding = round2(Math.max(0, expected - paid));
+    const outstanding = settled ? 0 : round2(Math.max(0, expected - paid));
     // A period with expected_amount === 0 (e.g. interest_rate: 0) has nothing owed,
     // so paid(0) >= expected(0) is intentionally 'paid' even with zero actual payment —
     // 0 owed = nothing outstanding = satisfied, not a bug.
-    const status = paid >= expected ? 'paid'
+    const status = settled || paid >= expected ? 'paid'
       : due < today ? 'overdue'
       : paid > 0 ? 'partial'
       : 'pending';

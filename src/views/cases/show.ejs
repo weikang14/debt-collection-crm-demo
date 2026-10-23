@@ -109,7 +109,9 @@
     <%
       // Payments fill periods oldest-first (FIFO in schedule.js), so only the
       // earliest unpaid period gets a Pay button — paying a later row would
-      // still land on the earlier ones.
+      // still land on the earlier ones. The prefill is capped at the ledger
+      // outstanding: per-period cent rounding can leave the schedule a few cents
+      // above it, and the payment validator rejects any overpay.
       const canPay = !readOnly && ['admin','manager','finance','agent'].includes(currentUser.role);
       const nextDue = schedule.findIndex(r => r.outstanding_amount > 0);
     %>
@@ -120,7 +122,7 @@
       <td class="num"><%= h.money(row.paid_amount) %></td>
       <td class="num"><%= h.money(row.outstanding_amount) %></td>
       <td><span class="badge <%= schedClass[row.status] %>"><%= schedLabel[row.status] %></span></td>
-      <% if (canPay) { %><td><% if (i === nextDue) { %><button type="button" class="btn btn-sm btn-gold" onclick="payInstallment(<%= row.outstanding_amount %>)">Pay</button><% } else { %>—<% } %></td><% } %>
+      <% if (canPay) { %><td><% if (i === nextDue) { %><button type="button" class="btn btn-sm btn-gold" onclick="payInstallment(<%= Math.min(row.outstanding_amount, c.outstanding_amount) %>)">Pay</button><% } else { %>—<% } %></td><% } %>
     </tr><% }) %></tbody></table>
     </section>
     <% } %>

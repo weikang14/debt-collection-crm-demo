@@ -63,9 +63,39 @@ test('overpayment: no row paid_amount exceeds its expected_amount, excess is unu
   rows.forEach(r => assert.strictEqual(r.status, 'paid'));
 });
 
-test('interest_mode other than monthly => no schedule', () => {
-  assert.deepStrictEqual(repaymentSchedule(baseCase({ interest_mode: 'daily' }), []), []);
-  assert.deepStrictEqual(repaymentSchedule(baseCase({ interest_mode: 'fixed' }), []), []);
+test('daily mode: same interest-first schedule, per-day rate = annual ÷365, agrees with ledger', () => {
+  // 36.5% p.a. => 0.001/day, the same clean rate as baseCase's 3%/month.
+  const c = baseCase({ interest_mode: 'daily', interest_rate: 36.5 });
+  const rows = repaymentSchedule(c, []);
+  assert.strictEqual(rows.length, 3);
+  near(rows[0].expected_amount, 93, 'Jan (31d) interest-only');
+  near(rows[1].expected_amount, 84, 'Feb (28d) interest-only');
+  near(rows[2].expected_amount, 3093, 'Mar (31d) interest + principal');
+  const sumExpected = rows.reduce((s, r) => s + r.expected_amount, 0);
+  near(sumExpected, caseBalance(c, [], rows[2].due_date).interest + c.principal_amount, 'daily schedule total agrees with ledger');
+});
+
+test('fixed mode: principal + lump interest in equal instalments, last absorbs the cent remainder', () => {
+  const c = baseCase({ interest_mode: 'fixed', interest_amount: 300.01 });
+  const rows = repaymentSchedule(c, []);
+  assert.deepStrictEqual(rows.map(r => r.expected_amount), [1100, 1100, 1100.01]);
+  near(rows.reduce((s, r) => s + r.expected_amount, 0), caseBalance(c, []).outstanding, 'fixed schedule total = ledger outstanding');
+  const paid = repaymentSchedule(c, [{ amount: 1100, payment_date: '2026-02-01' }]);
+  assert.deepStrictEqual(paid.map(r => r.status), ['paid', 'overdue', 'overdue']);
+});
+
+test('ledger settled (early payoff cut interest below projection) => every row paid, nothing outstanding', () => {
+  // Paid 3200 of a projected 3270: ledger says 0 left because paying early saved interest.
+  const rows = repaymentSchedule(baseCase({ outstanding_amount: 0 }), [{ amount: 3200, payment_date: '2026-01-15' }]);
+  rows.forEach(r => { assert.strictEqual(r.status, 'paid'); assert.strictEqual(r.outstanding_amount, 0); });
+  near(rows[2].paid_amount, 3023, 'last row shows what was actually paid (3200 - 93 - 84), not the projection');
+});
+
+test('fixed mode: 1-month and >60-month tenures do not throw (outside the PTP plan 2..60 limit)', () => {
+  assert.deepStrictEqual(repaymentSchedule(baseCase({ interest_mode: 'fixed', interest_amount: 0, tenure: 1 }), []).map(r => r.expected_amount), [3000]);
+  const long = repaymentSchedule(baseCase({ interest_mode: 'fixed', interest_amount: 600, tenure: 72 }), []);
+  assert.strictEqual(long.length, 72);
+  near(long.reduce((s, r) => s + r.expected_amount, 0), 3600, '72 instalments sum to principal + interest');
 });
 
 test('tenure_unit other than months => no schedule', () => {
