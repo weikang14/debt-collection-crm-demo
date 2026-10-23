@@ -1,6 +1,8 @@
 const bcrypt = require('bcryptjs');
 const dayjs = require('dayjs');
 const { db, init, run } = require('./index');
+const { recomputeOutstanding } = require('../services/payments');
+const { maturityDate } = require('../utils/installments');
 
 const hash = (pw) => bcrypt.hashSync(pw, 8);
 const ago = (d) => dayjs().subtract(d, 'day').format('YYYY-MM-DD HH:mm:ss');
@@ -73,6 +75,14 @@ function insertDemoRows() {
       [id, case_no, client_id, debtor_id, agent_id, principal, interest, outstanding, PRIOS[i % 4], st, ago(60 - i),
        ['fully_paid','closed','cancelled'].includes(st) ? ago(5) : null]);
     run('INSERT INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [id, 'note', `Case opened, status ${st}`, 'System']);
+    // A few open, payment-free cases get a monthly-rate 12-month loan so the
+    // Repayment Schedule (src/utils/schedule.js) has demo data to show.
+    if (id % 2 === 0 && ['new', 'assigned', 'negotiation', 'ptp'].includes(st)) {
+      const start = ago(60 - i).slice(0, 10);
+      run(`UPDATE cases SET interest_mode='monthly', interest_rate=1.5, interest_from=?, loan_start_date=?, tenure=12, tenure_unit='months', maturity_date=? WHERE id=?`,
+        [start, start, maturityDate(start, 12, 'months'), id]);
+      recomputeOutstanding(id);
+    }
   });
 
   // Payments for demo partial_paid / fully_paid cases only (is_demo=1 guard)

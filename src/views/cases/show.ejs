@@ -106,13 +106,21 @@
     <h2>Repayment Schedule</h2>
     <% const schedClass = { paid:'is-green', overdue:'is-red', partial:'is-gold', pending:'is-neutral' }; %>
     <% const schedLabel = { paid:'Paid', overdue:'Overdue', partial:'Partially Paid', pending:'Pending' }; %>
-    <table class="data"><thead><tr><th>Due Date</th><th class="num">Expected</th><th class="num">Paid</th><th class="num">Outstanding</th><th>Status</th></tr></thead>
-    <tbody><% schedule.forEach(row => { %><tr>
+    <%
+      // Payments fill periods oldest-first (FIFO in schedule.js), so only the
+      // earliest unpaid period gets a Pay button — paying a later row would
+      // still land on the earlier ones.
+      const canPay = !readOnly && ['admin','manager','finance','agent'].includes(currentUser.role);
+      const nextDue = schedule.findIndex(r => r.outstanding_amount > 0);
+    %>
+    <table class="data"><thead><tr><th>Due Date</th><th class="num">Expected</th><th class="num">Paid</th><th class="num">Outstanding</th><th>Status</th><% if (canPay) { %><th>Actions</th><% } %></tr></thead>
+    <tbody><% schedule.forEach((row, i) => { %><tr>
       <td><%= h.dateFmt(row.due_date) %></td>
       <td class="num"><%= h.money(row.expected_amount) %></td>
       <td class="num"><%= h.money(row.paid_amount) %></td>
       <td class="num"><%= h.money(row.outstanding_amount) %></td>
       <td><span class="badge <%= schedClass[row.status] %>"><%= schedLabel[row.status] %></span></td>
+      <% if (canPay) { %><td><% if (i === nextDue) { %><button type="button" class="btn btn-sm btn-gold" onclick="payInstallment(<%= row.outstanding_amount %>)">Pay</button><% } else { %>—<% } %></td><% } %>
     </tr><% }) %></tbody></table>
     </section>
     <% } %>
@@ -191,7 +199,7 @@
 <dialog id="dlg-payment" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/payments">
   <h3>Record Payment</h3>
   <label>Date <input type="date" name="payment_date" required></label>
-  <label>Amount (RM) <input type="number" step="0.01" name="amount" required></label>
+  <label>Amount (RM) <input type="number" step="0.01" name="amount" id="pay-amount" required></label>
   <label>Method <select name="method"><option>bank_transfer</option><option>cash</option><option>cheque</option><option>online</option></select></label>
   <label>Reference <input name="reference"></label>
   <label>Bank <input name="bank"></label>
@@ -258,6 +266,10 @@
     f.action = '/ptps/' + id + '/fulfill';
     document.getElementById('fulfill-amount').value = amount;
     dlg('dlg-ptp-fulfill');
+  }
+  function payInstallment(amount){
+    document.getElementById('pay-amount').value = amount;
+    dlg('dlg-payment');
   }
   function openEditPayment(id, amount, date, method, ref, bank){
     var f = document.getElementById('payment-edit-form');

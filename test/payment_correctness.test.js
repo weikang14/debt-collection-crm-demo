@@ -20,7 +20,7 @@ test('exact payoff clears float residue -> outstanding 0, fully_paid', () => {
 
 test('payment amount is stored exactly, not rounded', () => {
   const c = db.get('SELECT id FROM cases WHERE id NOT IN (SELECT id FROM cases LIMIT 1) LIMIT 1');
-  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation' WHERE id=?", [c.id]);
+  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation', interest_mode='fixed' WHERE id=?", [c.id]);
   applyPayment(c.id, { payment_date: '2026-07-06', amount: 12.345, method: 'cash' }, req);
   const pay = db.get('SELECT amount FROM payments WHERE case_id=? ORDER BY id DESC LIMIT 1', [c.id]);
   assert.strictEqual(pay.amount, 12.345);
@@ -30,7 +30,7 @@ const { resyncCaseStatus } = require('../src/services/payments');
 
 test('void path: deleting a payment + resyncCaseStatus restores outstanding and status', () => {
   const c = db.get('SELECT id FROM cases ORDER BY id DESC LIMIT 1');
-  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation' WHERE id=?", [c.id]);
+  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation', interest_mode='fixed' WHERE id=?", [c.id]);
   applyPayment(c.id, { payment_date: '2026-07-06', amount: 100, method: 'cash' }, req); // -> fully_paid
   assert.strictEqual(db.get('SELECT status FROM cases WHERE id=?', [c.id]).status, 'fully_paid');
   const pay = db.get('SELECT id FROM payments WHERE case_id=? ORDER BY id DESC LIMIT 1', [c.id]);
@@ -60,7 +60,7 @@ const { recordFulfillment } = require('../src/routes/ptps');
 
 test('recordFulfillment is atomic: payment failure reverts the PTP flip', () => {
   const c = db.get('SELECT id FROM cases ORDER BY id DESC LIMIT 1');
-  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation' WHERE id=?", [c.id]);
+  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation', interest_mode='fixed' WHERE id=?", [c.id]);
   const ptp = db.run("INSERT INTO ptps (case_id, amount, due_date, status, created_by) VALUES (?,?,?,?,?)",
     [c.id, 50, '2026-08-01', 'pending', 'Tester']);
   const before = db.get('SELECT COUNT(*) n FROM payments WHERE case_id=?', [c.id]).n;
@@ -78,7 +78,7 @@ test('recordFulfillment is atomic: payment failure reverts the PTP flip', () => 
 
 test('recordFulfillment happy path: PTP fulfilled + payment recorded + outstanding reduced', () => {
   const c = db.get('SELECT id FROM cases ORDER BY id DESC LIMIT 1');
-  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation' WHERE id=?", [c.id]);
+  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation', interest_mode='fixed' WHERE id=?", [c.id]);
   const ptp = db.run("INSERT INTO ptps (case_id, amount, due_date, status, created_by) VALUES (?,?,?,?,?)",
     [c.id, 40, '2026-08-01', 'pending', 'Tester']);
   const r = recordFulfillment(ptp.lastInsertRowid, {}, req);
@@ -89,7 +89,7 @@ test('recordFulfillment happy path: PTP fulfilled + payment recorded + outstandi
 
 test('recordFulfillment blocks overpayment and records nothing', () => {
   const c = db.get('SELECT id FROM cases ORDER BY id DESC LIMIT 1');
-  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation' WHERE id=?", [c.id]);
+  db.run("UPDATE cases SET principal_amount=100, interest_amount=0, outstanding_amount=100, status='negotiation', interest_mode='fixed' WHERE id=?", [c.id]);
   const ptp = db.run("INSERT INTO ptps (case_id, amount, due_date, status, created_by) VALUES (?,?,?,?,?)",
     [c.id, 500, '2026-08-01', 'pending', 'Tester']);
   const before = db.get('SELECT COUNT(*) n FROM payments WHERE case_id=?', [c.id]).n;
