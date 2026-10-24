@@ -1,0 +1,11 @@
+<% const schedClass = { paid:'is-green', overdue:'is-red', partial:'is-gold', pending:'is-neutral', restructured:'is-neutral' }; %>
+<% const schedLabel = { paid:'Paid', overdue:'Overdue', partial:'Partially Paid', pending:'Pending', restructured:'Restructured' }; %>
+<table class="data"><thead><tr><th>Due Date</th><th class="num">Expected</th><th class="num">Paid</th><th class="num">Outstanding</th><th>Status</th><% if (pay) { %><th>Actions</th><% } %></tr></thead>
+<tbody><% rows.forEach((row, i) => { %><tr>
+  <td><%= h.dateFmt(row.due_date) %><% if (row.kind === 'arrears') { %> <small style="color:var(--muted)">· Arrears (carried)</small><% } %></td>
+  <td class="num"><%= h.money(row.expected_amount) %></td>
+  <td class="num"><%= h.money(row.paid_amount) %></td>
+  <td class="num"><%= h.money(row.outstanding_amount) %></td>
+  <td><span class="badge <%= schedClass[row.status] %>"><%= schedLabel[row.status] %></span></td>
+  <% if (pay) { %><td><% if (i === pay.nextDue) { %><button type="button" class="btn btn-sm btn-gold" onclick="payInstallment(<%= Math.min(row.outstanding_amount, pay.cap) %>)">Pay</button><% } else { %>—<% } %></td><% } %>
+</tr><% }) %></tbody></table>

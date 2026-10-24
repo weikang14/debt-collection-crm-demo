@@ -1,6 +1,8 @@
 <% layout('layout'); -%>
+<% const locked = typeof termsLocked !== 'undefined' && termsLocked; %>
 <div class="page-head"><h1><%= title %></h1></div>
 <form class="card form" method="post" action="<%= action %>">
+  <% if (locked) { %><p style="margin:0;color:var(--muted);">Loan terms are locked after a restructure — re-plan them with a new restructure on the case page.</p><% } %>
   <label>Debtor <select name="debtor_id" required>
     <option value="">— Select debtor —</option>
     <% debtors.forEach(d => { %><option value="<%= d.id %>" <%= c.debtor_id===d.id?'selected':'' %>><%= d.name %></option><% }) %>
@@ -9,12 +11,14 @@
     <option value="">— Unassigned —</option>
     <% agents.forEach(a => { %><option value="<%= a.id %>" <%= c.agent_id===a.id?'selected':'' %>><%= a.name %></option><% }) %>
   </select></label>
-  <label>Principal Amount <input name="principal_amount" type="number" step="0.01" min="0" value="<%= c.principal_amount||'' %>" required></label>
-  <label>Loan Start Date <input type="date" name="loan_start_date" value="<%= c.loan_start_date||'' %>"></label>
-  <label>Tenure (months) <input name="tenure" type="number" step="1" min="1" id="tenure" value="<%= c.tenure||'' %>"></label>
+  <label>Principal Amount <input name="principal_amount" type="number" step="0.01" min="0" value="<%= c.principal_amount||'' %>" required <%= locked ? 'readonly' : '' %>></label>
+  <label>Loan Start Date <input type="date" name="loan_start_date" value="<%= c.loan_start_date||'' %>" <%= locked ? 'readonly' : '' %>></label>
+  <label>Tenure (months) <input name="tenure" type="number" step="1" min="1" id="tenure" value="<%= c.tenure||'' %>" <%= locked ? 'readonly' : '' %>></label>
+  <% if (!locked) { %>
   <div class="chip-row" role="group" aria-label="Common tenures">
     <% [3,6,9,12,18,24,36,48,60].forEach(v => { %><button type="button" class="chip" data-val="<%= v %>"><%= v %>mo</button><% }) %>
   </div>
+  <% } %>
   <script>
     // Quick-fill presets for Tenure. Still a plain number input underneath —
     // these just save typing for the common cases, they don't replace it.
@@ -33,12 +37,12 @@
   </script>
   <label>Interest Mode
     <span id="interest_help" title="View formula" style="cursor:pointer;display:inline-block;width:16px;height:16px;line-height:16px;text-align:center;border-radius:50%;background:var(--gold);color:#fff;font-size:11px;font-weight:700;">!</span>
-    <select name="interest_mode" id="interest_mode">
+    <select name="interest_mode" id="interest_mode" <%= locked ? 'disabled' : '' %>>
     <% ['fixed','monthly','daily'].forEach(m => { %><option value="<%= m %>" <%= (c.interest_mode||'fixed')===m?'selected':'' %>><%= {fixed:'Fixed amount',monthly:'Monthly rate %',daily:'Annual rate % (÷365 daily)'}[m] %></option><% }) %>
   </select></label>
   <div id="interest_formula" style="display:none;margin:-4px 0 8px;padding:10px 12px;background:#f6f2e8;border-left:3px solid var(--gold);border-radius:4px;font-size:13px;line-height:1.6;"></div>
-  <label class="if-fixed">Interest Amount <input name="interest_amount" type="number" step="0.01" value="<%= c.interest_amount||'' %>"></label>
-  <label class="if-accrual">Interest Rate % <input name="interest_rate" type="number" step="0.01" min="0" value="<%= c.interest_rate||'' %>"> <small>accrues from Loan Start Date above</small></label>
+  <label class="if-fixed">Interest Amount <input name="interest_amount" type="number" step="0.01" value="<%= c.interest_amount||'' %>" <%= locked ? 'readonly' : '' %>></label>
+  <label class="if-accrual">Interest Rate % <input name="interest_rate" type="number" step="0.01" min="0" value="<%= c.interest_rate||'' %>" <%= locked ? 'readonly' : '' %>> <small>accrues from Loan Start Date above</small></label>
   <script>
     // Show only the fields relevant to the chosen mode (fixed vs. rate-based accrual).
     (function(){

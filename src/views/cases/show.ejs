@@ -4,6 +4,7 @@
   <div class="head-actions">
     <% if (!readOnly) { %>
       <% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %><button type="button" class="btn btn-gold" onclick="dlg('dlg-payment')">Record Payment</button><% } %>
+      <% if (restructureForm && ['admin','manager'].includes(currentUser.role)) { %><button type="button" class="btn" onclick="dlg('dlg-restructure')">Restructure</button><% } %>
       <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
         <button type="button" class="btn" onclick="dlg('dlg-ptp')">New PTP</button>
         <button type="button" class="btn" onclick="dlg('dlg-plan')">New Plan</button>
@@ -37,8 +38,10 @@
     <div><div class="ledger-lbl">Principal</div><div class="ledger-val"><%= h.money(c.principal_amount) %></div></div>
     <div><div class="ledger-lbl">Interest</div><div class="ledger-val"><%= h.money(c.interest_charged) %></div></div>
     <div><div class="ledger-lbl">Paid</div><div class="ledger-val pos"><%= h.money(paid) %></div></div>
-    <% if (c.maturity_date) { %>
-    <div><div class="ledger-lbl">Maturity Date</div><div class="ledger-val"><%= h.dateFmt(c.maturity_date) %></div></div>
+    <% const maturity = lastRestructure ? lastRestructure.maturity_date : c.maturity_date; %>
+    <% if (maturity) { %>
+    <div><div class="ledger-lbl">Maturity Date</div><div class="ledger-val"><%= h.dateFmt(maturity) %></div>
+      <% if (lastRestructure) { %><small style="color:var(--muted)">Restructured on <%= h.dateFmt(lastRestructure.effective_date) %></small><% } %></div>
     <% } %>
   </div>
 </section>
@@ -103,9 +106,7 @@
   <div class="modal-body">
     <% if (schedule.length) { %>
     <section class="rec-section">
-    <h2>Repayment Schedule</h2>
-    <% const schedClass = { paid:'is-green', overdue:'is-red', partial:'is-gold', pending:'is-neutral' }; %>
-    <% const schedLabel = { paid:'Paid', overdue:'Overdue', partial:'Partially Paid', pending:'Pending' }; %>
+    <h2>Repayment Schedule<% if (lastRestructure) { %> <small style="color:var(--muted)">· since restructure on <%= h.dateFmt(lastRestructure.effective_date) %></small><% } %></h2>
     <%
       // Payments fill periods oldest-first (FIFO in schedule.js), so only the
       // earliest unpaid period gets a Pay button — paying a later row would
@@ -115,15 +116,29 @@
       const canPay = !readOnly && ['admin','manager','finance','agent'].includes(currentUser.role);
       const nextDue = schedule.findIndex(r => r.outstanding_amount > 0);
     %>
-    <table class="data"><thead><tr><th>Due Date</th><th class="num">Expected</th><th class="num">Paid</th><th class="num">Outstanding</th><th>Status</th><% if (canPay) { %><th>Actions</th><% } %></tr></thead>
-    <tbody><% schedule.forEach((row, i) => { %><tr>
-      <td><%= h.dateFmt(row.due_date) %></td>
-      <td class="num"><%= h.money(row.expected_amount) %></td>
-      <td class="num"><%= h.money(row.paid_amount) %></td>
-      <td class="num"><%= h.money(row.outstanding_amount) %></td>
-      <td><span class="badge <%= schedClass[row.status] %>"><%= schedLabel[row.status] %></span></td>
-      <% if (canPay) { %><td><% if (i === nextDue) { %><button type="button" class="btn btn-sm btn-gold" onclick="payInstallment(<%= Math.min(row.outstanding_amount, c.outstanding_amount) %>)">Pay</button><% } else { %>—<% } %></td><% } %>
-    </tr><% }) %></tbody></table>
+    <%- include('../partials/scheduleTable', { rows: schedule, pay: canPay ? { nextDue, cap: c.outstanding_amount } : null }) %>
+    </section>
+    <% } %>
+
+    <% if (scheduleHistory.length) { %>
+    <section class="rec-section">
+    <h2>Restructure History</h2>
+    <% const canManageRs = !readOnly && ['admin','manager'].includes(currentUser.role); %>
+    <% scheduleHistory.slice().reverse().forEach(({ restructure: r, rows }) => { %>
+      <div class="card" style="margin-bottom:0.75rem;">
+        <div><b><%= h.dateFmt(r.effective_date) %></b> · <%= h.interestTerms(r.interest_mode, r.interest_rate, r.interest_amount) %> · <%= r.tenure %> months · by <%= r.created_by || '—' %></div>
+        <div>Principal at cut RM <%= h.money(r.principal_at_cut) %> · Arrears carried RM <%= h.money(r.arrears_at_cut) %></div>
+        <div>Reason: <%= r.reason %></div>
+        <% if (canManageRs && canUndo && r.id === lastRestructure.id) { %>
+        <form method="post" action="/cases/<%= c.id %>/restructures/<%= r.id %>/undo" style="margin:0.5rem 0 0;" onsubmit="return confirm('Undo this restructure?')"><button class="btn btn-sm" type="submit">Undo</button></form>
+        <% } %>
+        <% if (rows.length) { %>
+        <details style="margin-top:0.5rem;"><summary>Superseded schedule (<%= rows.length %> rows)</summary>
+          <%- include('../partials/scheduleTable', { rows, pay: null }) %>
+        </details>
+        <% } %>
+      </div>
+    <% }) %>
     </section>
     <% } %>
 
@@ -134,10 +149,10 @@
     <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th><% if (canEditPay) { %><th>Actions</th><% } %></tr></thead>
     <tbody><% payments.forEach(p => { %><tr><td class="mono"><%= p.receipt_no %></td><td><%= h.dateFmt(p.payment_date) %></td>
     <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td>
-    <% if (canEditPay) { %><td><div style="display:flex; gap:0.5rem;">
+    <% if (canEditPay) { %><td><% if (lock && p.payment_date < lock) { %><small style="color:var(--muted)">Locked · restructured</small><% } else { %><div style="display:flex; gap:0.5rem;">
       <button type="button" class="btn btn-sm" onclick="openEditPayment(<%= p.id %>, <%= p.amount %>, '<%= p.payment_date %>', '<%= p.method %>', '<%= p.reference||'' %>', '<%= p.bank||'' %>')">Edit</button>
       <form method="post" action="/cases/<%= c.id %>/payments/<%= p.id %>/void" style="margin:0;" onsubmit="return confirm('Void payment <%= p.receipt_no %>?')"><button class="btn btn-sm" type="submit">Void</button></form>
-    </div></td><% } %></tr><% }) %></tbody></table>
+    </div><% } %></td><% } %></tr><% }) %></tbody></table>
     <% } %>
     </section>
 
@@ -197,10 +212,28 @@
 </dialog>
 
 <% if (!readOnly) { %>
+<% if (restructureForm && ['admin','manager'].includes(currentUser.role)) { %>
+<dialog id="dlg-restructure" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/restructures">
+  <h3>Restructure Loan</h3>
+  <p style="margin:0 0 0.5rem;color:var(--muted);font-size:13px;">Remaining principal RM <%= h.money(restructureForm.cut.principal) %> · unpaid interest RM <%= h.money(restructureForm.cut.arrears) %> as of today. Unpaid interest is carried as arrears (recalculated for the effective date you pick) and does not earn further interest.</p>
+  <% if (restructureForm.range.min > restructureForm.range.max) { %>
+  <div class="alert is-red">No valid effective date today — it must be on or after <%= restructureForm.range.min %>.</div>
+  <% } %>
+  <label>Effective Date <input type="date" name="effective_date" min="<%= restructureForm.range.min %>" max="<%= restructureForm.range.max %>" value="<%= restructureForm.range.max %>" required></label>
+  <label>Interest Mode <select name="interest_mode" id="rs-mode">
+    <option value="monthly">Monthly rate %</option><option value="daily">Annual rate % (÷365 daily)</option><option value="fixed">Fixed amount</option>
+  </select></label>
+  <label class="rs-accrual">Interest Rate % <input type="number" step="0.01" min="0" name="interest_rate"></label>
+  <label class="rs-fixed">Interest Amount (RM) <input type="number" step="0.01" min="0" name="interest_amount"></label>
+  <label>Tenure (months) <input type="number" step="1" min="1" max="120" name="tenure" required></label>
+  <label>Reason <textarea name="reason" required></textarea></label>
+  <div class="form-actions"><button class="btn btn-gold" type="submit">Restructure</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
+</form></dialog>
+<% } %>
 <% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %>
 <dialog id="dlg-payment" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/payments">
   <h3>Record Payment</h3>
-  <label>Date <input type="date" name="payment_date" required></label>
+  <label>Date <input type="date" name="payment_date" required<% if (lock) { %> min="<%= lock %>"<% } %>></label>
   <label>Amount (RM) <small style="color:var(--muted)">· max <%= h.money(c.outstanding_amount) %></small> <input type="number" step="0.01" min="0.01" max="<%= c.outstanding_amount %>" name="amount" id="pay-amount" required></label>
   <label>Method <select name="method"><option>bank_transfer</option><option>cash</option><option>cheque</option><option>online</option></select></label>
   <label>Reference <input name="reference"></label>
@@ -211,7 +244,7 @@
 <% if (['admin','manager','finance'].includes(currentUser.role)) { %>
 <dialog id="dlg-payment-edit" class="modal"><form class="form" id="payment-edit-form" method="post" action="">
   <h3>Edit Payment</h3>
-  <label>Date <input type="date" name="payment_date" id="pe-date" required></label>
+  <label>Date <input type="date" name="payment_date" id="pe-date" required<% if (lock) { %> min="<%= lock %>"<% } %>></label>
   <label>Amount (RM) <input type="number" step="0.01" min="0.01" name="amount" id="pe-amount" required></label>
   <label>Method <select name="method" id="pe-method"><option>bank_transfer</option><option>cash</option><option>cheque</option><option>online</option></select></label>
   <label>Reference <input name="reference" id="pe-ref"></label>
@@ -244,7 +277,7 @@
 <dialog id="dlg-ptp-fulfill" class="modal"><form class="form" id="fulfill-form" method="post" action="">
   <h3>Fulfill PTP — Record Payment</h3>
   <label>Amount (RM) <small style="color:var(--muted)">· max <%= h.money(c.outstanding_amount) %></small> <input type="number" step="0.01" min="0.01" max="<%= c.outstanding_amount %>" name="amount" id="fulfill-amount" required></label>
-  <label>Date <input type="date" name="payment_date" required></label>
+  <label>Date <input type="date" name="payment_date" required<% if (lock) { %> min="<%= lock %>"<% } %>></label>
   <label>Method <select name="method"><option>bank_transfer</option><option>cash</option><option>cheque</option><option>online</option></select></label>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Confirm &amp; Record</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
@@ -285,6 +318,13 @@
     document.getElementById('pe-bank').value = bank;
     dlg('dlg-payment-edit');
   }
+  (function(){
+    var s = document.getElementById('rs-mode'); if (!s) return;
+    function sync(){ var fixed = s.value === 'fixed';
+      document.querySelectorAll('.rs-accrual').forEach(function(e){ e.style.display = fixed ? 'none' : ''; });
+      document.querySelectorAll('.rs-fixed').forEach(function(e){ e.style.display = fixed ? '' : 'none'; }); }
+    s.addEventListener('change', sync); sync();
+  })();
   document.querySelectorAll('dialog.modal').forEach(function(d){
     d.addEventListener('click', function(e){ if (e.target === d) d.close(); });
   });
