@@ -45,43 +45,63 @@ function dailyRate(c) {
   return 0;
 }
 
+// A case's loan as consecutive segments: segment 0 is the case's own terms and
+// each restructure (sorted by effective_date) starts the next. `lump` is the
+// fixed-mode interest, charged in full when its segment starts.
+function loanSegments(c, restructures) {
+  return [
+    { interest_mode: c.interest_mode, interest_rate: c.interest_rate, lump: c.interest_amount || 0,
+      start: c.interest_from || c.opened_at, maturity: c.maturity_date },
+    ...restructures.map(r => ({ interest_mode: r.interest_mode, interest_rate: r.interest_rate, lump: r.interest_amount || 0,
+      start: r.effective_date, maturity: r.maturity_date })),
+  ];
+}
+
 // Interest-first (先息后本) balance. Walks payments in date order: between events
-// interest accrues on the *remaining* principal, and each payment clears accrued
+// interest accrues on the *remaining* principal, and each payment clears unpaid
 // interest before it touches principal — so paying down principal shrinks all
-// future interest. Pure; asOf is injectable for tests, and otherwise defaults to
-// the case's maturity_date — the loan's fixed term, not "today" — so displayed
-// interest is the full start-to-end figure and doesn't drift as days pass.
-// Falls back to today when there's no maturity_date (tenure not set). `payments`
-// MUST be sorted ascending by payment_date. `interest` returned is total interest
-// charged to asOf, so the identity outstanding = principal + interest − paid still holds.
-function caseBalance(c, payments, asOf) {
-  const end = asOf || c.maturity_date || new Date();
+// future interest. The loan runs as segments (see loanSegments): at each
+// restructure's effective date, unpaid interest is carried as arrears that no
+// longer accrues and the remaining principal continues under the new terms. A
+// payment belongs to the segment whose window holds its date (date < next
+// segment's start → earlier segment). Pure; asOf is injectable for tests and
+// otherwise defaults to the last segment's maturity — the loan's fixed term,
+// not "today" — falling back to today when there is none. `payments` MUST be
+// sorted ascending by payment_date and `restructures` by effective_date. The
+// identity outstanding = principal + interest − paid holds.
+function caseBalance(c, payments, asOf, restructures = []) {
+  const segs = loanSegments(c, restructures);
   const paid = payments.reduce((s, p) => s + p.amount, 0);
-  if (c.interest_mode !== 'daily' && c.interest_mode !== 'monthly') {
-    // fixed: interest is a lump, allocation order can't change the totals.
-    const interest = c.interest_amount || 0;
-    return { principal: c.principal_amount, interest, paid,
-      outstanding: round2(Math.max(0, c.principal_amount + interest - paid)) };
-  }
-  const r = dailyRate(c);
-  let remP = c.principal_amount, unpaidInt = 0, paidInt = 0, last = c.interest_from || c.opened_at;
-  for (const p of payments) {
-    unpaidInt += remP * r * daysBetween(last, p.payment_date);
-    let amt = p.amount;
-    const toInt = Math.min(amt, unpaidInt); unpaidInt -= toInt; amt -= toInt; paidInt += toInt;
-    remP = Math.max(0, remP - amt); // remainder pays principal; any overpay is dropped (validatePayment blocks it)
-    last = p.payment_date;
-  }
-  unpaidInt += remP * r * daysBetween(last, end);
+  let remP = c.principal_amount, unpaidInt = 0, paidInt = 0, pi = 0;
+  segs.forEach((s, k) => {
+    const next = segs[k + 1];
+    const end = next ? next.start : (asOf || s.maturity || new Date());
+    const accrues = s.interest_mode === 'daily' || s.interest_mode === 'monthly';
+    const r = dailyRate(s);
+    if (!accrues) unpaidInt += s.lump; // fixed: allocation order can't change its totals
+    let last = s.start;
+    for (; pi < payments.length && (!next || payments[pi].payment_date < next.start); pi++) {
+      const p = payments[pi];
+      if (accrues) unpaidInt += remP * r * daysBetween(last, p.payment_date);
+      const toInt = Math.min(p.amount, unpaidInt); unpaidInt -= toInt; paidInt += toInt;
+      remP = Math.max(0, remP - (p.amount - toInt)); // any overpay is dropped (validatePayment blocks it)
+      // Never move the accrual origin backwards: a payment dated before interest
+      // starts must not make the days before the start count.
+      if (accrues && localDay(p.payment_date) > localDay(last)) last = p.payment_date;
+    }
+    if (accrues) unpaidInt += remP * r * daysBetween(last, end);
+  });
   return { principal: c.principal_amount, interest: round2(paidInt + unpaidInt), paid,
-    outstanding: round2(Math.max(0, remP + unpaidInt)) };
+    outstanding: round2(Math.max(0, remP + unpaidInt)),
+    principalRemaining: round2(remP), interestUnpaid: round2(unpaidInt) };
 }
 
 function recomputeOutstanding(caseId) {
   const c = get('SELECT principal_amount, interest_amount, interest_mode, interest_rate, interest_from, opened_at, maturity_date FROM cases WHERE id = ?', [caseId]);
   if (!c) return 0; // case gone (e.g. recompute-on-load of an out-of-scope/missing id)
   const payments = all('SELECT amount, payment_date FROM payments WHERE case_id = ? ORDER BY payment_date, id', [caseId]);
-  const b = caseBalance(c, payments);
+  const restructures = all('SELECT * FROM case_restructures WHERE case_id = ? ORDER BY effective_date, id', [caseId]);
+  const b = caseBalance(c, payments, undefined, restructures);
   // interest_charged caches total interest for every mode. interest_amount is the
   // fixed-mode input and is never overwritten: a restructure can switch a fixed
   // loan to an accrual mode, and segment 0 still needs its original lump.
