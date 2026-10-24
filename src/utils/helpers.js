@@ -10,6 +10,14 @@ const money = (n) =>
 // money()). Absorbs float residue like 0.1 + 0.2.
 const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
+// Today in Malaysia local time (UTC+8) as YYYY-MM-DD — the format of every
+// user-entered date (payment_date, effective_date, due_date).
+const todayMYT = () => new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+
+// One-line label for a loan segment's interest terms (restructure history, timeline).
+const interestTerms = (mode, rate, amount) =>
+  mode === 'monthly' ? `${rate}%/month` : mode === 'daily' ? `${rate}%/year (daily)` : `fixed RM ${money(amount)}`;
+
 // Agent commission = amount collected × commission rate (a percentage).
 const commission = (collected, rate) => (Number(collected) || 0) * (Number(rate) || 0) / 100;
 
@@ -68,4 +76,4 @@ const ICONS = {
 };
 const icon = (name) => ICONS[name] || '';
 
-module.exports = { money, round2, commission, dateFmt, dateTimeFmt, daysOverdue, followupBadge, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon };
+module.exports = { money, round2, todayMYT, interestTerms, commission, dateFmt, dateTimeFmt, daysOverdue, followupBadge, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon };

@@ -1,15 +1,6 @@
 const { dailyRate, daysBetween } = require('../services/payments');
 const { dueDates } = require('./installments');
-const { round2 } = require('./helpers');
-
-// "Today" in Malaysia local time (UTC+8) as YYYY-MM-DD, to compare against
-// due_date strings. Same +8h-then-truncate idiom as payments.js's daysBetween
-// and the date-input default in cases/show.ejs.
-// ponytail: TZ offset duplicated a third time; extract to a shared const if a
-// 4th call site shows up.
-function todayStr() {
-  return new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
-}
+const { round2, todayMYT } = require('./helpers');
 
 // Monthly repayment schedule over the loan tenure, one row per month.
 // - monthly / daily (accrual modes): projects caseBalance()'s interest-first
@@ -59,7 +50,7 @@ function repaymentSchedule(c, payments) {
   // ponytail: only the fully-settled case is reconciled; re-projecting the
   // remaining rows after a partial prepayment is the Restructure feature.
   const settled = c.outstanding_amount <= 0;
-  const today = todayStr();
+  const today = todayMYT();
   return dates.map((due, i) => {
     const expected = expectedList[i];
     const paid = round2(Math.min(expected, Math.max(0, pool)));
