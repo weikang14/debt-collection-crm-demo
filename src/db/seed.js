@@ -3,6 +3,7 @@ const dayjs = require('dayjs');
 const { db, init, run } = require('./index');
 const { recomputeOutstanding } = require('../services/payments');
 const { maturityDate } = require('../utils/installments');
+const { balanceAtCut } = require('../services/restructure');
 
 const hash = (pw) => bcrypt.hashSync(pw, 8);
 const ago = (d) => dayjs().subtract(d, 'day').format('YYYY-MM-DD HH:mm:ss');
@@ -40,7 +41,7 @@ const PRIOS = ['low','medium','high','urgent'];
 
 function clearAllTables() {
   init();
-  for (const t of ['audit_logs','call_logs','commission_settlements','tasks','ptps','payments','timeline_events','cases','debtors','agents','clients','users']) {
+  for (const t of ['audit_logs','call_logs','commission_settlements','tasks','ptps','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users']) {
     db.exec(`DELETE FROM ${t}`);
     db.exec(`DELETE FROM sqlite_sequence WHERE name='${t}'`);
   }
@@ -87,6 +88,20 @@ function insertDemoRows() {
       recomputeOutstanding(id);
     }
   });
+
+  // Case 14 (monthly, see above) is also restructured 10 days ago so the demo
+  // shows a carried-arrears row, the new schedule and the restructure history.
+  const c14 = db.prepare('SELECT * FROM cases WHERE id=14 AND is_demo=1').get();
+  if (c14 && c14.interest_mode === 'monthly' && !db.prepare('SELECT 1 FROM case_restructures WHERE case_id=14').get()) {
+    const eff = ago(10).slice(0, 10);
+    const cut = balanceAtCut(c14, [], [], eff);
+    const reason = 'Debtor requested lower instalments';
+    run(`INSERT INTO case_restructures (case_id,effective_date,reason,interest_mode,interest_rate,interest_amount,tenure,maturity_date,principal_at_cut,arrears_at_cut,created_by,is_demo)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,1)`, [14, eff, reason, 'monthly', 1.2, 0, 18, maturityDate(eff, 18, 'months'), cut.principal, cut.arrears, 'Collection Manager']);
+    run('INSERT INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)',
+      [14, 'note', `Restructure: from ${eff}, 1.2%/month, 18 months. Reason: ${reason}`, 'Collection Manager']);
+    recomputeOutstanding(14);
+  }
 
   // Payments for demo partial_paid / fully_paid cases only (is_demo=1 guard)
   db.prepare("SELECT id,principal_amount,interest_amount,status FROM cases WHERE is_demo=1 AND status IN ('partial_paid','fully_paid')").all().forEach((c, idx) => {
@@ -139,7 +154,7 @@ function seedDemo() {
 // sqlite_sequence, so customer IDs stay above the demo ID range.
 function deleteDemo() {
   init();
-  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments', 'commission_settlements']) {
+  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments', 'commission_settlements', 'case_restructures']) {
     run(`DELETE FROM ${t} WHERE is_demo=1`);
   }
   run(`DELETE FROM cases WHERE is_demo=1
@@ -147,7 +162,8 @@ function deleteDemo() {
     AND id NOT IN (SELECT case_id FROM ptps)
     AND id NOT IN (SELECT case_id FROM tasks WHERE case_id IS NOT NULL)
     AND id NOT IN (SELECT case_id FROM call_logs)
-    AND id NOT IN (SELECT case_id FROM timeline_events)`);
+    AND id NOT IN (SELECT case_id FROM timeline_events)
+    AND id NOT IN (SELECT case_id FROM case_restructures)`);
   run(`DELETE FROM debtors WHERE is_demo=1 AND id NOT IN (SELECT debtor_id FROM cases)`);
   run(`DELETE FROM agents  WHERE is_demo=1 AND id NOT IN (SELECT agent_id FROM cases WHERE agent_id IS NOT NULL)`);
   run(`DELETE FROM clients WHERE is_demo=1 AND id NOT IN (SELECT client_id FROM cases)`);
