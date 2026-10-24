@@ -36,7 +36,7 @@ test('createRestructure stores the cut snapshot, recomputes, and logs', () => {
   assert.strictEqual(row.maturity_date, '2027-01-11');
   assert.strictEqual(row.created_by, 'Manager');
   near(caseRow(id).outstanding_amount, 2912 + 14.56 + 531.44, 'outstanding = principal + arrears + 365d x 1.456');
-  assert.ok(db.get("SELECT 1 x FROM timeline_events WHERE case_id=? AND event_type='note' AND content LIKE 'Restructure:%'", [id]));
+  assert.ok(db.get("SELECT 1 x FROM timeline_events WHERE case_id=? AND event_type='restructure' AND content LIKE 'Restructure:%'", [id]));
   assert.ok(db.get("SELECT 1 x FROM audit_logs WHERE action='restructure' AND entity_id=?", [id]));
 });
 
@@ -175,4 +175,15 @@ test('a blank rate or fixed amount is refused instead of silently meaning 0', ()
   assert.match(rs.parseTerms(terms({ interest_rate: '' })).error, /rate is required/);
   assert.match(rs.parseTerms(terms({ interest_mode: 'fixed', interest_amount: '' })).error, /amount is required/);
   assert.strictEqual(rs.parseTerms(terms({ interest_rate: '0' })).interest_rate, 0);
+});
+
+test('paymentDateError rejects missing or malformed dates, with or without a restructure', () => {
+  const id = newCase();
+  for (const d of [undefined, '', '2026-8-30', '2026-02-30', '2026-01-05 10:00:00']) {
+    assert.match(rs.paymentDateError(id, d) || '', /Invalid payment date/, String(d));
+  }
+  assert.strictEqual(rs.paymentDateError(id, '2026-01-05'), null);
+  rs.createRestructure(id, terms({ effective_date: '2026-01-11' }), req);
+  // '2026-1-30' sorts after the lock as a string, so it must be refused on format first.
+  assert.match(rs.paymentDateError(id, '2026-1-30') || '', /Invalid payment date/);
 });

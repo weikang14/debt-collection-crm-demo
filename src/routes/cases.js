@@ -182,7 +182,7 @@ router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','f
   const c = loadCase(req, res); if (!c) return;
   const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
   if (!pay) return res.redirect(`/cases/${c.id}?err=Payment+not+found`);
-  const lockErr = lockedPaymentError(c.id, pay) || paymentDateError(c.id, req.body.payment_date || pay.payment_date);
+  const lockErr = lockedPaymentError(c.id, pay) || paymentDateError(c.id, req.body.payment_date || String(pay.payment_date).slice(0, 10));
   if (lockErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(lockErr)}`);
   const v = validatePayment(req.body.amount, c.outstanding_amount + pay.amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);

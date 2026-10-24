@@ -88,9 +88,10 @@ monthly/daily 模式被 `recomputeOutstanding()` 覆盖成「累计应收利息�
 
 ### 时间线
 
-`timeline_events.event_type` 有 CHECK 约束，新增类型需要重建表（项目无先例）。
-重组和撤销用 `note` 类型记录，内容以 `Restructure:` / `Restructure undone:`
-开头。权威记录是 `case_restructures` 和 `audit_logs`。
+重组和撤销用新的事件类型 `restructure` 记录，内容以 `Restructure:` /
+`Restructure undone:` 开头。`timeline_events.event_type` 的 CHECK 列表无法直接修改，
+迁移会一次性重建该表（保留所有行和 id）。备注的编辑/删除接口只作用于 `note`，
+所以重组记录不能被改动。（最初设计用 `note`，审查后改为独立类型。）
 
 ## 账面计算：分段的 `caseBalance()`
 
@@ -135,6 +136,9 @@ return { principal: c.principal_amount, paid,
 - 下一段先还欠息，是先息后本的自然延续：欠息就是 `unpaidInt` 里的一部分。
 - 恒等式 `outstanding = principal + interest − paid` 继续成立。
 - 新增的 `principalRemaining` / `interestUnpaid` 用于计算重组快照。
+- **利息在每段的到期日停止**（审查后补充）：不论计息算到段末还是算到一笔逾期
+  付款，都不超过该段到期日。所以重组已到期的贷款不会补算到期日之后的利息；
+  没有重组的贷款，到期后才付的款也不再多算利息。
 
 `recomputeOutstanding(caseId)` 读取该 case 的重组记录并传入；写
 `outstanding_amount` 和 `interest_charged`。

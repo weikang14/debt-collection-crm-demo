@@ -12,6 +12,10 @@ const { todayMYT, interestTerms, money } = require('../utils/helpers');
 
 const MODES = ['fixed', 'monthly', 'daily'];
 
+// A real calendar date written as YYYY-MM-DD — the only shape that compares
+// correctly as a string against effective dates.
+const isISODate = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && dayjs(s).format('YYYY-MM-DD') === s;
+
 function restructuresOf(caseId) {
   return all('SELECT * FROM case_restructures WHERE case_id = ? ORDER BY effective_date, id', [caseId]);
 }
@@ -46,9 +50,7 @@ function balanceAtCut(c, payments, restructures, effectiveDate) {
 
 function parseTerms(body) {
   const effective_date = String(body.effective_date || '');
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(effective_date) || dayjs(effective_date).format('YYYY-MM-DD') !== effective_date) {
-    return { error: 'Invalid effective date' };
-  }
+  if (!isISODate(effective_date)) return { error: 'Invalid effective date' };
   const interest_mode = body.interest_mode;
   if (!MODES.includes(interest_mode)) return { error: 'Invalid interest mode' };
   // A blank field is refused rather than read as 0 — an interest-free
@@ -88,10 +90,8 @@ function createRestructure(caseId, body, req) {
       [caseId, t.effective_date, t.reason, t.interest_mode, t.interest_rate, t.interest_amount, t.tenure,
         maturityDate(t.effective_date, t.tenure, 'months'), cut.principal, cut.arrears, by]).lastInsertRowid);
     resyncCaseStatus(caseId, by);
-    // ponytail: 'note' because timeline_events.event_type has a CHECK list and adding
-    // a type needs a table rebuild; case_restructures + audit_logs are the record.
     run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)',
-      [caseId, 'note', `Restructure: from ${t.effective_date}, ${interestTerms(t.interest_mode, t.interest_rate, t.interest_amount)}, ${t.tenure} months. `
+      [caseId, 'restructure', `Restructure: from ${t.effective_date}, ${interestTerms(t.interest_mode, t.interest_rate, t.interest_amount)}, ${t.tenure} months. `
         + `Principal RM ${money(cut.principal)}, arrears RM ${money(cut.arrears)} carried. Reason: ${t.reason}`, by]);
   })();
   logAction(req, 'restructure', 'case', caseId, `Restructured from ${t.effective_date} (${t.tenure} months)`);
@@ -109,15 +109,18 @@ function undoRestructure(caseId, restructureId, req) {
     run('DELETE FROM case_restructures WHERE id = ?', [latest.id]);
     resyncCaseStatus(caseId, by);
     run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)',
-      [caseId, 'note', `Restructure undone: from ${latest.effective_date}`, by]);
+      [caseId, 'restructure', `Restructure undone: from ${latest.effective_date}`, by]);
   })();
   logAction(req, 'restructure_undo', 'case', caseId, `Undid restructure from ${latest.effective_date}`);
   return { ok: true };
 }
 
+// Every payment write path (record, Pay, PTP fulfil, edit) goes through here,
+// so this is also where a payment date's format is checked.
 function paymentDateError(caseId, date) {
+  if (!isISODate(date)) return 'Invalid payment date';
   const lock = lockDate(caseId);
-  return lock && date && date < lock ? `Payment date must be on or after the restructure date (${lock})` : null;
+  return lock && date < lock ? `Payment date must be on or after the restructure date (${lock})` : null;
 }
 
 function lockedPaymentError(caseId, payment) {

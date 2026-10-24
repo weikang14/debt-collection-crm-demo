@@ -21,3 +21,25 @@ test('deleteDemo removes demo restructures together with their case', () => {
   assert.strictEqual(db.get('SELECT COUNT(*) n FROM case_restructures').n, 0);
   assert.strictEqual(db.get('SELECT COUNT(*) n FROM cases WHERE id=14').n, 0);
 });
+
+test('demo payments are stored as plain dates', () => {
+  seed.insertDemoRows();
+  const bad = db.all('SELECT payment_date FROM payments WHERE is_demo=1').filter(p => !/^\d{4}-\d{2}-\d{2}$/.test(p.payment_date));
+  assert.deepStrictEqual(bad, []);
+});
+
+test('deleteDemo keeps a demo restructure whose case still has customer payments', () => {
+  const today = new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
+  db.run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,is_demo) VALUES (14,'CUST-1',?,50,0)", [today]);
+  seed.deleteDemo();
+  assert.ok(db.get('SELECT 1 x FROM cases WHERE id=14'), 'case kept for the customer payment');
+  assert.strictEqual(db.get('SELECT COUNT(*) n FROM case_restructures WHERE case_id=14').n, 1, 'its restructure kept too');
+  seed.insertDemoRows();
+  assert.strictEqual(db.get('SELECT COUNT(*) n FROM case_restructures WHERE case_id=14').n, 1, 'reload does not duplicate it');
+});
+
+test('reload skips the demo restructure when case 14 has a payment on or after its date', () => {
+  db.run('DELETE FROM case_restructures WHERE case_id=14');
+  seed.insertDemoRows();
+  assert.strictEqual(db.get('SELECT COUNT(*) n FROM case_restructures WHERE case_id=14').n, 0);
+});

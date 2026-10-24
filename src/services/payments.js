@@ -75,19 +75,18 @@ function caseBalance(c, payments, asOf, restructures = []) {
   let remP = c.principal_amount, unpaidInt = 0, paidInt = 0, pi = 0;
   segs.forEach((s, k) => {
     const next = segs[k + 1];
-    let end = next ? next.start : (asOf || s.maturity || new Date());
-    // Interest stops at a segment's maturity, as it does for an unrestructured
-    // loan — restructuring a matured loan must not back-charge the days since.
-    // ponytail: a payment dated after maturity still accrues up to its own date
-    // (pre-existing behaviour, kept so unrestructured balances don't move).
-    if (s.maturity && localDay(end) > localDay(s.maturity)) end = s.maturity;
+    // Interest stops at a segment's maturity — whether the accrual runs to the
+    // segment's end or to a late payment — so a matured loan never keeps
+    // charging, and restructuring one doesn't back-charge the days since.
+    const capped = d => (s.maturity && localDay(d) > localDay(s.maturity) ? s.maturity : d);
+    const end = capped(next ? next.start : (asOf || s.maturity || new Date()));
     const accrues = s.interest_mode === 'daily' || s.interest_mode === 'monthly';
     const r = dailyRate(s);
     if (!accrues) unpaidInt += s.lump; // fixed: allocation order can't change its totals
     let last = s.start;
     for (; pi < payments.length && (!next || payments[pi].payment_date < next.start); pi++) {
       const p = payments[pi];
-      if (accrues) unpaidInt += remP * r * daysBetween(last, p.payment_date);
+      if (accrues) unpaidInt += remP * r * daysBetween(last, capped(p.payment_date));
       const toInt = Math.min(p.amount, unpaidInt); unpaidInt -= toInt; paidInt += toInt;
       remP = Math.max(0, remP - (p.amount - toInt)); // any overpay is dropped (validatePayment blocks it)
       // Never move the accrual origin backwards: a payment dated before interest

@@ -91,15 +91,20 @@ function insertDemoRows() {
 
   // Case 14 (monthly, see above) is also restructured 10 days ago so the demo
   // shows a carried-arrears row, the new schedule and the restructure history.
+  // On a demo reload the case may already carry real payments (a trial user's):
+  // the snapshot uses them, and a payment on/after the effective date would land
+  // in the new segment unvalidated, so the demo restructure is skipped then.
   const c14 = db.prepare('SELECT * FROM cases WHERE id=14 AND is_demo=1').get();
-  if (c14 && c14.interest_mode === 'monthly' && !db.prepare('SELECT 1 FROM case_restructures WHERE case_id=14').get()) {
-    const eff = ago(10).slice(0, 10);
-    const cut = balanceAtCut(c14, [], [], eff);
+  const eff = ago(10).slice(0, 10);
+  const pays14 = db.prepare('SELECT amount, payment_date FROM payments WHERE case_id=14 ORDER BY payment_date, id').all();
+  if (c14 && c14.interest_mode === 'monthly' && !db.prepare('SELECT 1 FROM case_restructures WHERE case_id=14').get()
+      && !pays14.some(p => String(p.payment_date).slice(0, 10) >= eff)) {
+    const cut = balanceAtCut(c14, pays14, [], eff);
     const reason = 'Debtor requested lower instalments';
     run(`INSERT INTO case_restructures (case_id,effective_date,reason,interest_mode,interest_rate,interest_amount,tenure,maturity_date,principal_at_cut,arrears_at_cut,created_by,is_demo)
          VALUES (?,?,?,?,?,?,?,?,?,?,?,1)`, [14, eff, reason, 'monthly', 1.2, 0, 18, maturityDate(eff, 18, 'months'), cut.principal, cut.arrears, 'Collection Manager']);
     run('INSERT INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)',
-      [14, 'note', `Restructure: from ${eff}, 1.2%/month, 18 months. Reason: ${reason}`, 'Collection Manager']);
+      [14, 'restructure', `Restructure: from ${eff}, 1.2%/month, 18 months. Reason: ${reason}`, 'Collection Manager']);
     recomputeOutstanding(14);
   }
 
@@ -112,7 +117,7 @@ function insertDemoRows() {
     // 'D001' casts to 0, so demo rows never inflate the customer sequence —
     // exactly how demo case numbers (CASE-YYYY-D001) work.
     run('INSERT OR IGNORE INTO payments (case_id,receipt_no,payment_date,amount,method,reference,bank,created_by,is_demo) VALUES (?,?,?,?,?,?,?,?,1)',
-      [c.id, `RCPT-${year}-D${String(idx + 1).padStart(3, '0')}`, ago(10), amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer']);
+      [c.id, `RCPT-${year}-D${String(idx + 1).padStart(3, '0')}`, ago(10).slice(0, 10), amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer']);
     run('INSERT OR IGNORE INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [c.id, 'payment', `Payment received RM ${amt.toFixed(2)}`, 'Finance Officer']);
   });
 
@@ -154,9 +159,12 @@ function seedDemo() {
 // sqlite_sequence, so customer IDs stay above the demo ID range.
 function deleteDemo() {
   init();
-  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments', 'commission_settlements', 'case_restructures']) {
+  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments', 'commission_settlements']) {
     run(`DELETE FROM ${t} WHERE is_demo=1`);
   }
+  // A demo restructure stays while its case still has (customer) payments —
+  // dropping it would silently re-price those payments, like an unguarded undo.
+  run('DELETE FROM case_restructures WHERE is_demo=1 AND case_id NOT IN (SELECT case_id FROM payments)');
   run(`DELETE FROM cases WHERE is_demo=1
     AND id NOT IN (SELECT case_id FROM payments)
     AND id NOT IN (SELECT case_id FROM ptps)

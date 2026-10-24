@@ -93,3 +93,9 @@ test('interest stops at a segment maturity, so restructuring a matured loan adds
   const r = { effective_date: '2026-06-01', interest_mode: 'fixed', interest_rate: 0, interest_amount: 0, maturity_date: '2026-12-01' };
   near(caseBalance(base, [], undefined, [r]).outstanding, 3270, '0% restructure keeps the debt');
 });
+
+test('a payment after maturity does not accrue interest past maturity', () => {
+  const b = caseBalance(base, [{ amount: 100, payment_date: '2026-05-01' }]);
+  near(b.interest, 270, 'interest stops at 04-01 even though the payment came a month later');
+  near(b.outstanding, 3170, 'outstanding');
+});

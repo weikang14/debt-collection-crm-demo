@@ -82,7 +82,7 @@
 
     <h2>Timeline</h2>
     <% if (!timeline.length) { %><%- include('../partials/empty', { msg: 'No activity yet.' }) %><% } else { %>
-    <% const evClass = { payment:'is-green', ptp_fulfilled:'is-green', ptp_broken:'is-red', ptp_created:'is-gold', status_change:'is-blue', legal:'is-red', call:'is-blue' }; %>
+    <% const evClass = { payment:'is-green', ptp_fulfilled:'is-green', ptp_broken:'is-red', ptp_created:'is-gold', status_change:'is-blue', legal:'is-red', call:'is-blue', restructure:'is-gold' }; %>
     <ul class="timeline">
     <% const canEditNote = !readOnly && ['admin','manager','agent'].includes(currentUser.role); %>
     <% timeline.forEach(ev => { %><li><span class="badge <%= evClass[ev.event_type]||'is-neutral' %>"><%= ev.event_type %></span>
@@ -150,7 +150,7 @@
     <tbody><% payments.forEach(p => { %><tr><td class="mono"><%= p.receipt_no %></td><td><%= h.dateFmt(p.payment_date) %></td>
     <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td>
     <% if (canEditPay) { %><td><% if (lock && p.payment_date < lock) { %><small style="color:var(--muted)">Locked · restructured</small><% } else { %><div style="display:flex; gap:0.5rem;">
-      <button type="button" class="btn btn-sm" onclick="openEditPayment(<%= p.id %>, <%= p.amount %>, '<%= p.payment_date %>', '<%= p.method %>', '<%= p.reference||'' %>', '<%= p.bank||'' %>')">Edit</button>
+      <button type="button" class="btn btn-sm" onclick="openEditPayment(<%= p.id %>, <%= p.amount %>, '<%= String(p.payment_date).slice(0, 10) %>', '<%= p.method %>', '<%= p.reference||'' %>', '<%= p.bank||'' %>')">Edit</button>
       <form method="post" action="/cases/<%= c.id %>/payments/<%= p.id %>/void" style="margin:0;" onsubmit="return confirm('Void payment <%= p.receipt_no %>?')"><button class="btn btn-sm" type="submit">Void</button></form>
     </div><% } %></td><% } %></tr><% }) %></tbody></table>
     <% } %>

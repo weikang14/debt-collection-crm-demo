@@ -69,6 +69,28 @@ function init() {
   try { db.prepare('ALTER TABLE cases ADD COLUMN tenure INTEGER').run(); } catch (e) { /* exists */ }
   try { db.prepare("ALTER TABLE cases ADD COLUMN tenure_unit TEXT NOT NULL DEFAULT 'months'").run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE cases ADD COLUMN maturity_date TEXT').run(); } catch (e) { /* exists */ }
+  // Migration: allow timeline event_type 'restructure'. SQLite can't alter a
+  // CHECK list, so the table is rebuilt once (rows copied as-is, ids kept);
+  // skipped when the stored definition already lists the type.
+  const tl = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='timeline_events'").get();
+  if (tl && !tl.sql.includes("'restructure'")) {
+    db.exec(`BEGIN;
+      CREATE TABLE timeline_events_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        case_id INTEGER NOT NULL REFERENCES cases(id),
+        event_type TEXT NOT NULL CHECK (event_type IN
+          ('call','whatsapp','email','payment','ptp_created','ptp_fulfilled','ptp_broken','note','status_change','legal','restructure')),
+        content TEXT NOT NULL, created_by TEXT,
+        is_demo INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO timeline_events_new (id, case_id, event_type, content, created_by, is_demo, created_at)
+        SELECT id, case_id, event_type, content, created_by, is_demo, created_at FROM timeline_events;
+      DROP TABLE timeline_events;
+      ALTER TABLE timeline_events_new RENAME TO timeline_events;
+      CREATE INDEX IF NOT EXISTS idx_timeline_case ON timeline_events(case_id);
+      COMMIT;`);
+  }
   // Migration: interest_charged = cached total interest (see schema.sql). The
   // one-time backfill copies interest_amount, which held that cache for accrual
   // cases and the charged lump for fixed ones — correct either way. Runs only
