@@ -18,7 +18,7 @@
 
 <%
   const paid = payments.reduce((s, p) => s + p.amount, 0);
-  const total = (c.principal_amount || 0) + (c.interest_amount || 0);
+  const total = (c.principal_amount || 0) + (c.interest_charged || 0);
   const recovered = total > 0 ? Math.round(paid / total * 100) : 0;
   const daysOpen = Math.max(0, Math.floor((Date.now() - new Date(c.opened_at).getTime()) / 86400000));
   const nextTask = tasks
@@ -35,7 +35,7 @@
   <div class="ledger-vr"></div>
   <div class="ledger-break">
     <div><div class="ledger-lbl">Principal</div><div class="ledger-val"><%= h.money(c.principal_amount) %></div></div>
-    <div><div class="ledger-lbl">Interest</div><div class="ledger-val"><%= h.money(c.interest_amount) %></div></div>
+    <div><div class="ledger-lbl">Interest</div><div class="ledger-val"><%= h.money(c.interest_charged) %></div></div>
     <div><div class="ledger-lbl">Paid</div><div class="ledger-val pos"><%= h.money(paid) %></div></div>
     <% if (c.maturity_date) { %>
     <div><div class="ledger-lbl">Maturity Date</div><div class="ledger-val"><%= h.dateFmt(c.maturity_date) %></div></div>

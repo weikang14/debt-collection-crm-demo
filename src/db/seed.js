@@ -70,9 +70,9 @@ function insertDemoRows() {
     let outstanding = principal + interest;
     if (st === 'fully_paid') outstanding = 0;
     else if (st === 'partial_paid') outstanding = Math.round((principal + interest) * 0.5);
-    run(`INSERT OR IGNORE INTO cases (id,case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,opened_at,closed_at,is_demo)
-         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)`,
-      [id, case_no, client_id, debtor_id, agent_id, principal, interest, outstanding, PRIOS[i % 4], st, ago(60 - i),
+    run(`INSERT OR IGNORE INTO cases (id,case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,interest_charged,outstanding_amount,priority,status,opened_at,closed_at,is_demo)
+         VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,1)`,
+      [id, case_no, client_id, debtor_id, agent_id, principal, interest, interest, outstanding, PRIOS[i % 4], st, ago(60 - i),
        ['fully_paid','closed','cancelled'].includes(st) ? ago(5) : null]);
     run('INSERT INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [id, 'note', `Case opened, status ${st}`, 'System']);
     // A few open, payment-free cases get a 12-month loan so the Repayment

@@ -21,12 +21,12 @@ router.get('/', requireLogin, (req, res) => {
     GROUP BY a.id ORDER BY collected DESC`, [from, to]);
   if (req.query.export === 'cases') {
     const rows = all(`SELECT cases.case_no, debtors.name AS debtor_name, agents.name AS agent_name,
-        cases.principal_amount, cases.interest_amount, cases.outstanding_amount, cases.status, cases.opened_at,
+        cases.principal_amount, cases.interest_charged, cases.outstanding_amount, cases.status, cases.opened_at,
         (SELECT COALESCE(SUM(amount),0) FROM payments WHERE case_id=cases.id) AS paid
       FROM cases JOIN debtors ON debtors.id=cases.debtor_id
       LEFT JOIN agents ON agents.id=cases.agent_id
       WHERE ${w.clause} ORDER BY cases.opened_at DESC`, w.params)
-      .map(c => [c.case_no, c.debtor_name, c.agent_name || '', c.principal_amount, c.interest_amount, round2(c.paid), c.outstanding_amount, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
+      .map(c => [c.case_no, c.debtor_name, c.agent_name || '', c.principal_amount, c.interest_charged, round2(c.paid), c.outstanding_amount, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
     return sendCsv(res, 'cases-detailed.csv', toCsv(['Case No', 'Debtor', 'Agent', 'Principal', 'Interest', 'Paid', 'Outstanding', 'Status', 'Opened'], rows));
   }
   if (req.query.export === 'outstanding') {

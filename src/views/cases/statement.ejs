@@ -34,7 +34,7 @@
     <div><span>IC/Passport</span><%= c.ic_passport || '—' %></div>
     <div><span>Status</span><%= h.caseStatusLabel(c.status) %></div>
     <div><span>Principal</span>RM <%= h.money(c.principal_amount) %></div>
-    <div><span>Interest</span>RM <%= h.money(c.interest_amount) %></div>
+    <div><span>Interest</span>RM <%= h.money(c.interest_charged) %></div>
     <div><span>Paid</span>RM <%= h.money(paid) %></div>
     <div><span>Outstanding</span>RM <%= h.money(c.outstanding_amount) %></div>
   </div>

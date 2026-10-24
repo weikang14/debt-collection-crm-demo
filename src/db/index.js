@@ -69,6 +69,14 @@ function init() {
   try { db.prepare('ALTER TABLE cases ADD COLUMN tenure INTEGER').run(); } catch (e) { /* exists */ }
   try { db.prepare("ALTER TABLE cases ADD COLUMN tenure_unit TEXT NOT NULL DEFAULT 'months'").run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE cases ADD COLUMN maturity_date TEXT').run(); } catch (e) { /* exists */ }
+  // Migration: interest_charged = cached total interest (see schema.sql). The
+  // one-time backfill copies interest_amount, which held that cache for accrual
+  // cases and the charged lump for fixed ones — correct either way. Runs only
+  // when the ALTER succeeds.
+  try {
+    db.prepare('ALTER TABLE cases ADD COLUMN interest_charged REAL NOT NULL DEFAULT 0').run();
+    db.prepare('UPDATE cases SET interest_charged = interest_amount').run();
+  } catch (e) { /* exists */ }
 }
 function get(sql, params = []) { return db.prepare(sql).get(...params); }
 function all(sql, params = []) { return db.prepare(sql).all(...params); }

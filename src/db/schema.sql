@@ -52,12 +52,14 @@ CREATE TABLE IF NOT EXISTS cases (
   principal_amount REAL NOT NULL DEFAULT 0,
   interest_amount REAL NOT NULL DEFAULT 0,
   outstanding_amount REAL NOT NULL DEFAULT 0,
+  -- Cache of total interest charged (every mode, every restructure segment),
+  -- written by recomputeOutstanding(). interest_amount stays the fixed-mode input.
+  interest_charged REAL NOT NULL DEFAULT 0,
   -- Interest model, per case. 'fixed': interest_amount is a manual lump (default,
   -- unchanged behaviour). 'daily': interest_rate is an ANNUAL % accrued /365 on
   -- remaining principal. 'monthly': interest_rate is a MONTHLY % accrued /30.
-  -- daily/monthly use interest-first (先息后本) allocation; interest_amount then
-  -- caches the total interest charged to date. interest_from = accrual start
-  -- (falls back to opened_at when null).
+  -- daily/monthly use interest-first (先息后本) allocation. interest_from =
+  -- accrual start (falls back to opened_at when null).
   interest_mode TEXT NOT NULL DEFAULT 'fixed' CHECK (interest_mode IN ('fixed','monthly','daily')),
   interest_rate REAL NOT NULL DEFAULT 0,
   interest_from TEXT,
@@ -92,6 +94,26 @@ CREATE TABLE IF NOT EXISTS payments (
   payment_date TEXT NOT NULL, amount REAL NOT NULL,
   method TEXT NOT NULL DEFAULT 'bank_transfer',
   reference TEXT, bank TEXT, remark TEXT, created_by TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+-- One row per Extension / Restructure (docs/superpowers/specs/2026-10-23-restructure-design.md).
+-- The case's own columns stay the original loan terms; each row starts a new
+-- ledger segment at effective_date. *_at_cut are display/audit snapshots.
+CREATE TABLE IF NOT EXISTS case_restructures (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  case_id INTEGER NOT NULL REFERENCES cases(id),
+  effective_date TEXT NOT NULL,
+  reason TEXT NOT NULL,
+  interest_mode TEXT NOT NULL CHECK (interest_mode IN ('fixed','monthly','daily')),
+  interest_rate REAL NOT NULL DEFAULT 0,
+  interest_amount REAL NOT NULL DEFAULT 0,
+  tenure INTEGER NOT NULL CHECK (tenure BETWEEN 1 AND 120),
+  maturity_date TEXT NOT NULL,
+  principal_at_cut REAL NOT NULL,
+  arrears_at_cut REAL NOT NULL,
+  created_by TEXT,
   is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -156,6 +178,7 @@ CREATE INDEX IF NOT EXISTS idx_cases_debtor ON cases(debtor_id);
 CREATE INDEX IF NOT EXISTS idx_timeline_case ON timeline_events(case_id);
 CREATE INDEX IF NOT EXISTS idx_payments_case ON payments(case_id);
 CREATE INDEX IF NOT EXISTS idx_ptps_case_status ON ptps(case_id, status);
+CREATE INDEX IF NOT EXISTS idx_restructures_case ON case_restructures(case_id, effective_date);
 
 CREATE TABLE IF NOT EXISTS settings (
   id INTEGER PRIMARY KEY CHECK (id = 1),

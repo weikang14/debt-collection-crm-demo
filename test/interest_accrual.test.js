@@ -51,14 +51,23 @@ test('same-day case accrues 0 and does not creep with wall-clock time', () => {
   near(next.interest, 83.33, 'one whole day accrues one day of interest');
 });
 
-test('recomputeOutstanding caches derived interest for accrual cases', () => {
+test('recomputeOutstanding caches derived interest in interest_charged for accrual cases', () => {
   db.run("INSERT INTO clients (id,company_name,commission_rate) VALUES (1,'X',0)");
   db.run("INSERT INTO debtors (id,name) VALUES (1,'D')");
   db.run(`INSERT INTO cases (id,case_no,client_id,debtor_id,principal_amount,interest_amount,outstanding_amount,status,interest_mode,interest_rate,interest_from)
     VALUES (1,'C1',1,1,36500,0,36500,'new','daily',10,'2000-01-01')`);
   const out = recomputeOutstanding(1);
-  const row = db.get('SELECT interest_amount, outstanding_amount FROM cases WHERE id=1');
-  assert.ok(row.interest_amount > 0, 'interest cached to column');           // years of accrual, well above 0
+  const row = db.get('SELECT interest_charged, outstanding_amount FROM cases WHERE id=1');
+  assert.ok(row.interest_charged > 0, 'interest cached to column');          // years of accrual, well above 0
   assert.strictEqual(row.outstanding_amount, out);                           // returned value == cached column
-  assert.strictEqual(row.outstanding_amount, db.get('SELECT 36500+interest_amount AS x FROM cases WHERE id=1').x); // no payments => principal + interest
+  assert.strictEqual(row.outstanding_amount, db.get('SELECT 36500+interest_charged AS x FROM cases WHERE id=1').x); // no payments => principal + interest
+});
+
+test('recomputeOutstanding never overwrites the interest_amount input', () => {
+  db.run(`INSERT INTO cases (id,case_no,client_id,debtor_id,principal_amount,interest_amount,outstanding_amount,status,interest_mode,interest_rate,interest_from)
+    VALUES (2,'C2',1,1,36500,123,36500,'new','daily',10,'2000-01-01')`);
+  recomputeOutstanding(2);
+  const row = db.get('SELECT interest_amount, interest_charged FROM cases WHERE id=2');
+  assert.strictEqual(row.interest_amount, 123);
+  assert.ok(row.interest_charged > 123);
 });

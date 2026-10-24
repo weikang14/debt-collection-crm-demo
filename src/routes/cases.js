@@ -101,9 +101,9 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
   const interest = mode === 'fixed' ? (Number(b.interest_amount)||0) : 0;
   const { start: loanStart, tenure, unit: tenureUnit, maturity } = tenureFields(b);
   const case_no = nextCaseNo();
-  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,priority,status,remark,interest_mode,interest_rate,interest_from,loan_start_date,tenure,tenure_unit,maturity_date)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, mode, rate, from, loanStart, tenure, tenureUnit, maturity]);
+  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,interest_charged,outstanding_amount,priority,status,remark,interest_mode,interest_rate,interest_from,loan_start_date,tenure,tenure_unit,maturity_date)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, mode, rate, from, loanStart, tenure, tenureUnit, maturity]);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)', [r.lastInsertRowid,'note',`Case ${case_no} created`,req.session.user.full_name]);
   logAction(req,'create','case',r.lastInsertRowid,`Created case ${case_no}`);
   res.redirect(`/cases/${r.lastInsertRowid}?ok=Case+created`);

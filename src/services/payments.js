@@ -82,13 +82,10 @@ function recomputeOutstanding(caseId) {
   if (!c) return 0; // case gone (e.g. recompute-on-load of an out-of-scope/missing id)
   const payments = all('SELECT amount, payment_date FROM payments WHERE case_id = ? ORDER BY payment_date, id', [caseId]);
   const b = caseBalance(c, payments);
-  // Accrual modes: cache the derived interest too, so views reading cases.interest_amount
-  // (statement, reports) stay consistent. Fixed mode leaves the user-entered interest alone.
-  if (c.interest_mode === 'daily' || c.interest_mode === 'monthly') {
-    run("UPDATE cases SET outstanding_amount=?, interest_amount=?, updated_at=datetime('now') WHERE id=?", [b.outstanding, b.interest, caseId]);
-  } else {
-    run("UPDATE cases SET outstanding_amount=?, updated_at=datetime('now') WHERE id=?", [b.outstanding, caseId]);
-  }
+  // interest_charged caches total interest for every mode. interest_amount is the
+  // fixed-mode input and is never overwritten: a restructure can switch a fixed
+  // loan to an accrual mode, and segment 0 still needs its original lump.
+  run("UPDATE cases SET outstanding_amount=?, interest_charged=?, updated_at=datetime('now') WHERE id=?", [b.outstanding, b.interest, caseId]);
   return b.outstanding;
 }
 // The 4 DB writes of a payment, WITHOUT a transaction wrapper or audit log, so a
