@@ -13,8 +13,9 @@ router.get('/', requireLogin, (req, res) => {
   const cq = (extra, params = []) => get(`SELECT COUNT(*) c, COALESCE(SUM(outstanding_amount),0) s FROM cases WHERE ${w.clause} ${extra}`, [...w.params, ...params]);
   const outstanding = cq('').s;
   const legalCount = cq("AND status='legal'").c;
-  const openedToday = cq("AND date(opened_at)=date('now','+8 hours')").c;
-  const closedToday = cq("AND date(closed_at)=date('now','+8 hours')").c;
+  // opened_at / closed_at are stored in UTC: shift them to MYT before taking the date.
+  const openedToday = cq("AND date(opened_at,'+8 hours')=date('now','+8 hours')").c;
+  const closedToday = cq("AND date(closed_at,'+8 hours')=date('now','+8 hours')").c;
   // payments today (join to scoped cases)
   const paid = get(`SELECT COALESCE(SUM(p.amount),0) s, COUNT(p.id) n FROM payments p JOIN cases c ON c.id=p.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} AND date(p.payment_date)=date('now','+8 hours')`, w.params);
   const collectedToday = paid.s, paymentsToday = paid.n;
@@ -26,7 +27,7 @@ router.get('/', requireLogin, (req, res) => {
     : get("SELECT COUNT(*) c FROM tasks WHERE status='pending' AND due_date IS NOT NULL AND date(due_date) < date('now','+8 hours')").c;
   // Aging: active outstanding grouped by debt age (days since opened), MYT.
   const tph = TERMINAL_STATUSES.map(() => '?').join(',');
-  const agingRows = all(`SELECT CAST(julianday('now','+8 hours') - julianday(opened_at) AS INTEGER) age, outstanding_amount amt
+  const agingRows = all(`SELECT CAST(julianday(date('now','+8 hours')) - julianday(date(opened_at,'+8 hours')) AS INTEGER) age, outstanding_amount amt
     FROM cases WHERE ${w.clause} AND outstanding_amount > 0 AND status NOT IN (${tph})`, [...w.params, ...TERMINAL_STATUSES]);
   const aging = bucketAging(agingRows);
   const activeCases = get(`SELECT COUNT(*) c FROM cases WHERE ${w.clause} AND status NOT IN (${tph})`, [...w.params, ...TERMINAL_STATUSES]).c;
@@ -36,7 +37,7 @@ router.get('/', requireLogin, (req, res) => {
   const followupRows = followupTasks(u, 14);
   const followups = followupRows.slice(0, 10);
   const followupCount = followupRows.length;
-  const recent = all(`SELECT e.*, c.case_no FROM timeline_events e JOIN cases c ON c.id=e.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} ORDER BY e.created_at DESC LIMIT 12`, w.params);
+  const recent = all(`SELECT e.*, c.case_no FROM timeline_events e JOIN cases c ON c.id=e.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} ORDER BY e.created_at DESC, e.id DESC LIMIT 12`, w.params);
   let leaderboard = null;
   if (!isScoped(u)) {
     leaderboard = all(`SELECT a.name, COALESCE(SUM(p.amount),0) collected FROM agents a

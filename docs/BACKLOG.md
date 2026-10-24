@@ -37,6 +37,9 @@ Priority: 🔴 correctness/robustness · 🟠 logic · 🟡 hardening · 💡 fe
   A payment failure reverts the PTP flip (test: atomic rollback).
 - **#8 Numbering** → `nextCaseNo`/`nextReceiptNo` use per-year `MAX(suffix)+1`,
   never reuse a deleted number (test: no-reuse). Unblocks payment edit/void.
+  *Correction (2026-10-24 QA, F-03):* MAX+1 still reused the number of the
+  **newest** row once it was deleted. Now a `number_sequences` high-water mark
+  per prefix makes every issued number permanent (test: `qa_fixes` F-03).
 - **#9 Audit logging** → `logAction` coerces `undefined` bindings to `null` so a
   `req` missing a field still logs instead of silently dropping. This also fixed
   the `audit failed:` test noise (fake `req` now has `username`/`ip`).

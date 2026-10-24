@@ -4,8 +4,9 @@ const { db, init, run } = require('./index');
 const { recomputeOutstanding } = require('../services/payments');
 const { maturityDate } = require('../utils/installments');
 const { balanceAtCut } = require('../services/restructure');
+const { HASH_COST } = require('../utils/forms');
 
-const hash = (pw) => bcrypt.hashSync(pw, 8);
+const hash = (pw) => bcrypt.hashSync(pw, HASH_COST);
 const ago = (d) => dayjs().subtract(d, 'day').format('YYYY-MM-DD HH:mm:ss');
 const inDays = (d) => dayjs().add(d, 'day').format('YYYY-MM-DD');
 
@@ -27,12 +28,12 @@ const DEBTORS = [
   ['Sarah Lim','900215-10-5522','','012-2223334','sarah.l@mail.my','8 Jln Mawar, PJ','Retail Co',3500,'medium','Lim Ah Kow','012-8880002'],
   ['Ravi Chandran','850320-08-5533','','016-3334445','ravi@mail.my','5 Lorong Melur, Ipoh','Tech Sol',6800,'low','',''],
   ['Nadia Hassan','920510-14-5544','','017-4445556','nadia@mail.my','21 Jln Kenanga, KL','','2800','high','Hassan bin Ali','017-7770003'],
-  ['Wong Kar Wai','780612-05-5555','','013-5556667','wong@mail.my','3 Jln Cempaka, JB','WKW Trading',9500,'medium','',''],
+  ['Wong Kah Mun','780612-05-5555','','013-5556667','wong@mail.my','3 Jln Cempaka, JB','WKM Trading',9500,'medium','',''],
   ['Farah Aziz','950701-14-5566','','018-6667778','farah@mail.my','7 Jln Teratai, KL','Clinic MY',5200,'low','Aziz bin Rahman','018-6660004'],
   ['Tan Boon Huat','830825-07-5577','','019-7778889','tanbh@mail.my','15 Jln Anggerik, Penang','',4000,'high','',''],
   ['Kavitha Nair','890903-10-5588','','012-8889990','kavitha@mail.my','9 Jln Seroja, PJ','Nair Ent',7100,'medium','Nair Suresh','012-5550005'],
   ['Muhammad Faiz','910128-14-5599','','016-9990001','faiz@mail.my','2 Jln Dahlia, KL','',3300,'high','Zainab bt Yusof','016-3330006'],
-  ['Lee Chong Wei','870417-05-5610','','017-1011121','lcw@mail.my','18 Jln Melati, JB','LCW Sports',12000,'low','',''],
+  ['Lee Kok Seng','870417-05-5610','','017-1011121','lks@mail.my','18 Jln Melati, JB','LKS Sports',12000,'low','',''],
   ['Aisyah Rahman','930922-14-5621','','018-2022232','aisyah@mail.my','6 Jln Kemuning, KL','',2600,'medium','Rahman bin Salleh','018-2220007'],
   ['Ganesh Pillai','800511-08-5632','','019-3033343','ganesh@mail.my','11 Jln Cendana, Ipoh','GP Logistics',8800,'high','',''],
 ];
@@ -41,7 +42,7 @@ const PRIOS = ['low','medium','high','urgent'];
 
 function clearAllTables() {
   init();
-  for (const t of ['audit_logs','call_logs','commission_settlements','tasks','ptps','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users']) {
+  for (const t of ['audit_logs','call_logs','commission_settlements','tasks','ptps','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users','number_sequences']) {
     db.exec(`DELETE FROM ${t}`);
     db.exec(`DELETE FROM sqlite_sequence WHERE name='${t}'`);
   }
@@ -108,7 +109,12 @@ function insertDemoRows() {
     recomputeOutstanding(14);
   }
 
-  // Payments for demo partial_paid / fully_paid cases only (is_demo=1 guard)
+  // Payments for demo partial_paid / fully_paid cases only (is_demo=1 guard).
+  // Dated 10 days ago but never before the 1st of this month, so a seed run in
+  // the first days of a month still shows this month's collections/commission.
+  const monthStart = dayjs().startOf('month');
+  const tenAgo = dayjs().subtract(10, 'day');
+  const payDate = (tenAgo.isBefore(monthStart) ? monthStart : tenAgo).format('YYYY-MM-DD');
   db.prepare("SELECT id,principal_amount,interest_amount,status FROM cases WHERE is_demo=1 AND status IN ('partial_paid','fully_paid')").all().forEach((c, idx) => {
     const total = c.principal_amount + c.interest_amount;
     const amt = c.status === 'fully_paid' ? total : Math.round(total * 0.5);
@@ -117,11 +123,14 @@ function insertDemoRows() {
     // 'D001' casts to 0, so demo rows never inflate the customer sequence —
     // exactly how demo case numbers (CASE-YYYY-D001) work.
     run('INSERT OR IGNORE INTO payments (case_id,receipt_no,payment_date,amount,method,reference,bank,created_by,is_demo) VALUES (?,?,?,?,?,?,?,?,1)',
-      [c.id, `RCPT-${year}-D${String(idx + 1).padStart(3, '0')}`, ago(10).slice(0, 10), amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer']);
+      [c.id, `RCPT-${year}-D${String(idx + 1).padStart(3, '0')}`, payDate, amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer']);
     run('INSERT OR IGNORE INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [c.id, 'payment', `Payment received RM ${amt.toFixed(2)}`, 'Finance Officer']);
   });
 
-  const ptpSeed = [[4,3000,inDays(5),'pending'],[3,2500,ago(3),'broken'],[5,4000,ago(15),'fulfilled'],[14,1800,inDays(10),'pending']];
+  // Case 5's fulfilled PTP is the promise its demo payment kept: same amount, same day.
+  const paid5 = db.prepare('SELECT amount, payment_date FROM payments WHERE case_id=5 AND is_demo=1').get();
+  const ptpSeed = [[4,3000,inDays(5),'pending'],[3,2500,ago(3).slice(0, 10),'broken'],
+    ...(paid5 ? [[5,paid5.amount,paid5.payment_date,'fulfilled']] : []),[14,1800,inDays(10),'pending']];
   ptpSeed.forEach((p) => {
     run('INSERT INTO ptps (case_id,amount,due_date,status,created_by,is_demo) VALUES (?,?,?,?,?,1)', [...p, 'Agent']);
     run('INSERT INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [p[0], p[3] === 'broken' ? 'ptp_broken' : p[3] === 'fulfilled' ? 'ptp_fulfilled' : 'ptp_created', `PTP RM ${p[1]} due ${p[2]}`, 'Agent']);
@@ -130,12 +139,15 @@ function insertDemoRows() {
   const callSeed = [[2,1,180,'answered'],[3,2,0,'no_answer'],[4,1,60,'refused'],[7,3,240,'answered'],[13,2,0,'busy'],[16,4,90,'answered']];
   callSeed.forEach((c) => run('INSERT INTO call_logs (case_id,agent_id,duration_seconds,result,notes,is_demo) VALUES (?,?,?,?,?,1)', [...c, 'Follow-up call']));
 
-  const taskSeed = [[2,1,'follow_up','Call debtor re: overdue',inDays(1),'pending'],[3,2,'visit','Field visit to address',ago(1),'pending'],[7,3,'legal','Prepare LOD',inDays(3),'pending'],[5,1,'reminder','Send WhatsApp reminder',inDays(0),'done']];
+  // Each task belongs to its case's agent (case 2 → agent 2, cases 3/7 → agent 3, case 5 → agent 1).
+  const taskSeed = [[2,2,'follow_up','Call debtor re: overdue',inDays(1),'pending'],[3,3,'visit','Field visit to address',ago(1).slice(0, 10),'pending'],[7,3,'legal','Prepare LOD',inDays(3),'pending'],[5,1,'reminder','Send WhatsApp reminder',inDays(0),'done']];
   taskSeed.forEach((t) => run('INSERT INTO tasks (case_id,agent_id,type,title,due_date,status,is_demo) VALUES (?,?,?,?,?,?,1)', t));
 
   const period = dayjs().format('YYYY-MM');
-  run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by,is_demo) VALUES (?,?,?,?,?,1)', [1, period, 300, 'Partial payout', 'Collection Manager']);
-  run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by,is_demo) VALUES (?,?,?,?,?,1)', [3, period, 150, 'Advance', 'Collection Manager']);
+  // Both stay below what the agent earned this month (Lim 145.80, Nurul 1,225.80),
+  // so no Pending starts negative; overpaying is shown live by settling more.
+  run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by,is_demo) VALUES (?,?,?,?,?,1)', [1, period, 100, 'Partial payout', 'Collection Manager']);
+  run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by,is_demo) VALUES (?,?,?,?,?,1)', [2, period, 500, 'Advance', 'Collection Manager']);
 }
 
 function insertDemoUsers() {
@@ -159,6 +171,10 @@ function seedDemo() {
 // sqlite_sequence, so customer IDs stay above the demo ID range.
 function deleteDemo() {
   init();
+  // One transaction: a failure leaves the demo data whole, never half-deleted.
+  db.transaction(deleteDemoRows)();
+}
+function deleteDemoRows() {
   for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments', 'commission_settlements']) {
     run(`DELETE FROM ${t} WHERE is_demo=1`);
   }
@@ -173,7 +189,12 @@ function deleteDemo() {
     AND id NOT IN (SELECT case_id FROM timeline_events)
     AND id NOT IN (SELECT case_id FROM case_restructures)`);
   run(`DELETE FROM debtors WHERE is_demo=1 AND id NOT IN (SELECT debtor_id FROM cases)`);
-  run(`DELETE FROM agents  WHERE is_demo=1 AND id NOT IN (SELECT agent_id FROM cases WHERE agent_id IS NOT NULL)`);
+  // A demo agent stays while trial rows (cases, tasks, settlements, calls) still point at it.
+  run(`DELETE FROM agents  WHERE is_demo=1
+    AND id NOT IN (SELECT agent_id FROM cases WHERE agent_id IS NOT NULL)
+    AND id NOT IN (SELECT agent_id FROM tasks WHERE agent_id IS NOT NULL)
+    AND id NOT IN (SELECT agent_id FROM commission_settlements)
+    AND id NOT IN (SELECT agent_id FROM call_logs WHERE agent_id IS NOT NULL)`);
   run(`DELETE FROM clients WHERE is_demo=1 AND id NOT IN (SELECT client_id FROM cases)`);
 }
 

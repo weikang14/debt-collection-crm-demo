@@ -1,15 +1,16 @@
 const express = require('express');
 const { all } = require('../db');
-const dayjs = require('dayjs');
 const { requireLogin } = require('../middleware/auth');
 const { caseWhere } = require('../utils/scope');
 const { toCsv, sendCsv } = require('../utils/csv');
-const { caseStatusLabel, dateFmt, commission, round2 } = require('../utils/helpers');
+const { caseStatusLabel, dateFmt, commission, round2, todayMYT } = require('../utils/helpers');
 const router = express.Router();
 
 router.get('/', requireLogin, (req, res) => {
-  const from = req.query.from || dayjs().startOf('month').format('YYYY-MM-DD');
-  const to = req.query.to || dayjs().format('YYYY-MM-DD');
+  // Default range = this month to date, in Malaysia time (the server may run in UTC).
+  const today = todayMYT();
+  const from = req.query.from || today.slice(0, 8) + '01';
+  const to = req.query.to || today;
   const w = caseWhere(req.session.user); const cAlias = w.clause.replace(/cases\./g,'c.');
   const collection = all(`SELECT cl.company_name, COUNT(p.id) cnt, COALESCE(SUM(p.amount),0) total
     FROM payments p JOIN cases c ON c.id=p.case_id JOIN clients cl ON cl.id=c.client_id
@@ -34,7 +35,7 @@ router.get('/', requireLogin, (req, res) => {
     return sendCsv(res, 'outstanding-by-status.csv', toCsv(['Status', 'Cases', 'Outstanding'], rows));
   }
   if (req.query.export === 'performance' && !['agent', 'client'].includes(req.session.user.role)) {
-    const rows = performance.map(r => [r.name, r.collected, r.commission_rate, commission(r.collected, r.commission_rate), r.target_amount]);
+    const rows = performance.map(r => [r.name, round2(r.collected), r.commission_rate, round2(commission(r.collected, r.commission_rate)), r.target_amount]);
     return sendCsv(res, 'agent-performance.csv', toCsv(['Agent', 'Collected', 'Rate %', 'Commission', 'Target'], rows));
   }
   res.render('reports/index', { title: 'Reports', from, to, collection, outstanding, performance });

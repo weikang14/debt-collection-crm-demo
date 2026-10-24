@@ -1,2 +1,3 @@
-<% if (query && query.ok) { %><div class="alert is-green"><%= query.ok %></div><% } %>
-<% if (query && query.err) { %><div class="alert is-red"><%= query.err %></div><% } %>
+<% const f = (typeof flash !== 'undefined' && flash) || {}; %>
+<% if (f.ok) { %><div class="alert is-green"><%= f.ok %></div><% } %>
+<% if (f.err) { %><div class="alert is-red"><%= f.err %></div><% } %>

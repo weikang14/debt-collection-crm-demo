@@ -10,11 +10,9 @@ const { todayMYT, interestTerms, money } = require('../utils/helpers');
 // Each row starts a new ledger segment at effective_date; the case row keeps the
 // original terms. Payment ownership: payment_date < E → earlier segment.
 
-const MODES = ['fixed', 'monthly', 'daily'];
+const { isISODate } = require('../utils/forms');
 
-// A real calendar date written as YYYY-MM-DD — the only shape that compares
-// correctly as a string against effective dates.
-const isISODate = s => typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && dayjs(s).format('YYYY-MM-DD') === s;
+const MODES = ['fixed', 'monthly', 'daily'];
 
 function restructuresOf(caseId) {
   return all('SELECT * FROM case_restructures WHERE case_id = ? ORDER BY effective_date, id', [caseId]);
@@ -116,9 +114,12 @@ function undoRestructure(caseId, restructureId, req) {
 }
 
 // Every payment write path (record, Pay, PTP fulfil, edit) goes through here,
-// so this is also where a payment date's format is checked.
+// so this is also where a payment date's format and range are checked. A
+// future date would accrue interest to that day and push the restructure
+// lower bound past today.
 function paymentDateError(caseId, date) {
   if (!isISODate(date)) return 'Invalid payment date';
+  if (date > todayMYT()) return 'Payment date cannot be in the future';
   const lock = lockDate(caseId);
   return lock && date < lock ? `Payment date must be on or after the restructure date (${lock})` : null;
 }

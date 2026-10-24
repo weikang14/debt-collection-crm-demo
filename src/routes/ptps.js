@@ -4,7 +4,7 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { paymentWrites } = require('../services/payments');
-const { validatePayment } = require('../utils/forms');
+const { validatePayment, methodError } = require('../utils/forms');
 const { paymentDateError } = require('../services/restructure');
 const router = express.Router();
 
@@ -20,7 +20,7 @@ function recordFulfillment(ptpId, body, req) {
   const v = validatePayment(rawAmount, cs.outstanding_amount);
   if (v.error) return { ok: false, error: v.error };
   const payment_date = body.payment_date || new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-  const dateErr = paymentDateError(ptp.case_id, payment_date);
+  const dateErr = paymentDateError(ptp.case_id, payment_date) || methodError(body.method);
   if (dateErr) return { ok: false, error: dateErr };
   const method = body.method || 'bank_transfer';
   const by = req.session.user.full_name;
@@ -41,6 +41,9 @@ function recordFulfillment(ptpId, body, req) {
 function breakPtp(ptpId, req) {
   const ptp = get('SELECT * FROM ptps WHERE id=?', [ptpId]);
   if (!ptp) return { ok: false, error: 'PTP not found' };
+  // Same guard as recordFulfillment: a stale page or resubmit must not flip a
+  // fulfilled PTP to broken or count one breach twice.
+  if (ptp.status !== 'pending') return { ok: false, error: 'PTP already resolved' };
   run("UPDATE ptps SET status='broken' WHERE id=?", [ptp.id]);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)',
     [ptp.case_id, 'ptp_broken', `PTP broken (RM ${ptp.amount.toFixed(2)})`, req.session.user.full_name]);
@@ -74,7 +77,8 @@ router.post('/:id/fulfill', requireLogin, requireRole('admin', 'manager', 'agent
 
 router.post('/:id/break', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {
   const caseId = loadScopedCaseId(req, res); if (caseId === null) return;
-  breakPtp(req.params.id, req);
+  const r = breakPtp(req.params.id, req);
+  if (!r.ok) return res.redirect(`/cases/${caseId}?err=${encodeURIComponent(r.error)}`);
   res.redirect(`/cases/${caseId}?ok=PTP+broken`);
 });
 

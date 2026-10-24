@@ -3,7 +3,7 @@
 <form class="card form" method="post" action="/users">
   <label>Username <input name="username" required autocomplete="off"></label>
   <label>Full Name <input name="full_name" required></label>
-  <label>Password <input name="password" type="password" required autocomplete="new-password"></label>
+  <label>Password <input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
   <label>Role
     <select name="role" id="role-select">
       <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>

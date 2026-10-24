@@ -3,13 +3,17 @@ const express = require('express');
 const session = require('express-session');
 const engine = require('ejs-mate');
 const { init } = require('./db');
+const { sameOrigin, securityHeaders, flash, errorHandler, notFound } = require('./middleware/security');
+const { refreshStaleAccruals } = require('./services/payments');
 
 init();
 
 const app = express();
+app.disable('x-powered-by');
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+app.use(securityHeaders);
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 // In production a real secret is mandatory; the demo fallback is dev-only.
@@ -20,7 +24,11 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'debt-collection-crm-demo-secret',
   resave: false,
   saveUninitialized: false,
+  // Idle timeout: each response pushes expiry 2h out; 2h without a request logs out.
+  rolling: true,
+  cookie: { maxAge: 2 * 60 * 60 * 1000 },
 }));
+app.use(sameOrigin);
 
 app.get('/health', (req, res) => res.type('text').send('ok'));
 
@@ -38,6 +46,8 @@ app.get('/demo-accounts', (req, res) => res.render('demo-accounts', { accounts: 
 // ROUTE MOUNT POINT — later tasks insert app.use(...) here
 const { attachUser } = require('./middleware/auth');
 app.use(attachUser);
+app.use(flash);
+app.use((req, res, next) => { if (req.session.user) refreshStaleAccruals(); next(); });
 const h = require('./utils/helpers');
 app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; next(); });
 app.use(require('./routes/auth'));
@@ -57,6 +67,8 @@ app.use('/commissions', require('./routes/commissions').router);
 app.use('/search', require('./routes/search'));
 app.use('/audit-log', require('./routes/audit'));
 app.use('/settings', require('./routes/settings'));
+app.use(notFound);
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`CRM demo running: http://localhost:${PORT}`));

@@ -32,10 +32,11 @@ function currentMonth() { return dayjs.utc().add(8, 'hour').format('YYYY-MM'); }
 
 function recordSettlement(body, req) {
   const amount = round2(Number(body.amount));
-  if (!Number.isFinite(amount) || amount <= 0) return { ok: false, error: 'Invalid amount' };
+  if (!Number.isFinite(amount) || amount <= 0 || amount > 1e9) return { ok: false, error: 'Invalid amount' };
   const agent = get('SELECT id FROM agents WHERE id=?', [body.agent_id]);
   if (!agent) return { ok: false, error: 'Agent not found' };
   const period = body.period || currentMonth();
+  if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return { ok: false, error: 'Invalid period' };
   const r = run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by) VALUES (?,?,?,?,?)',
     [agent.id, period, amount, body.note || null, req.session.user.full_name]);
   logAction(req, 'commission_settle', 'agent', agent.id, `Settled RM ${amount} for ${period}`);
@@ -76,8 +77,9 @@ router.post('/settle', requireLogin, canSettle, (req, res) => {
 
 router.post('/:id/void', requireLogin, canSettle, (req, res) => {
   const row = get('SELECT period FROM commission_settlements WHERE id=?', [req.params.id]);
+  if (!row) return res.redirect('/commissions?err=Settlement+not+found');
   voidSettlement(req.params.id, req);
-  res.redirect(`/commissions?month=${encodeURIComponent(row ? row.period : currentMonth())}&ok=Settlement+voided`);
+  res.redirect(`/commissions?month=${encodeURIComponent(row.period)}&ok=Settlement+voided`);
 });
 
 module.exports = { router, commissionRows, round2, recordSettlement, voidSettlement };

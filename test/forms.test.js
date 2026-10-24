@@ -20,6 +20,7 @@ test('validatePayment: blocks overpayment, allows exact payoff and partial', () 
   assert.deepStrictEqual(validatePayment(100, 100), { amount: 100 });
   assert.deepStrictEqual(validatePayment(30, 100), { amount: 30 });
 });
-test('validatePayment: returns the amount exactly, no rounding', () => {
-  assert.deepStrictEqual(validatePayment(12.345, 100), { amount: 12.345 });
+test('validatePayment: returns the amount exactly, no rounding; sub-sen amounts are refused, not rounded', () => {
+  assert.deepStrictEqual(validatePayment(12.34, 100), { amount: 12.34 });
+  assert.deepStrictEqual(validatePayment(12.345, 100), { error: 'Invalid amount' });
 });

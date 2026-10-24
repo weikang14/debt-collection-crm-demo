@@ -170,6 +170,13 @@ CREATE TABLE IF NOT EXISTS commission_settlements (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Highest number ever issued per prefix (e.g. 'RCPT-2026-'), so deleting the
+-- newest row (a voided payment) never frees its number for reuse.
+CREATE TABLE IF NOT EXISTS number_sequences (
+  prefix TEXT PRIMARY KEY,
+  last INTEGER NOT NULL
+);
+
 CREATE INDEX IF NOT EXISTS idx_commission_agent_period ON commission_settlements(agent_id, period);
 CREATE INDEX IF NOT EXISTS idx_cases_status ON cases(status);
 CREATE INDEX IF NOT EXISTS idx_cases_agent ON cases(agent_id);

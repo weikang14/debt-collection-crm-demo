@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Case Statement <%= c.case_no %></title>
+<title>Statement <%= c.case_no %> — Debt Collection CRM</title>
 <link rel="stylesheet" href="/css/style.css">
 <style>
   body { background: #fff; padding: 32px; max-width: 820px; margin: 0 auto; color: var(--ink-text); }
@@ -37,6 +37,14 @@
     <div><span>Interest</span>RM <%= h.money(c.interest_charged) %></div>
     <div><span>Paid</span>RM <%= h.money(paid) %></div>
     <div><span>Outstanding</span>RM <%= h.money(c.outstanding_amount) %></div>
+    <% const rs = restructures[restructures.length - 1]; const maturity = rs ? rs.maturity_date : c.maturity_date; %>
+    <div><span>Loan Start Date</span><%= c.loan_start_date ? h.dateFmt(c.loan_start_date) : '—' %></div>
+    <div><span>Interest Terms</span><%= h.interestTerms(c.interest_mode, c.interest_rate, c.interest_amount) %></div>
+    <div><span>Tenure</span><%= c.tenure ? c.tenure + ' ' + (c.tenure_unit || 'months') : '—' %></div>
+    <div><span>Maturity Date</span><%= maturity ? h.dateFmt(maturity) : '—' %></div>
+    <% if (rs) { %>
+    <div style="grid-column: 1 / -1"><span>Restructured</span>From <%= h.dateFmt(rs.effective_date) %>: <%= h.interestTerms(rs.interest_mode, rs.interest_rate, rs.interest_amount) %>, <%= rs.tenure %> months · arrears carried RM <%= h.money(rs.arrears_at_cut) %></div>
+    <% } %>
   </div>
   <h2>Payment History</h2>
   <% if (!payments.length) { %><p>No payments recorded.</p><% } else { %>

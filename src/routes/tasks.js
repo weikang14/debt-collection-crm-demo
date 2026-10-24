@@ -2,7 +2,20 @@ const express = require('express');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { caseWhere, isScoped } = require('../utils/scope');
+const { logAction } = require('../utils/audit');
+const { isISODate, MAX_NAME } = require('../utils/forms');
 const router = express.Router();
+
+const TASK_TYPES = ['follow_up', 'visit', 'legal', 'reminder'];
+// Shared by create and edit: returns an error message or null.
+function taskFormError(b) {
+  const title = String(b.title ?? '').trim();
+  if (!title) return 'Title is required';
+  if (title.length > MAX_NAME) return `Title must be at most ${MAX_NAME} characters`;
+  if (b.type && !TASK_TYPES.includes(b.type)) return 'Invalid task type';
+  if (b.due_date && !isISODate(b.due_date)) return 'Invalid due date';
+  return null;
+}
 
 router.get('/', requireLogin, (req, res) => {
   const u = req.session.user;
@@ -15,8 +28,9 @@ router.get('/', requireLogin, (req, res) => {
   if (req.query.overdue === '1') where.push("tasks.status='pending' AND tasks.due_date IS NOT NULL AND date(tasks.due_date) < date('now','+8 hours')");
   // Due-date window: an upper bound on how far ahead to look, independent of
   // the overdue flag above (a lower-bound signal). Unset/unknown = no cap.
-  const WINDOW_DAYS = { '1': 1, '7': 7, '14': 14, '30': 30 };
-  if (WINDOW_DAYS[req.query.window]) {
+  // '1' is the "Today" option: up to and including today, not tomorrow.
+  const WINDOW_DAYS = { '1': 0, '7': 7, '14': 14, '30': 30 };
+  if (Object.hasOwn(WINDOW_DAYS, req.query.window ?? '')) {
     where.push("tasks.due_date IS NOT NULL AND date(tasks.due_date) <= date('now','+8 hours', ?)");
     params.push(`+${WINDOW_DAYS[req.query.window]} days`);
   }
@@ -35,6 +49,8 @@ router.get('/', requireLogin, (req, res) => {
 router.post('/new', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const b = req.body;
   const u = req.session.user;
+  const formErr = taskFormError(b);
+  if (formErr) return res.redirect(`/tasks?err=${encodeURIComponent(formErr)}`);
   const w = caseWhere(u);
   // A task's agent always follows the case it's attached to — never a
   // separate manual pick, so it can never point at the wrong agent. Only
@@ -47,18 +63,20 @@ router.post('/new', requireLogin, requireRole('admin','manager','agent'), (req, 
     caseAgentId = caseRow.agent_id;
   }
   const agentId = b.case_id ? caseAgentId : (u.role === 'agent' ? u.agent_id : (b.agent_id || null));
-  run('INSERT INTO tasks (case_id,agent_id,type,title,due_date,notes) VALUES (?,?,?,?,?,?)',
-    [b.case_id||null, agentId, b.type||'follow_up', b.title, b.due_date||null, b.notes||null]);
+  if (!b.case_id && agentId && !get('SELECT 1 FROM agents WHERE id=?', [agentId])) return res.redirect('/tasks?err=Agent+not+found');
+  const title = String(b.title).trim();
+  const r = run('INSERT INTO tasks (case_id,agent_id,type,title,due_date,notes) VALUES (?,?,?,?,?,?)',
+    [b.case_id||null, agentId, b.type||'follow_up', title, b.due_date||null, b.notes||null]);
+  logAction(req, 'task_create', 'task', r.lastInsertRowid, `Created task "${title}"${b.case_id ? ` on case ${b.case_id}` : ''}`);
   res.redirect('/tasks?ok=Task+created');
 });
 router.post('/:id/complete', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const u = req.session.user;
-  if (u.role === 'agent') {
-    const task = get('SELECT * FROM tasks WHERE id=?', [req.params.id]);
-    if (!task) return res.redirect('/tasks?err=Not+found');
-    if (task.agent_id !== u.agent_id) return res.redirect('/tasks?err=Forbidden');
-  }
-  run("UPDATE tasks SET status='done' WHERE id=?", [req.params.id]);
+  const task = get('SELECT * FROM tasks WHERE id=?', [req.params.id]);
+  if (!task) return res.redirect('/tasks?err=Not+found');
+  if (u.role === 'agent' && task.agent_id !== u.agent_id) return res.redirect('/tasks?err=Forbidden');
+  run("UPDATE tasks SET status='done' WHERE id=?", [task.id]);
+  logAction(req, 'task_complete', 'task', task.id, `Completed task "${task.title}"`);
   res.redirect('/tasks?ok=Task+completed');
 });
 router.post('/:id', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
@@ -67,8 +85,13 @@ router.post('/:id', requireLogin, requireRole('admin','manager','agent'), (req, 
   if (!task) return res.redirect('/tasks?err=Not+found');
   if (u.role === 'agent' && task.agent_id !== u.agent_id) return res.redirect('/tasks?err=Forbidden');
   const b = req.body;
-  run('UPDATE tasks SET title=?, type=?, due_date=?, notes=? WHERE id=?',
-    [b.title || '', b.type || 'follow_up', b.due_date || null, b.notes || null, req.params.id]);
+  const formErr = taskFormError(b);
+  if (formErr) return res.redirect(`/tasks?err=${encodeURIComponent(formErr)}`);
+  const next = { title: String(b.title).trim(), type: b.type || 'follow_up', due_date: b.due_date || null, notes: b.notes || null };
+  run('UPDATE tasks SET title=?, type=?, due_date=?, notes=? WHERE id=?', [next.title, next.type, next.due_date, next.notes, task.id]);
+  const changes = Object.keys(next).filter(k => String(task[k] ?? '') !== String(next[k] ?? ''))
+    .map(k => `${k}: ${task[k] ?? '—'} → ${next[k] ?? '—'}`);
+  logAction(req, 'task_update', 'task', task.id, `Updated task ${task.id}${changes.length ? ': ' + changes.join('; ') : ''}`);
   res.redirect('/tasks?ok=Task+updated');
 });
 module.exports = router;

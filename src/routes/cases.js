@@ -13,8 +13,29 @@ const { restructuresOf, lockDate, canRestructure, effectiveDateRange, balanceAtC
 const crypto = require('node:crypto');
 const router = express.Router();
 
+const { validatePayment, isISODate, parseMoney, methodError } = require('../utils/forms');
+
 const CASE_STATUSES = ['new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased'];
 const PRIORITIES = ['low','medium','high','urgent'];
+const CALL_RESULTS = ['answered','no_answer','busy','wrong_number','refused'];
+const blank = v => v === undefined || v === null || String(v).trim() === '';
+
+// Server-side check of the New/Edit Case form (the browser's min/required are
+// bypassable). Returns an error message, or null when the form is acceptable.
+function caseFormError(b) {
+  if (!get('SELECT 1 FROM debtors WHERE id=?', [b.debtor_id])) return 'Debtor not found';
+  if (!blank(b.agent_id) && !get('SELECT 1 FROM agents WHERE id=?', [b.agent_id])) return 'Agent not found';
+  const principal = parseMoney(b.principal_amount);
+  if (!(principal > 0) || principal > 1e12) return 'Invalid principal';
+  if (!blank(b.interest_amount) && !(parseMoney(b.interest_amount) >= 0)) return 'Invalid interest amount';
+  if (!blank(b.interest_rate) && !/^\d+(\.\d+)?$/.test(String(b.interest_rate).trim())) return 'Invalid interest rate';
+  if (!blank(b.loan_start_date) && !isISODate(b.loan_start_date)) return 'Invalid loan start date';
+  const tenure = Number(b.tenure);
+  if (!blank(b.tenure) && !(Number.isInteger(tenure) && tenure >= 1 && tenure <= 120)) return 'Tenure must be 1–120 months';
+  if (!blank(b.priority) && !PRIORITIES.includes(b.priority)) return 'Invalid priority';
+  if (!blank(b.status) && !CASE_STATUSES.includes(b.status)) return 'Invalid status';
+  return null;
+}
 const noAgentCreate = requireRole('admin','manager'); // who can create/edit cases
 
 // shared loader with scope enforcement
@@ -96,6 +117,8 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
   if (!b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
     return res.redirect('/cases/new?err=Debtor+and+principal+are+required');
   }
+  const formErr = caseFormError(b);
+  if (formErr) return res.redirect(`/cases/new?err=${encodeURIComponent(formErr)}`);
   const principal = Number(b.principal_amount)||0;
   const { mode, rate, from } = interestFields(b);
   // Accrual modes start with ~0 interest; the manual interest field only applies to fixed.
@@ -105,6 +128,9 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
   const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,interest_charged,outstanding_amount,priority,status,remark,interest_mode,interest_rate,interest_from,loan_start_date,tenure,tenure_unit,maturity_date)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
     [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, mode, rate, from, loanStart, tenure, tenureUnit, maturity]);
+  // Accrual interest is derived; compute it now so lists and the dashboard
+  // don't show the bare principal until someone opens the case.
+  recomputeOutstanding(r.lastInsertRowid);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)', [r.lastInsertRowid,'note',`Case ${case_no} created`,req.session.user.full_name]);
   logAction(req,'create','case',r.lastInsertRowid,`Created case ${case_no}`);
   res.redirect(`/cases/${r.lastInsertRowid}?ok=Case+created`);
@@ -122,30 +148,38 @@ router.get('/:id/statement', requireLogin, (req, res) => {
   const paid = payments.reduce((s, p) => s + p.amount, 0);
   const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
   const company = get('SELECT * FROM settings WHERE id=1') || {};
-  res.render('cases/statement', { c, payments, paid, today, company });
+  res.render('cases/statement', { c, payments, paid, today, company, restructures: restructuresOf(c.id) });
 });
 router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
   if (!b.debtor_id || b.principal_amount === undefined || b.principal_amount === '') {
     return res.redirect('/cases/'+req.params.id+'/edit?err=Debtor+and+principal+are+required');
   }
+  const old = get('SELECT * FROM cases WHERE id=?', [req.params.id]);
+  if (!old) return res.redirect('/cases?err=Case+not+found');
+  const formErr = caseFormError(b);
+  if (formErr) return res.redirect(`/cases/${old.id}/edit?err=${encodeURIComponent(formErr)}`);
   const principal = Number(b.principal_amount)||0;
   const { mode, rate, from } = interestFields(b);
   const interest = mode === 'fixed' ? (Number(b.interest_amount)||0) : 0;
   const { start: loanStart, tenure, unit: tenureUnit, maturity } = tenureFields(b);
   const t = lockedTerms(req.params.id, { principal_amount: principal, interest_amount: interest, interest_mode: mode,
     interest_rate: rate, interest_from: from, loan_start_date: loanStart, tenure, tenure_unit: tenureUnit, maturity_date: maturity });
+  const next = { debtor_id: Number(b.debtor_id), agent_id: b.agent_id ? Number(b.agent_id) : null, priority: b.priority || 'medium', remark: b.remark || null, ...t };
   run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,interest_mode=?,interest_rate=?,interest_from=?,loan_start_date=?,tenure=?,tenure_unit=?,maturity_date=?,updated_at=datetime('now') WHERE id=?`,
-    [b.debtor_id,b.agent_id||null,t.principal_amount,t.interest_amount,b.priority||'medium',b.remark||null,t.interest_mode,t.interest_rate,t.interest_from,t.loan_start_date,t.tenure,t.tenure_unit,t.maturity_date,req.params.id]);
+    [next.debtor_id,next.agent_id,t.principal_amount,t.interest_amount,next.priority,next.remark,t.interest_mode,t.interest_rate,t.interest_from,t.loan_start_date,t.tenure,t.tenure_unit,t.maturity_date,req.params.id]);
   const cid = Number(req.params.id);
   resyncCaseStatus(cid, req.session.user.full_name);
-  logAction(req,'update','case',cid,`Updated case ${cid}`);
+  // Audit what actually changed, old → new, so a corrected term leaves a trace.
+  const changes = Object.keys(next).filter(k => String(old[k] ?? '') !== String(next[k] ?? ''))
+    .map(k => `${k}: ${old[k] ?? '—'} → ${next[k] ?? '—'}`);
+  logAction(req,'update','case',cid,`Updated case ${old.case_no}${changes.length ? ': ' + changes.join('; ') : ' (no field changes)'}`);
   res.redirect(`/cases/${cid}?ok=Saved`);
 });
 
 router.get('/:id', requireLogin, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
-  const timeline = all('SELECT * FROM timeline_events WHERE case_id=? ORDER BY created_at DESC', [c.id]);
+  const timeline = all('SELECT * FROM timeline_events WHERE case_id=? ORDER BY created_at DESC, id DESC', [c.id]);
   const payments = all('SELECT * FROM payments WHERE case_id=? ORDER BY payment_date DESC', [c.id]);
   const ptps = all('SELECT * FROM ptps WHERE case_id=? ORDER BY (plan_id IS NULL), plan_id, installment_no, due_date DESC', [c.id]);
   const tasks = all('SELECT * FROM tasks WHERE case_id=? ORDER BY due_date', [c.id]);
@@ -165,12 +199,11 @@ router.get('/:id', requireLogin, (req, res) => {
 });
 
 const { applyPayment } = require('../services/payments');
-const { validatePayment } = require('../utils/forms');
 router.post('/:id/payments', requireLogin, requireRole('admin','manager','finance','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const v = validatePayment(req.body.amount, c.outstanding_amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
-  const dateErr = paymentDateError(c.id, req.body.payment_date);
+  const dateErr = paymentDateError(c.id, req.body.payment_date) || methodError(req.body.method);
   if (dateErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(dateErr)}`);
   const r = applyPayment(c.id, { ...req.body, amount: v.amount }, req);
   res.redirect(`/cases/${c.id}?ok=Payment+${r.receipt_no}+recorded`);
@@ -182,24 +215,33 @@ router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','f
   const c = loadCase(req, res); if (!c) return;
   const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
   if (!pay) return res.redirect(`/cases/${c.id}?err=Payment+not+found`);
-  const lockErr = lockedPaymentError(c.id, pay) || paymentDateError(c.id, req.body.payment_date || String(pay.payment_date).slice(0, 10));
+  const lockErr = lockedPaymentError(c.id, pay) || paymentDateError(c.id, req.body.payment_date || String(pay.payment_date).slice(0, 10))
+    || methodError(req.body.method);
   if (lockErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(lockErr)}`);
   const v = validatePayment(req.body.amount, c.outstanding_amount + pay.amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
   const by = req.session.user.full_name;
+  const next = { amount: v.amount, payment_date: req.body.payment_date || pay.payment_date, method: req.body.method || pay.method,
+    reference: req.body.reference || null, bank: req.body.bank || null };
   db.transaction(() => {
     run('UPDATE payments SET amount=?, payment_date=?, method=?, reference=?, bank=? WHERE id=?',
-      [v.amount, req.body.payment_date || pay.payment_date, req.body.method || pay.method, req.body.reference || null, req.body.bank || null, pay.id]);
+      [next.amount, next.payment_date, next.method, next.reference, next.bank, pay.id]);
     resyncCaseStatus(c.id, by);
     run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
       [c.id, 'payment', `Payment ${pay.receipt_no} edited: RM ${pay.amount.toFixed(2)} → RM ${v.amount.toFixed(2)}`, by]);
   })();
-  logAction(req, 'payment_edit', 'case', c.id, `Edited payment ${pay.receipt_no}`);
+  // ponytail: the row is overwritten in place; the old values survive only here
+  // in the audit log. An append-only ledger (correction rows) is F-24's full fix.
+  const fmt = (k, x) => (x == null ? '—' : k === 'amount' ? Number(x).toFixed(2) : x);
+  const changes = Object.keys(next).filter(k => String(pay[k] ?? '') !== String(next[k] ?? ''))
+    .map(k => `${k} ${fmt(k, pay[k])} → ${fmt(k, next[k])}`);
+  logAction(req, 'payment_edit', 'case', c.id, `Edited payment ${pay.receipt_no}${changes.length ? ': ' + changes.join('; ') : ''}`);
   res.redirect(`/cases/${c.id}?ok=Payment+updated`);
 });
 
-// Void (delete) a recorded payment. MAX+1 numbering (#8) means the freed receipt
-// number is never wrongly reused. The timeline + audit keep the paper trail.
+// Void (delete) a recorded payment. numbering.js keeps a high-water mark per
+// year, so the freed receipt number is never reused — not even the newest one.
+// The timeline + audit keep the paper trail.
 // ponytail: hard delete; add a `voided` flag only if an immutable ledger is required.
 router.post('/:id/payments/:pid/void', requireLogin, requireRole('admin','manager','finance'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
@@ -222,6 +264,13 @@ router.post('/:id/ptps', requireLogin, requireRole('admin','manager','agent'), (
   const c = loadCase(req, res); if (!c) return;
   const v = validatePayment(req.body.amount, c.outstanding_amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
+  if (!isISODate(req.body.due_date)) return res.redirect(`/cases/${c.id}?err=Invalid+due+date`);
+  // ponytail: a double click / resubmit lands twice within seconds — treat an
+  // identical pending PTP from the last 10s as the same request.
+  if (get(`SELECT 1 FROM ptps WHERE case_id=? AND plan_id IS NULL AND amount=? AND due_date=? AND status='pending'
+      AND created_at >= datetime('now','-10 seconds')`, [c.id, v.amount, req.body.due_date])) {
+    return res.redirect(`/cases/${c.id}?ok=PTP+created`);
+  }
   const by = req.session.user.full_name;
   run('INSERT INTO ptps (case_id,amount,due_date,remark,created_by) VALUES (?,?,?,?,?)', [c.id, v.amount, req.body.due_date, req.body.remark||null, by]);
   if (!TERMINAL_STATUSES.includes(c.status)) run("UPDATE cases SET status='ptp' WHERE id=?", [c.id]);
@@ -241,9 +290,15 @@ function createPtpPlan(caseId, body, req) {
   const n = Number(body.num_installments);
   if (!Number.isInteger(n) || n < 2 || n > 60) return { ok: false, error: 'Installments must be 2–60' };
   if (!body.first_due_date) return { ok: false, error: 'First due date is required' };
+  if (!isISODate(body.first_due_date)) return { ok: false, error: 'Invalid first due date' };
   if (v.amount < n * 0.01) return { ok: false, error: 'Total too small for the number of installments' };
   const amounts = splitInstallments(v.amount, n);
   const dates = dueDates(body.first_due_date, n);
+  // Same double-submit guard as a single PTP: an identical plan from the last 10s.
+  if (get(`SELECT 1 FROM ptps WHERE case_id=? AND installment_no=1 AND plan_size=? AND amount=? AND due_date=?
+      AND created_at >= datetime('now','-10 seconds')`, [caseId, n, amounts[0], dates[0]])) {
+    return { ok: true, duplicate: true };
+  }
   const planId = crypto.randomUUID();
   const by = req.session.user.full_name;
   db.transaction(() => {
@@ -300,7 +355,9 @@ router.post('/:id/ptp-plans/:planId/cancel', requireLogin, requireRole('admin', 
 router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const by = req.session.user.full_name;
-  const dur = Number(req.body.duration_seconds)||0;
+  const dur = blank(req.body.duration_seconds) ? 0 : Number(req.body.duration_seconds);
+  if (!Number.isInteger(dur) || dur < 0) return res.redirect(`/cases/${c.id}?err=Invalid+duration`);
+  if (req.body.result && !CALL_RESULTS.includes(req.body.result)) return res.redirect(`/cases/${c.id}?err=Invalid+call+result`);
   run('INSERT INTO call_logs (case_id,agent_id,duration_seconds,result,notes) VALUES (?,?,?,?,?)',
     [c.id, req.session.user.agent_id||c.agent_id||null, dur, req.body.result||'no_answer', req.body.notes||null]);
   run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
@@ -309,21 +366,34 @@ router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), 
   res.redirect(`/cases/${c.id}?ok=Call+logged`);
 });
 
+// Notes: the audit log keeps the text, so an edited or deleted note leaves a trace.
+const MAX_NOTE = 5000;
+const noteText = b => String(b.content ?? '').trim();
+const findNote = (c, id) => get("SELECT * FROM timeline_events WHERE id=? AND case_id=? AND event_type='note'", [id, c.id]);
 router.post('/:id/notes', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
-  run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'note',req.body.content||'',req.session.user.full_name]);
+  const content = noteText(req.body);
+  if (!content || content.length > MAX_NOTE) return res.redirect(`/cases/${c.id}?err=Note+must+be+1–${MAX_NOTE}+characters`);
+  const r = run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'note',content,req.session.user.full_name]);
+  logAction(req, 'note_add', 'case', c.id, `Note ${r.lastInsertRowid}: ${content}`);
   res.redirect(`/cases/${c.id}?ok=Note+added`);
 });
 router.post('/:id/notes/:noteId', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
-  run("UPDATE timeline_events SET content=? WHERE id=? AND case_id=? AND event_type='note'",
-    [req.body.content || '', req.params.noteId, c.id]);
+  const note = findNote(c, req.params.noteId);
+  if (!note) return res.redirect(`/cases/${c.id}?err=Note+not+found`);
+  const content = noteText(req.body);
+  if (!content || content.length > MAX_NOTE) return res.redirect(`/cases/${c.id}?err=Note+must+be+1–${MAX_NOTE}+characters`);
+  run('UPDATE timeline_events SET content=? WHERE id=?', [content, note.id]);
+  logAction(req, 'note_edit', 'case', c.id, `Note ${note.id}: ${note.content} → ${content}`);
   res.redirect(`/cases/${c.id}?ok=Note+updated`);
 });
 router.post('/:id/notes/:noteId/delete', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
-  run("DELETE FROM timeline_events WHERE id=? AND case_id=? AND event_type='note'",
-    [req.params.noteId, c.id]);
+  const note = findNote(c, req.params.noteId);
+  if (!note) return res.redirect(`/cases/${c.id}?err=Note+not+found`);
+  run('DELETE FROM timeline_events WHERE id=?', [note.id]);
+  logAction(req, 'note_delete', 'case', c.id, `Deleted note ${note.id} (by ${note.created_by || '—'}): ${note.content}`);
   res.redirect(`/cases/${c.id}?ok=Note+deleted`);
 });
 router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'), (req, res) => {

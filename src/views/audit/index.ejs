@@ -10,8 +10,20 @@
       <% }) %>
     </select>
   </label>
+  <label>Entity
+    <select name="entity">
+      <option value="">All entities</option>
+      <% entities.forEach(e => { %>
+      <option value="<%= e.entity_type %>" <%= query.entity===e.entity_type?'selected':'' %>><%= e.entity_type %></option>
+      <% }) %>
+    </select>
+  </label>
+  <label>From <input type="date" name="from" value="<%= query.from||'' %>"></label>
+  <label>To <input type="date" name="to" value="<%= query.to||'' %>"></label>
   <button class="btn btn-gold" type="submit">Apply</button>
+  <a class="btn" href="/audit-log?<%= new URLSearchParams({ action: query.action||'', entity: query.entity||'', from: query.from||'', to: query.to||'', format: 'csv' }) %>">Export CSV</a>
 </form>
+<p class="hint">Showing the latest 200 matching entries. Narrow by date, or export CSV for the full list.</p>
 
 <% if (logs.length===0) { %>
 <%- include('../partials/empty', { msg: 'No audit entries.' }) %>

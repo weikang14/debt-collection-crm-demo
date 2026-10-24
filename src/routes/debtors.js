@@ -4,6 +4,7 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { reachableDebtorIds, caseWhere } = require('../utils/scope');
 const { debtorFilter } = require('../utils/debtorFilter');
+const { MAX_NAME } = require('../utils/forms');
 const router = express.Router();
 
 const canView = requireRole('admin','manager','agent','finance','auditor');
@@ -11,6 +12,17 @@ const canEdit = requireRole('admin','manager','agent');
 
 // Optional text -> trimmed string or null (never undefined, which SQLite rejects).
 const S = (v) => { const s = (v == null ? '' : String(v)).trim(); return s === '' ? null : s; };
+
+const RISKS = ['low', 'medium', 'high'];
+// Shared by create and edit: an error message, or null when the form is acceptable.
+function debtorFormError(b) {
+  const name = S(b.name);
+  if (!name) return 'Name is required';
+  if (name.length > MAX_NAME) return `Name must be at most ${MAX_NAME} characters`;
+  if (S(b.salary) !== null && !(Number(b.salary) >= 0 && Number.isFinite(Number(b.salary)))) return 'Invalid salary';
+  if (b.risk_level && !RISKS.includes(b.risk_level)) return 'Invalid risk level';
+  return null;
+}
 
 router.get('/', requireLogin, canView, (req, res) => {
   const ids = reachableDebtorIds(req.session.user); // null = unrestricted
@@ -22,7 +34,8 @@ router.get('/new', requireLogin, canEdit, (req, res) => res.render('debtors/form
 router.post('/', requireLogin, canEdit, (req, res) => {
   const b = req.body;
   const name = S(b.name);
-  if (!name) return res.redirect('/debtors/new?err=Name+is+required');
+  const formErr = debtorFormError(b);
+  if (formErr) return res.redirect(`/debtors/new?err=${encodeURIComponent(formErr)}`);
   const r = run(`INSERT INTO debtors (name,ic_passport,company,phone,email,address,employer,salary,risk_level,guarantor_name,guarantor_phone,remark)
                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
     [name,S(b.ic_passport),S(b.company),S(b.phone),S(b.email),S(b.address),S(b.employer),Number(b.salary)||null,b.risk_level||'medium',S(b.guarantor_name),S(b.guarantor_phone),S(b.remark)]);
@@ -50,7 +63,8 @@ router.post('/:id', requireLogin, canEdit, (req, res) => {
   if (ids !== null && !ids.includes(Number(req.params.id))) return res.status(403).render('error', { message: 'Forbidden' });
   const b = req.body;
   const name = S(b.name);
-  if (!name) return res.redirect(`/debtors/${req.params.id}/edit?err=Name+is+required`);
+  const formErr = debtorFormError(b);
+  if (formErr) return res.redirect(`/debtors/${req.params.id}/edit?err=${encodeURIComponent(formErr)}`);
   run(`UPDATE debtors SET name=?,ic_passport=?,company=?,phone=?,email=?,address=?,employer=?,salary=?,risk_level=?,guarantor_name=?,guarantor_phone=?,remark=? WHERE id=?`,
     [name,S(b.ic_passport),S(b.company),S(b.phone),S(b.email),S(b.address),S(b.employer),Number(b.salary)||null,b.risk_level||'medium',S(b.guarantor_name),S(b.guarantor_phone),S(b.remark),req.params.id]);
   logAction(req,'update','debtor',Number(req.params.id),`Updated debtor ${name}`);

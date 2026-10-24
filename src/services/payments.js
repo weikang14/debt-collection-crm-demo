@@ -1,7 +1,7 @@
 const { db, get, all, run } = require('../db');
 const { nextReceiptNo } = require('../utils/numbering');
 const { logAction } = require('../utils/audit');
-const { round2 } = require('../utils/helpers');
+const { round2, todayMYT } = require('../utils/helpers');
 
 const TERMINAL_STATUSES = ['legal', 'closed', 'cancelled', 'bankruptcy', 'deceased'];
 
@@ -112,6 +112,18 @@ function recomputeOutstanding(caseId) {
   run("UPDATE cases SET outstanding_amount=?, interest_charged=?, updated_at=datetime('now') WHERE id=?", [b.outstanding, b.interest, caseId]);
   return b.outstanding;
 }
+// Accrual balances without a maturity grow every day, but lists, the dashboard
+// and reports read the cached outstanding_amount. Refresh every accrual case
+// once per Malaysia day (balances step by whole days, so once is enough).
+// ponytail: per-process memo on each request; a nightly job if case counts grow large.
+let refreshedOn = null;
+function refreshStaleAccruals() {
+  const today = todayMYT();
+  if (refreshedOn === today) return;
+  refreshedOn = today;
+  for (const { id } of all("SELECT id FROM cases WHERE interest_mode IN ('monthly','daily')")) recomputeOutstanding(id);
+}
+
 // The 4 DB writes of a payment, WITHOUT a transaction wrapper or audit log, so a
 // caller (recordFulfillment) can run them inside its own larger transaction —
 // node:sqlite has no nested transactions/savepoints. Returns the receipt_no so
@@ -153,4 +165,4 @@ function resyncCaseStatus(caseId, by) {
   }
   return outstanding;
 }
-module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, caseBalance, applyPayment, paymentWrites, resyncCaseStatus, dailyRate, daysBetween };
+module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, refreshStaleAccruals, caseBalance, applyPayment, paymentWrites, resyncCaseStatus, dailyRate, daysBetween };

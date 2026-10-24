@@ -1,5 +1,16 @@
+const { get } = require('../db');
+
+// The session holds a login-time snapshot; re-read the account on every request
+// so a deactivation or role change takes effect at once, not at next login.
 function attachUser(req, res, next) {
-  res.locals.currentUser = req.session.user || null;
+  const s = req.session && req.session.user;
+  if (s) {
+    const u = get('SELECT id, username, full_name, role, agent_id, client_id, active FROM users WHERE id = ?', [s.id]);
+    req.session.user = u && u.active
+      ? { id: u.id, username: u.username, full_name: u.full_name, role: u.role, agent_id: u.agent_id, client_id: u.client_id }
+      : null;
+  }
+  res.locals.currentUser = (req.session && req.session.user) || null;
   next();
 }
 function requireLogin(req, res, next) {

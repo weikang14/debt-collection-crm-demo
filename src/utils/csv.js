@@ -1,6 +1,9 @@
 // Tiny CSV helper. No dependency — quote only when needed, escape quotes.
 function csvCell(v) {
-  const s = v == null ? '' : String(v);
+  let s = v == null ? '' : String(v);
+  // A text cell starting with = + - @ (or tab/CR) runs as a formula in Excel;
+  // prefix a quote. Numbers stay numbers, so a negative amount is untouched.
+  if (typeof v === 'string' && /^[=+\-@\t\r]/.test(s)) s = "'" + s;
   return /[",\n\r]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
 }
 function toCsv(headers, rows) {

@@ -1,14 +1,16 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const { get } = require('../db');
+const { get, run } = require('../db');
 const { logAction } = require('../utils/audit');
 const { VERSION } = require('../version');
 const router = express.Router();
 
 // A bcrypt hash of a random string, compared against when the username is
 // unknown so a missing user costs the same time as a wrong password → no
-// username enumeration via response timing.
-const DUMMY_HASH = bcrypt.hashSync('no-such-user', 10);
+// username enumeration via response timing. Real hashes use the same cost
+// (users.js, seed.js); older, cheaper ones are upgraded at login below.
+const { HASH_COST } = require('../utils/forms');
+const DUMMY_HASH = bcrypt.hashSync('no-such-user', HASH_COST);
 
 // Per-IP login throttle. In-memory: resets on restart, per-process — fine for a
 // single-process node:sqlite app.
@@ -44,6 +46,9 @@ router.post('/login', (req, res) => {
     return res.status(401).render('auth/login', { error: 'Invalid username or password', version: VERSION });
   }
   attempts.delete(req.ip);
+  if (bcrypt.getRounds(u.password_hash) < HASH_COST) {
+    run('UPDATE users SET password_hash=? WHERE id=?', [bcrypt.hashSync(password, HASH_COST), u.id]);
+  }
   req.session.user = { id: u.id, username: u.username, full_name: u.full_name, role: u.role, agent_id: u.agent_id, client_id: u.client_id };
   logAction(req, 'login', 'user', u.id, `User ${u.username} logged in`);
   res.redirect('/');

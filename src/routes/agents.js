@@ -2,13 +2,31 @@ const express = require('express');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
-const { parseActive } = require('../utils/forms');
+const { parseActive, MAX_NAME } = require('../utils/forms');
 const router = express.Router();
 const canView = requireRole('admin','manager','auditor');
 const canEdit = requireRole('admin','manager');
 
 // Optional text -> trimmed string or null (never undefined, which SQLite rejects).
 const S = (v) => { const s = (v == null ? '' : String(v)).trim(); return s === '' ? null : s; };
+
+// Form numbers: blank → the default; otherwise a finite number in range, else
+// null (invalid). `Number(x) || 5` used to turn a deliberate 0% into 5%.
+function num(v, dflt, max) {
+  if (S(v) === null) return dflt;
+  const n = Number(v);
+  return Number.isFinite(n) && n >= 0 && n <= max ? n : null;
+}
+function agentFields(b) {
+  const name = S(b.name);
+  if (!name) return { error: 'Name is required' };
+  if (name.length > MAX_NAME) return { error: `Name must be at most ${MAX_NAME} characters` };
+  const commission_rate = num(b.commission_rate, 5, 100);
+  if (commission_rate === null) return { error: 'Commission rate must be 0–100' };
+  const target_amount = num(b.target_amount, 0, 1e12);
+  if (target_amount === null) return { error: 'Invalid target amount' };
+  return { name, commission_rate, target_amount };
+}
 
 const STAT = `SELECT a.*,
   (SELECT COUNT(*) FROM cases WHERE agent_id=a.id) AS case_count,
@@ -28,10 +46,11 @@ router.get('/', requireLogin, canView, (req, res) => {
 router.get('/new', requireLogin, canEdit, (req, res) => res.render('agents/form', { title: 'New Agent', agent: {}, action: '/agents' }));
 router.post('/', requireLogin, canEdit, (req, res) => {
   const b = req.body;
-  const name = S(b.name);
-  if (!name) return res.redirect('/agents/new?err=Name+is+required');
+  const f = agentFields(b);
+  if (f.error) return res.redirect(`/agents/new?err=${encodeURIComponent(f.error)}`);
+  const { name } = f;
   const r = run('INSERT INTO agents (name,contact,department,target_amount,commission_rate,active) VALUES (?,?,?,?,?,?)',
-    [name,S(b.contact),S(b.department),Number(b.target_amount)||0,Number(b.commission_rate)||5, parseActive(b.active)]);
+    [name,S(b.contact),S(b.department),f.target_amount,f.commission_rate, parseActive(b.active)]);
   logAction(req,'create','agent',r.lastInsertRowid,`Created agent ${name}`);
   res.redirect('/agents?ok=Agent+created');
 });
@@ -49,10 +68,11 @@ router.get('/:id/edit', requireLogin, canEdit, (req, res) => {
 });
 router.post('/:id', requireLogin, canEdit, (req, res) => {
   const b = req.body;
-  const name = S(b.name);
-  if (!name) return res.redirect(`/agents/${req.params.id}/edit?err=Name+is+required`);
+  const f = agentFields(b);
+  if (f.error) return res.redirect(`/agents/${req.params.id}/edit?err=${encodeURIComponent(f.error)}`);
+  const { name } = f;
   run('UPDATE agents SET name=?,contact=?,department=?,target_amount=?,commission_rate=?,active=? WHERE id=?',
-    [name,S(b.contact),S(b.department),Number(b.target_amount)||0,Number(b.commission_rate)||5, parseActive(b.active), req.params.id]);
+    [name,S(b.contact),S(b.department),f.target_amount,f.commission_rate, parseActive(b.active), req.params.id]);
   logAction(req,'update','agent',Number(req.params.id),`Updated agent ${name}`);
   res.redirect(`/agents/${req.params.id}?ok=Saved`);
 });
