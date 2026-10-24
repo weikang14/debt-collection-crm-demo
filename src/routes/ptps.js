@@ -5,6 +5,7 @@ const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { paymentWrites } = require('../services/payments');
 const { validatePayment } = require('../utils/forms');
+const { paymentDateError } = require('../services/restructure');
 const router = express.Router();
 
 // Fulfilling a PTP means the promised money was actually paid, so we record a
@@ -19,6 +20,8 @@ function recordFulfillment(ptpId, body, req) {
   const v = validatePayment(rawAmount, cs.outstanding_amount);
   if (v.error) return { ok: false, error: v.error };
   const payment_date = body.payment_date || new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+  const dateErr = paymentDateError(ptp.case_id, payment_date);
+  if (dateErr) return { ok: false, error: dateErr };
   const method = body.method || 'bank_transfer';
   const by = req.session.user.full_name;
   // One transaction covers the PTP flip + payment writes + timeline, so a

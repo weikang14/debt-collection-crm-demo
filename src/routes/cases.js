@@ -6,9 +6,10 @@ const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
 const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
-const { caseStatusLabel, dateFmt, round2 } = require('../utils/helpers');
+const { caseStatusLabel, dateFmt, round2, todayMYT } = require('../utils/helpers');
 const { splitInstallments, dueDates, maturityDate } = require('../utils/installments');
-const { repaymentSchedule } = require('../utils/schedule');
+const { restructuresOf, lockDate, canRestructure, effectiveDateRange, balanceAtCut, createRestructure, undoRestructure,
+  paymentDateError, lockedPaymentError, lockedTerms, scheduleView } = require('../services/restructure');
 const crypto = require('node:crypto');
 const router = express.Router();
 
@@ -113,7 +114,7 @@ router.get('/:id/edit', requireLogin, noAgentCreate, (req, res) => {
   res.render('cases/form', { title: 'Edit Case', c, action: `/cases/${c.id}`,
     debtors: all('SELECT id,name FROM debtors ORDER BY name'),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
-    statuses: CASE_STATUSES, priorities: PRIORITIES });
+    statuses: CASE_STATUSES, priorities: PRIORITIES, termsLocked: !!lockDate(c.id) });
 });
 router.get('/:id/statement', requireLogin, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
@@ -132,8 +133,10 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const { mode, rate, from } = interestFields(b);
   const interest = mode === 'fixed' ? (Number(b.interest_amount)||0) : 0;
   const { start: loanStart, tenure, unit: tenureUnit, maturity } = tenureFields(b);
+  const t = lockedTerms(req.params.id, { principal_amount: principal, interest_amount: interest, interest_mode: mode,
+    interest_rate: rate, interest_from: from, loan_start_date: loanStart, tenure, tenure_unit: tenureUnit, maturity_date: maturity });
   run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,interest_mode=?,interest_rate=?,interest_from=?,loan_start_date=?,tenure=?,tenure_unit=?,maturity_date=?,updated_at=datetime('now') WHERE id=?`,
-    [b.debtor_id,b.agent_id||null,principal,interest,b.priority||'medium',b.remark||null,mode,rate,from,loanStart,tenure,tenureUnit,maturity,req.params.id]);
+    [b.debtor_id,b.agent_id||null,t.principal_amount,t.interest_amount,b.priority||'medium',b.remark||null,t.interest_mode,t.interest_rate,t.interest_from,t.loan_start_date,t.tenure,t.tenure_unit,t.maturity_date,req.params.id]);
   const cid = Number(req.params.id);
   resyncCaseStatus(cid, req.session.user.full_name);
   logAction(req,'update','case',cid,`Updated case ${cid}`);
@@ -147,8 +150,16 @@ router.get('/:id', requireLogin, (req, res) => {
   const ptps = all('SELECT * FROM ptps WHERE case_id=? ORDER BY (plan_id IS NULL), plan_id, installment_no, due_date DESC', [c.id]);
   const tasks = all('SELECT * FROM tasks WHERE case_id=? ORDER BY due_date', [c.id]);
   const calls = all('SELECT * FROM call_logs WHERE case_id=? ORDER BY call_time DESC', [c.id]);
-  const schedule = repaymentSchedule(c, payments);
+  const restructures = restructuresOf(c.id);
+  const { current: schedule, history: scheduleHistory } = scheduleView(c, payments, restructures);
+  const lastRestructure = restructures[restructures.length - 1] || null;
+  const asc = payments.slice().sort((a, b) => a.payment_date.localeCompare(b.payment_date));
+  const restructureForm = canRestructure(c)
+    ? { range: effectiveDateRange(c, asc, restructures), cut: balanceAtCut(c, asc, restructures, todayMYT()) }
+    : null;
+  const canUndo = !!lastRestructure && !payments.some(p => p.payment_date >= lastRestructure.effective_date);
   res.render('cases/show', { title: c.case_no, c, timeline, payments, ptps, tasks, calls, schedule,
+    scheduleHistory, lastRestructure, lock: lastRestructure ? lastRestructure.effective_date : null, restructureForm, canUndo,
     statuses: CASE_STATUSES, terminal: TERMINAL_STATUSES,
     readOnly: ['auditor','client'].includes(req.session.user.role) });
 });
@@ -159,6 +170,8 @@ router.post('/:id/payments', requireLogin, requireRole('admin','manager','financ
   const c = loadCase(req, res); if (!c) return;
   const v = validatePayment(req.body.amount, c.outstanding_amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
+  const dateErr = paymentDateError(c.id, req.body.payment_date);
+  if (dateErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(dateErr)}`);
   const r = applyPayment(c.id, { ...req.body, amount: v.amount }, req);
   res.redirect(`/cases/${c.id}?ok=Payment+${r.receipt_no}+recorded`);
 });
@@ -169,6 +182,8 @@ router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','f
   const c = loadCase(req, res); if (!c) return;
   const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
   if (!pay) return res.redirect(`/cases/${c.id}?err=Payment+not+found`);
+  const lockErr = lockedPaymentError(c.id, pay) || paymentDateError(c.id, req.body.payment_date || pay.payment_date);
+  if (lockErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(lockErr)}`);
   const v = validatePayment(req.body.amount, c.outstanding_amount + pay.amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
   const by = req.session.user.full_name;
@@ -190,6 +205,8 @@ router.post('/:id/payments/:pid/void', requireLogin, requireRole('admin','manage
   const c = loadCase(req, res); if (!c) return;
   const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
   if (!pay) return res.redirect(`/cases/${c.id}?err=Payment+not+found`);
+  const lockErr = lockedPaymentError(c.id, pay);
+  if (lockErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(lockErr)}`);
   const by = req.session.user.full_name;
   db.transaction(() => {
     run('DELETE FROM payments WHERE id=?', [pay.id]);
@@ -317,6 +334,19 @@ router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'),
   run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'status_change',`Status changed ${c.status} → ${ns}`,req.session.user.full_name]);
   logAction(req,'status_change','case',c.id,`Status ${c.status} → ${ns}`);
   res.redirect(`/cases/${c.id}?ok=Status+updated`);
+});
+
+router.post('/:id/restructures', requireLogin, requireRole('admin','manager'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const r = createRestructure(c.id, req.body, req);
+  if (!r.ok) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(r.error)}`);
+  res.redirect(`/cases/${c.id}?ok=Restructured`);
+});
+router.post('/:id/restructures/:rid/undo', requireLogin, requireRole('admin','manager'), (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const r = undoRestructure(c.id, req.params.rid, req);
+  if (!r.ok) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(r.error)}`);
+  res.redirect(`/cases/${c.id}?ok=Restructure+undone`);
 });
 
 module.exports = { router, loadCase, createPtpPlan, cancelPtpPlan };
