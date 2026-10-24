@@ -141,3 +141,19 @@ test('interest_rate 0: every non-final period is paid with nothing owed, even wi
     assert.strictEqual(r.status, 'paid', `period ${i} status`);
   });
 });
+
+test('arrears row comes first and is paid first (FIFO)', () => {
+  const rows = repaymentSchedule(baseCase(), [{ amount: 50, payment_date: '2026-02-01' }], { arrears: 40 });
+  assert.strictEqual(rows.length, 4);
+  assert.strictEqual(rows[0].kind, 'arrears');
+  assert.strictEqual(rows[0].due_date, '2026-01-01');
+  assert.strictEqual(rows[0].status, 'paid');
+  near(rows[1].paid_amount, 10, 'remaining 10 goes to period 1');
+  assert.strictEqual(rows[1].kind, 'regular');
+});
+
+test('superseded schedule: unpaid rows read "restructured" and settled logic is skipped', () => {
+  const rows = repaymentSchedule(baseCase({ outstanding_amount: 0 }), [{ amount: 100, payment_date: '2026-01-15' }], { superseded: true });
+  assert.deepStrictEqual(rows.map(r => r.status), ['paid', 'restructured', 'restructured']);
+  near(rows[2].outstanding_amount, 3093, 'not zeroed by a settled ledger');
+});

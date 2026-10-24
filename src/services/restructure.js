@@ -2,6 +2,7 @@ const dayjs = require('dayjs');
 const { db, get, all, run } = require('../db');
 const { caseBalance, resyncCaseStatus } = require('./payments');
 const { maturityDate } = require('../utils/installments');
+const { repaymentSchedule } = require('../utils/schedule');
 const { logAction } = require('../utils/audit');
 const { todayMYT, interestTerms, money } = require('../utils/helpers');
 
@@ -128,5 +129,24 @@ function lockedTerms(caseId, terms) {
     loan_start_date, tenure, tenure_unit, maturity_date FROM cases WHERE id = ?`, [caseId]);
 }
 
+// Repayment schedules for the case page: the current segment's (led by its
+// carried-arrears row) plus, per restructure, the schedule it superseded —
+// each fed only the payments inside its own date window.
+function scheduleView(c, payments, restructures) {
+  if (!restructures.length) return { current: repaymentSchedule(c, payments), history: [] };
+  const inWindow = (from, to) => payments.filter(p => (!from || p.payment_date >= from) && (!to || p.payment_date < to));
+  const segCase = r => ({ interest_mode: r.interest_mode, interest_rate: r.interest_rate, interest_amount: r.interest_amount,
+    principal_amount: r.principal_at_cut, loan_start_date: r.effective_date, interest_from: r.effective_date,
+    tenure: r.tenure, tenure_unit: 'months', outstanding_amount: c.outstanding_amount });
+  const history = restructures.map((r, k) => {
+    const prev = restructures[k - 1];
+    const rows = repaymentSchedule(prev ? segCase(prev) : c, inWindow(prev && prev.effective_date, r.effective_date),
+      { superseded: true, arrears: prev ? prev.arrears_at_cut : 0 });
+    return { restructure: r, rows };
+  });
+  const last = restructures[restructures.length - 1];
+  return { current: repaymentSchedule(segCase(last), inWindow(last.effective_date), { arrears: last.arrears_at_cut }), history };
+}
+
 module.exports = { restructuresOf, lockDate, canRestructure, effectiveDateRange, balanceAtCut, parseTerms,
-  createRestructure, undoRestructure, paymentDateError, lockedPaymentError, lockedTerms };
+  createRestructure, undoRestructure, paymentDateError, lockedPaymentError, lockedTerms, scheduleView };

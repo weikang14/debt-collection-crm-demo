@@ -127,3 +127,38 @@ test('lockedTerms keeps the stored loan terms once a case is restructured', () =
   assert.strictEqual(t.interest_mode, 'monthly');
   assert.strictEqual(t.maturity_date, '2026-04-01');
 });
+
+test('scheduleView: current segment with arrears row, history with the superseded schedule', () => {
+  const c = { interest_mode: 'monthly', interest_rate: 3, interest_from: '2026-01-01', loan_start_date: '2026-01-01',
+    tenure: 3, tenure_unit: 'months', principal_amount: 3000, interest_amount: 0, outstanding_amount: 3000 };
+  const r = { id: 1, effective_date: '2026-01-11', interest_mode: 'monthly', interest_rate: 1.5, interest_amount: 0,
+    tenure: 3, principal_at_cut: 3000, arrears_at_cut: 30 };
+  const payments = [{ amount: 35, payment_date: '2026-01-12' }, { amount: 50, payment_date: '2026-01-05' }];
+  const v = rs.scheduleView(c, payments, [r]);
+  assert.strictEqual(v.history.length, 1);
+  assert.strictEqual(v.history[0].restructure, r);
+  near(v.history[0].rows[0].paid_amount, 50, 'old segment only sees the 01-05 payment');
+  assert.strictEqual(v.history[0].rows[0].status, 'restructured');
+  assert.strictEqual(v.current.length, 4);
+  assert.strictEqual(v.current[0].kind, 'arrears');
+  assert.strictEqual(v.current[0].status, 'paid');
+  near(v.current[1].paid_amount, 5, 'new segment sees only the 01-12 payment');
+  near(v.current[1].expected_amount, 46.5, '3000 x 0.0005 x 31 days');
+});
+
+test('scheduleView: original terms without a tenure give an empty superseded table', () => {
+  const c = { interest_mode: 'fixed', principal_amount: 1000, interest_amount: 80, opened_at: '2026-01-01 00:00:00', outstanding_amount: 1080 };
+  const r = { id: 2, effective_date: '2026-01-11', interest_mode: 'fixed', interest_rate: 0, interest_amount: 0,
+    tenure: 2, principal_at_cut: 1000, arrears_at_cut: 80 };
+  const v = rs.scheduleView(c, [], [r]);
+  assert.deepStrictEqual(v.history[0].rows, []);
+  assert.deepStrictEqual(v.current.map(x => x.expected_amount), [80, 500, 500]);
+});
+
+test('scheduleView without restructures is the plain schedule', () => {
+  const c = { interest_mode: 'fixed', principal_amount: 1000, interest_amount: 0, loan_start_date: '2026-01-01',
+    tenure: 2, tenure_unit: 'months', outstanding_amount: 1000 };
+  const v = rs.scheduleView(c, [], []);
+  assert.deepStrictEqual(v.history, []);
+  assert.deepStrictEqual(v.current.map(x => x.expected_amount), [500, 500]);
+});

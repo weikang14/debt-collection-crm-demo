@@ -14,7 +14,11 @@ const { round2, todayMYT } = require('./helpers');
 // Paid/outstanding/status are derived live from `payments` (a FIFO waterfall
 // in schedule order, independent of each payment's actual date) — nothing
 // here is persisted, so editing tenure/rate takes effect on the next read.
-function repaymentSchedule(c, payments) {
+// opts.arrears: a restructure's carried unpaid interest, owed first on the
+//   segment's start date (kind 'arrears'), ahead of the regular rows in FIFO.
+// opts.superseded: a schedule replaced by a restructure — shown as history, so
+//   the ledger-settled override is skipped and unpaid rows read 'restructured'.
+function repaymentSchedule(c, payments, opts = {}) {
   if (c.tenure_unit !== 'months' || !c.tenure || !c.loan_start_date) {
     return [];
   }
@@ -43,16 +47,17 @@ function repaymentSchedule(c, payments) {
     const base = Math.floor((total / n) * 100) / 100;
     expectedList = dates.map((_, i) => (i === n - 1 ? round2(total - base * (n - 1)) : base));
   }
+  const periods = dates.map((due, i) => ({ due, expected: expectedList[i], kind: 'regular' }));
+  if (opts.arrears > 0) periods.unshift({ due: c.loan_start_date, expected: round2(opts.arrears), kind: 'arrears' });
   let pool = payments.reduce((s, p) => s + p.amount, 0);
   // The schedule projects on-time payment, but the ledger accrues by actual
   // payment date — paying early cuts interest below the projection. Once the
   // ledger is settled, nothing is owed on any row (paid_amount stays truthful).
-  // ponytail: only the fully-settled case is reconciled; re-projecting the
-  // remaining rows after a partial prepayment is the Restructure feature.
-  const settled = c.outstanding_amount <= 0;
+  // ponytail: only the fully-settled case is reconciled; a partial prepayment is
+  // re-planned through an explicit restructure.
+  const settled = !opts.superseded && c.outstanding_amount <= 0;
   const today = todayMYT();
-  return dates.map((due, i) => {
-    const expected = expectedList[i];
+  return periods.map(({ due, expected, kind }) => {
     const paid = round2(Math.min(expected, Math.max(0, pool)));
     pool -= paid;
     const outstanding = settled ? 0 : round2(Math.max(0, expected - paid));
@@ -60,10 +65,11 @@ function repaymentSchedule(c, payments) {
     // so paid(0) >= expected(0) is intentionally 'paid' even with zero actual payment —
     // 0 owed = nothing outstanding = satisfied, not a bug.
     const status = settled || paid >= expected ? 'paid'
+      : opts.superseded ? 'restructured'
       : due < today ? 'overdue'
       : paid > 0 ? 'partial'
       : 'pending';
-    return { due_date: due, expected_amount: expected, paid_amount: paid, outstanding_amount: outstanding, status };
+    return { due_date: due, expected_amount: expected, paid_amount: paid, outstanding_amount: outstanding, status, kind };
   });
 }
 
