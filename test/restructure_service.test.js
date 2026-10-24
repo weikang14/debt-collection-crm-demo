@@ -162,3 +162,17 @@ test('scheduleView without restructures is the plain schedule', () => {
   assert.deepStrictEqual(v.history, []);
   assert.deepStrictEqual(v.current.map(x => x.expected_amount), [500, 500]);
 });
+
+test('timestamped payment dates (demo data) still allow an effective date on the payment day', () => {
+  const id = newCase();
+  pay(id, 10, '2026-01-20 10:00:00');
+  const range = rs.effectiveDateRange(caseRow(id), [{ payment_date: '2026-01-20 10:00:00' }], []);
+  assert.strictEqual(range.min, '2026-01-20');
+  assert.ok(rs.createRestructure(id, terms({ effective_date: '2026-01-20' }), req).ok);
+});
+
+test('a blank rate or fixed amount is refused instead of silently meaning 0', () => {
+  assert.match(rs.parseTerms(terms({ interest_rate: '' })).error, /rate is required/);
+  assert.match(rs.parseTerms(terms({ interest_mode: 'fixed', interest_amount: '' })).error, /amount is required/);
+  assert.strictEqual(rs.parseTerms(terms({ interest_rate: '0' })).interest_rate, 0);
+});

@@ -320,9 +320,10 @@
   }
   (function(){
     var s = document.getElementById('rs-mode'); if (!s) return;
+    // Only the visible field is required, so a blank rate can't slip through as 0%.
     function sync(){ var fixed = s.value === 'fixed';
-      document.querySelectorAll('.rs-accrual').forEach(function(e){ e.style.display = fixed ? 'none' : ''; });
-      document.querySelectorAll('.rs-fixed').forEach(function(e){ e.style.display = fixed ? '' : 'none'; }); }
+      document.querySelectorAll('.rs-accrual').forEach(function(e){ e.style.display = fixed ? 'none' : ''; e.querySelector('input').required = !fixed; });
+      document.querySelectorAll('.rs-fixed').forEach(function(e){ e.style.display = fixed ? '' : 'none'; e.querySelector('input').required = fixed; }); }
     s.addEventListener('change', sync); sync();
   })();
   document.querySelectorAll('dialog.modal').forEach(function(d){

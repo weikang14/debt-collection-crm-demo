@@ -31,7 +31,7 @@ function effectiveDateRange(c, payments, restructures) {
   const prev = restructures[restructures.length - 1];
   const candidates = [
     String(c.interest_from || c.opened_at || '').slice(0, 10),
-    ...payments.map(p => p.payment_date),
+    ...payments.map(p => String(p.payment_date).slice(0, 10)), // demo rows carry a time of day
     prev ? dayjs(prev.effective_date).add(1, 'day').format('YYYY-MM-DD') : '',
   ];
   return { min: candidates.reduce((m, d) => (d > m ? d : m), ''), max: todayMYT() };
@@ -51,9 +51,13 @@ function parseTerms(body) {
   }
   const interest_mode = body.interest_mode;
   if (!MODES.includes(interest_mode)) return { error: 'Invalid interest mode' };
-  const num = v => (v === undefined || v === '' ? 0 : Number(v));
-  const interest_rate = interest_mode === 'fixed' ? 0 : num(body.interest_rate);
-  const interest_amount = interest_mode === 'fixed' ? num(body.interest_amount) : 0;
+  // A blank field is refused rather than read as 0 — an interest-free
+  // restructure must be typed in as 0 on purpose.
+  const blank = v => v === undefined || v === '';
+  if (interest_mode !== 'fixed' && blank(body.interest_rate)) return { error: 'Interest rate is required' };
+  if (interest_mode === 'fixed' && blank(body.interest_amount)) return { error: 'Interest amount is required' };
+  const interest_rate = interest_mode === 'fixed' ? 0 : Number(body.interest_rate);
+  const interest_amount = interest_mode === 'fixed' ? Number(body.interest_amount) : 0;
   if (!Number.isFinite(interest_rate) || interest_rate < 0) return { error: 'Invalid interest rate' };
   if (!Number.isFinite(interest_amount) || interest_amount < 0) return { error: 'Invalid interest amount' };
   const tenure = body.tenure === '' || body.tenure === undefined ? NaN : Number(body.tenure);

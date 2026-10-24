@@ -85,3 +85,11 @@ test('recomputeOutstanding applies stored restructures', () => {
   near(row.interest_charged, 45, 'interest_charged');
   assert.strictEqual(row.interest_amount, 0);
 });
+
+test('interest stops at a segment maturity, so restructuring a matured loan adds nothing', () => {
+  // base matures 2026-04-01 after 90 days x 3.00 = 270. A cut two months later must not
+  // charge 04-01 -> 06-01, and a 0% restructure must leave the debt unchanged.
+  near(caseBalance(base, [], '2026-06-01').interestUnpaid, 270, 'snapshot stops at maturity');
+  const r = { effective_date: '2026-06-01', interest_mode: 'fixed', interest_rate: 0, interest_amount: 0, maturity_date: '2026-12-01' };
+  near(caseBalance(base, [], undefined, [r]).outstanding, 3270, '0% restructure keeps the debt');
+});

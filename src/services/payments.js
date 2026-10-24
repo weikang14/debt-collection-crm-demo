@@ -75,7 +75,12 @@ function caseBalance(c, payments, asOf, restructures = []) {
   let remP = c.principal_amount, unpaidInt = 0, paidInt = 0, pi = 0;
   segs.forEach((s, k) => {
     const next = segs[k + 1];
-    const end = next ? next.start : (asOf || s.maturity || new Date());
+    let end = next ? next.start : (asOf || s.maturity || new Date());
+    // Interest stops at a segment's maturity, as it does for an unrestructured
+    // loan — restructuring a matured loan must not back-charge the days since.
+    // ponytail: a payment dated after maturity still accrues up to its own date
+    // (pre-existing behaviour, kept so unrestructured balances don't move).
+    if (s.maturity && localDay(end) > localDay(s.maturity)) end = s.maturity;
     const accrues = s.interest_mode === 'daily' || s.interest_mode === 'monthly';
     const r = dailyRate(s);
     if (!accrues) unpaidInt += s.lump; // fixed: allocation order can't change its totals
