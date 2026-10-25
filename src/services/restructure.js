@@ -1,6 +1,6 @@
 const dayjs = require('dayjs');
 const { db, get, all, run } = require('../db');
-const { caseBalance, resyncCaseStatus } = require('./payments');
+const { caseBalance, resyncCaseStatus, localDate, nominalAnnualRate, rateCapError } = require('./payments');
 const { maturityDate } = require('../utils/installments');
 const { repaymentSchedule } = require('../utils/schedule');
 const { logAction } = require('../utils/audit');
@@ -8,7 +8,8 @@ const { todayMYT, interestTerms, money } = require('../utils/helpers');
 
 // Extension / Restructure (docs/superpowers/specs/2026-10-23-restructure-design.md).
 // Each row starts a new ledger segment at effective_date; the case row keeps the
-// original terms. Payment ownership: payment_date < E → earlier segment.
+// original terms. Payment ownership (D-04): payment_date ≤ E → earlier segment,
+// so a payment taken on the day of the restructure is inside its cut.
 
 const { isISODate } = require('../utils/forms');
 
@@ -18,14 +19,17 @@ function restructuresOf(caseId) {
   return all('SELECT * FROM case_restructures WHERE case_id = ? ORDER BY effective_date, id', [caseId]);
 }
 
-// Payments dated before this belong to a superseded segment and are frozen.
+// Payments dated on or before this belong to a superseded segment and are frozen.
 function lockDate(caseId) {
   const r = get('SELECT effective_date FROM case_restructures WHERE case_id = ? ORDER BY effective_date DESC, id DESC LIMIT 1', [caseId]);
   return r ? r.effective_date : null;
 }
+// First date a new payment may carry once the case is restructured.
+const afterLock = lock => (lock ? dayjs(lock).add(1, 'day').format('YYYY-MM-DD') : null);
 
+// Bankrupt / deceased debtors aren't re-planned (D-13), nor closed / cancelled cases.
 function canRestructure(c) {
-  return c.outstanding_amount > 0 && !['closed', 'cancelled'].includes(c.status);
+  return c.outstanding_amount > 0 && !['closed', 'cancelled', 'bankruptcy', 'deceased'].includes(c.status);
 }
 
 // Allowed effective dates for a new restructure. min > max means none today.
@@ -39,10 +43,10 @@ function effectiveDateRange(c, payments, restructures) {
   return { min: candidates.reduce((m, d) => (d > m ? d : m), ''), max: todayMYT() };
 }
 
-// What is owed at the cut, from payments strictly before it — a payment ON the
-// effective date belongs to the new segment. `payments` sorted ascending.
+// What is owed at the cut, from payments up to and including the effective
+// date (D-04). `payments` sorted ascending.
 function balanceAtCut(c, payments, restructures, effectiveDate) {
-  const b = caseBalance(c, payments.filter(p => p.payment_date < effectiveDate), effectiveDate, restructures);
+  const b = caseBalance(c, payments.filter(p => localDate(p.payment_date) <= effectiveDate), effectiveDate, restructures);
   return { principal: b.principalRemaining, arrears: b.interestUnpaid };
 }
 
@@ -67,6 +71,24 @@ function parseTerms(body) {
   return { effective_date, interest_mode, interest_rate, interest_amount, tenure, reason };
 }
 
+// Legal limits on new terms (D-03): under the annual cap, no higher than the
+// terms being replaced, and total interest over the loan's life ≤ principal.
+function termsError(c, payments, prior, t, cut) {
+  const capErr = rateCapError(t, cut.principal);
+  if (capErr) return capErr;
+  const prev = prior[prior.length - 1];
+  const before = nominalAnnualRate(prev || c, prev ? prev.principal_at_cut : c.principal_amount);
+  const after = nominalAnnualRate(t, cut.principal);
+  if (before !== null && after !== null && after > before + 1e-9) {
+    return `A restructure cannot raise the interest rate (${before}% → ${after}% p.a.)`;
+  }
+  const draft = { ...t, maturity_date: maturityDate(t.effective_date, t.tenure, 'months') };
+  if (caseBalance(c, payments, undefined, [...prior, draft]).interest > c.principal_amount + 0.005) {
+    return 'Total interest cannot exceed the principal';
+  }
+  return null;
+}
+
 function createRestructure(caseId, body, req) {
   const c = get('SELECT * FROM cases WHERE id = ?', [caseId]);
   if (!c) return { ok: false, error: 'Case not found' };
@@ -80,6 +102,8 @@ function createRestructure(caseId, body, req) {
     return { ok: false, error: `Effective date must be between ${range.min} and ${range.max}` };
   }
   const cut = balanceAtCut(c, payments, prior, t.effective_date);
+  const limitErr = termsError(c, payments, prior, t, cut);
+  if (limitErr) return { ok: false, error: limitErr };
   const by = req.session.user.full_name;
   let id;
   db.transaction(() => {
@@ -100,8 +124,8 @@ function undoRestructure(caseId, restructureId, req) {
   const rows = restructuresOf(caseId);
   const latest = rows[rows.length - 1];
   if (!latest || latest.id !== Number(restructureId)) return { ok: false, error: 'Only the latest restructure can be undone' };
-  const after = get('SELECT COUNT(*) AS n FROM payments WHERE case_id = ? AND payment_date >= ?', [caseId, latest.effective_date]).n;
-  if (after > 0) return { ok: false, error: 'Payments exist on or after the effective date; void them first' };
+  const after = get('SELECT COUNT(*) AS n FROM payments WHERE case_id = ? AND substr(payment_date, 1, 10) > ?', [caseId, latest.effective_date]).n;
+  if (after > 0) return { ok: false, error: 'Payments exist after the effective date; void them first' };
   const by = req.session.user.full_name;
   db.transaction(() => {
     run('DELETE FROM case_restructures WHERE id = ?', [latest.id]);
@@ -121,12 +145,12 @@ function paymentDateError(caseId, date) {
   if (!isISODate(date)) return 'Invalid payment date';
   if (date > todayMYT()) return 'Payment date cannot be in the future';
   const lock = lockDate(caseId);
-  return lock && date < lock ? `Payment date must be on or after the restructure date (${lock})` : null;
+  return lock && date <= lock ? `Payment date must be after the restructure date (${lock})` : null;
 }
 
 function lockedPaymentError(caseId, payment) {
   const lock = lockDate(caseId);
-  return lock && payment.payment_date < lock ? 'This payment belongs to a restructured period; undo the restructure first' : null;
+  return lock && localDate(payment.payment_date) <= lock ? 'This payment belongs to a restructured period; undo the restructure first' : null;
 }
 
 // After a restructure the original loan terms are history: Edit Case keeps the
@@ -139,10 +163,13 @@ function lockedTerms(caseId, terms) {
 
 // Repayment schedules for the case page: the current segment's (led by its
 // carried-arrears row) plus, per restructure, the schedule it superseded —
-// each fed only the payments inside its own date window.
+// each fed only the payments inside its own date window (from, to].
 function scheduleView(c, payments, restructures) {
   if (!restructures.length) return { current: repaymentSchedule(c, payments), history: [] };
-  const inWindow = (from, to) => payments.filter(p => (!from || p.payment_date >= from) && (!to || p.payment_date < to));
+  const inWindow = (from, to) => payments.filter(p => {
+    const d = localDate(p.payment_date);
+    return (!from || d > from) && (!to || d <= to);
+  });
   const segCase = r => ({ interest_mode: r.interest_mode, interest_rate: r.interest_rate, interest_amount: r.interest_amount,
     principal_amount: r.principal_at_cut, loan_start_date: r.effective_date, interest_from: r.effective_date,
     tenure: r.tenure, tenure_unit: 'months', outstanding_amount: c.outstanding_amount });
@@ -156,5 +183,17 @@ function scheduleView(c, payments, restructures) {
   return { current: repaymentSchedule(segCase(last), inWindow(last.effective_date), { arrears: last.arrears_at_cut }), history };
 }
 
-module.exports = { restructuresOf, lockDate, canRestructure, effectiveDateRange, balanceAtCut, parseTerms,
-  createRestructure, undoRestructure, paymentDateError, lockedPaymentError, lockedTerms, scheduleView };
+// Arrears from the current schedule (D-09): the unpaid amount of instalments
+// already due, and days past due (DPD) counted from the oldest of them.
+// { dpd: null, overdue: null } when the case has no schedule (no term set).
+function arrearsOf(c, payments, restructures) {
+  const rows = scheduleView(c, payments, restructures).current;
+  if (!rows.length) return { dpd: null, overdue: null };
+  const today = todayMYT();
+  const due = rows.filter(r => r.due_date < today && r.outstanding_amount > 0);
+  if (!due.length) return { dpd: 0, overdue: 0 };
+  return { dpd: dayjs(today).diff(dayjs(due[0].due_date), 'day'), overdue: Math.round(due.reduce((s, r) => s + r.outstanding_amount, 0) * 100) / 100 };
+}
+
+module.exports = { restructuresOf, lockDate, afterLock, canRestructure, effectiveDateRange, balanceAtCut, parseTerms,
+  createRestructure, undoRestructure, paymentDateError, lockedPaymentError, lockedTerms, scheduleView, arrearsOf };

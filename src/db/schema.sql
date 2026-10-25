@@ -94,6 +94,8 @@ CREATE TABLE IF NOT EXISTS payments (
   payment_date TEXT NOT NULL, amount REAL NOT NULL,
   method TEXT NOT NULL DEFAULT 'bank_transfer',
   reference TEXT, bank TEXT, remark TEXT, created_by TEXT,
+  -- The case's agent when the money came in: commission stays with the collector.
+  agent_id INTEGER REFERENCES agents(id),
   is_demo INTEGER NOT NULL DEFAULT 0,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -122,7 +124,7 @@ CREATE TABLE IF NOT EXISTS ptps (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   case_id INTEGER NOT NULL REFERENCES cases(id),
   amount REAL NOT NULL, due_date TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','fulfilled','broken')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','fulfilled','partially_kept','broken')),
   remark TEXT, created_by TEXT,
   plan_id TEXT, installment_no INTEGER, plan_size INTEGER,
   is_demo INTEGER NOT NULL DEFAULT 0,
@@ -195,5 +197,7 @@ CREATE TABLE IF NOT EXISTS settings (
   email TEXT NOT NULL DEFAULT '',
   reg_no TEXT NOT NULL DEFAULT '',
   logo TEXT NOT NULL DEFAULT '',
+  -- Legal ceiling on a loan's nominal annual rate, in % (checked on case and restructure terms).
+  max_annual_rate REAL NOT NULL DEFAULT 18,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

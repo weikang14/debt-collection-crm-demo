@@ -6,7 +6,9 @@ const { logAction } = require('../utils/audit');
 const { isISODate, MAX_NAME } = require('../utils/forms');
 const router = express.Router();
 
-const TASK_TYPES = ['follow_up', 'visit', 'legal', 'reminder'];
+// No field visits in the moneylender edition (D-05): 'visit' stays valid in the
+// table for old rows, but new or edited tasks can't use it.
+const TASK_TYPES = ['follow_up', 'legal', 'reminder'];
 // Shared by create and edit: returns an error message or null.
 function taskFormError(b) {
   const title = String(b.title ?? '').trim();
@@ -28,9 +30,10 @@ router.get('/', requireLogin, (req, res) => {
   if (req.query.overdue === '1') where.push("tasks.status='pending' AND tasks.due_date IS NOT NULL AND date(tasks.due_date) < date('now','+8 hours')");
   // Due-date window: an upper bound on how far ahead to look, independent of
   // the overdue flag above (a lower-bound signal). Unset/unknown = no cap.
-  // '1' is the "Today" option: up to and including today, not tomorrow.
+  // '1' is the "Today" option: due today only — overdue has its own filter (D-12).
   const WINDOW_DAYS = { '1': 0, '7': 7, '14': 14, '30': 30 };
-  if (Object.hasOwn(WINDOW_DAYS, req.query.window ?? '')) {
+  if (req.query.window === '1') where.push("date(tasks.due_date) = date('now','+8 hours')");
+  else if (Object.hasOwn(WINDOW_DAYS, req.query.window ?? '')) {
     where.push("tasks.due_date IS NOT NULL AND date(tasks.due_date) <= date('now','+8 hours', ?)");
     params.push(`+${WINDOW_DAYS[req.query.window]} days`);
   }

@@ -14,10 +14,11 @@ const terms = (o = {}) => ({ effective_date: '2026-01-11', interest_mode: 'month
 db.run("INSERT INTO clients (id,company_name,commission_rate) VALUES (1,'X',0)");
 db.run("INSERT INTO debtors (id,name) VALUES (1,'D')");
 let seq = 0;
-// 3000 @ 3%/month from 2026-01-01 (3.00/day), 3-month term.
+// 3000 @ 36.5% p.a. (daily mode) from 2026-01-01 = 3.00/day, 3-month term.
+// Restructures move it to 1.5%/month (18% p.a., within the cap): 45.00/month on 3000.
 function newCase(o = {}) {
   const r = db.run(`INSERT INTO cases (case_no,client_id,debtor_id,principal_amount,interest_amount,outstanding_amount,status,interest_mode,interest_rate,interest_from,opened_at,maturity_date)
-    VALUES (?,1,1,3000,0,3000,?,'monthly',3,'2026-01-01','2026-01-01 00:00:00','2026-04-01')`, ['S' + (++seq), o.status || 'negotiation']);
+    VALUES (?,1,1,3000,0,3000,?,'daily',36.5,'2026-01-01','2026-01-01 00:00:00','2026-04-01')`, ['S' + (++seq), o.status || 'negotiation']);
   const id = Number(r.lastInsertRowid);
   recomputeOutstanding(id);
   return id;
@@ -35,19 +36,19 @@ test('createRestructure stores the cut snapshot, recomputes, and logs', () => {
   near(row.arrears_at_cut, 14.56, 'arrears_at_cut');
   assert.strictEqual(row.maturity_date, '2027-01-11');
   assert.strictEqual(row.created_by, 'Manager');
-  near(caseRow(id).outstanding_amount, 2912 + 14.56 + 531.44, 'outstanding = principal + arrears + 365d x 1.456');
+  near(caseRow(id).outstanding_amount, 2912 + 14.56 + 524.16, 'outstanding = principal + arrears + 12 months x 2912 x 1.5%');
   assert.ok(db.get("SELECT 1 x FROM timeline_events WHERE case_id=? AND event_type='restructure' AND content LIKE 'Restructure:%'", [id]));
   assert.ok(db.get("SELECT 1 x FROM audit_logs WHERE action='restructure' AND entity_id=?", [id]));
 });
 
-test('a payment ON the effective date is excluded from the snapshot (new segment)', () => {
+test('D-04: a payment ON the effective date is inside the snapshot', () => {
   const id = newCase();
-  pay(id, 40, '2026-01-11');
+  pay(id, 40, '2026-01-11'); // 30.00 accrued by 01-11 -> 30 interest + 10 principal
   const r = rs.createRestructure(id, terms(), req);
   assert.ok(r.ok, r.error);
   const row = db.get('SELECT * FROM case_restructures WHERE id=?', [r.id]);
-  near(row.principal_at_cut, 3000, 'principal untouched by the same-day payment');
-  near(row.arrears_at_cut, 30, 'arrears = 10 days x 3.00');
+  near(row.principal_at_cut, 2990, 'principal after the same-day payment');
+  near(row.arrears_at_cut, 0, 'the same-day payment cleared the interest');
 });
 
 test('effective date bounds: after loan start, not before last payment, not after today, after previous restructure', () => {
@@ -91,13 +92,13 @@ test('parseTerms rejects bad input', () => {
   assert.strictEqual(ok.tenure, 12);
 });
 
-test('undo: only the latest, only with no payments on/after it, and restores the balance', () => {
+test('undo: only the latest, only with no payments after it, and restores the balance', () => {
   const id = newCase();
   const before = caseRow(id).outstanding_amount;
   const a = rs.createRestructure(id, terms({ effective_date: '2026-01-11' }), req);
   const b = rs.createRestructure(id, terms({ effective_date: '2026-01-15' }), req);
   assert.match(rs.undoRestructure(id, a.id, req).error, /latest/);
-  pay(id, 5, '2026-01-15');
+  pay(id, 5, '2026-01-16'); // after b's effective date (01-15): paid under b's terms
   assert.match(rs.undoRestructure(id, b.id, req).error, /Payments exist/);
   db.run('DELETE FROM payments WHERE case_id=?', [id]);
   assert.ok(rs.undoRestructure(id, b.id, req).ok);
@@ -106,14 +107,15 @@ test('undo: only the latest, only with no payments on/after it, and restores the
   assert.ok(db.get("SELECT 1 x FROM audit_logs WHERE action='restructure_undo' AND entity_id=?", [id]));
 });
 
-test('payment locks: dates before the latest effective date are frozen', () => {
+test('payment locks: dates up to and including the latest effective date are frozen (D-04)', () => {
   const id = newCase();
   assert.strictEqual(rs.paymentDateError(id, '2026-01-01'), null);
   rs.createRestructure(id, terms({ effective_date: '2026-01-11' }), req);
   assert.match(rs.paymentDateError(id, '2026-01-10'), /restructure date/);
-  assert.strictEqual(rs.paymentDateError(id, '2026-01-11'), null);
-  assert.match(rs.lockedPaymentError(id, { payment_date: '2026-01-10' }), /restructured period/);
-  assert.strictEqual(rs.lockedPaymentError(id, { payment_date: '2026-01-11' }), null);
+  assert.match(rs.paymentDateError(id, '2026-01-11'), /after the restructure date/);
+  assert.strictEqual(rs.paymentDateError(id, '2026-01-12'), null);
+  assert.match(rs.lockedPaymentError(id, { payment_date: '2026-01-11' }), /restructured period/);
+  assert.strictEqual(rs.lockedPaymentError(id, { payment_date: '2026-01-12' }), null);
 });
 
 test('lockedTerms keeps the stored loan terms once a case is restructured', () => {
@@ -124,7 +126,7 @@ test('lockedTerms keeps the stored loan terms once a case is restructured', () =
   rs.createRestructure(id, terms(), req);
   const t = rs.lockedTerms(id, form);
   assert.strictEqual(t.principal_amount, 3000);
-  assert.strictEqual(t.interest_mode, 'monthly');
+  assert.strictEqual(t.interest_mode, 'daily');
   assert.strictEqual(t.maturity_date, '2026-04-01');
 });
 
@@ -143,7 +145,7 @@ test('scheduleView: current segment with arrears row, history with the supersede
   assert.strictEqual(v.current[0].kind, 'arrears');
   assert.strictEqual(v.current[0].status, 'paid');
   near(v.current[1].paid_amount, 5, 'new segment sees only the 01-12 payment');
-  near(v.current[1].expected_amount, 46.5, '3000 x 0.0005 x 31 days');
+  near(v.current[1].expected_amount, 45, '3000 x 1.5% x 1 month (D-01)');
 });
 
 test('scheduleView: original terms without a tenure give an empty superseded table', () => {

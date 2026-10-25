@@ -99,6 +99,36 @@ function init() {
     db.prepare('ALTER TABLE cases ADD COLUMN interest_charged REAL NOT NULL DEFAULT 0').run();
     db.prepare('UPDATE cases SET interest_charged = interest_amount').run();
   } catch (e) { /* exists */ }
+  // Migration: payments.agent_id = collector of record (commission follows it).
+  // One-time backfill with each case's current agent — the best history we have.
+  try {
+    db.prepare('ALTER TABLE payments ADD COLUMN agent_id INTEGER REFERENCES agents(id)').run();
+    db.prepare('UPDATE payments SET agent_id = (SELECT agent_id FROM cases WHERE cases.id = payments.case_id)').run();
+  } catch (e) { /* exists */ }
+  // Migration: legal rate cap setting (default 18% p.a.).
+  try { db.prepare('ALTER TABLE settings ADD COLUMN max_annual_rate REAL NOT NULL DEFAULT 18').run(); } catch (e) { /* exists */ }
+  // Migration: PTP status 'partially_kept'. Same one-time rebuild as the
+  // timeline above (SQLite can't alter a CHECK list); rows and ids kept.
+  const pt = db.prepare("SELECT sql FROM sqlite_master WHERE type='table' AND name='ptps'").get();
+  if (pt && !pt.sql.includes("'partially_kept'")) {
+    db.exec(`BEGIN;
+      CREATE TABLE ptps_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        case_id INTEGER NOT NULL REFERENCES cases(id),
+        amount REAL NOT NULL, due_date TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending','fulfilled','partially_kept','broken')),
+        remark TEXT, created_by TEXT,
+        plan_id TEXT, installment_no INTEGER, plan_size INTEGER,
+        is_demo INTEGER NOT NULL DEFAULT 0,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO ptps_new (id, case_id, amount, due_date, status, remark, created_by, plan_id, installment_no, plan_size, is_demo, created_at)
+        SELECT id, case_id, amount, due_date, status, remark, created_by, plan_id, installment_no, plan_size, is_demo, created_at FROM ptps;
+      DROP TABLE ptps;
+      ALTER TABLE ptps_new RENAME TO ptps;
+      CREATE INDEX IF NOT EXISTS idx_ptps_case_status ON ptps(case_id, status);
+      COMMIT;`);
+  }
 }
 function get(sql, params = []) { return db.prepare(sql).get(...params); }
 function all(sql, params = []) { return db.prepare(sql).all(...params); }

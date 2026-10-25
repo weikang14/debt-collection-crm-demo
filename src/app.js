@@ -10,6 +10,11 @@ init();
 
 const app = express();
 app.disable('x-powered-by');
+// On Render (it sets RENDER=true) requests arrive through its proxies, so req.ip —
+// which the login throttle and audit log use — must be read from
+// X-Forwarded-For, trusting exactly that many hops; more would let a client
+// spoof its IP. TRUST_PROXY overrides the default if the hop count changes.
+if (process.env.RENDER) app.set('trust proxy', Number(process.env.TRUST_PROXY) || 3);
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));

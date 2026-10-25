@@ -32,11 +32,11 @@ test('daily mode is 先息后本: a payment clears interest first, then principa
   near(b.principal + b.interest - b.paid, b.outstanding, 'identity holds'); // 36500+95-3700
 });
 
-test('monthly mode accrues rate /30 per day (pro-rata)', () => {
+test('monthly mode accrues rate × whole months; a part month by its share of days (D-01)', () => {
   const c = { interest_mode: 'monthly', principal_amount: 3000, interest_rate: 2, interest_from: '2026-01-01' };
-  // 2%/mo on 3000 = 60/mo = 2.00/day. 15 days => 30.00.
-  const b = caseBalance(c, [], new Date('2026-01-16'));
-  near(b.interest, 30, 'interest');
+  // 2%/mo on 3000 = 60.00 per month. 01-01 -> 01-16 is 15 of January's 31 days.
+  near(caseBalance(c, [], new Date('2026-01-16')).interest, 60 * 15 / 31, 'part month');
+  near(caseBalance(c, [], new Date('2026-03-01')).interest, 120, 'two whole months, February included');
 });
 
 test('same-day case accrues 0 and does not creep with wall-clock time', () => {
@@ -46,9 +46,9 @@ test('same-day case accrues 0 and does not creep with wall-clock time', () => {
   const eve  = caseBalance(c, [], new Date('2026-07-14T14:00:00Z'));   // Malaysia 10pm, same day
   near(noon.interest, 0, 'same-day interest is 0');
   assert.strictEqual(noon.interest, eve.interest);                     // no creep within the day
-  // Next day steps by exactly one full day: 50000 * 5%/30 = 83.33.
+  // Next day steps by one day of the 07-14 -> 08-14 month (31 days): 2500 / 31.
   const next = caseBalance(c, [], new Date('2026-07-15T04:00:00Z'));
-  near(next.interest, 83.33, 'one whole day accrues one day of interest');
+  near(next.interest, 2500 / 31, 'one whole day accrues one day of interest');
 });
 
 test('recomputeOutstanding caches derived interest in interest_charged for accrual cases', () => {

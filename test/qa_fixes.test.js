@@ -76,7 +76,8 @@ function renderShow(extra = {}) {
   const c = { id: 1, case_no: 'QA-1', status: 'ptp', outstanding_amount: 500, principal_amount: 1000, interest_charged: 0, opened_at: '2026-01-01 00:00:00',
     debtor_id: 1, debtor_name: 'D1', priority: 'medium', interest_mode: 'fixed' };
   return ejs.renderFile(path.join(__dirname, '../src/views/cases/show.ejs'), {
-    layout: () => {}, h, c, timeline: [], tasks: [], calls: [], schedule: [], scheduleHistory: [], lastRestructure: null, lock: null,
+    layout: () => {}, h, c, timeline: [], tasks: [], calls: [], schedule: [], scheduleHistory: [], lastRestructure: null, lock: null, lockMin: null,
+    settlement: 500, arrears: { dpd: null, overdue: null }, frozen: false,
     restructureForm: null, canUndo: false, statuses: ['new'], terminal: [], readOnly: false, currentUser: { role: 'admin' },
     payments: [{ id: 7, receipt_no: 'R-7', payment_date: '2026-10-01', amount: 10, method: 'cash', reference: "O'Brien');alert(1);//", bank: '' }],
     ptps: [{ id: 3, amount: 5, due_date: '2026-11-01', status: 'pending' }], ...extra });
@@ -94,7 +95,7 @@ test('F-57: PTP Break asks for confirmation', async () => {
 
 test('F-07 / F-58: statement shows the loan terms and a standard page title', async () => {
   const html = await ejs.renderFile(path.join(__dirname, '../src/views/cases/statement.ejs'), {
-    h, today: '2026-10-24', company: {}, payments: [], paid: 0,
+    h, today: '2026-10-24', company: {}, payments: [], paid: 0, settlement: 1030, arrears: { dpd: 12, overdue: 15 },
     c: { id: 1, case_no: 'QA-1', debtor_name: 'D1', status: 'negotiation', principal_amount: 1000, interest_charged: 90, outstanding_amount: 1090,
       loan_start_date: '2026-01-01', interest_mode: 'monthly', interest_rate: 1.5, interest_amount: 0, tenure: 12, tenure_unit: 'months', maturity_date: '2027-01-01' },
     restructures: [{ effective_date: '2026-04-01', interest_mode: 'monthly', interest_rate: 1.2, interest_amount: 0, tenure: 18, maturity_date: '2027-10-01', arrears_at_cut: 139.5 }],
@@ -132,7 +133,7 @@ test('F-16: "Due within: Today" stops at today', () => {
 });
 
 test('F-18: agent-performance CSV rounds money to sen', () => {
-  db.run('INSERT INTO payments (case_id,receipt_no,payment_date,amount) VALUES (1,?,?,100.01)', ['QA-R-18', todayMYT()]);
+  db.run('INSERT INTO payments (case_id,receipt_no,payment_date,amount,agent_id) VALUES (1,?,?,100.01,1)', ['QA-R-18', todayMYT()]);
   const out = call(reportsRouter, 'get', '/', { query: { export: 'performance' } });
   assert.match(out.body, /A1,100\.01,5\.5,5\.5,0/);
 });

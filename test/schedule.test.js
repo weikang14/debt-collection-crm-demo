@@ -2,14 +2,13 @@ process.env.CRM_DB_PATH = require('node:path').join(require('node:os').tmpdir(),
 const { test } = require('node:test');
 const assert = require('node:assert');
 const { repaymentSchedule } = require('../src/utils/schedule');
-const { caseBalance, dailyRate } = require('../src/services/payments');
+const { caseBalance } = require('../src/services/payments');
 const { round2 } = require('../src/utils/helpers');
 
 const near = (a, b, msg) => assert.ok(Math.abs(a - b) < 0.005, `${msg}: ${a} vs ${b}`);
 
-// principal 3000, 3%/month => dailyRate = 0.001/day exactly (clean numbers for
-// hand-checked assertions). Jan has 31 days, Feb 2026 has 28 (not a leap year),
-// March has 31.
+// principal 3000 @ 3%/month => 90.00 per whole month (D-01: the monthly mode
+// charges principal × rate per month, whatever the month's length).
 function baseCase(overrides = {}) {
   return {
     interest_mode: 'monthly',
@@ -29,9 +28,9 @@ test('one row per tenure month; last row bundles principal', () => {
   assert.strictEqual(rows[0].due_date, '2026-02-01');
   assert.strictEqual(rows[1].due_date, '2026-03-01');
   assert.strictEqual(rows[2].due_date, '2026-04-01');
-  near(rows[0].expected_amount, 93, 'Jan (31d) interest-only');
-  near(rows[1].expected_amount, 84, 'Feb (28d) interest-only');
-  near(rows[2].expected_amount, 3093, 'Mar (31d) interest + principal');
+  near(rows[0].expected_amount, 90, 'Jan interest-only');
+  near(rows[1].expected_amount, 90, 'Feb interest-only — same as a 31-day month');
+  near(rows[2].expected_amount, 3090, 'Mar interest + principal');
 });
 
 test('zero payments, due dates already past => all overdue', () => {
@@ -45,26 +44,26 @@ test('zero payments, due dates far in the future => all pending', () => {
 });
 
 test('lump payment covering first 2 periods exactly: waterfall fills oldest first', () => {
-  const rows = repaymentSchedule(baseCase(), [{ amount: 177, payment_date: '2026-02-15' }]);
+  const rows = repaymentSchedule(baseCase(), [{ amount: 180, payment_date: '2026-02-15' }]);
   assert.strictEqual(rows[0].status, 'paid');
   assert.strictEqual(rows[1].status, 'paid');
-  near(rows[0].paid_amount, 93, 'period 1 fully paid');
-  near(rows[1].paid_amount, 84, 'period 2 fully paid');
+  near(rows[0].paid_amount, 90, 'period 1 fully paid');
+  near(rows[1].paid_amount, 90, 'period 2 fully paid');
   near(rows[2].paid_amount, 0, 'period 3 untouched');
   assert.strictEqual(rows[2].status, 'overdue'); // due 2026-04-01, long past, unpaid
-  near(rows[2].outstanding_amount, 3093, 'period 3 fully outstanding');
+  near(rows[2].outstanding_amount, 3090, 'period 3 fully outstanding');
 });
 
 test('overpayment: no row paid_amount exceeds its expected_amount, excess is unused', () => {
   const rows = repaymentSchedule(baseCase(), [{ amount: 5000, payment_date: '2026-01-15' }]);
   rows.forEach(r => assert.ok(r.paid_amount <= r.expected_amount));
   const totalPaid = rows.reduce((s, r) => s + r.paid_amount, 0);
-  near(totalPaid, 3270, 'total applied caps at total expected, not the 5000 paid'); // 93+84+3093
+  near(totalPaid, 3270, 'total applied caps at total expected, not the 5000 paid'); // 90+90+3090
   rows.forEach(r => assert.strictEqual(r.status, 'paid'));
 });
 
 test('daily mode: same interest-first schedule, per-day rate = annual ÷365, agrees with ledger', () => {
-  // 36.5% p.a. => 0.001/day, the same clean rate as baseCase's 3%/month.
+  // 36.5% p.a. => 0.001/day: the daily mode follows the calendar (31/28/31 days).
   const c = baseCase({ interest_mode: 'daily', interest_rate: 36.5 });
   const rows = repaymentSchedule(c, []);
   assert.strictEqual(rows.length, 3);
@@ -88,7 +87,7 @@ test('ledger settled (early payoff cut interest below projection) => every row p
   // Paid 3200 of a projected 3270: ledger says 0 left because paying early saved interest.
   const rows = repaymentSchedule(baseCase({ outstanding_amount: 0 }), [{ amount: 3200, payment_date: '2026-01-15' }]);
   rows.forEach(r => { assert.strictEqual(r.status, 'paid'); assert.strictEqual(r.outstanding_amount, 0); });
-  near(rows[2].paid_amount, 3023, 'last row shows what was actually paid (3200 - 93 - 84), not the projection');
+  near(rows[2].paid_amount, 3020, 'last row shows what was actually paid (3200 - 90 - 90), not the projection');
 });
 
 test('fixed mode: 1-month and >60-month tenures do not throw (outside the PTP plan 2..60 limit)', () => {
@@ -123,8 +122,8 @@ test('interest_from different from loan_start_date: period 1 accrues from intere
   const rows = repaymentSchedule(c, []);
   // period 1 due date is still driven off loan_start_date's month boundary
   assert.strictEqual(rows[0].due_date, '2026-02-01');
-  const daysAccrued = 22; // 2026-01-10 -> 2026-02-01
-  near(rows[0].expected_amount, round2(c.principal_amount * dailyRate(c) * daysAccrued), 'period 1 accrues only from interest_from (22d), not full loan_start_date span (31d)');
+  // 01-10 -> 02-01 is 22 of the 31 days in the month that starts on 01-10.
+  near(rows[0].expected_amount, round2(3000 * 0.03 * 22 / 31), 'period 1 accrues only from interest_from (22/31 month), not a whole month');
 
   // The real point of the fix: schedule total must never silently disagree with caseBalance.
   const sumExpected = rows.reduce((s, r) => s + r.expected_amount, 0);
@@ -155,5 +154,5 @@ test('arrears row comes first and is paid first (FIFO)', () => {
 test('superseded schedule: unpaid rows read "restructured" and settled logic is skipped', () => {
   const rows = repaymentSchedule(baseCase({ outstanding_amount: 0 }), [{ amount: 100, payment_date: '2026-01-15' }], { superseded: true });
   assert.deepStrictEqual(rows.map(r => r.status), ['paid', 'restructured', 'restructured']);
-  near(rows[2].outstanding_amount, 3093, 'not zeroed by a settled ledger');
+  near(rows[2].outstanding_amount, 3090, 'not zeroed by a settled ledger');
 });

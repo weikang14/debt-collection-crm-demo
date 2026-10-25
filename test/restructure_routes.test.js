@@ -44,7 +44,9 @@ test('fulfilling a PTP with a payment dated before the restructure is refused', 
   assert.match(bad.error, /restructure date/);
   assert.strictEqual(db.get('SELECT status FROM ptps WHERE id=?', [ptp]).status, 'pending');
   assert.strictEqual(db.get('SELECT COUNT(*) n FROM payments WHERE case_id=1').n, 0);
-  assert.ok(recordFulfillment(ptp, { amount: 10, payment_date: '2026-01-11' }, req).ok);
+  // D-04: the effective date itself belongs to the old terms, so the first allowed date is the day after.
+  assert.strictEqual(recordFulfillment(ptp, { amount: 10, payment_date: '2026-01-11' }, req).ok, false);
+  assert.ok(recordFulfillment(ptp, { amount: 10, payment_date: '2026-01-12' }, req).ok);
 });
 
 // Run a cases-router route's final handler (role/scope checks are covered above

@@ -1,6 +1,6 @@
 <% layout('layout') -%>
 <div class="page-head"><h1>Debtors</h1>
-  <% if (['admin','manager','agent'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/debtors/new">+ New Debtor</a><% } %>
+  <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/debtors/new">+ New Debtor</a><% } %>
 </div>
 <form class="card filters" method="get" action="/debtors">
   <label>Risk <select name="risk">

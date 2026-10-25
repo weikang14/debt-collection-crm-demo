@@ -18,7 +18,7 @@ router.get('/', requireLogin, (req, res) => {
   const outstanding = all(`SELECT c.status, COUNT(*) cnt, COALESCE(SUM(c.outstanding_amount),0) total
     FROM cases c WHERE ${cAlias} GROUP BY c.status ORDER BY total DESC`, w.params);
   const performance = all(`SELECT a.name, a.target_amount, a.commission_rate, COALESCE(SUM(CASE WHEN date(p.payment_date) BETWEEN ? AND ? THEN p.amount ELSE 0 END),0) collected
-    FROM agents a LEFT JOIN cases c ON c.agent_id=a.id LEFT JOIN payments p ON p.case_id=c.id
+    FROM agents a LEFT JOIN payments p ON p.agent_id=a.id
     GROUP BY a.id ORDER BY collected DESC`, [from, to]);
   if (req.query.export === 'cases') {
     const rows = all(`SELECT cases.case_no, debtors.name AS debtor_name, agents.name AS agent_name,

@@ -15,11 +15,22 @@
 </div>
 
 <div class="qrow">
-  <div class="q"><div class="lbl2">Total Outstanding</div><div class="v2">RM <%= h.money(kpi.outstanding) %></div></div>
+  <div class="q"><div class="lbl2">Total Outstanding</div><div class="v2">RM <%= h.money(kpi.outstanding) %></div>
+    <div class="sub2">contract balance, excl. closed &amp; cancelled · RM <%= h.money(kpi.specialOutstanding) %> in legal / bankruptcy / deceased</div></div>
   <div class="q"><div class="lbl2">Case Activity</div><div class="v2"><%= kpi.openedToday %> <small>opened</small> · <%= kpi.closedToday %> <small>closed</small> · <%= kpi.overdueTasks %> <small>overdue</small> · <%= kpi.followupCount %> <small>upcoming</small></div></div>
 </div>
 
-<h2>Aging <span class="meta">outstanding by debt age (days)</span></h2>
+<h2>Aging <span class="meta">open balances by days past due (oldest missed instalment)</span></h2>
+<% const maxDpd = Math.max(...agingDpd, 1); %>
+<div class="panel">
+  <div class="agelines">
+    <% dpdLabels.forEach((lbl, i) => { %>
+    <div class="al"><span><%= lbl %></span><span class="tr"><i style="width:<%= Math.round(agingDpd[i] / maxDpd * 100) %>%"></i></span><span class="v">RM <%= h.money(agingDpd[i]) %></span></div>
+    <% }) %>
+  </div>
+</div>
+
+<h2>Case Age <span class="meta">open balances by days since the case was opened</span></h2>
 <% const maxAge = Math.max(...aging, 1); %>
 <div class="panel">
   <div class="agelines">

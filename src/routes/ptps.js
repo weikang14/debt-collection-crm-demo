@@ -3,7 +3,7 @@ const { db, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
-const { paymentWrites } = require('../services/payments');
+const { paymentWrites, overpayError } = require('../services/payments');
 const { validatePayment, methodError } = require('../utils/forms');
 const { paymentDateError } = require('../services/restructure');
 const router = express.Router();
@@ -16,25 +16,32 @@ function recordFulfillment(ptpId, body, req) {
   if (!ptp) return { ok: false, error: 'PTP not found' };
   if (ptp.status !== 'pending') return { ok: false, error: 'PTP already resolved' };
   const rawAmount = (body.amount !== undefined && body.amount !== '') ? body.amount : ptp.amount;
-  const cs = get('SELECT outstanding_amount FROM cases WHERE id=?', [ptp.case_id]);
+  const cs = get('SELECT outstanding_amount, status FROM cases WHERE id=?', [ptp.case_id]);
+  // Bankrupt / deceased (D-13): money is taken through Record Payment with a reason.
+  if (['bankruptcy', 'deceased'].includes(cs.status)) return { ok: false, error: 'Record this payment with a reason instead (bankrupt / deceased case)' };
   const v = validatePayment(rawAmount, cs.outstanding_amount);
   if (v.error) return { ok: false, error: v.error };
   const payment_date = body.payment_date || new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
-  const dateErr = paymentDateError(ptp.case_id, payment_date) || methodError(body.method);
+  const dateErr = paymentDateError(ptp.case_id, payment_date) || methodError(body.method)
+    || overpayError(ptp.case_id, { amount: v.amount, payment_date });
   if (dateErr) return { ok: false, error: dateErr };
   const method = body.method || 'bank_transfer';
   const by = req.session.user.full_name;
+  // Less than promised = "partially kept" (D-10); no new promise is created for the rest.
+  const partial = v.amount < ptp.amount - 0.005;
+  const status = partial ? 'partially_kept' : 'fulfilled';
+  const note = partial ? `PTP partially kept: RM ${v.amount.toFixed(2)} of RM ${ptp.amount.toFixed(2)}` : `PTP fulfilled (RM ${v.amount.toFixed(2)})`;
   // One transaction covers the PTP flip + payment writes + timeline, so a
   // payment failure can't leave an orphaned "fulfilled PTP, no payment".
   let receipt_no;
   db.transaction(() => {
-    run("UPDATE ptps SET status='fulfilled' WHERE id=?", [ptp.id]);
-    ({ receipt_no } = paymentWrites(ptp.case_id, { payment_date, amount: v.amount, method, remark: 'PTP fulfilled', created_by: by }));
+    run('UPDATE ptps SET status=? WHERE id=?', [status, ptp.id]);
+    ({ receipt_no } = paymentWrites(ptp.case_id, { payment_date, amount: v.amount, method, remark: note, created_by: by }));
     run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)',
-      [ptp.case_id, 'ptp_fulfilled', `PTP fulfilled (RM ${ptp.amount.toFixed(2)})`, by]);
+      [ptp.case_id, 'ptp_fulfilled', note, by]);
   })();
   logAction(req, 'payment', 'case', ptp.case_id, `Recorded payment ${receipt_no} amount ${v.amount}`);
-  logAction(req, 'ptp_fulfilled', 'case', ptp.case_id, `PTP ${ptp.id} fulfilled`);
+  logAction(req, 'ptp_fulfilled', 'case', ptp.case_id, `PTP ${ptp.id} ${partial ? 'partially kept' : 'fulfilled'}`);
   return { ok: true, caseId: ptp.case_id };
 }
 
@@ -72,7 +79,7 @@ router.post('/:id/fulfill', requireLogin, requireRole('admin', 'manager', 'agent
   const caseId = loadScopedCaseId(req, res); if (caseId === null) return;
   const r = recordFulfillment(req.params.id, req.body, req);
   if (!r.ok) return res.redirect(`/cases/${caseId}?err=${encodeURIComponent(r.error)}`);
-  res.redirect(`/cases/${caseId}?ok=PTP+fulfilled+and+payment+recorded`);
+  res.redirect(`/cases/${caseId}?ok=PTP+payment+recorded`);
 });
 
 router.post('/:id/break', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {

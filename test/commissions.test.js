@@ -9,7 +9,8 @@ const { init, run, get } = require('../src/db');
 const { commissionRows, recordSettlement, voidSettlement } = require('../src/routes/commissions');
 
 // Seed: 2 agents (rate 5% and 6%), each a case, agent A has 2 payments in
-// 2026-07 (10000 total), agent B one payment in 2026-07 (5000).
+// 2026-07 (10000 total), agent B one payment in 2026-07 (5000). Each payment
+// carries its collector (agent_id) — commission is credited by it (D-11).
 before(() => {
   init();
   run("INSERT INTO agents (id,name,commission_rate,active) VALUES (1,'Agent A',5,1)");
@@ -18,10 +19,10 @@ before(() => {
   run("INSERT INTO debtors (id,name) VALUES (1,'D')");
   run("INSERT INTO cases (id,case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,status) VALUES (1,'K1',1,1,1,10000,0,0,'partial_paid')");
   run("INSERT INTO cases (id,case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,outstanding_amount,status) VALUES (2,'K2',1,1,2,5000,0,0,'partial_paid')");
-  run("INSERT INTO payments (case_id,receipt_no,payment_date,amount) VALUES (1,'R1','2026-07-03',6000)");
-  run("INSERT INTO payments (case_id,receipt_no,payment_date,amount) VALUES (1,'R2','2026-07-20 10:00:00',4000)");
-  run("INSERT INTO payments (case_id,receipt_no,payment_date,amount) VALUES (2,'R3','2026-07-10',5000)");
-  run("INSERT INTO payments (case_id,receipt_no,payment_date,amount) VALUES (1,'R4','2026-06-30',9999)"); // out of month
+  run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,agent_id) VALUES (1,'R1','2026-07-03',6000,1)");
+  run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,agent_id) VALUES (1,'R2','2026-07-20 10:00:00',4000,1)");
+  run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,agent_id) VALUES (2,'R3','2026-07-10',5000,2)");
+  run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,agent_id) VALUES (1,'R4','2026-06-30',9999,1)"); // out of month
 });
 
 const admin = { role: 'admin' };

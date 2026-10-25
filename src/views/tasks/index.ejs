@@ -9,7 +9,7 @@
   </select></label>
   <label>Type <select name="type">
     <option value="" <%= !query.type?'selected':'' %>>All</option>
-    <% ['follow_up','visit','legal','reminder'].forEach(tp => { %><option value="<%= tp %>" <%= query.type===tp?'selected':'' %>><%= tp %></option><% }) %>
+    <% ['follow_up','legal','reminder'].forEach(tp => { %><option value="<%= tp %>" <%= query.type===tp?'selected':'' %>><%= tp %></option><% }) %>
   </select></label>
   <label>Overdue only <input type="checkbox" name="overdue" value="1" <%= query.overdue==='1'?'checked':'' %>></label>
   <label>Due within <select name="window">
@@ -35,7 +35,6 @@
     </select></label>
     <label>Type <select name="type">
       <option value="follow_up">follow_up</option>
-      <option value="visit">visit</option>
       <option value="legal">legal</option>
       <option value="reminder">reminder</option>
     </select></label>
@@ -73,7 +72,7 @@
   <h3>Edit Task</h3>
   <label>Title <input type="text" name="title" id="te-title" required></label>
   <label>Type <select name="type" id="te-type">
-    <% ['follow_up','visit','legal','reminder'].forEach(tp => { %><option value="<%= tp %>"><%= tp %></option><% }) %>
+    <% ['follow_up','legal','reminder'].forEach(tp => { %><option value="<%= tp %>"><%= tp %></option><% }) %>
   </select></label>
   <label>Due Date <input type="date" name="due_date" id="te-due"></label>
   <label>Notes <input type="text" name="notes" id="te-notes"></label>

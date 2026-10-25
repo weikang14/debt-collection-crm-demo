@@ -1,6 +1,7 @@
 const { db, get, all, run } = require('../db');
 const { nextReceiptNo } = require('../utils/numbering');
 const { logAction } = require('../utils/audit');
+const dayjs = require('dayjs');
 const { round2, todayMYT } = require('../utils/helpers');
 
 const TERMINAL_STATUSES = ['legal', 'closed', 'cancelled', 'bankruptcy', 'deceased'];
@@ -34,14 +35,34 @@ const TZ_OFFSET = 8 * 3600000; // dates are entered/stored in Malaysia local tim
 const localDay = t => Math.floor((new Date(t).getTime() + TZ_OFFSET) / MS_DAY);
 const daysBetween = (a, b) => Math.max(0, localDay(b) - localDay(a));
 
-// Per-day interest rate for accrual modes. daily: annual rate /365 (bank-contract
-// convention). monthly: rate /30 (pro-rata by days — a part-month accrues its
-// fraction). fixed returns 0 (no accrual).
-// ponytail: monthly is day/30 pro-rata; switch to whole-month steps only if a
-// lender demands it.
+// Per-day interest rate of the daily (annual %) mode: annual rate /365, the
+// bank-contract convention. Other modes don't accrue by the day.
 function dailyRate(c) {
-  if (c.interest_mode === 'daily') return (c.interest_rate || 0) / 100 / 365;
-  if (c.interest_mode === 'monthly') return (c.interest_rate || 0) / 100 / 30;
+  return c.interest_mode === 'daily' ? (c.interest_rate || 0) / 100 / 365 : 0;
+}
+
+// Malaysia calendar date (YYYY-MM-DD) of a stored date or datetime.
+const localDate = t => new Date(localDay(t) * MS_DAY).toISOString().slice(0, 10);
+// Months elapsed from `start` to `d`, counted on the loan's own monthly
+// anniversaries (31 Jan → 28 Feb → 31 Mar, like the schedule's due dates); a
+// part month is the share of that month's days. 0 when d is not after start.
+function monthsSince(start, d) {
+  const s = dayjs(localDate(start)), e = dayjs(localDate(d));
+  if (!e.isAfter(s)) return 0;
+  let k = Math.max(0, e.diff(s, 'month') - 1);
+  while (!s.add(k + 1, 'month').isAfter(e)) k++;
+  const a = s.add(k, 'month'), b = s.add(k + 1, 'month');
+  return k + e.diff(a, 'day') / b.diff(a, 'day');
+}
+
+// Interest on `principal` from `from` to `to` under segment s (D-01): the
+// monthly mode charges principal × monthly rate per whole month — so 1.5%/month
+// is 18% a year in any year — and the daily mode annual rate /365 per day.
+function accrue(s, principal, from, to) {
+  if (s.interest_mode === 'daily') return principal * dailyRate(s) * daysBetween(from, to);
+  if (s.interest_mode === 'monthly') {
+    return principal * (s.interest_rate || 0) / 100 * Math.max(0, monthsSince(s.start, to) - monthsSince(s.start, from));
+  }
   return 0;
 }
 
@@ -63,16 +84,18 @@ function loanSegments(c, restructures) {
 // future interest. The loan runs as segments (see loanSegments): at each
 // restructure's effective date, unpaid interest is carried as arrears that no
 // longer accrues and the remaining principal continues under the new terms. A
-// payment belongs to the segment whose window holds its date (date < next
-// segment's start → earlier segment). Pure; asOf is injectable for tests and
-// otherwise defaults to the last segment's maturity — the loan's fixed term,
-// not "today" — falling back to today when there is none. `payments` MUST be
-// sorted ascending by payment_date and `restructures` by effective_date. The
-// identity outstanding = principal + interest − paid holds.
+// payment belongs to the segment whose window holds its date — one dated ON a
+// restructure's effective date still belongs to the earlier segment (D-04).
+// Pure; asOf is injectable and otherwise defaults to the last segment's
+// maturity — the loan's fixed term, not "today" — falling back to today when
+// there is none. `payments` MUST be sorted ascending by payment_date and
+// `restructures` by effective_date. The identity outstanding = principal +
+// interest − paid holds; `excess` is what payments paid beyond what was owed
+// on their date (the write paths refuse any — see overpayError).
 function caseBalance(c, payments, asOf, restructures = []) {
   const segs = loanSegments(c, restructures);
   const paid = payments.reduce((s, p) => s + p.amount, 0);
-  let remP = c.principal_amount, unpaidInt = 0, paidInt = 0, pi = 0;
+  let remP = c.principal_amount, unpaidInt = 0, paidInt = 0, excess = 0, pi = 0;
   segs.forEach((s, k) => {
     const next = segs[k + 1];
     // Interest stops at a segment's maturity — whether the accrual runs to the
@@ -81,23 +104,66 @@ function caseBalance(c, payments, asOf, restructures = []) {
     const capped = d => (s.maturity && localDay(d) > localDay(s.maturity) ? s.maturity : d);
     const end = capped(next ? next.start : (asOf || s.maturity || new Date()));
     const accrues = s.interest_mode === 'daily' || s.interest_mode === 'monthly';
-    const r = dailyRate(s);
     if (!accrues) unpaidInt += s.lump; // fixed: allocation order can't change its totals
     let last = s.start;
-    for (; pi < payments.length && (!next || payments[pi].payment_date < next.start); pi++) {
+    for (; pi < payments.length && (!next || localDate(payments[pi].payment_date) <= localDate(next.start)); pi++) {
       const p = payments[pi];
-      if (accrues) unpaidInt += remP * r * daysBetween(last, capped(p.payment_date));
+      if (accrues) unpaidInt += accrue(s, remP, last, capped(p.payment_date));
       const toInt = Math.min(p.amount, unpaidInt); unpaidInt -= toInt; paidInt += toInt;
-      remP = Math.max(0, remP - (p.amount - toInt)); // any overpay is dropped (validatePayment blocks it)
+      excess += Math.max(0, p.amount - toInt - remP);
+      remP = Math.max(0, remP - (p.amount - toInt));
       // Never move the accrual origin backwards: a payment dated before interest
       // starts must not make the days before the start count.
       if (accrues && localDay(p.payment_date) > localDay(last)) last = p.payment_date;
     }
-    if (accrues) unpaidInt += remP * r * daysBetween(last, end);
+    if (accrues) unpaidInt += accrue(s, remP, last, end);
   });
   return { principal: c.principal_amount, interest: round2(paidInt + unpaidInt), paid,
     outstanding: round2(Math.max(0, remP + unpaidInt)),
-    principalRemaining: round2(remP), interestUnpaid: round2(unpaidInt) };
+    principalRemaining: round2(remP), interestUnpaid: round2(unpaidInt), excess: round2(excess) };
+}
+
+const loadLedger = caseId => ({
+  c: get('SELECT * FROM cases WHERE id = ?', [caseId]),
+  payments: all('SELECT id, amount, payment_date FROM payments WHERE case_id = ? ORDER BY payment_date, id', [caseId]),
+  restructures: all('SELECT * FROM case_restructures WHERE case_id = ? ORDER BY effective_date, id', [caseId]),
+});
+
+// What clears the loan on `date` (D-02): remaining principal plus interest
+// accrued up to that day — not the whole contract's interest. Fixed-mode
+// interest is charged in full up front, so it stays in. Payments after `date`
+// are ignored.
+function settlementOn(caseId, date) {
+  const { c, payments, restructures } = loadLedger(caseId);
+  if (!c) return 0;
+  return caseBalance(c, payments.filter(p => localDate(p.payment_date) <= date), date, restructures).outstanding;
+}
+
+// Refuse a payment set that would pay more than is owed at some payment's date.
+// `change` adds a payment ({amount, payment_date}) and/or replaces one (`replaceId`).
+function overpayError(caseId, change) {
+  const { c, payments, restructures } = loadLedger(caseId);
+  const list = payments.filter(p => p.id !== change.replaceId).concat({ id: 0, amount: Number(change.amount), payment_date: change.payment_date })
+    .sort((a, b) => localDate(a.payment_date).localeCompare(localDate(b.payment_date)) || (a.id || Infinity) - (b.id || Infinity));
+  const { excess } = caseBalance(c, list, undefined, restructures);
+  if (excess <= 0.005) return null;
+  return `Amount exceeds what is owed on ${change.payment_date}: at most RM ${(Number(change.amount) - excess).toFixed(2)}`;
+}
+
+// Nominal annual rate of a set of loan terms, in % — what the legal cap is
+// checked against (D-03). Fixed interest is annualised over the tenure in
+// months; null when that can't be done (no tenure).
+function nominalAnnualRate(t, principal) {
+  if (t.interest_mode === 'monthly') return round2((t.interest_rate || 0) * 12);
+  if (t.interest_mode === 'daily') return round2(t.interest_rate || 0);
+  if (!t.tenure || !(principal > 0)) return null;
+  return round2((t.interest_amount || 0) / principal / (t.tenure / 12) * 100);
+}
+const maxAnnualRate = () => (get('SELECT max_annual_rate m FROM settings WHERE id = 1') || {}).m ?? 18;
+// The cap check shared by Case form and Restructure. null when allowed.
+function rateCapError(t, principal) {
+  const rate = nominalAnnualRate(t, principal), cap = maxAnnualRate();
+  return rate !== null && rate > cap + 1e-9 ? `Interest rate exceeds the ${cap}% p.a. limit (this loan: ${rate}% p.a.)` : null;
 }
 
 function recomputeOutstanding(caseId) {
@@ -131,17 +197,15 @@ function refreshStaleAccruals() {
 function paymentWrites(caseId, p) {
   const receipt_no = nextReceiptNo();
   const by = p.created_by;
-  run(`INSERT INTO payments (case_id, receipt_no, payment_date, amount, method, reference, bank, remark, created_by)
-       VALUES (?,?,?,?,?,?,?,?,?)`,
-    [caseId, receipt_no, p.payment_date, Number(p.amount), p.method || 'bank_transfer', p.reference || null, p.bank || null, p.remark || null, by]);
-  const outstanding = recomputeOutstanding(caseId);
-  const cnt = get('SELECT COUNT(*) AS c FROM payments WHERE case_id = ?', [caseId]).c;
-  const cur = get('SELECT status FROM cases WHERE id = ?', [caseId]).status;
-  const next = livePtpGuard(cur, statusAfterPayment(cur, outstanding, cnt), caseId);
-  if (next !== cur) run('UPDATE cases SET status = ? WHERE id = ?', [next, caseId]);
+  // agent_id = who held the case when the money came in, so commission stays
+  // with the collector after a reassignment (D-11).
+  run(`INSERT INTO payments (case_id, receipt_no, payment_date, amount, method, reference, bank, remark, created_by, agent_id)
+       VALUES (?,?,?,?,?,?,?,?,?,(SELECT agent_id FROM cases WHERE id = ?))`,
+    [caseId, receipt_no, p.payment_date, Number(p.amount), p.method || 'bank_transfer', p.reference || null, p.bank || null, p.remark || null, by, caseId]);
   run(`INSERT INTO timeline_events (case_id, event_type, content, created_by) VALUES (?,?,?,?)`,
     [caseId, 'payment', `Payment ${receipt_no}: RM ${Number(p.amount).toFixed(2)} via ${p.method || 'bank_transfer'}`, by]);
-  return { receipt_no, outstanding, status: next };
+  const outstanding = resyncCaseStatus(caseId, by);
+  return { receipt_no, outstanding, status: get('SELECT status FROM cases WHERE id = ?', [caseId]).status };
 }
 function applyPayment(caseId, p, req) {
   let r;
@@ -152,17 +216,21 @@ function applyPayment(caseId, p, req) {
 
 // Recompute outstanding + case status after a payment or case change. Honors the
 // live-PTP guard (#5): a pending PTP outranks partial_paid. Writes a status_change
-// timeline event when the status actually moves. Call inside a transaction.
+// timeline event when the status actually moves; paying off closes the case
+// (closed_at, so it counts as closed today — D-09) and a revert reopens it.
+// Call inside a transaction.
 function resyncCaseStatus(caseId, by) {
   const outstanding = recomputeOutstanding(caseId);
   const cnt = get('SELECT COUNT(*) AS c FROM payments WHERE case_id = ?', [caseId]).c;
   const cur = get('SELECT status FROM cases WHERE id = ?', [caseId]).status;
   const next = livePtpGuard(cur, statusAfterPayment(cur, outstanding, cnt), caseId);
   if (next !== cur) {
-    run('UPDATE cases SET status=? WHERE id=?', [next, caseId]);
+    run(`UPDATE cases SET status=?, closed_at = CASE WHEN ? = 'fully_paid' THEN datetime('now') WHEN ? = 'fully_paid' THEN NULL ELSE closed_at END,
+      updated_at=datetime('now') WHERE id=?`, [next, next, cur, caseId]);
     run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
       [caseId, 'status_change', `Status changed ${cur} → ${next}`, by]);
   }
   return outstanding;
 }
-module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, refreshStaleAccruals, caseBalance, applyPayment, paymentWrites, resyncCaseStatus, dailyRate, daysBetween };
+module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, refreshStaleAccruals, caseBalance, applyPayment, paymentWrites,
+  resyncCaseStatus, dailyRate, daysBetween, accrue, monthsSince, localDate, settlementOn, overpayError, nominalAnnualRate, maxAnnualRate, rateCapError };

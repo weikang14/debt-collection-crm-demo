@@ -36,7 +36,9 @@
     <div><span>Principal</span>RM <%= h.money(c.principal_amount) %></div>
     <div><span>Interest</span>RM <%= h.money(c.interest_charged) %></div>
     <div><span>Paid</span>RM <%= h.money(paid) %></div>
-    <div><span>Outstanding</span>RM <%= h.money(c.outstanding_amount) %></div>
+    <div><span>Outstanding (contract, to maturity)</span>RM <%= h.money(c.outstanding_amount) %></div>
+    <div><span>Settlement Amount as of <%= today %></span>RM <%= h.money(settlement) %></div>
+    <% if (arrears.dpd !== null) { %><div><span>Overdue</span>RM <%= h.money(arrears.overdue) %><%= arrears.dpd > 0 ? ' · ' + arrears.dpd + ' days past due' : '' %></div><% } %>
     <% const rs = restructures[restructures.length - 1]; const maturity = rs ? rs.maturity_date : c.maturity_date; %>
     <div><span>Loan Start Date</span><%= c.loan_start_date ? h.dateFmt(c.loan_start_date) : '—' %></div>
     <div><span>Interest Terms</span><%= h.interestTerms(c.interest_mode, c.interest_rate, c.interest_amount) %></div>

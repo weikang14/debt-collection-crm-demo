@@ -31,6 +31,13 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
     const phone = (b.phone || '').trim();
     const email = (b.email || '').trim();
     const reg_no = (b.reg_no || '').trim();
+    // Legal ceiling on a loan's nominal annual rate (D-03); blank keeps the current value.
+    const cur = get('SELECT max_annual_rate FROM settings WHERE id=1') || {};
+    const rateRaw = String(b.max_annual_rate ?? '').trim();
+    const max_annual_rate = rateRaw === '' ? (cur.max_annual_rate ?? 18) : Number(rateRaw);
+    if (!(Number.isFinite(max_annual_rate) && max_annual_rate > 0 && max_annual_rate <= 100)) {
+      return res.redirect('/settings?err=' + encodeURIComponent('Max annual interest rate must be between 0 and 100'));
+    }
 
     // Logo precedence: remove wins, then a new upload, else keep the existing.
     let logo;
@@ -42,8 +49,8 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
       logo = (get('SELECT logo FROM settings WHERE id=1') || {}).logo || '';
     }
 
-    run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, logo=?, updated_at=datetime('now') WHERE id=1`,
-      [company_name, address, phone, email, reg_no, logo]);
+    run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, logo=?, max_annual_rate=?, updated_at=datetime('now') WHERE id=1`,
+      [company_name, address, phone, email, reg_no, logo, max_annual_rate]);
     logAction(req, 'update', 'settings', 1, `Updated company settings (${company_name || 'unnamed'})`);
     res.redirect('/settings?ok=' + encodeURIComponent('Company settings saved'));
   });

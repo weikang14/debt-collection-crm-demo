@@ -26,12 +26,14 @@ function seedCase(principal, interest) {
     VALUES (?,?,?,?,?,?, 'negotiation')`, ['C-' + Date.now() + Math.random(), cl, d, principal, interest, out]);
   return r.lastInsertRowid;
 }
+// Promises may not be dated in the past (D-10): first installment a month from now.
+const FUTURE = new Date(Date.now() + 8 * 3600000 + 30 * 86400000).toISOString().slice(0, 10);
 const fakeReq = (body) => ({ body, session: { user: { full_name: 'Tester', role: 'admin' } }, params: {}, ip: '::1' });
 
 test('generate plan: N pending rows share plan_id, sum = total, case -> ptp', () => {
   const cid = seedCase(10000, 0);
   const { createPtpPlan } = require('../src/routes/cases');
-  const res = createPtpPlan(cid, { total_amount: '10000', num_installments: '5', first_due_date: '2026-08-01' }, fakeReq({}));
+  const res = createPtpPlan(cid, { total_amount: '10000', num_installments: '5', first_due_date: FUTURE }, fakeReq({}));
   assert.strictEqual(res.ok, true);
   const rows = all("SELECT * FROM ptps WHERE case_id=? AND status='pending' ORDER BY installment_no", [cid]);
   assert.strictEqual(rows.length, 5);
@@ -46,7 +48,7 @@ test('generate plan: N pending rows share plan_id, sum = total, case -> ptp', ()
 test('generate plan: total over outstanding is rejected, no rows inserted', () => {
   const cid = seedCase(1000, 0);
   const { createPtpPlan } = require('../src/routes/cases');
-  const res = createPtpPlan(cid, { total_amount: '5000', num_installments: '3', first_due_date: '2026-08-01' }, fakeReq({}));
+  const res = createPtpPlan(cid, { total_amount: '5000', num_installments: '3', first_due_date: FUTURE }, fakeReq({}));
   assert.strictEqual(res.ok, false);
   assert.strictEqual(all('SELECT * FROM ptps WHERE case_id=?', [cid]).length, 0);
 });
@@ -54,7 +56,7 @@ test('generate plan: total over outstanding is rejected, no rows inserted', () =
 test('generate plan: bad installment count is rejected', () => {
   const cid = seedCase(1000, 0);
   const { createPtpPlan } = require('../src/routes/cases');
-  const res = createPtpPlan(cid, { total_amount: '900', num_installments: '1', first_due_date: '2026-08-01' }, fakeReq({}));
+  const res = createPtpPlan(cid, { total_amount: '900', num_installments: '1', first_due_date: FUTURE }, fakeReq({}));
   assert.strictEqual(res.ok, false);
   assert.strictEqual(all('SELECT * FROM ptps WHERE case_id=?', [cid]).length, 0);
 });
@@ -62,7 +64,7 @@ test('generate plan: bad installment count is rejected', () => {
 test('cancel plan: all pending broken, case ptp -> negotiation when none paid', () => {
   const cid = seedCase(9000, 0);
   const { createPtpPlan, cancelPtpPlan } = require('../src/routes/cases');
-  const gen = createPtpPlan(cid, { total_amount: '9000', num_installments: '3', first_due_date: '2026-08-01' }, fakeReq({}));
+  const gen = createPtpPlan(cid, { total_amount: '9000', num_installments: '3', first_due_date: FUTURE }, fakeReq({}));
   const res = cancelPtpPlan(cid, gen.planId, fakeReq({}));
   assert.strictEqual(res.ok, true);
   assert.strictEqual(res.broken, 3);
@@ -73,7 +75,7 @@ test('cancel plan: all pending broken, case ptp -> negotiation when none paid', 
 test('fulfilling one installment lowers outstanding, case stays ptp while siblings pending', () => {
   const cid = seedCase(6000, 0);
   const { createPtpPlan } = require('../src/routes/cases');
-  const gen = createPtpPlan(cid, { total_amount: '6000', num_installments: '3', first_due_date: '2026-08-01' }, fakeReq({}));
+  const gen = createPtpPlan(cid, { total_amount: '6000', num_installments: '3', first_due_date: FUTURE }, fakeReq({}));
   const first = get("SELECT id FROM ptps WHERE case_id=? ORDER BY installment_no LIMIT 1", [cid]);
   const { recordFulfillment } = require('../src/routes/ptps');
   const r = recordFulfillment(first.id, {}, fakeReq({}));

@@ -30,7 +30,7 @@ function agentFields(b) {
 
 const STAT = `SELECT a.*,
   (SELECT COUNT(*) FROM cases WHERE agent_id=a.id) AS case_count,
-  (SELECT COALESCE(SUM(p.amount),0) FROM payments p JOIN cases c ON c.id=p.case_id WHERE c.agent_id=a.id) AS collected`;
+  (SELECT COALESCE(SUM(p.amount),0) FROM payments p WHERE p.agent_id=a.id) AS collected`; // credited to the collector (D-11)
 
 router.get('/', requireLogin, canView, (req, res) => {
   const where = [];

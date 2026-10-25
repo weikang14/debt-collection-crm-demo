@@ -1,4 +1,4 @@
-const { dailyRate, daysBetween } = require('../services/payments');
+const { accrue } = require('../services/payments');
 const { dueDates } = require('./installments');
 const { round2, todayMYT } = require('./helpers');
 
@@ -6,8 +6,9 @@ const { round2, todayMYT } = require('./helpers');
 // - monthly / daily (accrual modes): projects caseBalance()'s interest-first
 //   (先息后本) model (src/services/payments.js) — assuming on-time payment,
 //   periods 1..n-1 are interest-only and period n (maturity) also clears the
-//   full principal. Repayment is monthly either way; the mode only changes the
-//   per-day rate (dailyRate: monthly ÷30, annual ÷365).
+//   full principal. Repayment is monthly either way; interest per period comes
+//   from the ledger's own accrue(): monthly mode principal × rate per month,
+//   daily mode annual ÷365 per day.
 // - fixed: principal + the lump interest split into n equal instalments (等额分期).
 // days/years tenure gets no schedule — it would need an arbitrary conversion
 // into monthly periods (legacy rows only; the form now always saves months).
@@ -26,15 +27,16 @@ function repaymentSchedule(c, payments, opts = {}) {
   const n = dates.length;
   let expectedList;
   if (c.interest_mode === 'monthly' || c.interest_mode === 'daily') {
-    const rate = dailyRate(c);
     // Match caseBalance()'s accrual origin (src/services/payments.js) so period 1's
     // "Expected" interest never disagrees with the ledger's interest figure shown
     // elsewhere on the case page. Trailing `|| c.loan_start_date` is a fallback for
     // pure-function callers/tests that don't set opened_at; never triggers on real
     // DB rows since opened_at is NOT NULL in schema.
-    let periodStart = c.interest_from || c.opened_at || c.loan_start_date;
+    const start = c.interest_from || c.opened_at || c.loan_start_date;
+    const seg = { interest_mode: c.interest_mode, interest_rate: c.interest_rate, start };
+    let periodStart = start;
     expectedList = dates.map((due, i) => {
-      let expected = round2(c.principal_amount * rate * daysBetween(periodStart, due));
+      let expected = round2(accrue(seg, c.principal_amount, periodStart, due));
       if (i === n - 1) expected = round2(expected + c.principal_amount);
       periodStart = due;
       return expected;

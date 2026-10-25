@@ -14,8 +14,8 @@ function commissionRows(user, month) {
   const scoped = user && user.role === 'agent';
   const rows = all(
     `SELECT a.id AS agent_id, a.name, a.commission_rate AS rate,
-       COALESCE((SELECT SUM(p.amount) FROM payments p JOIN cases c ON c.id = p.case_id
-                 WHERE c.agent_id = a.id AND substr(p.payment_date,1,7) = ?), 0) AS collected,
+       COALESCE((SELECT SUM(p.amount) FROM payments p
+                 WHERE p.agent_id = a.id AND substr(p.payment_date,1,7) = ?), 0) AS collected,
        COALESCE((SELECT SUM(cs.amount) FROM commission_settlements cs
                  WHERE cs.agent_id = a.id AND cs.period = ?), 0) AS settled
      FROM agents a

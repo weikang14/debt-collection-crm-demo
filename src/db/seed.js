@@ -93,13 +93,14 @@ function insertDemoRows() {
   // Case 14 (monthly, see above) is also restructured 10 days ago so the demo
   // shows a carried-arrears row, the new schedule and the restructure history.
   // On a demo reload the case may already carry real payments (a trial user's):
-  // the snapshot uses them, and a payment on/after the effective date would land
-  // in the new segment unvalidated, so the demo restructure is skipped then.
+  // the snapshot uses them (one ON the effective date is inside the cut), and a
+  // payment after it would land in the new segment unvalidated, so the demo
+  // restructure is skipped then.
   const c14 = db.prepare('SELECT * FROM cases WHERE id=14 AND is_demo=1').get();
   const eff = ago(10).slice(0, 10);
   const pays14 = db.prepare('SELECT amount, payment_date FROM payments WHERE case_id=14 ORDER BY payment_date, id').all();
   if (c14 && c14.interest_mode === 'monthly' && !db.prepare('SELECT 1 FROM case_restructures WHERE case_id=14').get()
-      && !pays14.some(p => String(p.payment_date).slice(0, 10) >= eff)) {
+      && !pays14.some(p => String(p.payment_date).slice(0, 10) > eff)) {
     const cut = balanceAtCut(c14, pays14, [], eff);
     const reason = 'Debtor requested lower instalments';
     run(`INSERT INTO case_restructures (case_id,effective_date,reason,interest_mode,interest_rate,interest_amount,tenure,maturity_date,principal_at_cut,arrears_at_cut,created_by,is_demo)
@@ -122,8 +123,8 @@ function insertDemoRows() {
     // with customer receipts. nextReceiptNo (MAX+1) reads substr→INTEGER, and
     // 'D001' casts to 0, so demo rows never inflate the customer sequence —
     // exactly how demo case numbers (CASE-YYYY-D001) work.
-    run('INSERT OR IGNORE INTO payments (case_id,receipt_no,payment_date,amount,method,reference,bank,created_by,is_demo) VALUES (?,?,?,?,?,?,?,?,1)',
-      [c.id, `RCPT-${year}-D${String(idx + 1).padStart(3, '0')}`, payDate, amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer']);
+    run('INSERT OR IGNORE INTO payments (case_id,receipt_no,payment_date,amount,method,reference,bank,created_by,agent_id,is_demo) VALUES (?,?,?,?,?,?,?,?,(SELECT agent_id FROM cases WHERE id=?),1)',
+      [c.id, `RCPT-${year}-D${String(idx + 1).padStart(3, '0')}`, payDate, amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer', c.id]);
     run('INSERT OR IGNORE INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [c.id, 'payment', `Payment received RM ${amt.toFixed(2)}`, 'Finance Officer']);
   });
 
@@ -140,7 +141,7 @@ function insertDemoRows() {
   callSeed.forEach((c) => run('INSERT INTO call_logs (case_id,agent_id,duration_seconds,result,notes,is_demo) VALUES (?,?,?,?,?,1)', [...c, 'Follow-up call']));
 
   // Each task belongs to its case's agent (case 2 → agent 2, cases 3/7 → agent 3, case 5 → agent 1).
-  const taskSeed = [[2,2,'follow_up','Call debtor re: overdue',inDays(1),'pending'],[3,3,'visit','Field visit to address',ago(1).slice(0, 10),'pending'],[7,3,'legal','Prepare LOD',inDays(3),'pending'],[5,1,'reminder','Send WhatsApp reminder',inDays(0),'done']];
+  const taskSeed = [[2,2,'follow_up','Call debtor re: overdue',inDays(1),'pending'],[3,3,'follow_up','Call debtor about the broken promise',ago(1).slice(0, 10),'pending'],[7,3,'legal','Prepare LOD',inDays(3),'pending'],[5,1,'reminder','Send WhatsApp reminder',inDays(0),'done']];
   taskSeed.forEach((t) => run('INSERT INTO tasks (case_id,agent_id,type,title,due_date,status,is_demo) VALUES (?,?,?,?,?,?,1)', t));
 
   const period = dayjs().format('YYYY-MM');

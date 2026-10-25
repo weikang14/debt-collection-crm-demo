@@ -4,21 +4,47 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
-const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES } = require('../services/payments');
+const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES, caseBalance, settlementOn, overpayError, rateCapError } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
-const { caseStatusLabel, dateFmt, round2, todayMYT } = require('../utils/helpers');
+const { caseStatusLabel, dateFmt, round2, todayMYT, money } = require('../utils/helpers');
 const { splitInstallments, dueDates, maturityDate } = require('../utils/installments');
-const { restructuresOf, lockDate, canRestructure, effectiveDateRange, balanceAtCut, createRestructure, undoRestructure,
-  paymentDateError, lockedPaymentError, lockedTerms, scheduleView } = require('../services/restructure');
+const { restructuresOf, lockDate, afterLock, canRestructure, effectiveDateRange, balanceAtCut, createRestructure, undoRestructure,
+  paymentDateError, lockedPaymentError, lockedTerms, scheduleView, arrearsOf } = require('../services/restructure');
 const crypto = require('node:crypto');
 const router = express.Router();
 
 const { validatePayment, isISODate, parseMoney, methodError } = require('../utils/forms');
 
 const CASE_STATUSES = ['new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased'];
+// What an agent may set by hand (D-12): no Fully Paid and no terminal status.
+const AGENT_STATUSES = ['new','assigned','negotiation','ptp','partial_paid'];
 const PRIORITIES = ['low','medium','high','urgent'];
 const CALL_RESULTS = ['answered','no_answer','busy','wrong_number','refused'];
 const blank = v => v === undefined || v === null || String(v).trim() === '';
+
+// Bankrupt / deceased debtors (D-13): no new promises, calls or restructures;
+// a payment can still be received but needs a reason on record.
+const FROZEN = ['bankruptcy', 'deceased'];
+const frozenError = c => (FROZEN.includes(c.status) ? `Not allowed while the case is ${caseStatusLabel(c.status)}` : null);
+
+// Legal limits on a case's own terms (D-03): under the annual cap, and total
+// contract interest no more than the principal.
+function loanLimitError(t) {
+  const capErr = rateCapError(t, t.principal_amount);
+  if (capErr) return capErr;
+  const draft = { ...t, opened_at: new Date().toISOString() };
+  return caseBalance(draft, []).interest > t.principal_amount + 0.005 ? 'Total interest cannot exceed the principal' : null;
+}
+
+// Promises may not add up to more than would settle the loan on the last
+// promised date (D-10).
+function promiseCapError(caseId, amount, dueDate) {
+  const pending = all("SELECT amount, due_date FROM ptps WHERE case_id=? AND status='pending'", [caseId]);
+  const last = pending.reduce((m, p) => (p.due_date > m ? p.due_date : m), dueDate);
+  const cap = settlementOn(caseId, last);
+  const total = round2(pending.reduce((s, p) => s + p.amount, 0) + amount);
+  return total > cap + 0.005 ? `Promised total RM ${money(total)} exceeds the settlement amount on ${last} (RM ${money(cap)})` : null;
+}
 
 // Server-side check of the New/Edit Case form (the browser's min/required are
 // bypassable). Returns an error message, or null when the form is acceptable.
@@ -124,6 +150,9 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
   // Accrual modes start with ~0 interest; the manual interest field only applies to fixed.
   const interest = mode === 'fixed' ? (Number(b.interest_amount)||0) : 0;
   const { start: loanStart, tenure, unit: tenureUnit, maturity } = tenureFields(b);
+  const limitErr = loanLimitError({ principal_amount: principal, interest_mode: mode, interest_rate: rate, interest_amount: interest,
+    interest_from: from, tenure, maturity_date: maturity });
+  if (limitErr) return res.redirect(`/cases/new?err=${encodeURIComponent(limitErr)}`);
   const case_no = nextCaseNo();
   const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,interest_charged,outstanding_amount,priority,status,remark,interest_mode,interest_rate,interest_from,loan_start_date,tenure,tenure_unit,maturity_date)
     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
@@ -148,7 +177,9 @@ router.get('/:id/statement', requireLogin, (req, res) => {
   const paid = payments.reduce((s, p) => s + p.amount, 0);
   const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
   const company = get('SELECT * FROM settings WHERE id=1') || {};
-  res.render('cases/statement', { c, payments, paid, today, company, restructures: restructuresOf(c.id) });
+  const restructures = restructuresOf(c.id);
+  res.render('cases/statement', { c, payments, paid, today, company, restructures,
+    settlement: settlementOn(c.id, today), arrears: arrearsOf(c, payments, restructures) });
 });
 router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
@@ -166,13 +197,27 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const t = lockedTerms(req.params.id, { principal_amount: principal, interest_amount: interest, interest_mode: mode,
     interest_rate: rate, interest_from: from, loan_start_date: loanStart, tenure, tenure_unit: tenureUnit, maturity_date: maturity });
   const next = { debtor_id: Number(b.debtor_id), agent_id: b.agent_id ? Number(b.agent_id) : null, priority: b.priority || 'medium', remark: b.remark || null, ...t };
+  // Limits apply to changed terms only, so an older case can still get a new
+  // agent or remark; its terms are re-planned through a restructure.
+  const termKeys = ['principal_amount', 'interest_amount', 'interest_mode', 'interest_rate', 'loan_start_date', 'tenure'];
+  if (termKeys.some(k => String(old[k] ?? '') !== String(t[k] ?? ''))) {
+    const limitErr = loanLimitError(t);
+    if (limitErr) return res.redirect(`/cases/${old.id}/edit?err=${encodeURIComponent(limitErr)}`);
+  }
   run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,interest_mode=?,interest_rate=?,interest_from=?,loan_start_date=?,tenure=?,tenure_unit=?,maturity_date=?,updated_at=datetime('now') WHERE id=?`,
     [next.debtor_id,next.agent_id,t.principal_amount,t.interest_amount,next.priority,next.remark,t.interest_mode,t.interest_rate,t.interest_from,t.loan_start_date,t.tenure,t.tenure_unit,t.maturity_date,req.params.id]);
   const cid = Number(req.params.id);
   resyncCaseStatus(cid, req.session.user.full_name);
+  // Reassignment (D-11): open tasks move to the new agent; done tasks and past
+  // collections stay credited to whoever did them.
+  let movedTasks = 0;
+  if ((old.agent_id ?? null) !== next.agent_id) {
+    movedTasks = run("UPDATE tasks SET agent_id=? WHERE case_id=? AND status='pending'", [next.agent_id, cid]).changes;
+  }
   // Audit what actually changed, old → new, so a corrected term leaves a trace.
   const changes = Object.keys(next).filter(k => String(old[k] ?? '') !== String(next[k] ?? ''))
     .map(k => `${k}: ${old[k] ?? '—'} → ${next[k] ?? '—'}`);
+  if (movedTasks) changes.push(`${movedTasks} open task(s) reassigned`);
   logAction(req,'update','case',cid,`Updated case ${old.case_no}${changes.length ? ': ' + changes.join('; ') : ' (no field changes)'}`);
   res.redirect(`/cases/${cid}?ok=Saved`);
 });
@@ -191,11 +236,16 @@ router.get('/:id', requireLogin, (req, res) => {
   const restructureForm = canRestructure(c)
     ? { range: effectiveDateRange(c, asc, restructures), cut: balanceAtCut(c, asc, restructures, todayMYT()) }
     : null;
-  const canUndo = !!lastRestructure && !payments.some(p => p.payment_date >= lastRestructure.effective_date);
+  const lock = lastRestructure ? lastRestructure.effective_date : null;
+  const canUndo = !!lastRestructure && !payments.some(p => String(p.payment_date).slice(0, 10) > lock);
+  const role = req.session.user.role;
+  // The status menu an agent sees omits Fully Paid and terminal statuses (D-12).
+  const statusOptions = role === 'agent' ? AGENT_STATUSES : CASE_STATUSES;
   res.render('cases/show', { title: c.case_no, c, timeline, payments, ptps, tasks, calls, schedule,
-    scheduleHistory, lastRestructure, lock: lastRestructure ? lastRestructure.effective_date : null, restructureForm, canUndo,
-    statuses: CASE_STATUSES, terminal: TERMINAL_STATUSES,
-    readOnly: ['auditor','client'].includes(req.session.user.role) });
+    scheduleHistory, lastRestructure, lock, lockMin: afterLock(lock), restructureForm, canUndo,
+    settlement: settlementOn(c.id, todayMYT()), arrears: arrearsOf(c, asc, restructures), frozen: FROZEN.includes(c.status),
+    statuses: statusOptions, terminal: TERMINAL_STATUSES,
+    readOnly: ['auditor','client'].includes(role) });
 });
 
 const { applyPayment } = require('../services/payments');
@@ -203,9 +253,11 @@ router.post('/:id/payments', requireLogin, requireRole('admin','manager','financ
   const c = loadCase(req, res); if (!c) return;
   const v = validatePayment(req.body.amount, c.outstanding_amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
-  const dateErr = paymentDateError(c.id, req.body.payment_date) || methodError(req.body.method);
+  const dateErr = paymentDateError(c.id, req.body.payment_date) || methodError(req.body.method)
+    || (FROZEN.includes(c.status) && blank(req.body.remark) ? `A reason is required to accept a payment on a ${caseStatusLabel(c.status)} case` : null)
+    || overpayError(c.id, { amount: v.amount, payment_date: req.body.payment_date });
   if (dateErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(dateErr)}`);
-  const r = applyPayment(c.id, { ...req.body, amount: v.amount }, req);
+  const r = applyPayment(c.id, { ...req.body, amount: v.amount, remark: blank(req.body.remark) ? null : String(req.body.remark).trim() }, req);
   res.redirect(`/cases/${c.id}?ok=Payment+${r.receipt_no}+recorded`);
 });
 
@@ -223,6 +275,8 @@ router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','f
   const by = req.session.user.full_name;
   const next = { amount: v.amount, payment_date: req.body.payment_date || pay.payment_date, method: req.body.method || pay.method,
     reference: req.body.reference || null, bank: req.body.bank || null };
+  const overErr = overpayError(c.id, { amount: next.amount, payment_date: String(next.payment_date).slice(0, 10), replaceId: pay.id });
+  if (overErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(overErr)}`);
   db.transaction(() => {
     run('UPDATE payments SET amount=?, payment_date=?, method=?, reference=?, bank=? WHERE id=?',
       [next.amount, next.payment_date, next.method, next.reference, next.bank, pay.id]);
@@ -262,15 +316,20 @@ router.post('/:id/payments/:pid/void', requireLogin, requireRole('admin','manage
 
 router.post('/:id/ptps', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
+  const frozen = frozenError(c);
+  if (frozen) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(frozen)}`);
   const v = validatePayment(req.body.amount, c.outstanding_amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
   if (!isISODate(req.body.due_date)) return res.redirect(`/cases/${c.id}?err=Invalid+due+date`);
+  if (req.body.due_date < todayMYT()) return res.redirect(`/cases/${c.id}?err=Due+date+cannot+be+in+the+past`);
   // ponytail: a double click / resubmit lands twice within seconds — treat an
   // identical pending PTP from the last 10s as the same request.
   if (get(`SELECT 1 FROM ptps WHERE case_id=? AND plan_id IS NULL AND amount=? AND due_date=? AND status='pending'
       AND created_at >= datetime('now','-10 seconds')`, [c.id, v.amount, req.body.due_date])) {
     return res.redirect(`/cases/${c.id}?ok=PTP+created`);
   }
+  const capErr = promiseCapError(c.id, v.amount, req.body.due_date);
+  if (capErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(capErr)}`);
   const by = req.session.user.full_name;
   run('INSERT INTO ptps (case_id,amount,due_date,remark,created_by) VALUES (?,?,?,?,?)', [c.id, v.amount, req.body.due_date, req.body.remark||null, by]);
   if (!TERMINAL_STATUSES.includes(c.status)) run("UPDATE cases SET status='ptp' WHERE id=?", [c.id]);
@@ -285,15 +344,20 @@ router.post('/:id/ptps', requireLogin, requireRole('admin','manager','agent'), (
 function createPtpPlan(caseId, body, req) {
   const c = get('SELECT id, outstanding_amount, status FROM cases WHERE id=?', [caseId]);
   if (!c) return { ok: false, error: 'Case not found' };
+  const frozen = frozenError(c);
+  if (frozen) return { ok: false, error: frozen };
   const v = validatePayment(body.total_amount, c.outstanding_amount);
   if (v.error) return { ok: false, error: v.error };
   const n = Number(body.num_installments);
   if (!Number.isInteger(n) || n < 2 || n > 60) return { ok: false, error: 'Installments must be 2–60' };
   if (!body.first_due_date) return { ok: false, error: 'First due date is required' };
   if (!isISODate(body.first_due_date)) return { ok: false, error: 'Invalid first due date' };
+  if (body.first_due_date < todayMYT()) return { ok: false, error: 'First due date cannot be in the past' };
   if (v.amount < n * 0.01) return { ok: false, error: 'Total too small for the number of installments' };
   const amounts = splitInstallments(v.amount, n);
   const dates = dueDates(body.first_due_date, n);
+  const capErr = promiseCapError(caseId, v.amount, dates[n - 1]);
+  if (capErr) return { ok: false, error: capErr };
   // Same double-submit guard as a single PTP: an identical plan from the last 10s.
   if (get(`SELECT 1 FROM ptps WHERE case_id=? AND installment_no=1 AND plan_size=? AND amount=? AND due_date=?
       AND created_at >= datetime('now','-10 seconds')`, [caseId, n, amounts[0], dates[0]])) {
@@ -354,6 +418,8 @@ router.post('/:id/ptp-plans/:planId/cancel', requireLogin, requireRole('admin', 
 
 router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
+  const frozen = frozenError(c);
+  if (frozen) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(frozen)}`);
   const by = req.session.user.full_name;
   const dur = blank(req.body.duration_seconds) ? 0 : Number(req.body.duration_seconds);
   if (!Number.isInteger(dur) || dur < 0) return res.redirect(`/cases/${c.id}?err=Invalid+duration`);
@@ -370,6 +436,9 @@ router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), 
 const MAX_NOTE = 5000;
 const noteText = b => String(b.content ?? '').trim();
 const findNote = (c, id) => get("SELECT * FROM timeline_events WHERE id=? AND case_id=? AND event_type='note'", [id, c.id]);
+// Agents change only their own notes (D-12). Notes store the author's name.
+// ponytail: matched on full_name; store the user id if two staff share a name.
+const notOwnNote = (req, note) => req.session.user.role === 'agent' && note.created_by !== req.session.user.full_name;
 router.post('/:id/notes', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const content = noteText(req.body);
@@ -382,6 +451,7 @@ router.post('/:id/notes/:noteId', requireLogin, requireRole('admin','manager','a
   const c = loadCase(req, res); if (!c) return;
   const note = findNote(c, req.params.noteId);
   if (!note) return res.redirect(`/cases/${c.id}?err=Note+not+found`);
+  if (notOwnNote(req, note)) return res.redirect(`/cases/${c.id}?err=You+can+only+change+your+own+notes`);
   const content = noteText(req.body);
   if (!content || content.length > MAX_NOTE) return res.redirect(`/cases/${c.id}?err=Note+must+be+1–${MAX_NOTE}+characters`);
   run('UPDATE timeline_events SET content=? WHERE id=?', [content, note.id]);
@@ -392,6 +462,7 @@ router.post('/:id/notes/:noteId/delete', requireLogin, requireRole('admin','mana
   const c = loadCase(req, res); if (!c) return;
   const note = findNote(c, req.params.noteId);
   if (!note) return res.redirect(`/cases/${c.id}?err=Note+not+found`);
+  if (notOwnNote(req, note)) return res.redirect(`/cases/${c.id}?err=You+can+only+change+your+own+notes`);
   run('DELETE FROM timeline_events WHERE id=?', [note.id]);
   logAction(req, 'note_delete', 'case', c.id, `Deleted note ${note.id} (by ${note.created_by || '—'}): ${note.content}`);
   res.redirect(`/cases/${c.id}?ok=Note+deleted`);
@@ -400,6 +471,12 @@ router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'),
   const c = loadCase(req, res); if (!c) return;
   const ns = req.body.status;
   if (!CASE_STATUSES.includes(ns)) return res.redirect(`/cases/${c.id}?err=Invalid+status`);
+  if (req.session.user.role === 'agent' && !AGENT_STATUSES.includes(ns)) {
+    return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(`Only a manager can set ${caseStatusLabel(ns)}`)}`);
+  }
+  if (ns === 'fully_paid' && c.outstanding_amount > 0.005) {
+    return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(`Cannot mark Fully Paid: RM ${money(c.outstanding_amount)} is still owed`)}`);
+  }
   run("UPDATE cases SET status=?, closed_at=CASE WHEN ? IN ('closed','fully_paid','cancelled') THEN datetime('now') ELSE closed_at END, updated_at=datetime('now') WHERE id=?", [ns, ns, c.id]);
   run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'status_change',`Status changed ${c.status} → ${ns}`,req.session.user.full_name]);
   logAction(req,'status_change','case',c.id,`Status ${c.status} → ${ns}`);

@@ -9,6 +9,8 @@ const router = express.Router();
 
 const canView = requireRole('admin','manager','agent','finance','auditor');
 const canEdit = requireRole('admin','manager','agent');
+// Agents work debtors already on their cases; new debtors arrive with a new case (D-12).
+const canCreate = requireRole('admin','manager');
 
 // Optional text -> trimmed string or null (never undefined, which SQLite rejects).
 const S = (v) => { const s = (v == null ? '' : String(v)).trim(); return s === '' ? null : s; };
@@ -30,8 +32,8 @@ router.get('/', requireLogin, canView, (req, res) => {
   const debtors = all(`SELECT * FROM debtors WHERE ${f.where} ORDER BY name`, f.params);
   res.render('debtors/list', { title: 'Debtors', debtors });
 });
-router.get('/new', requireLogin, canEdit, (req, res) => res.render('debtors/form', { title: 'New Debtor', debtor: {}, action: '/debtors' }));
-router.post('/', requireLogin, canEdit, (req, res) => {
+router.get('/new', requireLogin, canCreate, (req, res) => res.render('debtors/form', { title: 'New Debtor', debtor: {}, action: '/debtors' }));
+router.post('/', requireLogin, canCreate, (req, res) => {
   const b = req.body;
   const name = S(b.name);
   const formErr = debtorFormError(b);
