@@ -1,3 +1,4 @@
+process.env.CRM_DB_PATH = require('node:path').join(require('node:os').tmpdir(), 'crm-numbering-' + process.pid + '.db'); // never the real data/crm.db
 const { test } = require('node:test');
 const assert = require('node:assert');
 const { init, run, exec } = require('../src/db');
