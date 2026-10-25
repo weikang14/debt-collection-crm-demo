@@ -28,8 +28,8 @@
 %>
 <section class="ledger">
   <div class="ledger-lead">
-    <div class="ledger-lbl">Total Outstanding <small>(contract, to maturity)</small></div>
-    <div class="ledger-amt"><span class="ledger-cur">RM</span><%= h.money(c.outstanding_amount) %></div>
+    <div class="ledger-lbl">Settlement Today <small>(clears the loan if paid today)</small></div>
+    <div class="ledger-amt"><span class="ledger-cur">RM</span><%= h.money(settlement) %></div>
     <div class="ledger-bar"><i style="width:<%= Math.min(recovered, 100) %>%"></i></div>
     <div class="ledger-meta"><b><%= recovered %>% recovered</b><span>RM <%= h.money(paid) %> of <%= h.money(total) %> paid · opened <%= daysOpen %> <%= daysOpen === 1 ? 'day' : 'days' %> ago</span></div>
   </div>
@@ -38,11 +38,11 @@
     <div><div class="ledger-lbl">Principal</div><div class="ledger-val"><%= h.money(c.principal_amount) %></div></div>
     <div><div class="ledger-lbl">Interest</div><div class="ledger-val"><%= h.money(c.interest_charged) %></div></div>
     <div><div class="ledger-lbl">Paid</div><div class="ledger-val pos"><%= h.money(paid) %></div></div>
-    <div><div class="ledger-lbl">Settlement Today</div><div class="ledger-val"><%= h.money(settlement) %></div>
-      <small style="color:var(--muted)">clears the loan if paid today</small></div>
+    <div><div class="ledger-lbl">Contract Balance</div><div class="ledger-val"><%= h.money(c.outstanding_amount) %></div>
+      <small style="color:var(--muted)">incl. interest not yet due</small></div>
     <% if (arrears.dpd !== null) { %>
     <div><div class="ledger-lbl">Overdue</div><div class="ledger-val<%= arrears.dpd > 0 ? ' neg' : '' %>"><%= h.money(arrears.overdue) %></div>
-      <small style="color:var(--muted)"><%= arrears.dpd > 0 ? arrears.dpd + ' days past due' : 'up to date' %></small></div>
+      <small style="color:var(--muted)"><%= arrears.dpd > 0 ? arrears.dpd + (arrears.dpd === 1 ? ' day' : ' days') + ' past due' : 'up to date' %></small></div>
     <% } %>
     <% const maturity = lastRestructure ? lastRestructure.maturity_date : c.maturity_date; %>
     <% if (maturity) { %>
@@ -56,14 +56,29 @@
     <div class="card kv">
       <% if (!readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
       <div class="kv-head">
+        <% if (!statuses.includes(c.status)) { %>
+        <%# D-12 / G-02: an agent can't move a closed, frozen or paid-off case. %>
+        <div class="status-inline"><span>Status</span> <%- include('../partials/statusBadge', { status: c.status }) %> <small style="color:var(--muted)">· only a manager can change it</small></div>
+        <% } else if (frozen) { %>
+        <%# N-08: lifting bankruptcy / deceased needs a reason, so no auto-submit here. %>
+        <form method="post" action="/cases/<%= c.id %>/status" class="status-inline">
+          <label>Status
+            <select name="status">
+              <% statuses.forEach(s => { %><option value="<%= s %>" <%= c.status===s?'selected':'' %>><%= h.caseStatusLabel(s) %></option><% }) %>
+            </select>
+          </label>
+          <input name="reason" placeholder="Reason (required to lift)" style="max-width:220px">
+          <button class="btn btn-sm" type="submit">Update</button>
+        </form>
+        <% } else { %>
         <form method="post" action="/cases/<%= c.id %>/status" class="status-inline">
           <label>Status
             <select name="status" onchange="this.form.submit()">
-              <% if (!statuses.includes(c.status)) { %><option value="<%= c.status %>" selected disabled><%= h.caseStatusLabel(c.status) %></option><% } %>
               <% statuses.forEach(s => { %><option value="<%= s %>" <%= c.status===s?'selected':'' %>><%= h.caseStatusLabel(s) %></option><% }) %>
             </select>
           </label>
         </form>
+        <% } %>
       </div>
       <% } %>
       <div><span>Debtor</span><a href="/debtors/<%= c.debtor_id %>"><%= c.debtor_name %></a></div>
@@ -152,9 +167,9 @@
     <% const canEditPay = !readOnly && ['admin','manager','finance'].includes(currentUser.role); %>
     <h2>Payments</h2>
     <% if (!payments.length) { %><%- include('../partials/empty', { msg: 'No payments recorded.' }) %><% } else { %>
-    <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th><% if (canEditPay) { %><th>Actions</th><% } %></tr></thead>
+    <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th><th>Remark</th><% if (canEditPay) { %><th>Actions</th><% } %></tr></thead>
     <tbody><% payments.forEach(p => { %><tr><td class="mono"><%= p.receipt_no %></td><td><%= h.dateFmt(p.payment_date) %></td>
-    <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td>
+    <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td><td><%= p.remark || '' %></td>
     <% if (canEditPay) { %><td><% if (lock && String(p.payment_date).slice(0, 10) <= lock) { %><small style="color:var(--muted)">Locked · restructured</small><% } else { %><div style="display:flex; gap:0.5rem;">
       <button type="button" class="btn btn-sm" onclick="openEditPayment(this)" data-id="<%= p.id %>" data-amount="<%= p.amount %>" data-date="<%= String(p.payment_date).slice(0, 10) %>" data-method="<%= p.method %>" data-ref="<%= p.reference||'' %>" data-bank="<%= p.bank||'' %>">Edit</button>
       <form method="post" action="/cases/<%= c.id %>/payments/<%= p.id %>/void" style="margin:0;" onsubmit="return confirm('Void payment <%= p.receipt_no %>?')"><button class="btn btn-sm" type="submit">Void</button></form>
@@ -169,17 +184,18 @@
       // Group by plan_id for headers/progress. Nulls (standalone PTPs) stay ungrouped.
       const planGroups = {};
       ptps.forEach(p => { if (p.plan_id) { (planGroups[p.plan_id] ||= []).push(p); } });
-      const canManagePtp = !readOnly && ['admin','manager','agent'].includes(currentUser.role);
+      const canManagePtp = !readOnly && !frozen && ['admin','manager','agent'].includes(currentUser.role);
       let lastPlan = undefined;
     %>
     <table class="data"><thead><tr><th>Installment</th><th class="num">Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
     <tbody><% ptps.forEach(p => { %>
       <% if (p.plan_id && p.plan_id !== lastPlan) { lastPlan = p.plan_id;
            const g = planGroups[p.plan_id];
-           const paid = g.filter(x => x.status==='fulfilled' || x.status==='partially_kept').length;
+           const paid = g.filter(x => x.status==='fulfilled').length;
+           const partial = g.filter(x => x.status==='partially_kept').length;
            const total = g.reduce((s,x)=>s+x.amount,0);
            const hasPending = g.some(x => x.status==='pending'); %>
-      <tr class="plan-head"><td colspan="4"><b>Installment Plan</b> · RM <%= h.money(total) %> · <%= paid %>/<%= g[0].plan_size %> kept</td>
+      <tr class="plan-head"><td colspan="4"><b>Installment Plan</b> · RM <%= h.money(total) %> · <%= paid %>/<%= g[0].plan_size %> kept<%= partial ? ' · ' + partial + ' partial' : '' %></td>
         <td><% if (hasPending && canManagePtp) { %>
           <form method="post" action="/cases/<%= c.id %>/ptp-plans/<%= p.plan_id %>/cancel" style="margin:0;" onsubmit="return confirm('Cancel this installment plan? All pending installments will be broken.')"><button class="btn btn-sm" type="submit">Cancel plan</button></form>
         <% } %></td></tr>
@@ -263,14 +279,14 @@
 <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
 <dialog id="dlg-ptp" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/ptps">
   <h3>New PTP</h3>
-  <label>Amount (RM) <small style="color:var(--muted)">· max <%= h.money(c.outstanding_amount) %></small> <input type="number" step="0.01" min="0.01" max="<%= c.outstanding_amount %>" name="amount" required></label>
+  <label>Amount (RM) <small style="color:var(--muted)">· with other open promises, at most the settlement amount on the due date (today RM <%= h.money(settlement) %>)</small> <input type="number" step="0.01" min="0.01" max="<%= c.outstanding_amount %>" name="amount" required></label>
   <label>Due Date <input type="date" name="due_date" required></label>
   <label>Remark <input name="remark"></label>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Add PTP</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
 <dialog id="dlg-plan" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/ptp-plans">
   <h3>New Installment Plan</h3>
-  <label>Total Amount (RM) <small style="color:var(--muted)">· max <%= h.money(c.outstanding_amount) %></small> <input type="number" step="0.01" min="0.01" max="<%= c.outstanding_amount %>" name="total_amount" required></label>
+  <label>Total Amount (RM) <small style="color:var(--muted)">· with other open promises, at most the settlement amount on the last due date (today RM <%= h.money(settlement) %>)</small> <input type="number" step="0.01" min="0.01" max="<%= c.outstanding_amount %>" name="total_amount" required></label>
   <label>Number of Installments <input type="number" min="2" max="60" step="1" name="num_installments" value="3" required></label>
   <label>First Due Date <input type="date" name="first_due_date" required></label>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Create Plan</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>

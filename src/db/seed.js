@@ -23,19 +23,21 @@ const CLIENTS = [
   ['GreenVista Property Mgmt','Mr. Lee','03-66004455','admin@greenvista.my','AGR-2024-045',10],
   ['QuickCash Microloans','Ms. Siti','03-55005566','ops@quickcash.my','AGR-2024-060',20],
 ];
+// IC numbers use month 00 and place code 00: obviously invalid, so no demo
+// debtor can match a real person's NRIC.
 const DEBTORS = [
-  ['Ahmad bin Ismail','880101-14-5501','','019-1112223','ahmad@mail.my','12 Jln Bunga, KL','ABC Sdn Bhd',4200,'high','Ismail bin Omar','019-9990001'],
-  ['Sarah Lim','900215-10-5522','','012-2223334','sarah.l@mail.my','8 Jln Mawar, PJ','Retail Co',3500,'medium','Lim Ah Kow','012-8880002'],
-  ['Ravi Chandran','850320-08-5533','','016-3334445','ravi@mail.my','5 Lorong Melur, Ipoh','Tech Sol',6800,'low','',''],
-  ['Nadia Hassan','920510-14-5544','','017-4445556','nadia@mail.my','21 Jln Kenanga, KL','','2800','high','Hassan bin Ali','017-7770003'],
-  ['Wong Kah Mun','780612-05-5555','','013-5556667','wong@mail.my','3 Jln Cempaka, JB','WKM Trading',9500,'medium','',''],
-  ['Farah Aziz','950701-14-5566','','018-6667778','farah@mail.my','7 Jln Teratai, KL','Clinic MY',5200,'low','Aziz bin Rahman','018-6660004'],
-  ['Tan Boon Huat','830825-07-5577','','019-7778889','tanbh@mail.my','15 Jln Anggerik, Penang','',4000,'high','',''],
-  ['Kavitha Nair','890903-10-5588','','012-8889990','kavitha@mail.my','9 Jln Seroja, PJ','Nair Ent',7100,'medium','Nair Suresh','012-5550005'],
-  ['Muhammad Faiz','910128-14-5599','','016-9990001','faiz@mail.my','2 Jln Dahlia, KL','',3300,'high','Zainab bt Yusof','016-3330006'],
-  ['Lee Kok Seng','870417-05-5610','','017-1011121','lks@mail.my','18 Jln Melati, JB','LKS Sports',12000,'low','',''],
-  ['Aisyah Rahman','930922-14-5621','','018-2022232','aisyah@mail.my','6 Jln Kemuning, KL','',2600,'medium','Rahman bin Salleh','018-2220007'],
-  ['Ganesh Pillai','800511-08-5632','','019-3033343','ganesh@mail.my','11 Jln Cendana, Ipoh','GP Logistics',8800,'high','',''],
+  ['Ahmad bin Ismail','880001-00-5501','','019-1112223','ahmad@mail.my','12 Jln Bunga, KL','ABC Sdn Bhd',4200,'high','Ismail bin Omar','019-9990001'],
+  ['Sarah Lim','900015-00-5522','','012-2223334','sarah.l@mail.my','8 Jln Mawar, PJ','Retail Co',3500,'medium','Lim Ah Kow','012-8880002'],
+  ['Ravi Chandran','850020-00-5533','','016-3334445','ravi@mail.my','5 Lorong Melur, Ipoh','Tech Sol',6800,'low','',''],
+  ['Nadia Hassan','920010-00-5544','','017-4445556','nadia@mail.my','21 Jln Kenanga, KL','','2800','high','Hassan bin Ali','017-7770003'],
+  ['Wong Kah Mun','780012-00-5555','','013-5556667','wong@mail.my','3 Jln Cempaka, JB','WKM Trading',9500,'medium','',''],
+  ['Farah Aziz','950001-00-5566','','018-6667778','farah@mail.my','7 Jln Teratai, KL','Clinic MY',5200,'low','Aziz bin Rahman','018-6660004'],
+  ['Tan Boon Huat','830025-00-5577','','019-7778889','tanbh@mail.my','15 Jln Anggerik, Penang','',4000,'high','',''],
+  ['Kavitha Nair','890003-00-5588','','012-8889990','kavitha@mail.my','9 Jln Seroja, PJ','Nair Ent',7100,'medium','Nair Suresh','012-5550005'],
+  ['Muhammad Faiz','910028-00-5599','','016-9990001','faiz@mail.my','2 Jln Dahlia, KL','',3300,'high','Zainab bt Yusof','016-3330006'],
+  ['Lee Kok Seng','870017-00-5610','','017-1011121','lks@mail.my','18 Jln Melati, JB','LKS Sports',12000,'low','',''],
+  ['Aisyah Rahman','930022-00-5621','','018-2022232','aisyah@mail.my','6 Jln Kemuning, KL','',2600,'medium','Rahman bin Salleh','018-2220007'],
+  ['Ganesh Pillai','800011-00-5632','','019-3033343','ganesh@mail.my','11 Jln Cendana, Ipoh','GP Logistics',8800,'high','',''],
 ];
 const STATUSES = ['new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased','new','assigned','negotiation','ptp','partial_paid','legal','fully_paid','assigned','negotiation'];
 const PRIOS = ['low','medium','high','urgent'];
@@ -81,6 +83,11 @@ function insertDemoRows() {
     // Schedule (src/utils/schedule.js) has demo data to show — one of each
     // interest mode: 4 = daily (18% p.a.), 12 = fixed (equal instalments of the
     // seeded 8% lump), the rest monthly (1.5%/month).
+    // Every other demo loan is a 12-month fixed-interest loan from its opening
+    // date (N-02: a loan that charges interest has a term).
+    const opened = ago(60 - i).slice(0, 10);
+    run(`UPDATE cases SET loan_start_date=?, tenure=12, tenure_unit='months', maturity_date=? WHERE id=? AND tenure IS NULL`,
+      [opened, maturityDate(opened, 12, 'months'), id]);
     if (id % 2 === 0 && ['new', 'assigned', 'negotiation', 'ptp'].includes(st)) {
       const start = ago(60 - i).slice(0, 10);
       const mode = id === 4 ? 'daily' : id === 12 ? 'fixed' : 'monthly';
@@ -190,12 +197,14 @@ function deleteDemoRows() {
     AND id NOT IN (SELECT case_id FROM timeline_events)
     AND id NOT IN (SELECT case_id FROM case_restructures)`);
   run(`DELETE FROM debtors WHERE is_demo=1 AND id NOT IN (SELECT debtor_id FROM cases)`);
-  // A demo agent stays while trial rows (cases, tasks, settlements, calls) still point at it.
+  // A demo agent stays while trial rows (cases, tasks, settlements, calls, the
+  // payments it collected) still point at it.
   run(`DELETE FROM agents  WHERE is_demo=1
     AND id NOT IN (SELECT agent_id FROM cases WHERE agent_id IS NOT NULL)
     AND id NOT IN (SELECT agent_id FROM tasks WHERE agent_id IS NOT NULL)
     AND id NOT IN (SELECT agent_id FROM commission_settlements)
-    AND id NOT IN (SELECT agent_id FROM call_logs WHERE agent_id IS NOT NULL)`);
+    AND id NOT IN (SELECT agent_id FROM call_logs WHERE agent_id IS NOT NULL)
+    AND id NOT IN (SELECT agent_id FROM payments WHERE agent_id IS NOT NULL)`);
   run(`DELETE FROM clients WHERE is_demo=1 AND id NOT IN (SELECT client_id FROM cases)`);
 }
 

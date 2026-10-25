@@ -848,6 +848,8 @@ h2 .meta, .page-head .meta { font-family: var(--font-body); font-size: 12px; col
 .plainlist .row .num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
 
 .dash-two { display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; align-items: start; margin-top: 6px; }
+/* Grid items default to min-width:auto and grow to their widest table; 0 lets them shrink so the table scrolls inside (G-11). */
+.dash-two > * { min-width: 0; }
 @media (max-width: 900px) { .dash-two { grid-template-columns: 1fr; } }
 .panel.flush { padding: 0; overflow: hidden; }
 

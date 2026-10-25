@@ -10,7 +10,16 @@
   <%- include('partials/sidebar') %>
   <div class="nav-backdrop" onclick="document.body.classList.remove('nav-open')"></div>
   <main class="content">
+    <% if (typeof demoBanner !== 'undefined' && demoBanner) { %><div class="alert is-red">Demo environment — use made-up data only. Do not enter real personal or loan details; data is reset on every restart.</div><% } %>
     <%- include('partials/flash') %>
     <%- body %>
   </main>
+<script>
+  // G-21: a second click on a submit button doesn't post the form again.
+  document.addEventListener('submit', function (e) {
+    if (e.defaultPrevented) return;
+    var b = e.submitter || e.target.querySelector('button[type=submit]');
+    if (b) setTimeout(function () { b.disabled = true; }, 0);
+  });
+</script>
 </body></html>

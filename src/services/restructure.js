@@ -1,6 +1,6 @@
 const dayjs = require('dayjs');
 const { db, get, all, run } = require('../db');
-const { caseBalance, resyncCaseStatus, localDate, nominalAnnualRate, rateCapError } = require('./payments');
+const { caseBalance, resyncCaseStatus, localDate, nominalAnnualRate, rateCapError, accrue } = require('./payments');
 const { maturityDate } = require('../utils/installments');
 const { repaymentSchedule } = require('../utils/schedule');
 const { logAction } = require('../utils/audit');
@@ -72,17 +72,30 @@ function parseTerms(body) {
 }
 
 // Legal limits on new terms (D-03): under the annual cap, no higher than the
-// terms being replaced, and total interest over the loan's life ≤ principal.
+// terms being replaced, total interest over the loan's life ≤ the original
+// principal, and (N-11, pending legal advice) the new interest plus carried
+// arrears ≤ the principal still owed at the cut.
 function termsError(c, payments, prior, t, cut) {
   const capErr = rateCapError(t, cut.principal);
   if (capErr) return capErr;
   const prev = prior[prior.length - 1];
+  // N-09: flat-rate annualisation isn't legally settled yet, so a rate-based
+  // loan isn't moved to a fixed amount until it is.
+  if (t.interest_mode === 'fixed' && ['monthly', 'daily'].includes((prev || c).interest_mode)) {
+    return 'A rate-based loan cannot be restructured to a fixed amount (pending legal review)';
+  }
+  const maturity = maturityDate(t.effective_date, t.tenure, 'months');
+  const newInterest = t.interest_mode === 'fixed' ? t.interest_amount
+    : accrue({ ...t, start: t.effective_date }, cut.principal, t.effective_date, maturity);
+  if (newInterest + cut.arrears > cut.principal + 0.005) {
+    return 'Interest after the restructure plus carried arrears cannot exceed the remaining principal';
+  }
   const before = nominalAnnualRate(prev || c, prev ? prev.principal_at_cut : c.principal_amount);
   const after = nominalAnnualRate(t, cut.principal);
   if (before !== null && after !== null && after > before + 1e-9) {
-    return `A restructure cannot raise the interest rate (${before}% → ${after}% p.a.)`;
+    return `A restructure cannot raise the interest rate (${Math.round(before * 100) / 100}% → ${Math.round(after * 100) / 100}% p.a.)`;
   }
-  const draft = { ...t, maturity_date: maturityDate(t.effective_date, t.tenure, 'months') };
+  const draft = { ...t, maturity_date: maturity };
   if (caseBalance(c, payments, undefined, [...prior, draft]).interest > c.principal_amount + 0.005) {
     return 'Total interest cannot exceed the principal';
   }
@@ -144,6 +157,11 @@ function undoRestructure(caseId, restructureId, req) {
 function paymentDateError(caseId, date) {
   if (!isISODate(date)) return 'Invalid payment date';
   if (date > todayMYT()) return 'Payment date cannot be in the future';
+  // N-14: nothing is owed before interest starts (a deposit is a different record).
+  const c = get('SELECT interest_from, loan_start_date, opened_at FROM cases WHERE id = ?', [caseId]);
+  const start = c && (c.interest_from || c.loan_start_date) ? String(c.interest_from || c.loan_start_date).slice(0, 10)
+    : c ? localDate(c.opened_at) : null;
+  if (start && date < start) return `Payment date cannot be before the loan start date (${start})`;
   const lock = lockDate(caseId);
   return lock && date <= lock ? `Payment date must be after the restructure date (${lock})` : null;
 }
@@ -192,7 +210,14 @@ function arrearsOf(c, payments, restructures) {
   const today = todayMYT();
   const due = rows.filter(r => r.due_date < today && r.outstanding_amount > 0);
   if (!due.length) return { dpd: 0, overdue: 0 };
-  return { dpd: dayjs(today).diff(dayjs(due[0].due_date), 'day'), overdue: Math.round(due.reduce((s, r) => s + r.outstanding_amount, 0) * 100) / 100 };
+  // The plan's FIFO can run ahead of the interest-first ledger after a principal
+  // prepayment; never call more overdue than would settle the loan today (N-06).
+  // ponytail: cap only; a ledger-based DPD is the full fix (N-06 A/B, K-02).
+  const settle = caseBalance(c, payments.filter(p => localDate(p.payment_date) <= today)
+    .sort((a, b) => localDate(a.payment_date).localeCompare(localDate(b.payment_date))), today, restructures).outstanding;
+  const overdue = Math.min(Math.round(due.reduce((s, r) => s + r.outstanding_amount, 0) * 100) / 100, settle);
+  if (overdue <= 0) return { dpd: 0, overdue: 0 };
+  return { dpd: dayjs(today).diff(dayjs(due[0].due_date), 'day'), overdue };
 }
 
 module.exports = { restructuresOf, lockDate, afterLock, canRestructure, effectiveDateRange, balanceAtCut, parseTerms,

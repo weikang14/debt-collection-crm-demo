@@ -54,7 +54,9 @@ app.use(attachUser);
 app.use(flash);
 app.use((req, res, next) => { if (req.session.user) refreshStaleAccruals(); next(); });
 const h = require('./utils/helpers');
-app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; next(); });
+// N-05: on the public Render demo, every page says to use made-up data only.
+const demoBanner = !!process.env.RENDER;
+app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; res.locals.demoBanner = demoBanner; next(); });
 app.use(require('./routes/auth'));
 app.use('/', require('./routes/dashboard'));
 // Clients module is retired for internal-only business (cases auto-use a built-in

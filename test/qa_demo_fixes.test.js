@@ -42,10 +42,23 @@ test('demo accounts use the same bcrypt cost as new accounts', () => {
   assert.strictEqual(bcrypt.getRounds(db.get("SELECT password_hash p FROM users WHERE username='admin'").p), 10);
 });
 
+test('G-10 / N-04: demo IC numbers are obviously invalid (month 00)', () => {
+  for (const d of db.all('SELECT ic_passport FROM debtors')) assert.match(d.ic_passport, /^\d{2}00\d{2}-00-\d{4}$/);
+});
+
+test('N-02: every demo loan that charges interest has a term', () => {
+  const bad = db.all("SELECT case_no FROM cases WHERE tenure IS NULL AND (interest_amount > 0 OR interest_rate > 0)");
+  assert.deepStrictEqual(bad, []);
+});
+
 test('F-10: delete demo data keeps a demo agent still referenced by trial rows', () => {
   db.run("INSERT INTO commission_settlements (agent_id,period,amount,is_demo) VALUES (4,'2026-10',10,0)");
   db.run("INSERT INTO tasks (agent_id,title,is_demo) VALUES (4,'trial task',0)");
+  // G-06: a trial payment collected by demo agent 3 on a trial case.
+  db.run("INSERT INTO cases (id,case_no,client_id,debtor_id,agent_id,principal_amount,outstanding_amount,is_demo) VALUES (900,'TRIAL-1',1,1,1,100,100,0)");
+  db.run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,agent_id,is_demo) VALUES (900,'TRIAL-R1','2026-10-01',10,3,0)");
   assert.doesNotThrow(() => deleteDemo());
   assert.ok(db.get('SELECT 1 FROM agents WHERE id=4'), 'agent 4 kept');
+  assert.ok(db.get('SELECT 1 FROM agents WHERE id=3'), 'agent 3 kept (collected a trial payment)');
   assert.strictEqual(db.get('SELECT COUNT(*) n FROM cases WHERE is_demo=1').n, 0);
 });

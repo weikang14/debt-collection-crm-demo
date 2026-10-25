@@ -145,7 +145,7 @@ test('arrears row comes first and is paid first (FIFO)', () => {
   const rows = repaymentSchedule(baseCase(), [{ amount: 50, payment_date: '2026-02-01' }], { arrears: 40 });
   assert.strictEqual(rows.length, 4);
   assert.strictEqual(rows[0].kind, 'arrears');
-  assert.strictEqual(rows[0].due_date, '2026-01-01');
+  assert.strictEqual(rows[0].due_date, '2026-02-01', 'N-01: due with the first new instalment, not on the start date');
   assert.strictEqual(rows[0].status, 'paid');
   near(rows[1].paid_amount, 10, 'remaining 10 goes to period 1');
   assert.strictEqual(rows[1].kind, 'regular');

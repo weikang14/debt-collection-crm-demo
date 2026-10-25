@@ -61,8 +61,12 @@ router.post('/new', requireLogin, requireRole('admin','manager','agent'), (req, 
   // admin/manager's manual choice.
   let caseAgentId;
   if (b.case_id) {
-    const caseRow = get(`SELECT id, agent_id FROM cases WHERE id=? AND ${w.clause}`, [b.case_id, ...w.params]);
+    const caseRow = get(`SELECT id, agent_id, status FROM cases WHERE id=? AND ${w.clause}`, [b.case_id, ...w.params]);
     if (!caseRow) return res.redirect('/tasks?err=Invalid+case');
+    // N-08: a bankrupt / deceased case is worked through legal channels only.
+    if (['bankruptcy', 'deceased'].includes(caseRow.status) && (b.type || 'follow_up') !== 'legal') {
+      return res.redirect('/tasks?err=' + encodeURIComponent('Only legal tasks can be added to a bankrupt or deceased case'));
+    }
     caseAgentId = caseRow.agent_id;
   }
   const agentId = b.case_id ? caseAgentId : (u.role === 'agent' ? u.agent_id : (b.agent_id || null));

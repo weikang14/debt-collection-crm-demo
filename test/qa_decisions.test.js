@@ -108,12 +108,16 @@ test('D-02: the case page shows the contract balance, settlement today and arrea
 
 // ── D-03 · legal rate cap (single configurable cap, default 18% p.a.) ─
 
-test('D-03: rates above the annual cap are refused; the cap is a setting', () => {
-  assert.match(errText(call(casesRouter, 'post', '/', { body: { debtor_id: '1', principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.6' } })), /18% p\.a\./);
-  assert.ok(isErr(call(casesRouter, 'post', '/', { body: { debtor_id: '1', principal_amount: '10000', interest_mode: 'daily', interest_rate: '18.5' } })));
-  assert.ok(isErr(call(casesRouter, 'post', '/', { body: { debtor_id: '1', principal_amount: '10000', interest_amount: '2000', tenure: '12', loan_start_date: ago(1) } })));
-  db.run('UPDATE settings SET max_annual_rate=24 WHERE id=1');
-  assert.ok(!isErr(call(casesRouter, 'post', '/', { body: { debtor_id: '1', principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.6' } })));
+test('D-03: rates above the annual cap are refused; the cap is a setting that can only go lower (N-03)', () => {
+  const body = o => ({ body: { debtor_id: '1', principal_amount: '10000', tenure: '12', loan_start_date: ago(1), ...o } });
+  assert.match(errText(call(casesRouter, 'post', '/', body({ interest_mode: 'monthly', interest_rate: '1.6' }))), /18% p\.a\./);
+  assert.ok(isErr(call(casesRouter, 'post', '/', body({ interest_mode: 'daily', interest_rate: '18.5' }))));
+  assert.ok(isErr(call(casesRouter, 'post', '/', body({ interest_amount: '2000' }))));
+  db.run('UPDATE settings SET max_annual_rate=24 WHERE id=1');      // a stored value above the legal limit is ignored
+  assert.ok(isErr(call(casesRouter, 'post', '/', body({ interest_mode: 'monthly', interest_rate: '1.6' }))));
+  db.run('UPDATE settings SET max_annual_rate=12 WHERE id=1');      // a lower cap applies
+  assert.match(errText(call(casesRouter, 'post', '/', body({ interest_mode: 'monthly', interest_rate: '1.1' }))), /12% p\.a\./);
+  assert.ok(!isErr(call(casesRouter, 'post', '/', body({ interest_mode: 'monthly', interest_rate: '1' }))));
   db.run('UPDATE settings SET max_annual_rate=18 WHERE id=1');
 });
 

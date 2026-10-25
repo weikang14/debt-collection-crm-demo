@@ -30,6 +30,11 @@ const frozenError = c => (FROZEN.includes(c.status) ? `Not allowed while the cas
 // Legal limits on a case's own terms (D-03): under the annual cap, and total
 // contract interest no more than the principal.
 function loanLimitError(t) {
+  // A loan that charges interest needs a term (N-02): without one the cap can't
+  // annualise fixed interest and accrual interest never stops. Checked only on
+  // new or changed terms, so older term-less cases can still be reassigned.
+  const charges = t.interest_mode === 'fixed' ? (t.interest_amount || 0) > 0 : (t.interest_rate || 0) > 0;
+  if (charges && !t.tenure) return 'Tenure is required for a loan that charges interest';
   const capErr = rateCapError(t, t.principal_amount);
   if (capErr) return capErr;
   const draft = { ...t, opened_at: new Date().toISOString() };
@@ -95,7 +100,8 @@ function interestFields(b) {
 // loan_start_date and tenure are present; otherwise it's left null so the UI
 // hides the Maturity Date display rather than showing a bogus computed date.
 function tenureFields(b) {
-  const unit = ['days', 'months', 'years'].includes(b.tenure_unit) ? b.tenure_unit : 'months';
+  // The form only offers months; any other unit would skew the rate cap (G-15).
+  const unit = 'months';
   const start = b.loan_start_date || null;
   const parsedTenure = Number(b.tenure);
   const tenure = Number.isFinite(parsedTenure) && parsedTenure > 0 ? parsedTenure : null;
@@ -209,9 +215,10 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const cid = Number(req.params.id);
   resyncCaseStatus(cid, req.session.user.full_name);
   // Reassignment (D-11): open tasks move to the new agent; done tasks and past
-  // collections stay credited to whoever did them.
+  // collections stay credited to whoever did them. Unassigning keeps the tasks
+  // with the previous agent until someone new takes the case (N-13).
   let movedTasks = 0;
-  if ((old.agent_id ?? null) !== next.agent_id) {
+  if (next.agent_id !== null && (old.agent_id ?? null) !== next.agent_id) {
     movedTasks = run("UPDATE tasks SET agent_id=? WHERE case_id=? AND status='pending'", [next.agent_id, cid]).changes;
   }
   // Audit what actually changed, old → new, so a corrected term leaves a trace.
@@ -253,6 +260,12 @@ router.post('/:id/payments', requireLogin, requireRole('admin','manager','financ
   const c = loadCase(req, res); if (!c) return;
   const v = validatePayment(req.body.amount, c.outstanding_amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
+  // G-21: the same form submitted twice within seconds (double click, resubmit)
+  // is one payment — matched on amount, date and reference, so two genuine
+  // same-day payments with different references still both record.
+  const dup = get(`SELECT receipt_no FROM payments WHERE case_id=? AND amount=? AND payment_date=? AND IFNULL(reference,'')=?
+    AND created_at >= datetime('now','-10 seconds')`, [c.id, v.amount, req.body.payment_date, String(req.body.reference || '')]);
+  if (dup) return res.redirect(`/cases/${c.id}?ok=Payment+${dup.receipt_no}+recorded`);
   const dateErr = paymentDateError(c.id, req.body.payment_date) || methodError(req.body.method)
     || (FROZEN.includes(c.status) && blank(req.body.remark) ? `A reason is required to accept a payment on a ${caseStatusLabel(c.status)} case` : null)
     || overpayError(c.id, { amount: v.amount, payment_date: req.body.payment_date });
@@ -471,15 +484,31 @@ router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'),
   const c = loadCase(req, res); if (!c) return;
   const ns = req.body.status;
   if (!CASE_STATUSES.includes(ns)) return res.redirect(`/cases/${c.id}?err=Invalid+status`);
-  if (req.session.user.role === 'agent' && !AGENT_STATUSES.includes(ns)) {
-    return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(`Only a manager can set ${caseStatusLabel(ns)}`)}`);
+  const fail = msg => res.redirect(`/cases/${c.id}?err=${encodeURIComponent(msg)}`);
+  if (req.session.user.role === 'agent') {
+    // D-12 / G-02: an agent neither sets nor lifts a terminal or paid-off status.
+    if (ns !== c.status && !AGENT_STATUSES.includes(c.status)) return fail(`Only a manager can change a ${caseStatusLabel(c.status)} case`);
+    if (!AGENT_STATUSES.includes(ns)) return fail(`Only a manager can set ${caseStatusLabel(ns)}`);
   }
-  if (ns === 'fully_paid' && c.outstanding_amount > 0.005) {
-    return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(`Cannot mark Fully Paid: RM ${money(c.outstanding_amount)} is still owed`)}`);
-  }
-  run("UPDATE cases SET status=?, closed_at=CASE WHEN ? IN ('closed','fully_paid','cancelled') THEN datetime('now') ELSE closed_at END, updated_at=datetime('now') WHERE id=?", [ns, ns, c.id]);
-  run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id,'status_change',`Status changed ${c.status} → ${ns}`,req.session.user.full_name]);
-  logAction(req,'status_change','case',c.id,`Status ${c.status} → ${ns}`);
+  if (ns === 'fully_paid' && c.outstanding_amount > 0.005) return fail(`Cannot mark Fully Paid: RM ${money(c.outstanding_amount)} is still owed`);
+  // N-08: lifting bankruptcy / deceased must say why (e.g. "bankruptcy order annulled").
+  const reason = String(req.body.reason ?? '').trim();
+  if (FROZEN.includes(c.status) && !FROZEN.includes(ns) && !reason) return fail(`A reason is required to lift ${caseStatusLabel(c.status)}`);
+  const by = req.session.user.full_name;
+  const note = reason ? ` — ${reason}` : '';
+  db.transaction(() => {
+    // closed_at follows the status: set when it closes, cleared when it reopens.
+    run(`UPDATE cases SET status=?, closed_at=CASE WHEN ? IN ('closed','fully_paid','cancelled') THEN datetime('now') ELSE NULL END,
+      updated_at=datetime('now') WHERE id=?`, [ns, ns, c.id]);
+    run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)", [c.id, 'status_change', `Status changed ${c.status} → ${ns}${note}`, by]);
+    // N-08: freezing a case closes its open promises — they can't be collected on.
+    if (FROZEN.includes(ns) && !FROZEN.includes(c.status)) {
+      const n = run("UPDATE ptps SET status='broken' WHERE case_id=? AND status='pending'", [c.id]).changes;
+      if (n) run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
+        [c.id, 'ptp_broken', `${n} pending promise(s) closed: case marked ${caseStatusLabel(ns)}`, by]);
+    }
+  })();
+  logAction(req, 'status_change', 'case', c.id, `Status ${c.status} → ${ns}${reason ? ' — reason: ' + reason : ''}`);
   res.redirect(`/cases/${c.id}?ok=Status+updated`);
 });
 

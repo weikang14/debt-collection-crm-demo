@@ -45,6 +45,7 @@
     <h2>Upcoming Follow-ups <span class="meta">next 14 days</span></h2>
     <% if (!followups.length) { %><%- include('../partials/empty', { msg: 'Nothing due for follow-up.' }) %><% } else { %>
     <div class="panel flush">
+      <div style="overflow-x:auto">
       <table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Agent</th><th>Task</th><th class="num">Outstanding</th></tr></thead>
       <tbody>
       <% followups.forEach(f => { const b = h.followupBadge(f.days_over); %>
@@ -54,6 +55,7 @@
       <td class="num"><%= h.money(f.outstanding_amount) %></td></tr>
       <% }) %>
       </tbody></table>
+      </div>
     </div>
     <% } %>
 

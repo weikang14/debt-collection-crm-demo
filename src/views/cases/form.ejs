@@ -51,7 +51,7 @@
       // Formulas mirror src/services/payments.js (dailyRate + interest-first caseBalance).
       var F={
         fixed:'<b>Fixed amount</b><br>outstanding = principal + interest − paid',
-        monthly:'<b>Monthly rate (interest-first)</b><br>daily rate = monthly% ÷ 100 ÷ 30<br>interest = Σ(remaining principal × daily rate × days)<br>days counted in whole days from Loan Start Date (same day = 0)<br>each payment clears interest first, then principal → paying principal shrinks later interest',
+        monthly:'<b>Monthly rate (interest-first)</b><br>interest = remaining principal × monthly% for each full month from the Loan Start Date (28- and 31-day months alike)<br>a part month is pro-rated by the actual days in that month<br>each payment clears interest first, then principal → paying principal shrinks later interest',
         daily:'<b>Annual rate (interest-first)</b><br>daily rate = annual% ÷ 100 ÷ 365<br>interest = Σ(remaining principal × daily rate × days)<br>days counted in whole days from Loan Start Date (same day = 0)<br>each payment clears interest first, then principal → paying principal shrinks later interest'
       };
       function sync(){var acc=sel.value!=='fixed';

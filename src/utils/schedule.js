@@ -15,8 +15,9 @@ const { round2, todayMYT } = require('./helpers');
 // Paid/outstanding/status are derived live from `payments` (a FIFO waterfall
 // in schedule order, independent of each payment's actual date) — nothing
 // here is persisted, so editing tenure/rate takes effect on the next read.
-// opts.arrears: a restructure's carried unpaid interest, owed first on the
-//   segment's start date (kind 'arrears'), ahead of the regular rows in FIFO.
+// opts.arrears: a restructure's carried unpaid interest (kind 'arrears'), due
+//   with the first new instalment (N-01) — so a fresh restructure isn't overdue
+//   the next day — and first in FIFO.
 // opts.superseded: a schedule replaced by a restructure — shown as history, so
 //   the ledger-settled override is skipped and unpaid rows read 'restructured'.
 function repaymentSchedule(c, payments, opts = {}) {
@@ -50,7 +51,7 @@ function repaymentSchedule(c, payments, opts = {}) {
     expectedList = dates.map((_, i) => (i === n - 1 ? round2(total - base * (n - 1)) : base));
   }
   const periods = dates.map((due, i) => ({ due, expected: expectedList[i], kind: 'regular' }));
-  if (opts.arrears > 0) periods.unshift({ due: c.loan_start_date, expected: round2(opts.arrears), kind: 'arrears' });
+  if (opts.arrears > 0) periods.unshift({ due: dates[0], expected: round2(opts.arrears), kind: 'arrears' });
   let pool = payments.reduce((s, p) => s + p.amount, 0);
   // The schedule projects on-time payment, but the ledger accrues by actual
   // payment date — paying early cuts interest below the projection. Once the

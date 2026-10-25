@@ -153,17 +153,21 @@ function overpayError(caseId, change) {
 // Nominal annual rate of a set of loan terms, in % — what the legal cap is
 // checked against (D-03). Fixed interest is annualised over the tenure in
 // months; null when that can't be done (no tenure).
+// Unrounded: the cap compares the exact value (18.0048% must not pass as 18.00%).
 function nominalAnnualRate(t, principal) {
-  if (t.interest_mode === 'monthly') return round2((t.interest_rate || 0) * 12);
-  if (t.interest_mode === 'daily') return round2(t.interest_rate || 0);
+  if (t.interest_mode === 'monthly') return (t.interest_rate || 0) * 12;
+  if (t.interest_mode === 'daily') return t.interest_rate || 0;
   if (!t.tenure || !(principal > 0)) return null;
-  return round2((t.interest_amount || 0) / principal / (t.tenure / 12) * 100);
+  return (t.interest_amount || 0) / principal / (t.tenure / 12) * 100;
 }
-const maxAnnualRate = () => (get('SELECT max_annual_rate m FROM settings WHERE id = 1') || {}).m ?? 18;
+// Act 400 ceiling for unsecured loans; the company setting may only be lower (N-03).
+// ponytail: one cap for all loans; secured loans (12%) need a per-case flag (G-13).
+const LEGAL_MAX_RATE = 18;
+const maxAnnualRate = () => Math.min(LEGAL_MAX_RATE, (get('SELECT max_annual_rate m FROM settings WHERE id = 1') || {}).m ?? LEGAL_MAX_RATE);
 // The cap check shared by Case form and Restructure. null when allowed.
 function rateCapError(t, principal) {
   const rate = nominalAnnualRate(t, principal), cap = maxAnnualRate();
-  return rate !== null && rate > cap + 1e-9 ? `Interest rate exceeds the ${cap}% p.a. limit (this loan: ${rate}% p.a.)` : null;
+  return rate !== null && rate > cap + 1e-9 ? `Interest rate exceeds the ${cap}% p.a. limit (this loan: ${round2(rate)}% p.a.)` : null;
 }
 
 function recomputeOutstanding(caseId) {
@@ -203,14 +207,14 @@ function paymentWrites(caseId, p) {
        VALUES (?,?,?,?,?,?,?,?,?,(SELECT agent_id FROM cases WHERE id = ?))`,
     [caseId, receipt_no, p.payment_date, Number(p.amount), p.method || 'bank_transfer', p.reference || null, p.bank || null, p.remark || null, by, caseId]);
   run(`INSERT INTO timeline_events (case_id, event_type, content, created_by) VALUES (?,?,?,?)`,
-    [caseId, 'payment', `Payment ${receipt_no}: RM ${Number(p.amount).toFixed(2)} via ${p.method || 'bank_transfer'}`, by]);
+    [caseId, 'payment', `Payment ${receipt_no}: RM ${Number(p.amount).toFixed(2)} via ${p.method || 'bank_transfer'}${p.remark ? ' — ' + p.remark : ''}`, by]);
   const outstanding = resyncCaseStatus(caseId, by);
   return { receipt_no, outstanding, status: get('SELECT status FROM cases WHERE id = ?', [caseId]).status };
 }
 function applyPayment(caseId, p, req) {
   let r;
   db.transaction(() => { r = paymentWrites(caseId, { ...p, created_by: req.session.user.full_name }); })();
-  logAction(req, 'payment', 'case', caseId, `Recorded payment ${r.receipt_no} amount ${p.amount}`);
+  logAction(req, 'payment', 'case', caseId, `Recorded payment ${r.receipt_no} amount ${p.amount}${p.remark ? ' — ' + p.remark : ''}`);
   return r;
 }
 
@@ -233,4 +237,4 @@ function resyncCaseStatus(caseId, by) {
   return outstanding;
 }
 module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, refreshStaleAccruals, caseBalance, applyPayment, paymentWrites,
-  resyncCaseStatus, dailyRate, daysBetween, accrue, monthsSince, localDate, settlementOn, overpayError, nominalAnnualRate, maxAnnualRate, rateCapError };
+  resyncCaseStatus, dailyRate, daysBetween, accrue, monthsSince, localDate, settlementOn, overpayError, nominalAnnualRate, maxAnnualRate, rateCapError, LEGAL_MAX_RATE };

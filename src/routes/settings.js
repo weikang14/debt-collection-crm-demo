@@ -1,12 +1,28 @@
 const express = require('express');
 const multer = require('multer');
-const { get, run } = require('../db');
+const { get, all, run } = require('../db');
+const { LEGAL_MAX_RATE, maxAnnualRate, nominalAnnualRate } = require('../services/payments');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { LOGO_MIME, MAX_LOGO_BYTES, toDataUrl } = require('../utils/logo');
 const router = express.Router();
 
 const adminOnly = requireRole('admin');
+
+// The rate cap may only be set at or below the Act 400 ceiling (N-03); blank keeps it.
+function parseMaxRate(raw, current) {
+  const s = String(raw ?? '').trim();
+  if (s === '') return { value: current ?? LEGAL_MAX_RATE };
+  const n = Number(s);
+  if (!/^\d+(\.\d+)?$/.test(s) || !(n > 0) || n > LEGAL_MAX_RATE) {
+    return { error: `Max annual interest rate must be above 0 and at most ${LEGAL_MAX_RATE}% (the legal limit)` };
+  }
+  return { value: n };
+}
+// Audit text for what changed, old → new (the logo is reported, not dumped).
+const settingsChanges = (old, next) => Object.keys(next)
+  .filter(k => String(old[k] ?? '') !== String(next[k] ?? ''))
+  .map(k => (k === 'logo' ? 'logo changed' : `${k}: ${old[k] ?? '—'} → ${next[k] ?? '—'}`));
 
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -19,7 +35,13 @@ const upload = multer({
 
 router.get('/', requireLogin, adminOnly, (req, res) => {
   const s = get('SELECT * FROM settings WHERE id=1') || {};
-  res.render('settings/form', { title: 'Company Settings', s });
+  // Open loans whose terms are above the current cap (after it was lowered).
+  const cap = maxAnnualRate();
+  const overCap = all(`SELECT id, case_no, principal_amount, interest_mode, interest_rate, interest_amount, tenure FROM cases
+    WHERE status NOT IN ('closed','cancelled') AND outstanding_amount > 0`)
+    .map(c => ({ ...c, rate: nominalAnnualRate(c, c.principal_amount) }))
+    .filter(c => c.rate !== null && c.rate > cap + 1e-9);
+  res.render('settings/form', { title: 'Company Settings', s, cap, overCap });
 });
 
 router.post('/', requireLogin, adminOnly, (req, res) => {
@@ -31,13 +53,10 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
     const phone = (b.phone || '').trim();
     const email = (b.email || '').trim();
     const reg_no = (b.reg_no || '').trim();
-    // Legal ceiling on a loan's nominal annual rate (D-03); blank keeps the current value.
-    const cur = get('SELECT max_annual_rate FROM settings WHERE id=1') || {};
-    const rateRaw = String(b.max_annual_rate ?? '').trim();
-    const max_annual_rate = rateRaw === '' ? (cur.max_annual_rate ?? 18) : Number(rateRaw);
-    if (!(Number.isFinite(max_annual_rate) && max_annual_rate > 0 && max_annual_rate <= 100)) {
-      return res.redirect('/settings?err=' + encodeURIComponent('Max annual interest rate must be between 0 and 100'));
-    }
+    const old = get('SELECT * FROM settings WHERE id=1') || {};
+    const rate = parseMaxRate(b.max_annual_rate, old.max_annual_rate);
+    if (rate.error) return res.redirect('/settings?err=' + encodeURIComponent(rate.error));
+    const max_annual_rate = rate.value;
 
     // Logo precedence: remove wins, then a new upload, else keep the existing.
     let logo;
@@ -51,9 +70,12 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
 
     run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, logo=?, max_annual_rate=?, updated_at=datetime('now') WHERE id=1`,
       [company_name, address, phone, email, reg_no, logo, max_annual_rate]);
-    logAction(req, 'update', 'settings', 1, `Updated company settings (${company_name || 'unnamed'})`);
+    const changes = settingsChanges(old, { company_name, address, phone, email, reg_no, logo, max_annual_rate });
+    logAction(req, 'update', 'settings', 1, `Updated company settings${changes.length ? ': ' + changes.join('; ') : ' (no changes)'}`);
     res.redirect('/settings?ok=' + encodeURIComponent('Company settings saved'));
   });
 });
 
 module.exports = router;
+module.exports.parseMaxRate = parseMaxRate;
+module.exports.settingsChanges = settingsChanges;
