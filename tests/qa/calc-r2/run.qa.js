@@ -72,7 +72,14 @@ async function main() {
   // newC(): create a case from input terms; remembers the terms for later recomputation.
   const terms = {};
   async function newC(label, t) {
-    const r = await C.newCase(s, debtor, t);
+    let r = await C.newCase(s, debtor, t);
+    // v1.11.0 compat (N-02, added 2026-10-26): an interest-bearing loan without tenure is refused.
+    // Record the refusal, then carry on with tenure 12 so the later scenarios still run.
+    if (!r.id && /Tenure is required/.test(r.err || '') && !t.tenure) {
+      results.push({ g: 'RULE', id: 'N-02', scenario: `${label}：v1.11.0 起不填期限被拒`, formula: '', expected: 'v1.10.0 允许', actual: r.err, result: 'RULE-CHANGE', note: '改用 tenure=12 继续' });
+      t = { ...t, tenure: 12 };
+      r = await C.newCase(s, debtor, t);
+    }
     if (!r.id) throw new Error(`create ${label}: ${r.err}`);
     terms[r.id] = { principal_amount: Number(t.principal_amount), interest_mode: t.interest_mode || 'fixed', interest_rate: t.interest_rate || 0,
       interest_amount: t.interest_amount || 0, loan_start_date: t.loan_start_date || null, tenure: t.tenure || null };
@@ -558,7 +565,9 @@ async function main() {
       '昨天（改派前）的 100 归 B：D-11 “收款时”指录入时还是收款日，待确认');
     cmp(g, 'B.earned', 'B 本月 Earned', '1334.57 × 7.5%', commission(bBack ? '1334.57' : '1234.57', 7.5), rowB && rowB.earned);
     const pay100 = C.q1('SELECT agent_id FROM payments WHERE case_id=? AND payment_date=?', id, backdated);
-    chk(g, 'BACKDATE', `补录 ${backdated}（改派前那天）的 100 归属`, '业务预期：A（当天负责的催收员）', pay100.agent_id === aA, pay100.agent_id === aA ? 'A' : pay100.agent_id === aB ? 'B' : String(pay100.agent_id), '待确认 Q');
+    // v1.11.0 (N-14): the loan starts today (no start date → opened), so yesterday's payment is refused.
+    if (!pay100) chk(g, 'BACKDATE', `补录 ${backdated}（改派前那天）的 100 归属`, '业务预期：A（当天负责的催收员）', false, 'v1.11.0 拒收：还款日期早于贷款起始日（N-14），无法验证归属', 'RULE-CHANGE');
+    else chk(g, 'BACKDATE', `补录 ${backdated}（改派前那天）的 100 归属`, '业务预期：A（当天负责的催收员）', pay100.agent_id === aA, pay100.agent_id === aA ? 'A' : pay100.agent_id === aB ? 'B' : String(pay100.agent_id), '待确认 Q');
     const tasks = C.qa('SELECT title, agent_id, status FROM tasks WHERE case_id=? ORDER BY id', id);
     chk(g, 'TASKS', '改派后任务：待办随案件转 B，已完成留 A', 'QA 待办→B；QA 已完成→A', tasks.find(t => t.title === 'QA 待办').agent_id === aB && tasks.find(t => t.title === 'QA 已完成').agent_id === aA, JSON.stringify(tasks));
     const rep = await C.reports(s);

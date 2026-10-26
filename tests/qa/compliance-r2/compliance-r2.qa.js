@@ -73,7 +73,9 @@ async function newCase(mgr, f) {
 // Settlement Today value shown on the case page.
 async function settlementShown(s, id) {
   const t = (await s.get(`/cases/${id}`)).text;
-  const m = t.match(/Settlement Today<\/div><div class="ledger-val">([\d,\.]+)/);
+  // v1.11.0 compat (G-24, added 2026-10-26): Settlement Today is now the lead figure (ledger-amt).
+  const m = t.match(/Settlement Today<\/div><div class="ledger-val">([\d,\.]+)/)
+    || t.match(/ledger-lbl">Settlement Today <small>[\s\S]*?ledger-amt"><span class="ledger-cur">RM<\/span>([\d,\.]+)/);
   return m ? num(m[1]) : null;
 }
 

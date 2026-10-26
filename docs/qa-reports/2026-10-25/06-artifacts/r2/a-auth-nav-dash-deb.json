@@ -1,0 +1,254 @@
+[
+ {
+  "id": "AUTH-01",
+  "expected": "Dashboard; System Admin/admin; audit login",
+  "actual": "302 /; footer=true; audit=User admin logged in",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-02",
+  "expected": "stay on login, red \"Invalid username or password\"",
+  "actual": "401 Invalid username or password",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-03",
+  "expected": "identical response for unknown user",
+  "actual": "401/401 \"Invalid username or password\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-04",
+  "expected": "inactive → Invalid username or password",
+  "actual": "401 Invalid username or password",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-06",
+  "expected": "redirect to Dashboard",
+  "actual": "302 /",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-07",
+  "expected": "all 302 → /login",
+  "actual": "302→/login, 302→/login, 302→/login, 302→/login, 302→/login, 302→/login",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-08",
+  "expected": "logout → /login; audit logout; back+refresh needs login",
+  "actual": "302→/login; audit=true; reuse cookie → 302 /login",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-09",
+  "expected": "opens without login, 5 accounts, login page has no link",
+  "actual": "200 rows=5 loginLink=false",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-10",
+  "expected": "footer shows current version (manual text says v1.8.0 — stale); /version newest first",
+  "actual": "footer v1.11.0; /version first=1.11.0 (1.11.0,1.11.0,1.10.0)",
+  "result": "FAIL",
+  "note": "手册写 v1.8.0，应为 v1.10.0（手册文字过时）"
+ },
+ {
+  "id": "AUTH-11",
+  "expected": "plain text ok",
+  "actual": "200 \"ok\" text/plain; charset=utf-8",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-12",
+  "expected": "all 403 Forbidden page",
+  "actual": "/users:403 /settings:403 /demo-tools:403 /audit-log:403 /agents:403 /cases/new:403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-01",
+  "expected": "menus match role table",
+  "actual": "all 5 roles match",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-03",
+  "expected": "active class on current item",
+  "actual": "all 12 pages highlight their item",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-05",
+  "expected": "green + red banners",
+  "actual": "ok=\"Note added\" err=\"Note must be 1–5000 characters\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-06",
+  "expected": "all titles follow pattern",
+  "actual": "25 pages ok, e.g. /cases/1=CASE-2026-D001 — Debt Collection CRM",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-01",
+  "expected": "Collected Today +100.00, payments +1",
+  "actual": "Payment RCPT-2026-0001 recorded; collected 0→100; n 0→1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-02",
+  "expected": "Collected Today unchanged",
+  "actual": "Payment RCPT-2026-0002 recorded; 100→100",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-03",
+  "expected": "active excl. terminal & Fully Paid; legal count",
+  "actual": "dash active=12 legal=2; db 12/2",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-04",
+  "expected": "due +1, broken +1, overdue = past-due pending",
+  "actual": "PTP created/PTP broken; due 0→1; broken 1→2; overdue 0 (db 0)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-05",
+  "expected": "matches Reports minus closed/cancelled",
+  "actual": "dash 134652.75 vs db 134652.75; special 46278 vs 46278.00; report Closed=8586 Cancelled=9504",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-06",
+  "expected": "opened +1, manual Closed +1, auto Fully Paid +1",
+  "actual": "opened 0→1; closed 0→1→2; Status updated; Payment RCPT-2026-0003 recorded; c12=fully_paid/2026-10-26 00:25:50",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-07",
+  "expected": "overdue +1, upcoming +2 (terminal-case task excluded)",
+  "actual": "overdue 1→2; upcoming 2→4",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-08",
+  "expected": "both sections sum to open balance; largest bar 100%",
+  "actual": "dpd=26989.75/46643/0/0/0/500 age=500/73632.75/0/0 open=74132.75 widths=58,100,0,0,0,1|1,100,0,0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-09",
+  "expected": "≤10, sorted, badge colours",
+  "actual": "rows=10 labels=1d late,1d late,Today,Today,Today,in 1d,in 1d,in 1d,in 1d,in 2d",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-10",
+  "expected": "visibility + top 5 by collected",
+  "actual": "{\"admin\":true,\"manager\":true,\"finance\":true,\"auditor\":true,\"agent1\":false} lb=24516,7965,3066,0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-11",
+  "expected": "call on top, ≤12 items, case link",
+  "actual": "items=12 first=\" Call: answered (30s) — DASH-11 call CASE-2026-D013 · System Admin · 2026-10-26 08:25 \"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-12",
+  "expected": "all figures/lists only agent1 cases",
+  "actual": "out 32790/32790; active 2/2; collected 100/100; foreign links=none",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-01",
+  "expected": "filters correct, sorted",
+  "actual": "high=5/5; name=Ravi Chandran; ic=; phone=Ravi Chandran; sorted=true",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "DEB-02",
+  "expected": "server says \"Name is required\"",
+  "actual": "err=\"Name is required\" (browser-side required: see ui.qa.py)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-03",
+  "expected": "back to list + banner + audit create debtor",
+  "actual": "/debtors \"Debtor created\" audit=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-04",
+  "expected": "Saved; new values; audit",
+  "actual": "\"Saved\" 011-7777777/high audit=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-05",
+  "expected": "cases with no/outstanding/status, clickable",
+  "actual": "page=1,13 db=1,13",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-06",
+  "expected": "list scoped; GET/edit/POST foreign → 403",
+  "actual": "list=1,5,9 mine=1,5,9; show=403 edit=403 post=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-07",
+  "expected": "can view; no buttons; POST 403",
+  "actual": "[{\"u\":\"finance\",\"list\":200,\"show\":200,\"newBtn\":false,\"edit\":false,\"post\":403},{\"u\":\"auditor\",\"list\":200,\"show\":200,\"newBtn\":false,\"edit\":false,\"post\":403}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-08",
+  "expected": "no button; /debtors/new 403; POST 403",
+  "actual": "btn=false new=403 post=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-09",
+  "expected": "escaped everywhere",
+  "actual": "detail escaped=true",
+  "result": "PASS",
+  "note": ""
+ }
+]

@@ -42,6 +42,14 @@ class Session {
     const loc = res.headers.get('location') || '';
     let ok = null, err = null;
     if (loc) { const u = new URL(loc, this.base); ok = u.searchParams.get('ok'); err = u.searchParams.get('err'); }
+    // v1.9.0+ compat (added 2026-10-26): banners moved from ?ok=/?err= into the session and show
+    // once as `.alert` on the next page — follow one same-origin redirect to read it.
+    if (loc && ok == null && err == null && method !== 'GET' && !/^https?:/.test(loc)) {
+      const g = await fetch(this.base + loc, { headers: this.cookie ? { cookie: this.cookie } : {}, redirect: 'manual' });
+      this._store(g);
+      const m = (await g.text()).match(/class="alert is-(green|red)">([^<]*)</);
+      if (m) { const t = m[2].replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&#34;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'); if (m[1] === 'green') ok = t; else err = t; }
+    }
     return { status: res.status, location: loc, ok, err, text, headers: res.headers };
   }
   get(url) { return this.req('GET', url); }
@@ -91,8 +99,8 @@ async function newDebtor(s, name, extra = {}) {
 }
 async function newCase(s, fields) {
   const r = await s.post('/cases', { priority: 'medium', status: 'new', ...fields });
-  const m = r.location.match(/^\/cases\/(\d+)\?ok=Case\+created/);
-  if (!m) throw new Error('case create failed ' + r.status + ' ' + r.location + ' ' + r.text.slice(0, 300));
+  const m = r.location.match(/^\/cases\/(\d+)(?:\?ok=Case\+created|$)/); // v1.9.0+: banner is in the session
+  if (!m || (r.ok !== 'Case created' && !/\?ok=/.test(r.location))) throw new Error('case create failed ' + r.status + ' ' + r.location + ' ' + r.text.slice(0, 300));
   return Number(m[1]);
 }
 const today = () => new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);

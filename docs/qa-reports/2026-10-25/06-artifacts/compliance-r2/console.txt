@@ -1,0 +1,44 @@
+[PASS] A1 monthly 1.5% x12 from 2026-01-01: id=21 interest_charged=1800
+[PASS] A2 monthly from 2026-01-31: whole month in a 28-day Feb: interest_charged=1800; months(01-31→02-28)=1; settlement interest on 2026-03-01=154.84 for 29 days = 19.49% p.a. on actual/365
+[OBSERVE] A3 annual 18% x12 from 2027-03-01 (contains 2028-02-29): accepted=true; interest_charged=1804.93 (18.049%)
+[PASS] A5 monthly 1.6% rejected: id=null flash=red:Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.)
+[PASS] A6 annual 18.5% rejected: id=null flash=red:Interest rate exceeds the 18% p.a. limit (this loan: 18.5% p.a.)
+[PASS] A7 fixed 2,000 / 10,000 / 12m rejected: id=null flash=red:Interest rate exceeds the 18% p.a. limit (this loan: 20% p.a.)
+[PASS] A8 fixed 9,000 / 10,000 with no tenure: accepted=false id=null flash=red:Tenure is required for a loan that charges interest; nominalAnnualRate=null
+[FAIL] A9 crafted POST: fixed 1,800 / 10,000, tenure 30 DAYS: accepted=true; stored tenure=30 months, maturity=2029-04-26; cap saw 7.199999999999999% p.a.; actual 219.0% p.a.
+[PASS] A10 monthly 1.5%, NO tenure, start 2021-06-01: accepted=false; interest today=null; projected interest at 2027-12-31=null vs principal 10,000
+[PASS] A11 monthly 1.5% x120 rejected (interest > principal): id=null flash=red:Total interest cannot exceed the principal
+[PASS] A12a manager cannot change cap: 403
+[FAIL] A12b admin raises cap 18→100: flash=red:Max annual interest rate must be above 0 and at most 18% (the legal limit); audit="create Created case CASE-2026-0004"
+[PASS] A12c with cap 100: monthly 8% x12 (96% p.a.): accepted=false interest=null
+[PASS] A12d cap back to 18: existing 96% loan flagged?: restored=18; page mentions limit/exceeds=n/a
+[PASS] B1a monthly loan, day 92: pay contract total 11,800: settlement shown=10450; flash=red:Amount exceeds what is owed on 2026-10-26: at most RM 10450.00
+[PASS] B1b pay settlement amount: flash=green:Payment RCPT-2026-0001 recorded; status=fully_paid; interest_charged=450; outstanding=0
+[OBSERVE] B2 fixed 1,800/12m settled on day 30: settlement=11800; green:Payment RCPT-2026-0002 recorded; interest kept=1800 ≈ 219% p.a. over the 30 days actually lent
+[PASS] C1 restructure 1.2%→1.5%/month: red:A restructure cannot raise the interest rate (14.4% → 18% p.a.)
+[PASS] C2 restructure monthly 1.5% (reducing) → fixed 1,800 flat over 12m: flash=red:A rate-based loan cannot be restructured to a fixed amount (pending legal review); effective rate of equal instalments=31.72% p.a. vs 18% on the interest-first basis
+[PASS] C3 s.17A(2): restructure 3,800 remaining principal over 120 months: remaining principal=3800; restructure red:Interest after the restructure plus carried arrears cannot exceed the remaining principal; unpaid interest at undefined if unpaid=undefined vs principal due u
+[FAIL] D1 edit principal & debtor of a case with payments: flash=red:Tenure is required for a loan that charges interest; payments=1; audit="Recorded payment RCPT-2026-0003 amount 8000"
+[PASS] D2 edit payment: flash=green:Payment updated; audit="Edited payment RCPT-2026-D004: amount 7965.00 → 7964.00; method bank_transfer → cash; reference TXN1003 → QA-NEW-REF; bank Maybank → —"
+[PARTIAL] D3 void newest payment then record another: void RCPT-2026-0004: green:Payment voided; row deleted=true; next receipt=RCPT-2026-0005
+[PASS] D4a agent edits manager note: red:You can only change your own notes
+[PASS] D4b agent deletes own note: audit="note_delete: Deleted note 50 (by Lim Wei Sheng): Agent note QA to delete"; row still exists=false
+[PASS] D5a task type visit: red:Invalid task type
+[OBSERVE] D5b follow_up task titled "Visit debtor at home address": flash=green:Task created; audit=task_create
+[PASS] D6 audit filter + CSV export: page=200; csv=200 text/csv; charset=utf-8; lines=30; audit rows added by export=0
+[FAIL] D7 agent changes debtor phone: flash=green:Saved; audit="Updated debtor Wong Kah Mun"
+[PASS] E0 session cookie lifetime: Expires=Mon, 26 Oct 2026 02:30:50 GMT (~120 min)
+[PASS] E1 deactivated user existing session: 302 /login
+[PASS] E2 cross-origin POST: 403
+[PASS] E3 7-char password: red:Password must be at least 8 characters
+[PASS] E4 payment reference with script payload: raw <script>alert(1) present=false
+[FAIL] F1 finance sees IC/salary/guarantor; searches by IC; agent exports CSV; statement printed: list has IC=false salary col=true; guarantor phone shown=true; IC search hit=false; csv phone=true; audit rows added=0
+[PASS] G1 bankrupt case 10: PTP / call / restructure / payment without & with reason: ptp=red:Not allowed while the case is Bankruptcy | call=red:Not allowed while the case is Bankruptcy | rs=red:This case cannot be restructured | pay no reason=red:A reason is required to accept a paym
+[PASS] G2 agent moves bankrupt case back to Negotiation, then PTP + call: status flash=red:Only a manager can change a Bankruptcy case; status now=bankruptcy; then PTP=red:Not allowed while the case is Bankruptcy; call=red:Not allowed while the case is Bankruptcy
+[PASS] G3 case 4 set bankrupt with a pending PTP; agent3 adds call task on deceased case 11: PTP#1 status after bankruptcy=broken; task on deceased case: red:Only legal tasks can be added to a bankrupt or deceased case
+[PASS] H1 agent: new debtor / Fully Paid / Closed: new debtor=403; fully_paid=red:Only a manager can set Fully Paid; closed=red:Only a manager can set Closed
+[PASS] I1 statement elements present: Loan Start Date=true; Interest Terms=true; Tenure=true; Maturity=true; Settlement=true; Overdue=true; Restructured=true; Payment history=true
+[OBSERVE] I2 statement elements still missing (s.19(1)/First Schedule): rate per annum wording for monthly loans=false; licence no.=false; signature=false; borrower address=false; instalments due & unpaid with due dates=false; title Statement of Account=false
+[FAIL] K1 receipt page: 404
+[PARTIAL] L1 demo debtors: Ahmad bin Ismail:880001-00-5501, Sarah Lim:900015-00-5522, Ravi Chandran:850020-00-5533, Nadia Hassan:920010-00-5544, Wong Kah Mun:780012-00-5555, Farah Aziz:950001-00-5566, Tan Boon Huat:830025-00-55
+saved 43 results

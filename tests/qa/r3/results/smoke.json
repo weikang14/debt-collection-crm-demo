@@ -1,0 +1,282 @@
+[
+ {
+  "id": "VERSION",
+  "expected": "登录页版本号 v1.11.0（线上测试的前提）",
+  "actual": "HTTP 200; 登录页 v1.11.0; http://127.0.0.1:3311; 浏览器 Chromium (Playwright 自带) 153.0.8010.12",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:04"
+ },
+ {
+  "id": "A-1",
+  "expected": "登录页显示 v1.11.0 和红色提示；登录后每个页面顶部也有这条提示",
+  "actual": "登录页 v1.11.0 + 提示=True（红色 alert is-red）；登录后 9 页缺提示: 无",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:05"
+ },
+ {
+  "id": "A-2",
+  "expected": "up to date；挂账行“Arrears (carried)”与新计划第一期同日到期；重组 10 天前、1.2%/月、18 个月",
+  "actual": "Overdue 小字=\"up to date\"；挂账行 2026-11-16 RM 239.95 vs 第一期 2026-11-16；计划状态 ['Pending']；重组历史 2026-10-16 · 1.2%/month · 18 months（期望生效日 2026-10-16）",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:05"
+ },
+ {
+  "id": "A-3",
+  "expected": "最大的数字是 Settlement Today；旁边 Contract Balance（含未到期利息）与逾期情况；逾期 ≤ 今日结清额",
+  "actual": "主数字标签=\"Settlement Today\" RM 2,932.65；Contract Balance 3,363.00；Overdue 42.75（28 days past due）",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:05"
+ },
+ {
+  "id": "A-4",
+  "expected": "案件 5 下拉只有 New/Assigned/Negotiation/PTP/Partial Paid；案件 17、10 无下拉，显示“only a manager can change it”",
+  "actual": "案件5 选项=['new', 'assigned', 'negotiation', 'ptp', 'partial_paid']；案件17 锁定=True；案件10(agent2) 锁定=True",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:06"
+ },
+ {
+  "id": "A-5",
+  "expected": "24 被拒（浏览器先拦截）；12 保存成功并出现红框“Open loans above the 12% p.a. cap: …”；审计“max_annual_rate: 18 → 12”；改回 18 后红框消失",
+  "actual": "浏览器拦截 24=True（\"Value must be less than or equal to 18.\"），提交后停留=True；服务端直接提交 24 → Max annual interest rate must be above 0 and at most 18% (the legal limit)；12 → Company settings saved；红框=\"Open loans above the 12% p.a. cap: CASE-2026-D002 (18%), CASE-2026-D004 (18%), CASE-2026-D014 (18%), CASE-2026-D020 (18%) — re-plan them with a restructure. Log\"；审计=max_annual_rate: 18 → 12；改回 18 后红框消失=True",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:07"
+ },
+ {
+  "id": "A-6",
+  "expected": "①② 提示“Tenure is required for a loan that charges interest”；③ 因超过 18% p.a. 被拒；三次都没有建成案件",
+  "actual": "① Tenure is required for a loan that charges interest；② Tenure is required for a loan that charges interest；③ Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)；案件数 20 → 20",
+  "result": "PASS",
+  "note": "③ 的提示写“this loan: 18% p.a.”（实际 18.0048%），数字被四舍五入，读者可能看不懂为何 18% 超过 18%",
+  "at_myt": "2026-10-26 08:37:07"
+ },
+ {
+  "id": "A-7",
+  "expected": "提交后按钮变灰；快速双击只生成一笔还款、一个收据号",
+  "actual": "第一次点击后按钮 disabled=True；还款行 0 → 1；今日 10.00 的还款 [('RCPT-2026-0001', '10.00')]",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:09"
+ },
+ {
+  "id": "A-7b",
+  "expected": "（服务端）10 秒内同金额同日期同 Reference 再提交只记一笔",
+  "actual": "再提交 → Payment RCPT-2026-0001 recorded；还款行 1 → 1",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:09"
+ },
+ {
+  "id": "A-8",
+  "expected": "提示“Payment date cannot be before the loan start date (日期)”，没有入账",
+  "actual": "起始日 2026-09-14，填 2026-09-13 → Payment date cannot be before the loan start date (2026-09-14)；还款行 1 → 1",
+  "result": "PASS",
+  "note": "案件 19 是 Fixed 贷款，详情页不显示 Loan Start Date（只在 Monthly/Annual 显示），清单写“日期填在详情页 Loan Start Date 之前”无法照做；起始日取自 Edit Case 页",
+  "at_myt": "2026-10-26 08:37:09"
+ },
+ {
+  "id": "A-9",
+  "expected": "原 pending PTP 自动变为 broken；时间线“1 pending promise(s) closed: case marked Bankruptcy”；不再有 New PTP/New Plan/Restructure/Log Call/Fulfill",
+  "actual": "Status updated；改前 pending 1 条，改后 PTP 状态 ['broken']；时间线=\"1 pending promise(s) closed: case marked Bankruptcy\"；按钮已隐藏 {'New PTP': True, 'New Plan': True, 'Restructure': True, 'Log Call': True, 'Fulfill': True}",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:09"
+ },
+ {
+  "id": "A-10",
+  "expected": "follow_up 被拒（“Only legal tasks can be added to a bankrupt or deceased case”）；legal 任务可以建",
+  "actual": "follow_up → Only legal tasks can be added to a bankrupt or deceased case；legal → Task created",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:09"
+ },
+ {
+  "id": "A-11",
+  "expected": "弹窗 Reason 必填（不填时浏览器拦截）；提交后原因显示在 Payments 的 Remark 列、时间线和 Audit Log",
+  "actual": "Reason required=True，空 Reason 浏览器拦截=True（弹窗仍开=True）；提交 → Payment RCPT-2026-0002 recorded；Remark 列=True；时间线=True；审计=True",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:10"
+ },
+ {
+  "id": "A-12",
+  "expected": "不填原因提示“A reason is required to lift Bankruptcy”；填了可以改，审计记下原因",
+  "actual": "不填 → A reason is required to lift Bankruptcy；填了 → Status updated，状态 Negotiation；审计含原因=True",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:10"
+ },
+ {
+  "id": "A-13",
+  "expected": "提示“A rate-based loan cannot be restructured to a fixed amount (pending legal review)”",
+  "actual": "err: A rate-based loan cannot be restructured to a fixed amount (pending legal review)",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:10"
+ },
+ {
+  "id": "A-14",
+  "expected": "Monthly 说明为“remaining principal × monthly% for each full month … pro-rated by the actual days in that month”；切换正常，没有脚本错误",
+  "actual": "点“!”显示=True；monthly=\"Monthly rate (interest-first)\ninterest = remaining principal × monthly% for each full month from the Loan Start Date (28- and 31-day months alike)\na part month is pro-rated by the actual days in that month\neach payment clears interest first, then principal → p\"；fixed=\"Fixed amount\noutstanding = principal + interest − paid\"；daily=\"Annual rate (interest-first)\ndaily rate = annual% ÷ 100 ÷ 365\ninterest = Σ(remai\"；脚本错误 无",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:11"
+ },
+ {
+  "id": "A-15",
+  "expected": "375px：没有横向滚动；Upcoming Follow-ups 表格在框内滚动；☰ 能打开和关闭侧栏",
+  "actual": "无横向滚动={'/': True, '/cases': True, '/cases/2': True, '/cases/14': True, '/tasks': True, '/reports': True}；Upcoming 表格容器={'overflowX': 'auto', 'scroll': 345, 'client': 345, 'tableWidth': 781}；☰ 打开=True 关闭=True",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:12"
+ },
+ {
+  "id": "B-1",
+  "expected": "7 个账号都能登录，菜单与权限一致（菜单里的页面 200，菜单外的 403/404）",
+  "actual": "全部登录成功；菜单: admin=12项; manager=8项; agent1=7项; agent2=7项; agent3=7项; finance=7项; auditor=9项；不一致: 无",
+  "result": "PASS",
+  "note": "手册 v1.2 的权限矩阵不在仓库里；期望值取自《使用手册》第三章角色表 + 侧栏代码",
+  "at_myt": "2026-10-26 08:37:13"
+ },
+ {
+  "id": "B-2",
+  "expected": "Dashboard 各项数字正常显示，没有报错页",
+  "actual": "{'admin': True, 'manager': True, 'agent1': True, 'finance': True, 'auditor': True}",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:14"
+ },
+ {
+  "id": "B-3",
+  "expected": "新建债务人和案件（Monthly 1.5%，12 个月）；还款计划 12 期、到期日逐月、合计 = 本金 + 利息",
+  "actual": "债务人 Debtor created #13；案件 #21 Case created；起始 2026-08-26；计划 12 期 2026-09-26…2027-08-26（期望 2026-09-26…2027-08-26）；每期 [180.0, 180.0, 180.0]…；合计 14160.0；Interest 2,160.00；Contract Balance 14,160.00；到期 2027-08-26",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:14"
+ },
+ {
+  "id": "B-4",
+  "expected": "部分还款后状态 Partial Paid，欠款正确（还 500 → 合同余额降 500 + 提前还本省下的未到期利息 21 = 521）",
+  "actual": "Payment RCPT-2026-0003 recorded；状态 Partial Paid；Contract Balance 14,160.00 → 13,639.00（降 521.00，独立计算 521.00）；Interest 2,139.00；Paid 500.00",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:14"
+ },
+ {
+  "id": "B-5",
+  "expected": "超额还款在弹窗内被拦截；提前结清只收到今天为止的利息",
+  "actual": "弹窗填 11960.00 被拦截=True（\"Value must be less than or equal to 11860.\"）；服务端 11860.01 → Amount exceeds what is owed on 2026-10-26: at most RM 11860.00；新案件 #22（2026-08-26 起 10,000 × 1.5%）今日结清额 10,300.00（独立计算 10,300.00，合同 11,800.00）→ Payment RCPT-2026-0004 recorded，状态 Fully Paid",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:14"
+ },
+ {
+  "id": "B-6",
+  "expected": "编辑并作废一笔还款，欠款恢复",
+  "actual": "编辑 500→600：Payment updated，Contract Balance 13,639.00 → 13,524.00（降 115.00，独立计算 115.00）；作废：Payment voided，→ 14,160.00（原 14,160.00），状态 Partial Paid",
+  "result": "PASS",
+  "note": "作废唯一一笔还款后状态仍是 Partial Paid（没有退回 Assigned）",
+  "at_myt": "2026-10-26 08:37:14"
+ },
+ {
+  "id": "B-7",
+  "expected": "还款计划第一期的 Pay 按钮能预填金额",
+  "actual": "Pay 按钮所在行 [0]（第一笔未还 0）；预填 180（期望 min(本期 180.0, 结清额 12360.0) = 180.0）；弹窗打开=True",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-8",
+  "expected": "新建 PTP → 履行（自动记一笔还款）→ 新建分期计划 → 取消计划（各期变 broken）",
+  "actual": "PTP PTP created；履行 PTP payment recorded；计划 Installment plan created；取消 Installment plan cancelled；分期状态 ['broken', 'broken', 'broken']；还款行 1",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-9",
+  "expected": "重组 → 生效日前的还款被锁定（不能编辑/作废）→ 撤销后恢复原条款",
+  "actual": "案件 #23；生效日 2026-10-26（可选 2026-09-26…2026-10-26）→ Restructured；Payments 显示 Locked=True；改锁定还款 → This payment belongs to a restructured period; undo the restructure first；作废 → This payment belongs to a restructured period; undo the restructure first；撤销 → Restructure undone；Contract Balance 11,500.00 → 11,500.00",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-10",
+  "expected": "记一次通话、加一条备注、修改状态，时间线正确（最新在上）",
+  "actual": "通话 Call logged；备注 Note added；状态 Status updated；时间线前 3 条 [('status_change', 'Status changed negotiation → negotiation'), ('note', 'B-10 note Edit Delete'), ('call', 'Call: answered (45s) — B-10 call')]",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-11",
+  "expected": "新建并完成一个任务",
+  "actual": "新建 Task created；完成 Task completed；案件 Records 里任务状态 ['done']",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-12",
+  "expected": "报表页正常显示，三个 CSV 都能下载",
+  "actual": "/reports 200；cases: HTTP 200 文件名=True csv=True 表头=\"﻿Case No,Debtor,Agent,Principal,Interest,Paid,Outstanding,Status,Opened\" 24 行；outstanding: HTTP 200 文件名=True csv=True 表头=\"﻿Status,Cases,Outstanding\" 12 行；performance: HTTP 200 文件名=True csv=True 表头=\"﻿Agent,Collected,Rate %,Commission,Target\" 5 行",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-13",
+  "expected": "佣金结算与作废（作废后待结算金额恢复）",
+  "actual": "Lim Wei Sheng 待结算 45.8；结算 1.00 → Settlement recorded；作废 → Settlement voided；作废后待结算 45.8",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-14",
+  "expected": "对账单可以打印（打印时隐藏按钮，生成 A4 PDF）",
+  "actual": "案件 2: 屏幕按钮 display=flex，打印 display=none，PDF 44207 字节；案件 5: 屏幕按钮 display=flex，打印 display=none，PDF 60103 字节；案件 14: 屏幕按钮 display=flex，打印 display=none，PDF 44543 字节",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-15",
+  "expected": "agent1 直接访问 /cases/2 被拒绝",
+  "actual": "HTTP 404；agent1 的案件列表含 2=False；agent1 列表 [5, 9, 13, 17]",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-16",
+  "expected": "auditor 的案件页只读",
+  "actual": "界面元素出现 {'Record Payment': False, 'Restructure': False, 'New PTP': False, 'New Plan': False, 'Log Call': False, 'Edit Case': False, 'status select': False, 'add note': False}；直接 POST 状态码 [403, 403, 403, 403]；Print statement 可见=True",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "B-17",
+  "expected": "Audit Log 有本次测试操作的记录",
+  "actual": "{'利率上限': True, '冻结原因收款': True, '解除破产原因': True, 'B-3 案件': True, '还款': True, '作废': True, '重组撤销': True}",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ },
+ {
+  "id": "JS-ERRORS",
+  "expected": "全程没有页面脚本错误",
+  "actual": "无",
+  "result": "PASS",
+  "note": "",
+  "at_myt": "2026-10-26 08:37:15"
+ }
+]

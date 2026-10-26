@@ -1,0 +1,590 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 546.835382
+  type: 'test'
+  ...
+# Subtest: CASE-01 列表筛选
+ok 2 - CASE-01 列表筛选
+  ---
+  duration_ms: 23.504184
+  type: 'test'
+  ...
+# Subtest: CASE-02 导出 CSV
+ok 3 - CASE-02 导出 CSV
+  ---
+  duration_ms: 9.496302
+  type: 'test'
+  ...
+# Subtest: CASE-03 新建必填
+ok 4 - CASE-03 新建必填
+  ---
+  duration_ms: 20.688977
+  type: 'test'
+  ...
+# Subtest: CASE-04 新建成功
+not ok 5 - CASE-04 新建成功
+  ---
+  duration_ms: 8.674421
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:60:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of null (reading '1')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:62:49)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-05 默认值
+ok 6 - CASE-05 默认值
+  ---
+  duration_ms: 4.388644
+  type: 'test'
+  ...
+# Subtest: CASE-07 到期日（月末对齐）
+ok 7 - CASE-07 到期日（月末对齐）
+  ---
+  duration_ms: 99.286151
+  type: 'test'
+  ...
+# Subtest: CASE-08 编辑案件
+not ok 8 - CASE-08 编辑案件
+  ---
+  duration_ms: 0.617893
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:78:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:32:23)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:79:13)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-09 新建 / 编辑权限
+ok 9 - CASE-09 新建 / 编辑权限
+  ---
+  duration_ms: 76.676041
+  type: 'test'
+  ...
+# Subtest: CASE-10 账面区
+not ok 10 - CASE-10 账面区
+  ---
+  duration_ms: 49.94776
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:93:1'
+  failureType: 'testCodeFailure'
+  error: 'CASE-10: expected Total Outstanding；x% recovered=已还÷(本金+利息)；Principal/Interest/Paid/Maturity；opened N days ago; actual Outstanding=10,389.90; 9%（期望 9%）; P=10,000.00 I=1,696.06 Paid=1,000.00 M=2027-01-01; opened 0 days ago'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:99:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-11 修改状态
+not ok 11 - CASE-11 修改状态
+  ---
+  duration_ms: 0.767864
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:101:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:32:23)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:102:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-12 结案时间
+not ok 12 - CASE-12 结案时间
+  ---
+  duration_ms: 92.188237
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:109:1'
+  failureType: 'testCodeFailure'
+  error: 'CASE-12: expected 记录结案时间；Dashboard closed 当天 +1; actual closed:有 fully_paid:无 cancelled:有; dashboard closed=2'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:117:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-13 备注增删改
+not ok 13 - CASE-13 备注增删改
+  ---
+  duration_ms: 3.892089
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:119:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:121:13)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-14 通话记录
+not ok 14 - CASE-14 通话记录
+  ---
+  duration_ms: 6.207859
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:135:1'
+  failureType: 'testCodeFailure'
+  error: 'CASE-14: expected Call logged；Records→Calls；时间线 Call: answered (60s) — 备注; actual null; Calls 表=false; 时间线=false'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:139:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-15 Records 弹窗（顺序；开关见 ui.qa.py）
+ok 15 - CASE-15 Records 弹窗（顺序；开关见 ui.qa.py）
+  ---
+  duration_ms: 20.877724
+  type: 'test'
+  ...
+# Subtest: CASE-16 时间线（倒序与徽章颜色）
+ok 16 - CASE-16 时间线（倒序与徽章颜色）
+  ---
+  duration_ms: 7882.056576
+  type: 'test'
+  ...
+# Subtest: CASE-17 Next Action
+not ok 17 - CASE-17 Next Action
+  ---
+  duration_ms: 23.314753
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:167:1'
+  failureType: 'testCodeFailure'
+  error: 'CASE-17: expected 显示最早到期的待办（日期 · 标题）; actual Next Action = "undefined"'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:172:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-18 催收员越权
+ok 18 - CASE-18 催收员越权
+  ---
+  duration_ms: 9.974479
+  type: 'test'
+  ...
+# Subtest: CASE-19 审计员只读
+ok 19 - CASE-19 审计员只读
+  ---
+  duration_ms: 9.443119
+  type: 'test'
+  ...
+# Subtest: CASE-20 财务视图
+ok 20 - CASE-20 财务视图
+  ---
+  duration_ms: 7.323463
+  type: 'test'
+  ...
+# Subtest: INT-03 Fixed 模式
+not ok 21 - INT-03 Fixed 模式
+  ---
+  duration_ms: 8.119821
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:193:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:103:75)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:194:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-04 Monthly 模式
+not ok 22 - INT-04 Monthly 模式
+  ---
+  duration_ms: 31.175885
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:198:1'
+  failureType: 'testCodeFailure'
+  error: 'INT-04: expected 利息 1,825.00；Total 11,825.00（计到 2027-01-01）; actual I=1,800.00 T=11,470.97 M=2027-01-01'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:201:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-05 Annual 模式
+not ok 23 - INT-05 Annual 模式
+  ---
+  duration_ms: 29.619003
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:203:1'
+  failureType: 'testCodeFailure'
+  error: 'INT-05: expected 利息 6,570.00；Total 43,070.00; actual I=6,570.00 T=41,864.00'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:206:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-06 + PAY-15 先息后本 / 提前还本省息
+not ok 24 - INT-06 + PAY-15 先息后本 / 提前还本省息
+  ---
+  duration_ms: 44.230273
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:208:1'
+  failureType: 'testCodeFailure'
+  error: 'INT-06: expected 先冲 300 利息、700 冲本金；总利息 1,718.25；Total 10,718.25; actual Payment RCPT-2026-0003 recorded; I=1,696.06 T=10,389.90'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:213:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-07 当天不计息
+not ok 25 - INT-07 当天不计息
+  ---
+  duration_ms: 7.654165
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:216:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:103:75)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:217:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-08 到期后停止计息
+not ok 26 - INT-08 到期后停止计息
+  ---
+  duration_ms: 34.454581
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:223:1'
+  failureType: 'testCodeFailure'
+  error: 'INT-08: expected 利息不再增加（封顶到期日 2025-09-01，92 天 = 460.00）; actual 页面利息 450.00；asOf 2026-12-31 → 450'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:227:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-09 起始日缺失
+not ok 27 - INT-09 起始日缺失
+  ---
+  duration_ms: 7.732448
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:229:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:103:75)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:230:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-10 改回 Fixed
+not ok 28 - INT-10 改回 Fixed
+  ---
+  duration_ms: 9.117775
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:234:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:103:75)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:235:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-01 记一笔还款
+ok 29 - PAY-01 记一笔还款
+  ---
+  duration_ms: 45.36716
+  type: 'test'
+  ...
+# Subtest: PAY-02 部分还款状态
+ok 30 - PAY-02 部分还款状态
+  ---
+  duration_ms: 0.695236
+  type: 'test'
+  ...
+# Subtest: PAY-03 + SCH-09 全额还清（Fixed 计划）
+ok 31 - PAY-03 + SCH-09 全额还清（Fixed 计划）
+  ---
+  duration_ms: 46.818066
+  type: 'test'
+  ...
+# Subtest: PAY-04 超额拦截
+ok 32 - PAY-04 超额拦截
+  ---
+  duration_ms: 20.807034
+  type: 'test'
+  ...
+# Subtest: PAY-05 无效金额
+ok 33 - PAY-05 无效金额
+  ---
+  duration_ms: 25.732782
+  type: 'test'
+  ...
+# Subtest: PAY-06 无效日期
+ok 34 - PAY-06 无效日期
+  ---
+  duration_ms: 16.174908
+  type: 'test'
+  ...
+# Subtest: PAY-07 终态不被改写
+not ok 35 - PAY-07 终态不被改写
+  ---
+  duration_ms: 291.283555
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:281:1'
+  failureType: 'testCodeFailure'
+  error: 'PAY-07: expected 欠款减少，状态不变（含还清后）; actual legal:legal/0 bankruptcy:bankruptcy/500 deceased:deceased/500 closed:closed/0 cancelled:cancelled/0'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:290:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-08 PTP 状态优先
+ok 36 - PAY-08 PTP 状态优先
+  ---
+  duration_ms: 47.548038
+  type: 'test'
+  ...
+# Subtest: PAY-09 编辑还款
+ok 37 - PAY-09 编辑还款
+  ---
+  duration_ms: 35.857317
+  type: 'test'
+  ...
+# Subtest: PAY-10 作废还款（含 Fully Paid 回 Negotiation）
+ok 38 - PAY-10 作废还款（含 Fully Paid 回 Negotiation）
+  ---
+  duration_ms: 73.323554
+  type: 'test'
+  ...
+# Subtest: PAY-11 催收员不能改账
+ok 39 - PAY-11 催收员不能改账
+  ---
+  duration_ms: 14.443209
+  type: 'test'
+  ...
+# Subtest: PAY-12 收据号连续
+not ok 40 - PAY-12 收据号连续
+  ---
+  duration_ms: 45.152718
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:329:1'
+  failureType: 'testCodeFailure'
+  error: 'PAY-12: expected 按年递增 1; actual 0014 → 0014'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:333:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-13 作废后的收据号（期望不复用）
+ok 41 - PAY-13 作废后的收据号（期望不复用）
+  ---
+  duration_ms: 62.758176
+  type: 'test'
+  ...
+# Subtest: PAY-14 Reference 含单引号（期望 Edit 正常）
+ok 42 - PAY-14 Reference 含单引号（期望 Edit 正常）
+  ---
+  duration_ms: 53.838274
+  type: 'test'
+  ...
+# Subtest: SCH-01 显示条件
+ok 43 - SCH-01 显示条件
+  ---
+  duration_ms: 103.065595
+  type: 'test'
+  ...
+# Subtest: SCH-02 期数与日期
+ok 44 - SCH-02 期数与日期
+  ---
+  duration_ms: 33.79121
+  type: 'test'
+  ...
+# Subtest: SCH-03 计息模式金额
+not ok 45 - SCH-03 计息模式金额
+  ---
+  duration_ms: 32.811352
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:366:1'
+  failureType: 'testCodeFailure'
+  error: 'SCH-03: expected 155.00 / 140.00 / 10,155.00; actual 150.00 / 150.00 / 10,150.00'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:369:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-04 Fixed 等额分期
+ok 46 - SCH-04 Fixed 等额分期
+  ---
+  duration_ms: 31.126883
+  type: 'test'
+  ...
+# Subtest: SCH-05 依次抵扣
+ok 47 - SCH-05 依次抵扣
+  ---
+  duration_ms: 58.978336
+  type: 'test'
+  ...
+# Subtest: SCH-06 状态
+ok 48 - SCH-06 状态
+  ---
+  duration_ms: 66.029421
+  type: 'test'
+  ...
+# Subtest: SCH-07 Pay 按钮
+ok 49 - SCH-07 Pay 按钮
+  ---
+  duration_ms: 9.063349
+  type: 'test'
+  ...
+# Subtest: SCH-08 只读角色
+ok 50 - SCH-08 只读角色
+  ---
+  duration_ms: 8.33778
+  type: 'test'
+  ...
+# Subtest: SCH-09 提前还清（计息案件）
+not ok 51 - SCH-09 提前还清（计息案件）
+  ---
+  duration_ms: 55.08463
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:402:1'
+  failureType: 'testCodeFailure'
+  error: 'SCH-09: expected 所有期 Paid，Outstanding 全为 0; actual 打开详情前库内欠款=11800; max=11800; null; 还后 Total=10,270.97; 计划 Overdue/150.00,Pending/150.00,Pending/10,150.00; 账面 Interest=1,800.00 Paid=0.00（恒等式见手册外 X-OVERPAY）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:408:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-10 实时重算
+not ok 52 - SCH-10 实时重算
+  ---
+  duration_ms: 44.013583
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:410:1'
+  failureType: 'testCodeFailure'
+  error: 'SCH-10: expected 计划按新条款重算; actual 改前 3 期首期 12.00；改后 3 期首期 12.00'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:415:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..52
+# tests 52
+# suites 0
+# pass 31
+# fail 21
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 11206.892629

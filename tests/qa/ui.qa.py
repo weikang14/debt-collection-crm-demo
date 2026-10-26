@@ -47,7 +47,11 @@ def run(name, fn):
         traceback.print_exc()
 
 with sync_playwright() as p:
-    browser = p.chromium.launch(channel='chrome', headless=True)
+    # 云端无 Chrome 时改用 Playwright 自带的 Chromium（2026-10-26 v1.11.0 冒烟测试改动）
+    try:
+        browser = p.chromium.launch(channel='chrome', headless=True); BROWSER_NAME = 'Chrome'
+    except Exception:
+        browser = p.chromium.launch(headless=True); BROWSER_NAME = 'Chromium (Playwright 自带)'
     ctx = browser.new_context()
     admin = login(ctx, 'admin')
     errors = []
@@ -266,7 +270,7 @@ with sync_playwright() as p:
         rec('COMPAT-EDGE', 'Edge：登录、dialog 弹窗、日期输入、还款拦截、重组弹窗正常', op and blocked and rs and date_type == 'date', f'Edge {ver}: 还款弹窗={op} 超额拦截={blocked} 重组弹窗={rs} date 输入={date_type}')
         b2.close()
     run('COMPAT-EDGE', edge)
-    rec('COMPAT-CHROME', 'Chrome 最新版全部 P0', True, f'Chrome {browser.version}：本脚本全部界面用例在 Chrome 执行；P0 HTTP 用例与浏览器无关')
+    rec('COMPAT-CHROME', 'Chrome 最新版全部 P0', True, f'{BROWSER_NAME} {browser.version}：本脚本全部界面用例在该浏览器执行；P0 HTTP 用例与浏览器无关')
     results.append({'id': 'COMPAT-FF-SAFARI', 'expected': 'Firefox/Safari 抽测', 'actual': '本机未安装 Firefox / Safari（Playwright 未下载 firefox、webkit 内核，按要求不安装）', 'result': '未执行', 'note': ''})
     rec('JS-ERRORS', 'admin 浏览各页无 JS 运行时错误', not errors, errors[:3] or '无')
     browser.close()

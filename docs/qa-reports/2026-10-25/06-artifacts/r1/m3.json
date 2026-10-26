@@ -1,0 +1,212 @@
+[
+ {
+  "id": "PTP-01",
+  "expected": "PTP created；状态 PTP；金色时间线；audit ptp_create",
+  "actual": "PTP created; status=ptp; audit=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-02",
+  "expected": "浏览器 max；服务端 Amount exceeds outstanding",
+  "actual": "max 属性=true; Amount exceeds outstanding",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-03",
+  "expected": "PTP fulfilled and payment recorded；fulfilled；自动还款备注 PTP fulfilled；欠款减少；audit 两条",
+  "actual": "金额预填=true; PTP payment recorded; payment RCPT-2026-0001 remark=PTP fulfilled (RM 500.00); 欠款=2500; status=partial_paid",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PTP-05",
+  "expected": "PTP already resolved，不重复记账",
+  "actual": "PTP already resolved; 还款笔数 1→1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-04",
+  "expected": "PTP broken；broken；无其他 pending 时回 Negotiation（无确认框 E-12）",
+  "actual": "PTP broken; 状态 ptp→negotiation; Break 无确认框=false",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PTP-07",
+  "expected": "浏览器拦截；服务端 Installments must be 2–60",
+  "actual": "1→Installments must be 2–60; 61→Installments must be 2–60",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-08",
+  "expected": "Total too small for the number of installments",
+  "actual": "Total too small for the number of installments",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-11",
+  "expected": "finance/auditor 无按钮；agent1 越权 403",
+  "actual": "finance: fulfill=false break=false cancel=false; auditor: fulfill=false break=false cancel=false; agent1 fulfill 403 break 403; PTP 仍 pending",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-01",
+  "expected": "仅 admin/manager 打开未结清案件可见",
+  "actual": "{\"admin\":true,\"manager\":true,\"agent1\":false,\"finance\":false,\"auditor\":false,\"closed\":false,\"canc\":false,\"paid\":false}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-02",
+  "expected": "显示截至今天剩余本金/未付利息；默认今天；下限=起算日/最近还款日/上次重组次日最晚者；上限今天",
+  "actual": "本金 9,304.84 利息 1,085.06（期望 1,106.70）; min=2026-03-02 max=2026-10-26 value=2026-10-26",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-05",
+  "expected": "依次提示 Interest rate is required / Interest amount is required / Tenure must be 1–120 months / Reason is required；未建重组",
+  "actual": "{\"rate\":\"Interest rate is required\",\"amt\":\"Interest amount is required\",\"tenure\":\"Tenure must be 1–120 months\",\"reason\":\"Reason is required\"} 重组数=0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-06",
+  "expected": "0/121/1.5 均提示 Tenure must be 1–120 months",
+  "actual": "Tenure must be 1–120 months | Tenure must be 1–120 months | Tenure must be 1–120 months",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-07",
+  "expected": "Effective date must be between 下限 and 今天",
+  "actual": "Effective date must be between 2026-03-02 and 2026-10-26 | Effective date must be between 2026-03-02 and 2026-10-26",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-08",
+  "expected": "Restructured；Maturity=生效日+18 月；Restructured on；金色时间线；audit",
+  "actual": "Restructured; Maturity=2027-10-01; 时间线=false; audit=Restructured from 2026-04-01 (18 months)",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-09",
+  "expected": "标题 since restructure on 日期；首行挂账 2026-04-01 139.50；之后 18 期",
+  "actual": "首行 {\"due\":\"2026-05-01\",\"arrears\":true,\"exp\":\"135.07\",\"paid\":\"0.00\",\"out\":\"135.07\",\"status\":\"Overdue\"}; 行数 19; 第2行 2026-05-01 111.66",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-10",
+  "expected": "卡片显示生效日/新条款/期限/操作人/截点本金/挂账欠息/原因；Superseded 未还期显示 Restructured",
+  "actual": " Restructure History 2026-04-01 · 1.2%/month · 18 months · by Collection Manager Principal at cut RM 9,304.84 · Arrears carried RM 135.07 Reason: QA 降低月供 Undo Superseded schedule (12 rows) Due Date Expected Paid Outstanding Status 2026-02-01 150.00 150.00 0.00",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-11",
+  "expected": "挂账 139.50；Total 11,478.06；总利息 2,478.06",
+  "actual": "Total=10,199.90 Interest=2,449.75",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-12",
+  "expected": "Locked · restructured，无 Edit/Void；直接提交提示锁定",
+  "actual": "edit→This payment belongs to a restructured period; undo the restructure first; void→This payment belongs to a restructured period; undo the restructure first",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-13",
+  "expected": "日期框 min=生效日；绕过提示 Payment date must be on or after the restructure date (日期)",
+  "actual": "Payment date must be after the restructure date (2026-04-01)",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-14",
+  "expected": "提示锁定；条款只读/禁用；快捷按钮隐藏；其他字段可保存；篡改不改条款",
+  "actual": "UI 锁定=true; Saved; 条款未变=true; priority=urgent agent=2; Total=10,199.90",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-12",
+  "expected": "日期框不能早于生效日；绕过提示 Payment date must be on or after the restructure date (日期)",
+  "actual": "Payment date must be after the restructure date (2026-04-01)",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-16",
+  "expected": "生效日后有还款时 Undo 消失；直接提交提示 Payments exist…；作废后可撤销",
+  "actual": "有还款时 Undo=false; 提交→Payments exist after the effective date; void them first; 作废后 Undo=true",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-15",
+  "expected": "Restructure undone；恢复原条款；时间线 Restructure undone: from 日期；audit；Edit Case 解锁",
+  "actual": "Restructure undone; Total=10,389.90; 解锁=true; audit=true",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-17",
+  "expected": "新生效日≥上次次日；新的在上；只有最新有 Undo；撤销较早提示 Only the latest restructure can be undone",
+  "actual": "同日→Effective date must be between 2026-05-02 and 2026-10-26; 第二次→Restructured; 新在上=true; Undo 数=1; 撤销旧→Only the latest restructure can be undone",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-03",
+  "expected": "红色提示 No valid effective date today — it must be on or after …",
+  "actual": "No valid effective date today — it must be on or after 2026-10-27.",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-18",
+  "expected": "（截点本金+500）/12 等额；挂账行最前",
+  "actual": "首行 1,200.00(arrears=true); 其余 875.00; 行数 13",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-19",
+  "expected": "agent、finance 返回 403",
+  "actual": "agent1:403/403 finance:403/403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-20",
+  "expected": "This case cannot be restructured",
+  "actual": "This case cannot be restructured | This case cannot be restructured | This case cannot be restructured",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-21",
+  "expected": "截点欠息只计到原到期日（2025-07-01，181 天 = 905.00）",
+  "actual": "arrears_at_cut=900 principal_at_cut=10000",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-22",
+  "expected": "挂账行、新计划、重组历史（10 天前、1.2%/月、18 个月、原因）",
+  "actual": "首行 {\"due\":\"2026-11-16\",\"arrears\":true,\"exp\":\"239.95\",\"paid\":\"0.00\",\"out\":\"239.95\",\"status\":\"Pending\"}; 行数 19",
+  "result": "FAIL",
+  "note": ""
+ }
+]

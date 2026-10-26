@@ -1,0 +1,163 @@
+[
+ {
+  "id": "X-RBAC",
+  "expected": "与第 3 章权限矩阵一致（允许的通过，不允许的 403/404/Forbidden）",
+  "actual": "183 个请求；不一致 1：agent1 POST /debtors → 403  ",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-RBAC-GET",
+  "expected": "GET 页面权限与矩阵一致",
+  "actual": "auditor GET /agents → 302 | auditor GET /agents/1 → 302 | auditor GET /audit-log → 302 | agent1 GET /debtors/new → 403 | auditor GET /commissions → 302 | auditor GET /reports → 302",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-SCOPE",
+  "expected": "全部拒绝且数据不变",
+  "actual": "403/403/404",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-STALE",
+  "expected": "列表/仪表盘/CSV 与详情页欠款一致",
+  "actual": "建案后：列表 11,800.00，仪表盘 334,800.75→346,600.75，CSV「CASE-2026-0005,QA RBAC 债务人,Lim Wei Sheng,10000,1800,0,11800,New,2026-10-26」；打开详情后：列表 11,800.00，仪表盘 346,600.75",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-VAL-ID",
+  "expected": "非数字/不存在 id 返回 404 或明确错误，不 500，不误报成功",
+  "actual": "/cases/abc:404 /cases/99999:404 /cases/-1:404 /cases/1.5:404 /cases/0:404 /cases/abc/statement:404 /cases/abc/edit:404 /debtors/abc:404 /debtors/99999:404 /agents/abc:404 /agents/99999:404; /users/abc/edit→null; 完成不存在任务→ok=\"null\"; 编辑不存在任务→Not found; 作废不存在结算→ok=\"null\"; /ptps/abc/fulfill→404",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-VAL-CASE",
+  "expected": "服务端拒绝负数/非数字/溢出/非法日期/超范围期限",
+  "actual": "{\"负本金\":\"拒绝 Invalid principal\",\"非数字本金\":\"拒绝 Invalid principal\",\"溢出本金1e309\":\"拒绝 Invalid principal\",\"负利率\":\"拒绝 Invalid interest rate\",\"负固定利息\":\"拒绝 Invalid interest amount\",\"非法起始日\":\"拒绝 Invalid loan start date\",\"超长期限20000月\":\"拒绝 Tenure must be 1–120 months\",\"小数期限\":\"拒绝 Tenure must be 1–120 months\",\"仪表盘总欠款\":\"346,600.75\",\"报表合计\":\"364,690.75\"}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-VAL-PAY",
+  "expected": "拒绝不足 1 分/超过 2 位小数/十六进制/未来日期/非白名单方式",
+  "actual": "{\"金额 0.001（不足 1 分）\":\"Invalid amount\",\"金额 100.005（3 位小数）\":\"Invalid amount\",\"金额十六进制 0x10\":\"Invalid amount\",\"金额 Infinity\":\"Invalid amount\",\"金额科学计数 1e2\":\"Invalid amount\",\"未来日期 2099-01-01\":\"Payment date cannot be in the future\",\"早于放款 2000-01-01\":\"Payment date cannot be before the loan start date (2026-10-26)\",\"日期带时间 2026-10-01T10:00\":\"Invalid payment date\",\"方式任意字符串\":\"Invalid payment method\",\"超长 Referen",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-ERR",
+  "expected": "异常返回友好错误页，不泄露堆栈/绝对路径；服务不崩溃",
+  "actual": "HTTP 302; 泄露堆栈与路径=false（片段: ）; 之后 /health=ok; 未知路由 404 “<!doctype html><html lang=\"en\"><head>\n<m”",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CONC-1",
+  "expected": "只记 1 笔还款，其余提示 PTP already resolved",
+  "actual": "还款 1 笔；响应 PTP already resolved /  / PTP already resolved /  / ",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-CONC-2",
+  "expected": "只有一笔成功，另一笔 Amount exceeds outstanding",
+  "actual": "Payment RCPT-2026-0007 recorded / Amount exceeds outstanding; 库 1 笔 700",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CONC-3",
+  "expected": "重复提交不应生成重复 PTP/计划；承诺总额不应超过欠款",
+  "actual": "pending PTP 1 条合计 RM 1000（欠款 RM 1,000）；计划 0 个",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CONC-4",
+  "expected": "10 笔并发还款收据号唯一、无 500",
+  "actual": "RCPT-2026-0008,RCPT-2026-0008,,,,RCPT-2026-0008,,RCPT-2026-0008,,",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-OVERPAY",
+  "expected": "恒等式 Outstanding = Principal + Interest − Paid 成立；或 max 只允许当日结清额",
+  "actual": "弹窗 max=11,800.00（按合同期计到到期日）；今天还 max 后：Principal 10,000.00 + Interest 1,800.00 − Paid 0.00 = 11,800.00，页面 Outstanding 10,270.97；多收 RM -11,800.00 无任何记录；回收率 0%",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-EDITCAP",
+  "expected": "编辑后金额不应超过该日真实应还（10,300.00）",
+  "actual": "编辑上限=11,696.06，null；结果 Principal 10,000.00 Interest 1,696.06 Paid 11,696.06 Outstanding 10,696.06",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-BREAK-FULFILLED",
+  "expected": "已履行/已违约的 PTP 再 Break 应被拒绝（PTP already resolved）",
+  "actual": "Break 已履行 PTP → null；再 Break → null；PTP 状态 fulfilled；还款仍 1 笔；ptp_broken 时间线 0 条",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-DEMO-FK",
+  "expected": "Delete demo data 不报错，自建数据保留",
+  "actual": "HTTP 302 Demo data deleted - your trial data is kept；失败后演示案件剩余 0、演示还款剩余 0（deleteDemo 无事务，半删除）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CSV-INJ",
+  "expected": "以 = + - @ 开头的单元格应被转义（加前导单引号）",
+  "actual": "CASE-2026-0015,\"'=HYPERLINK(\"\"http://evil.example\"\",\"\"点我\"\")\",,,1,0,medium,New,2026-10-26",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-TIMING",
+  "expected": "已存在用户错密码与不存在用户耗时相近（比值 0.67–1.5）",
+  "actual": "已存在用户中位 1.9ms；不存在用户中位 2.1ms；比值 1.09；状态码 401,429（DUMMY_HASH 代价 10，用户哈希代价 8）",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-HEADERS",
+  "expected": "Cookie 带 SameSite/Secure；有防点击劫持等安全头",
+  "actual": "Set-Cookie 属性: ; x-frame-options=DENY, content-security-policy=无, x-content-type-options=nosniff, strict-transport-security=无; x-powered-by=null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "X-FLASH",
+  "expected": "ok/err 提示不应来自任意 URL 参数（内容伪造）",
+  "actual": "null",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-STATUS",
+  "expected": "欠款 > 0 时不应可手动标 Fully Paid；agent 不应能删除他人备注且应留审计",
+  "actual": "agent1 标 Fully Paid → null（欠款 5000，closed_at=null）；agent1 删除 manager 备注 → null，已删除=false，备注审计 20 条",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-ORDER",
+  "expected": "最新事件在最上（third → second → payment → created）",
+  "actual": "页面顺序: third > second > Status changed assigned → partial_paid > Payment RCPT-2026-0011: RM 10.00 via ban > Case CASE-2026-0017 created（created_at 只精确到秒，同秒按插入先后升序）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-AUTOCLOSE",
+  "expected": "自动还清时记录结案时间并写状态变更",
+  "actual": "status=fully_paid closed_at=2026-10-26 00:23:03 status_change 事件=1",
+  "result": "PASS",
+  "note": ""
+ }
+]

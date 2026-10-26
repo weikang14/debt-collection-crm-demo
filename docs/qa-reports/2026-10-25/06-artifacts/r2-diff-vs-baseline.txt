@@ -1,0 +1,44 @@
+## a-auth-nav-dash-deb.json  old {"PASS":36}  new {"PASS":34,"FAIL":2}
+  AUTH-10: PASS -> FAIL :: footer v1.11.0; /version first=1.11.0 (1.11.0,1.11.0,1.10.0)
+  DEB-01: PASS -> FAIL :: high=5/5; name=Ravi Chandran; ic=; phone=Ravi Chandran; sorted=true
+## b-case-int-pay-sch.json  old {"PASS":63}  new {"PASS":52,"BLOCKED":5,"FAIL":6}
+  CASE-04: PASS -> BLOCKED :: ERROR: TypeError: Cannot read properties of undefined (reading 'case_no') at /home/user/debt-collection-crm-demo/tests/qa/r2/b-case-int-pay-sch.qa.js:50:64 at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async step (/home/user
+  CASE-08: PASS -> BLOCKED :: ERROR: TypeError: Cannot read properties of undefined (reading 'details') at /home/user/debt-collection-crm-demo/tests/qa/r2/b-case-int-pay-sch.qa.js:71:247 at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async step (/home/use
+  CASE-10: PASS -> FAIL :: outstanding=10,696.06 settle=10,389.90 overdue=350.00 (86 days past due) 9% recovered I=1,696.06 mat=2027-01-01
+  CASE-15: PASS -> FAIL :: positions=10386,14541,17725,17856,18637,18760
+  INT-03: PASS -> BLOCKED :: ERROR: Error: case create failed 302 /cases/new {"type":"err","text":"Tenure is required for a loan that charges interest"} at Object.newCase (/home/user/debt-collection-crm-demo/tests/qa/r2/_client.js:120:11) at process.processTicksAndRejections (node:interna
+  INT-07: PASS -> BLOCKED :: ERROR: Error: case create failed 302 /cases/new {"type":"err","text":"Tenure is required for a loan that charges interest"} at Object.newCase (/home/user/debt-collection-crm-demo/tests/qa/r2/_client.js:120:11) at process.processTicksAndRejections (node:interna
+  INT-09: PASS -> BLOCKED :: ERROR: Error: case create failed 302 /cases/new {"type":"err","text":"Tenure is required for a loan that charges interest"} at Object.newCase (/home/user/debt-collection-crm-demo/tests/qa/r2/_client.js:120:11) at process.processTicksAndRejections (node:interna
+  INT-12: PASS -> FAIL :: 24:null case=null; 18:Company settings saved; Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.)
+  INT-14: PASS -> FAIL :: null / Case not found
+  PAY-12: PASS -> FAIL :: 0015→0015
+  SCH-06: PASS -> FAIL :: after150=2026-09-01:Paid 2026-10-01:Overdue 2026-11-01:Pending 2026-12-01:Pending 2027-01-01:Pending 2027-02-01:Pending | after250=Paid,Paid,Pending,Pending,Pending,Pending
+## c-ptp-rs.json  old {"PASS":41}  new {"PASS":38,"FAIL":2,"BLOCKED":1}
+  PTP-16: PASS -> FAIL :: Not allowed while the case is Bankruptcy | Not allowed while the case is Bankruptcy | PTP already resolved
+  RS-09: PASS -> FAIL :: head=true; first={"due":"2026-05-01","arrears":true,"expected":135.07,"paid":0,"outstanding":135.07,"status":"Overdue","action":"<button type=\"button\" class=\"btn btn-sm btn-gold\" onclick=\"payInstallment(135.07)\">Pay</button>"}; n=19
+  RS-18: PASS -> BLOCKED :: ERROR: TypeError: Cannot read properties of undefined (reading 'principal_at_cut') at /home/user/debt-collection-crm-demo/tests/qa/r2/c-ptp-rs.qa.js:288:29 at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async step (/home/user
+## d-task-agt-usr-rpt-com-misc.json  old {"PASS":69}  new {"PASS":65,"BLOCKED":1,"FAIL":3}
+  TASK-11: PASS -> BLOCKED :: ERROR: TypeError: Cannot read properties of undefined (reading 'details') at /home/user/debt-collection-crm-demo/tests/qa/r2/d-task-agt-usr-rpt-com-misc.qa.js:105:292 at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async step 
+  SRCH-01: PASS -> FAIL :: case=14 name=15,3 ic= phone=15,3
+  SET-06: PASS -> FAIL :: missing: days past due
+  SET-09: PASS -> FAIL :: Max annual interest rate must be above 0 and at most 18% (the legal limit) | Max annual interest rate must be above 0 and at most 18% (the legal limit) | null
+## e-smoke-e2e-sec.json  old {"PASS":33,"见 npm test":1,"未执行":1}  new {"PASS":30,"见 npm test":1,"FAIL":1,"未执行":1,"BLOCKED":1}
+  E2E-04: PASS -> FAIL :: YNNYY cases= debtors=
+  AUTH-05: PASS -> BLOCKED :: ERROR: TypeError: fetch failed at node:internal/deps/undici/undici:14902:13 at process.processTicksAndRejections (node:internal/process/task_queues:105:5) at async Session.req (/home/user/debt-collection-crm-demo/tests/qa/r2/_client.js:41:17) at async /home/us
+  SEC-07: PASS -> (missing)
+## r-regression.json  old {"PASS":12,"PARTIAL":2}  new {"PASS":13,"PARTIAL":1}
+  F-20: PARTIAL -> PASS :: payment dated 2020-01-01 on a loan starting 2026-06-01 → Payment date cannot be before the loan start date (2026-06-01)
+## ui.json  old {"PASS":27,"FAIL":3}  new {"PASS":30}
+  NAV-04: FAIL -> PASS :: toggle=True open=True closeByBackdrop=True noHScroll={'/': True, '/cases': True, '/cases/14': True, '/tasks': True, '/reports': True, '/commissions': True}
+  INT-02: FAIL -> PASS :: toggle shown=True hidden=True; monthly text: 'Monthly rate (interest-first)\ninterest = remaining principal × monthly% for each full month from the Loan Start Date (28- and 31-day months alike)\na part month is pro-rated by the actual days in that month\neach 
+  X-STATUS-UI: FAIL -> PASS :: []
+## x-outside-manual.json  old {"PASS":23,"FAIL":11}  new {"PASS":28,"FAIL":6}
+  X-STATUS: FAIL -> PASS :: Only a manager can change a Legal case / Only a manager can change a Cancelled case / Only a manager can change a Bankruptcy case; then PTP=Not allowed while the case is Bankruptcy, call=Not allowed while the case is Bankruptcy; now 9:cancelled 10:bankruptcy 1
+  X-CAP-2: FAIL -> PASS :: monthly 1.5004 → Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.); annual 18.004 → Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)
+  X-CAP-3: FAIL -> PASS :: fixed 5000 no tenure → Tenure is required for a loan that charges interest
+  X-CAP-7: PASS -> FAIL :: null; annual 18.5 → Interest rate exceeds the 18% p.a. limit (this loan: 18.5% p.a.)
+  X-DUP-7: FAIL -> PASS :: rows=1
+  X-REASSIGN-1: PASS -> FAIL :: null; task agent=1; still on agent1 list=true
+  X-PARTIAL-1: FAIL -> PASS :: header=0/3; ptp=partially_kept
+  X-RS-ARREARS: FAIL -> PASS :: this case: Overdue 0.00 (up to date); demo case 14: 0.00 (up to date)
+  X-DEMO-FK: FAIL -> PASS :: other pins on agent 1=0; POST → 302 /demo-tools; banner={"type":"ok","text":"Demo data deleted - your trial data is kept"}; demo cases left=0; agent 1 exists=true

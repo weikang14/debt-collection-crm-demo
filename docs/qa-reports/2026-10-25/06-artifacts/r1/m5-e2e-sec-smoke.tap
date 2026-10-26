@@ -1,0 +1,186 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 625.559279
+  type: 'test'
+  ...
+# Subtest: E2E-01 新案件全生命周期
+not ok 2 - E2E-01 新案件全生命周期
+  ---
+  duration_ms: 263.213549
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:32:1'
+  failureType: 'testCodeFailure'
+  error: 'E2E-01: expected 各检查点通过; actual 1 建案:✓(CASE-2026-0001 new 计划12期) | 2 agent1 可见:✓(Cases 可见=true) | 3 通话+PTP:✓(status=ptp PTP due 0→1) | 4 履行:✗(RCPT-2026-0001 欠款 11800→11210 status=partial_paid) | 5 finance Pay + max 还清:✗(Pay 预填 100（第4期）; max 11092; status=partial_paid; 计划全 Paid=false; 本金+利息=11692 已还=600) | 6 Closed:✓(closed 0→1（自动 Fully Paid 未计入 closed，见 E-08）) | 7 审计:✓(create>status_change>call>ptp_create>payment>ptp_fulfilled>payment>status_change)'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:65:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-02 分期违约转法务
+not ok 3 - E2E-02 分期违约转法务
+  ---
+  duration_ms: 99.251544
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:67:1'
+  failureType: 'testCodeFailure'
+  error: 'E2E-02: expected 各检查点通过; actual 建计划:✓(333.33/333.33/333.34 ptp) | 履行第1期:✗(ptp) | 取消计划:✓(fulfilled,broken,broken negotiation) | 转 Legal:✗(legal 1→1; 还款后 partial_paid)'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:84:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-03 重组与撤销
+not ok 4 - E2E-03 重组与撤销
+  ---
+  duration_ms: 229.890738
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:86:1'
+  failureType: 'testCodeFailure'
+  error: 'E2E-03: expected 各检查点通过; actual 示例A:✗(10,389.90) | 重组:✗(10,199.90) | finance 还款:✓(Payment date must be after the restructure date (2026-04-01) / Payment RCPT-2026-0006 recorded) | 撤销被拒:✓(Payments exist after the effective date; void them first) | 撤销成功:✗(Restructure undone 10,389.90 时间线重组记录 2)'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:107:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-04 新员工入职与离职
+not ok 5 - E2E-04 新员工入职与离职
+  ---
+  duration_ms: 100.935608
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:109:1'
+  failureType: 'testCodeFailure'
+  error: 'login qa_newbie failed: 401 '
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    as (/home/user/debt-collection-crm-demo/tests/qa/_client.js:67:53)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:117:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-05 月底佣金结算
+ok 6 - E2E-05 月底佣金结算
+  ---
+  duration_ms: 81.914375
+  type: 'test'
+  ...
+# Subtest: E2E-06 + SEC-09 越权巡检（agent1）
+ok 7 - E2E-06 + SEC-09 越权巡检（agent1）
+  ---
+  duration_ms: 58.296977
+  type: 'test'
+  ...
+# Subtest: SEC-01 SQL 注入
+ok 8 - SEC-01 SQL 注入
+  ---
+  duration_ms: 51.163716
+  type: 'test'
+  ...
+# Subtest: SEC-02 脚本注入（XSS）
+ok 9 - SEC-02 脚本注入（XSS）
+  ---
+  duration_ms: 172.328893
+  type: 'test'
+  ...
+# Subtest: SEC-03 事件属性注入（期望不执行）
+ok 10 - SEC-03 事件属性注入（期望不执行）
+  ---
+  duration_ms: 44.643209
+  type: 'test'
+  ...
+# Subtest: SEC-04 密码存储
+ok 11 - SEC-04 密码存储
+  ---
+  duration_ms: 0.579387
+  type: 'test'
+  ...
+# Subtest: SEC-05 生产会话密钥
+ok 12 - SEC-05 生产会话密钥
+  ---
+  duration_ms: 137.083914
+  type: 'test'
+  ...
+# Subtest: SEC-06 CSRF
+not ok 13 - SEC-06 CSRF
+  ---
+  duration_ms: 125.694573
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:227:1'
+  failureType: 'testCodeFailure'
+  error: 'SEC-06: expected 确认当前无 CSRF 令牌（已知风险 E-05，上线前评估）; actual 跨站 Origin 的 POST → null（ptp→ptp）; Set-Cookie: connect.sid=…; Path=/; Expires=Mon, 26 Oct 2026 02:22:55 GMT; HttpOnly（无 SameSite/Secure）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:234:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SEC-07 登录限流
+ok 14 - SEC-07 登录限流
+  ---
+  duration_ms: 0.688
+  type: 'test'
+  ...
+# Subtest: SEC-08 演示账号（正式环境）
+ok 15 - SEC-08 演示账号（正式环境）
+  ---
+  duration_ms: 2.68454
+  type: 'test'
+  ...
+# Subtest: SMOKE 冒烟清单（本地 18 项）
+not ok 16 - SMOKE 冒烟清单（本地 18 项）
+  ---
+  duration_ms: 2409.597477
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:243:1'
+  failureType: 'testCodeFailure'
+  error: 'SMOKE: expected 18 项全部通过; actual #3 CASE-2026-0001 计划 12 期首期 150.00; #4 Payment RCPT-2026-0001 recorded 10,389.90 partial_paid; #6 Payment updated/Payment voided 欠款 10636.06→10696.06'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:286:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 10
+# fail 6
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5310.395889

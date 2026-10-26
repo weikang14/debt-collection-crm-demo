@@ -1,0 +1,297 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 709.938533
+  type: 'test'
+  ...
+# Subtest: X-RBAC 写操作越权矩阵
+not ok 2 - X-RBAC 写操作越权矩阵
+  ---
+  duration_ms: 1754.898019
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:23:1'
+  failureType: 'testCodeFailure'
+  error: 'X-RBAC: expected 与第 3 章权限矩阵一致（允许的通过，不允许的 403/404/Forbidden）; actual 183 个请求；不一致 1：agent1 POST /debtors → 403  '
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:80:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-RBAC-GET 只读页面越权
+not ok 3 - X-RBAC-GET 只读页面越权
+  ---
+  duration_ms: 264.354752
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:82:1'
+  failureType: 'testCodeFailure'
+  error: 'X-RBAC-GET: expected GET 页面权限与矩阵一致; actual auditor GET /agents → 302 | auditor GET /agents/1 → 302 | auditor GET /audit-log → 302 | agent1 GET /debtors/new → 403 | auditor GET /commissions → 302 | auditor GET /reports → 302'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:89:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-SCOPE agent 写他人债务人 / 他人任务 / 他人案件状态
+ok 4 - X-SCOPE agent 写他人债务人 / 他人任务 / 他人案件状态
+  ---
+  duration_ms: 11.647829
+  type: 'test'
+  ...
+# Subtest: X-STALE 新建计息案件在列表/仪表盘显示的欠款未含利息（打开详情才重算）
+ok 5 - X-STALE 新建计息案件在列表/仪表盘显示的欠款未含利息（打开详情才重算）
+  ---
+  duration_ms: 79.116091
+  type: 'test'
+  ...
+# Subtest: X-VAL 非数字 / 不存在的 id
+not ok 6 - X-VAL 非数字 / 不存在的 id
+  ---
+  duration_ms: 58.787556
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:118:1'
+  failureType: 'testCodeFailure'
+  error: 'X-VAL-ID: expected 非数字/不存在 id 返回 404 或明确错误，不 500，不误报成功; actual /cases/abc:404 /cases/99999:404 /cases/-1:404 /cases/1.5:404 /cases/0:404 /cases/abc/statement:404 /cases/abc/edit:404 /debtors/abc:404 /debtors/99999:404 /agents/abc:404 /agents/99999:404; /users/abc/edit→null; 完成不存在任务→ok="null"; 编辑不存在任务→Not found; 作废不存在结算→ok="null"; /ptps/abc/fulfill→404'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:125:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-VAL 案件金额 / 日期 / 期限边界（绕过前端）
+ok 7 - X-VAL 案件金额 / 日期 / 期限边界（绕过前端）
+  ---
+  duration_ms: 73.372067
+  type: 'test'
+  ...
+# Subtest: X-VAL 还款输入边界
+ok 8 - X-VAL 还款输入边界
+  ---
+  duration_ms: 119.633747
+  type: 'test'
+  ...
+# Subtest: X-VAL PTP / 计划 / 通话 / 任务 / 债务人 / 催收员 输入
+not ok 9 - X-VAL PTP / 计划 / 通话 / 任务 / 债务人 / 催收员 输入
+  ---
+  duration_ms: 132.039165
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:172:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'r')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    /home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:191:254
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:191:19)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-ERR 500 页面泄露堆栈 / 服务存活
+ok 10 - X-ERR 500 页面泄露堆栈 / 服务存活
+  ---
+  duration_ms: 16.190423
+  type: 'test'
+  ...
+# Subtest: X-CONC-1 同一 PTP 并发 5 个 fulfill
+not ok 11 - X-CONC-1 同一 PTP 并发 5 个 fulfill
+  ---
+  duration_ms: 82.382835
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:211:1'
+  failureType: 'testCodeFailure'
+  error: 'X-CONC-1: expected 只记 1 笔还款，其余提示 PTP already resolved; actual 还款 1 笔；响应 PTP already resolved /  / PTP already resolved /  / '
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:217:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-CONC-2 并发两笔全额还款
+ok 12 - X-CONC-2 并发两笔全额还款
+  ---
+  duration_ms: 34.340635
+  type: 'test'
+  ...
+# Subtest: X-CONC-3 双击/并发创建 PTP 与分期计划
+ok 13 - X-CONC-3 双击/并发创建 PTP 与分期计划
+  ---
+  duration_ms: 47.526564
+  type: 'test'
+  ...
+# Subtest: X-CONC-4 收据号并发唯一
+not ok 14 - X-CONC-4 收据号并发唯一
+  ---
+  duration_ms: 140.342161
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:233:1'
+  failureType: 'testCodeFailure'
+  error: 'X-CONC-4: expected 10 笔并发还款收据号唯一、无 500; actual RCPT-2026-0008,RCPT-2026-0008,,,,RCPT-2026-0008,,RCPT-2026-0008,,'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:237:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-OVERPAY 计息案件提前按 max 还清，多收部分被静默丢弃
+not ok 15 - X-OVERPAY 计息案件提前按 max 还清，多收部分被静默丢弃
+  ---
+  duration_ms: 70.783367
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:241:1'
+  failureType: 'testCodeFailure'
+  error: 'X-OVERPAY: expected 恒等式 Outstanding = Principal + Interest − Paid 成立；或 max 只允许当日结清额; actual 弹窗 max=11,800.00（按合同期计到到期日）；今天还 max 后：Principal 10,000.00 + Interest 1,800.00 − Paid 0.00 = 11,800.00，页面 Outstanding 10,270.97；多收 RM -11,800.00 无任何记录；回收率 0%'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:247:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-EDITCAP 编辑计息案件还款的上限可超过真实应还
+not ok 16 - X-EDITCAP 编辑计息案件还款的上限可超过真实应还
+  ---
+  duration_ms: 82.094399
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:249:1'
+  failureType: 'testCodeFailure'
+  error: 'X-EDITCAP: expected 编辑后金额不应超过该日真实应还（10,300.00）; actual 编辑上限=11,696.06，null；结果 Principal 10,000.00 Interest 1,696.06 Paid 11,696.06 Outstanding 10,696.06'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:256:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-BREAK-FULFILLED 已履行的 PTP 仍可被 Break
+ok 17 - X-BREAK-FULFILLED 已履行的 PTP 仍可被 Break
+  ---
+  duration_ms: 70.060037
+  type: 'test'
+  ...
+# Subtest: X-DEMO-FK 演示催收员有自建数据时删除演示数据
+ok 18 - X-DEMO-FK 演示催收员有自建数据时删除演示数据
+  ---
+  duration_ms: 179.564687
+  type: 'test'
+  ...
+# Subtest: X-CSV-INJ CSV 公式注入
+ok 19 - X-CSV-INJ CSV 公式注入
+  ---
+  duration_ms: 30.768564
+  type: 'test'
+  ...
+# Subtest: X-TIMING 登录用户名枚举（响应时间）
+not ok 20 - X-TIMING 登录用户名枚举（响应时间）
+  ---
+  duration_ms: 451.629589
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:284:1'
+  failureType: 'testCodeFailure'
+  error: 'X-TIMING: expected 已存在用户错密码与不存在用户耗时相近（比值 0.67–1.5）; actual 已存在用户中位 1.9ms；不存在用户中位 2.1ms；比值 1.09；状态码 401,429（DUMMY_HASH 代价 10，用户哈希代价 8）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:295:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-HEADERS 会话 Cookie 与安全响应头
+not ok 21 - X-HEADERS 会话 Cookie 与安全响应头
+  ---
+  duration_ms: 18.286656
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:297:1'
+  failureType: 'testCodeFailure'
+  error: 'X-HEADERS: expected Cookie 带 SameSite/Secure；有防点击劫持等安全头; actual Set-Cookie 属性: ; x-frame-options=DENY, content-security-policy=无, x-content-type-options=nosniff, strict-transport-security=无; x-powered-by=null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:79:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:301:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-FLASH 任意 URL 参数显示为系统提示
+ok 22 - X-FLASH 任意 URL 参数显示为系统提示
+  ---
+  duration_ms: 13.140681
+  type: 'test'
+  ...
+# Subtest: X-STATUS 手动把有欠款的案件标为 Fully Paid / agent 删除他人备注
+ok 23 - X-STATUS 手动把有欠款的案件标为 Fully Paid / agent 删除他人备注
+  ---
+  duration_ms: 48.827985
+  type: 'test'
+  ...
+# Subtest: X-ORDER 同一秒内的时间线事件顺序
+ok 24 - X-ORDER 同一秒内的时间线事件顺序
+  ---
+  duration_ms: 51.303968
+  type: 'test'
+  ...
+# Subtest: X-AUTOCLOSE 还款自动 Fully Paid 不写 status_change 时间线与 closed_at（E-08 复核）
+ok 25 - X-AUTOCLOSE 还款自动 Fully Paid 不写 status_change 时间线与 closed_at（E-08 复核）
+  ---
+  duration_ms: 30.58878
+  type: 'test'
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 15
+# fail 10
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 5486.135022

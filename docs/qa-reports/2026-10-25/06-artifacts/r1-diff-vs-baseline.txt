@@ -1,0 +1,113 @@
+## all.json  old {"PASS":240,"FAIL":30,"BLOCKED":2,"未执行":1}  new {"PASS":240,"FAIL":30,"BLOCKED":2,"未执行":1}
+## m1.json  old {"PASS":36,"FAIL":1}  new {"PASS":27,"FAIL":8}
+  AUTH-10: PASS -> FAIL :: 登录页 v1.8.0=false; 版本顺序 1.11.0 > 1.10.0 > 1.9.0 > 1.8.0 > 1.7.0 > 1.6.0 > 1.5.1 > 1.5.0 > 1.4.0 > 1.3.0 > 1.2.0 > 1.1.0 > 1.0.0
+  NAV-05: PASS -> FAIL :: 成功=null；失败=null
+  NAV-06: FAIL -> PASS :: 全部符合
+  DASH-03: PASS -> FAIL :: 页面 active=12 legal=2；库 active=14（含 fully_paid 2）legal=2
+  DASH-05: PASS -> FAIL :: dashboard 134652.75；reports Total 152,742.75
+  DASH-12: PASS -> FAIL :: 页面 {"collected":100,"payments":1,"active":2,"legal":1,"ptpDue":0,"ptpOverdue":0,"ptpBroken":0,"outstanding":32790,"opened":0,"closed":0,"overdueTasks":1,"upcoming":1}；期望 {"outstanding":42294,"active":2,"legal":1,"collected":100,"ptpBroken":0,"overdueTasks":1}；
+  DEB-01: PASS -> FAIL :: high 5 条; 'Lim' → Sarah Lim; IC → ; phone → Nadia Hassan; 排序=true
+  DEB-03: PASS -> FAIL :: /debtors; guarantor=QA 担保人; audit=Created debtor QA 债务人甲
+  DEB-08: PASS -> FAIL :: null; 列表可见=false
+  AUTH-05: PASS -> (missing)
+  DEB-04: PASS -> (missing)
+## m2.json  old {"PASS":50,"FAIL":2}  new {"PASS":30,"FAIL":13}
+  CASE-10: PASS -> FAIL :: Outstanding=10,389.90; 9%（期望 9%）; P=10,000.00 I=1,696.06 Paid=1,000.00 M=2027-01-01; opened 0 days ago
+  CASE-12: PASS -> FAIL :: closed:有 fully_paid:无 cancelled:有; dashboard closed=2
+  CASE-14: PASS -> FAIL :: null; Calls 表=false; 时间线=false
+  CASE-17: PASS -> FAIL :: Next Action = "undefined"
+  INT-04: PASS -> FAIL :: I=1,800.00 T=11,470.97 M=2027-01-01
+  INT-05: PASS -> FAIL :: I=6,570.00 T=41,864.00
+  INT-06: PASS -> FAIL :: Payment RCPT-2026-0003 recorded; I=1,696.06 T=10,389.90
+  INT-08: PASS -> FAIL :: 页面利息 450.00；asOf 2026-12-31 → 450
+  PAY-07: PASS -> FAIL :: legal:legal/0 bankruptcy:bankruptcy/500 deceased:deceased/500 closed:closed/0 cancelled:cancelled/0
+  PAY-12: PASS -> FAIL :: 0014 → 0014
+  PAY-13: FAIL -> PASS :: 作废 RCPT-2026-0015 后新还款收据号 = RCPT-2026-0016；时间线同号记录: Payment RCPT-2026-0015: RM 10.00 via bank_transfer | Payment RCPT-2026-0015 voided (RM 10.00)
+  PAY-14: FAIL -> PASS :: onclick 源码: openEditPayment(this)；HTML 解码后 JS 语法有效=true（浏览器点击验证见 ui.qa.py）
+  SCH-03: PASS -> FAIL :: 150.00 / 150.00 / 10,150.00
+  SCH-09: PASS -> FAIL :: 打开详情前库内欠款=11800; max=11800; null; 还后 Total=10,270.97; 计划 Overdue/150.00,Pending/150.00,Pending/10,150.00; 账面 Interest=1,800.00 Paid=0.00（恒等式见手册外 X-OVERPAY）
+  SCH-10: PASS -> FAIL :: 改前 3 期首期 12.00；改后 3 期首期 12.00
+  CASE-04: PASS -> (missing)
+  CASE-08: PASS -> (missing)
+  CASE-11: PASS -> (missing)
+  CASE-13: PASS -> (missing)
+  INT-03: PASS -> (missing)
+  PAY-15: PASS -> (missing)
+  INT-07: PASS -> (missing)
+  INT-09: PASS -> (missing)
+  INT-10: PASS -> (missing)
+## m3.json  old {"PASS":33}  new {"PASS":17,"FAIL":13}
+  PTP-03: PASS -> FAIL :: 金额预填=true; PTP payment recorded; payment RCPT-2026-0001 remark=PTP fulfilled (RM 500.00); 欠款=2500; status=partial_paid
+  PTP-04: PASS -> FAIL :: PTP broken; 状态 ptp→negotiation; Break 无确认框=false
+  RS-02: PASS -> FAIL :: 本金 9,304.84 利息 1,085.06（期望 1,106.70）; min=2026-03-02 max=2026-10-26 value=2026-10-26
+  RS-08: PASS -> FAIL :: Restructured; Maturity=2027-10-01; 时间线=false; audit=Restructured from 2026-04-01 (18 months)
+  RS-09: PASS -> FAIL :: 首行 {"due":"2026-05-01","arrears":true,"exp":"135.07","paid":"0.00","out":"135.07","status":"Overdue"}; 行数 19; 第2行 2026-05-01 111.66
+  RS-10: PASS -> FAIL ::  Restructure History 2026-04-01 · 1.2%/month · 18 months · by Collection Manager Principal at cut RM 9,304.84 · Arrears carried RM 135.07 Reason: QA 降低月供 Undo Superseded schedule (12 rows) Due Date Expected Paid Outstanding Status 2026-02-01 150.00 150.00 0.00
+  RS-11: PASS -> FAIL :: Total=10,199.90 Interest=2,449.75
+  RS-13: PASS -> FAIL :: Payment date must be after the restructure date (2026-04-01)
+  PTP-12: PASS -> FAIL :: Payment date must be after the restructure date (2026-04-01)
+  RS-16: PASS -> FAIL :: 有还款时 Undo=false; 提交→Payments exist after the effective date; void them first; 作废后 Undo=true
+  RS-15: PASS -> FAIL :: Restructure undone; Total=10,389.90; 解锁=true; audit=true
+  RS-21: PASS -> FAIL :: arrears_at_cut=900 principal_at_cut=10000
+  RS-22: PASS -> FAIL :: 首行 {"due":"2026-11-16","arrears":true,"exp":"239.95","paid":"0.00","out":"239.95","status":"Pending"}; 行数 19
+  PTP-06: PASS -> (missing)
+  PTP-09: PASS -> (missing)
+  PTP-10: PASS -> (missing)
+## m4.json  old {"FAIL":4,"PASS":61}  new {"FAIL":13,"PASS":47}
+  TASK-05: PASS -> FAIL :: null; QA case task/follow_up/2026-10-28/null
+  USR-01: PASS -> FAIL :: null; login 401→
+  USR-04: PASS -> FAIL :: Password must be at least 8 characters
+  USR-05: PASS -> FAIL :: Password must be at least 8 characters
+  USR-12: FAIL -> PASS :: Password must be at least 8 characters; 1 位密码登录 → 
+  USR-13: PASS -> FAIL :: create 0 条; update 0 条: 
+  RPT-03: PASS -> FAIL :: 10 月 {"col":"0.00","rate":"6","com":"0.00"}（库 null）; 9 月 {"col":"0.00","rate":"6","com":"0.00"}
+  RPT-06: FAIL -> PASS :: BOM=true; 尾差单元格: 无
+  COM-01: PASS -> FAIL :: 默认月 2026-10; 10 月 0.00（库 0）; 9 月 0.00
+  COM-02: PASS -> FAIL :: {"Lim Wei Sheng":{"col":"2,916.00","rate":"5","earned":"145.80","settled":"100.00","cls":"","pending":"45.80"},"Nurul Ain":{"col":"24,516.00","rate":"5","earned":"1,225.80","settled":"500.00","cls":"","pending":"725.80"},"QA 新催收员":{"col":"0.00","rate":"5","ear
+  SRCH-01: PASS -> FAIL :: {"caseNo":[10],"name":[15,3],"ic":[],"phone":[11]}
+  AUD-03: PASS -> FAIL :: 0 条，动作 
+  SET-06: PASS -> FAIL :: 内容完整=false 缺失=Outstanding</span>RM 2,916.00; target=_blank=true
+  AUD-04: PASS -> FAIL :: 缺失: create:user,update:user；备注/任务相关审计 7 条（E-11 现状）
+  USR-06: PASS -> (missing)
+  USR-08: PASS -> (missing)
+  USR-09: PASS -> (missing)
+  USR-10: FAIL -> (missing)
+  USR-11: PASS -> (missing)
+## m5.json  old {"PASS":31,"FAIL":2,"BLOCKED":1}  new {"FAIL":8,"PASS":24,"BLOCKED":1}
+  E2E-01: PASS -> FAIL :: 1 建案:✓(CASE-2026-0001 new 计划12期) | 2 agent1 可见:✓(Cases 可见=true) | 3 通话+PTP:✓(status=ptp PTP due 0→1) | 4 履行:✗(RCPT-2026-0001 欠款 11800→11210 status=partial_paid) | 5 finance Pay + max 还清:✗(Pay 预填 100（第4期）; max 11092; status=partial_paid; 计划全 Paid=false; 本金+利息=1
+  E2E-02: PASS -> FAIL :: 建计划:✓(333.33/333.33/333.34 ptp) | 履行第1期:✗(ptp) | 取消计划:✓(fulfilled,broken,broken negotiation) | 转 Legal:✗(legal 1→1; 还款后 partial_paid)
+  E2E-03: PASS -> FAIL :: 示例A:✗(10,389.90) | 重组:✗(10,199.90) | finance 还款:✓(Payment date must be after the restructure date (2026-04-01) / Payment RCPT-2026-0006 recorded) | 撤销被拒:✓(Payments exist after the effective date; void them first) | 撤销成功:✗(Restructure undone 10,389.90 时间线重组记录 2
+  SEC-03: FAIL -> PASS :: 解码后的 onclick: openEditPayment(this)；可执行注入 0 条（agent 角色写入 reference/method 均可；浏览器验证见 ui.qa.py）
+  SEC-06: PASS -> FAIL :: 跨站 Origin 的 POST → null（ptp→ptp）; Set-Cookie: connect.sid=…; Path=/; Expires=Mon, 26 Oct 2026 02:22:55 GMT; HttpOnly（无 SameSite/Secure）
+  SMOKE-03: PASS -> FAIL :: CASE-2026-0001 计划 12 期首期 150.00
+  SMOKE-04: PASS -> FAIL :: Payment RCPT-2026-0001 recorded 10,389.90 partial_paid
+  SMOKE-06: PASS -> FAIL :: Payment updated/Payment voided 欠款 10636.06→10696.06
+  SMOKE: PASS -> FAIL :: #3 CASE-2026-0001 计划 12 期首期 150.00; #4 Payment RCPT-2026-0001 recorded 10,389.90 partial_paid; #6 Payment updated/Payment voided 欠款 10636.06→10696.06
+  E2E-04: FAIL -> (missing)
+## p1.json  old {"PASS":3,"FAIL":2,"BLOCKED":1}  new {"FAIL":1,"BLOCKED":1}
+  PERF-01: PASS -> (missing)
+  TZ-01: PASS -> (missing)
+  TZ-02: FAIL -> (missing)
+  DATA-01: PASS -> (missing)
+## ui.json  old {"PASS":19,"FAIL":2,"未执行":1}  new {"PASS":20,"FAIL":1,"未执行":1}
+  PAY-14: FAIL -> PASS :: {"editOpened": true, "alerts": [], "pageerror": []}
+  SEC-03: FAIL -> PASS :: {"editOpened": true, "alerts": [], "pageerror": []}
+  COMPAT-EDGE: PASS -> FAIL :: BLOCKED: 本机无 Edge 通道 Error('BrowserType.launch: Chromium distribution \'msedge\' is not found at /opt
+## x1.json  old {"PASS":6,"FAIL":18}  new {"FAIL":9,"PASS":14}
+  X-RBAC: PASS -> FAIL :: 183 个请求；不一致 1：agent1 POST /debtors → 403 
+  X-RBAC-GET: PASS -> FAIL :: auditor GET /agents → 302 | auditor GET /agents/1 → 302 | auditor GET /audit-log → 302 | agent1 GET /debtors/new → 403 | auditor GET /commissions → 302 | auditor GET /reports → 302
+  X-STALE: FAIL -> PASS :: 建案后：列表 11,800.00，仪表盘 334,800.75→346,600.75，CSV「CASE-2026-0005,QA RBAC 债务人,Lim Wei Sheng,10000,1800,0,11800,New,2026-10-26」；打开详情后：列表 11,800.00，仪表盘 346,600.75
+  X-VAL-CASE: FAIL -> PASS :: {"负本金":"拒绝 Invalid principal","非数字本金":"拒绝 Invalid principal","溢出本金1e309":"拒绝 Invalid principal","负利率":"拒绝 Invalid interest rate","负固定利息":"拒绝 Invalid interest amount","非法起始日":"拒绝 Invalid loan start date","超长期限20000月":"拒绝 Tenure must be 1–120 months","小数期限":"拒绝 
+  X-VAL-PAY: FAIL -> PASS :: {"金额 0.001（不足 1 分）":"Invalid amount","金额 100.005（3 位小数）":"Invalid amount","金额十六进制 0x10":"Invalid amount","金额 Infinity":"Invalid amount","金额科学计数 1e2":"Invalid amount","未来日期 2099-01-01":"Payment date cannot be in the future","早于放款 2000-01-01":"Payment date canno
+  X-ERR: FAIL -> PASS :: HTTP 302; 泄露堆栈与路径=false（片段: ）; 之后 /health=ok; 未知路由 404 “<!doctype html><html lang="en"><head> <m”
+  X-CONC-1: PASS -> FAIL :: 还款 1 笔；响应 PTP already resolved / / PTP already resolved / / 
+  X-CONC-3: FAIL -> PASS :: pending PTP 1 条合计 RM 1000（欠款 RM 1,000）；计划 0 个
+  X-CONC-4: PASS -> FAIL :: RCPT-2026-0008,RCPT-2026-0008,,,,RCPT-2026-0008,,RCPT-2026-0008,,
+  X-BREAK-FULFILLED: FAIL -> PASS :: Break 已履行 PTP → null；再 Break → null；PTP 状态 fulfilled；还款仍 1 笔；ptp_broken 时间线 0 条
+  X-DEMO-FK: FAIL -> PASS :: HTTP 302 Demo data deleted - your trial data is kept；失败后演示案件剩余 0、演示还款剩余 0（deleteDemo 无事务，半删除）
+  X-CSV-INJ: FAIL -> PASS :: CASE-2026-0015,"'=HYPERLINK(""http://evil.example"",""点我"")",,,1,0,medium,New,2026-10-26
+  X-FLASH: FAIL -> PASS :: null
+  X-STATUS: FAIL -> PASS :: agent1 标 Fully Paid → null（欠款 5000，closed_at=null）；agent1 删除 manager 备注 → null，已删除=false，备注审计 20 条
+  X-ORDER: FAIL -> PASS :: 页面顺序: third > second > Status changed assigned → partial_paid > Payment RCPT-2026-0011: RM 10.00 via ban > Case CASE-2026-0017 created（created_at 只精确到秒，同秒按插入先后升序）
+  X-AUTOCLOSE: FAIL -> PASS :: status=fully_paid closed_at=2026-10-26 00:23:03 status_change 事件=1
+  X-VAL-MISC: FAIL -> (missing)
