@@ -1,0 +1,134 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 204.0394
+  type: 'test'
+  ...
+# Subtest: E2E-01 新案件全生命周期
+ok 2 - E2E-01 新案件全生命周期
+  ---
+  duration_ms: 244.4673
+  type: 'test'
+  ...
+# Subtest: E2E-02 分期违约转法务
+ok 3 - E2E-02 分期违约转法务
+  ---
+  duration_ms: 102.9777
+  type: 'test'
+  ...
+# Subtest: E2E-03 重组与撤销
+ok 4 - E2E-03 重组与撤销
+  ---
+  duration_ms: 170.6568
+  type: 'test'
+  ...
+# Subtest: E2E-04 新员工入职与离职
+not ok 5 - E2E-04 新员工入职与离职
+  ---
+  duration_ms: 211.1906
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m5-e2e-sec-smoke.qa.js:109:1'
+  failureType: 'testCodeFailure'
+  error: 'E2E-04: expected 各检查点通过; actual 建档+账号:✓(User qa_newbie created) | 只看本人案件:✓(cases=7 debtors=7 /cases/2→404) | 看到案件任务:✗(案件 7 的任务 [{"title":"Prepare LOD","agent_id":3}]；新人 Tasks 页可见=false) | 停用后无法登录:✓(401) | 停用档案:✓(新建案件下拉)'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m5-e2e-sec-smoke.qa.js:130:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-05 月底佣金结算
+ok 6 - E2E-05 月底佣金结算
+  ---
+  duration_ms: 91.4761
+  type: 'test'
+  ...
+# Subtest: E2E-06 + SEC-09 越权巡检（agent1）
+ok 7 - E2E-06 + SEC-09 越权巡检（agent1）
+  ---
+  duration_ms: 87.2841
+  type: 'test'
+  ...
+# Subtest: SEC-01 SQL 注入
+ok 8 - SEC-01 SQL 注入
+  ---
+  duration_ms: 63.5224
+  type: 'test'
+  ...
+# Subtest: SEC-02 脚本注入（XSS）
+ok 9 - SEC-02 脚本注入（XSS）
+  ---
+  duration_ms: 181.4979
+  type: 'test'
+  ...
+# Subtest: SEC-03 事件属性注入（期望不执行）
+not ok 10 - SEC-03 事件属性注入（期望不执行）
+  ---
+  duration_ms: 275.6026
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m5-e2e-sec-smoke.qa.js:208:1'
+  failureType: 'testCodeFailure'
+  error: "SEC-03: expected 不执行脚本; actual 解码后的 onclick: openEditPayment(13, 1, '2026-10-24', 'bank_transfer', 'x');alert(1);//', 'b') || openEditPayment(14, 1, '2026-10-24', 'cash');alert(document.cookie);//', '', '')；可执行注入 2 条（agent 角色写入 reference/method 均可；浏览器验证见 ui.qa.py）"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m5-e2e-sec-smoke.qa.js:215:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SEC-04 密码存储
+ok 11 - SEC-04 密码存储
+  ---
+  duration_ms: 0.7561
+  type: 'test'
+  ...
+# Subtest: SEC-05 生产会话密钥
+ok 12 - SEC-05 生产会话密钥
+  ---
+  duration_ms: 302.7379
+  type: 'test'
+  ...
+# Subtest: SEC-06 CSRF
+ok 13 - SEC-06 CSRF
+  ---
+  duration_ms: 78.4875
+  type: 'test'
+  ...
+# Subtest: SEC-07 登录限流
+ok 14 - SEC-07 登录限流
+  ---
+  duration_ms: 0.3076
+  type: 'test'
+  ...
+# Subtest: SEC-08 演示账号（正式环境）
+ok 15 - SEC-08 演示账号（正式环境）
+  ---
+  duration_ms: 2.8875
+  type: 'test'
+  ...
+# Subtest: SMOKE 冒烟清单（本地 18 项）
+ok 16 - SMOKE 冒烟清单（本地 18 项）
+  ---
+  duration_ms: 1475.5542
+  type: 'test'
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 14
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4303.5447

@@ -1,0 +1,416 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 296.3335
+  type: 'test'
+  ...
+# Subtest: X-RBAC 写操作越权矩阵
+ok 2 - X-RBAC 写操作越权矩阵
+  ---
+  duration_ms: 2204.8038
+  type: 'test'
+  ...
+# Subtest: X-RBAC-GET 只读页面越权
+ok 3 - X-RBAC-GET 只读页面越权
+  ---
+  duration_ms: 395.3635
+  type: 'test'
+  ...
+# Subtest: X-SCOPE agent 写他人债务人 / 他人任务 / 他人案件状态
+ok 4 - X-SCOPE agent 写他人债务人 / 他人任务 / 他人案件状态
+  ---
+  duration_ms: 21.0767
+  type: 'test'
+  ...
+# Subtest: X-STALE 新建计息案件在列表/仪表盘显示的欠款未含利息（打开详情才重算）
+not ok 5 - X-STALE 新建计息案件在列表/仪表盘显示的欠款未含利息（打开详情才重算）
+  ---
+  duration_ms: 70.5329
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:98:1'
+  failureType: 'testCodeFailure'
+  error: 'X-STALE: expected 列表/仪表盘/CSV 与详情页欠款一致; actual 建案后：列表 10,000.00，仪表盘 352,945.00→362,945.00，CSV「CASE-2026-0005,QA RBAC 债务人,Lim Wei Sheng,10000,0,0,10000,New,2026-10-24」；打开详情后：列表 11,825.00，仪表盘 364,770.00'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:107:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-VAL 非数字 / 不存在的 id
+not ok 6 - X-VAL 非数字 / 不存在的 id
+  ---
+  duration_ms: 65.8229
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:118:1'
+  failureType: 'testCodeFailure'
+  error: 'X-VAL-ID: expected 非数字/不存在 id 返回 404 或明确错误，不 500，不误报成功; actual /cases/abc:404 /cases/99999:404 /cases/-1:404 /cases/1.5:404 /cases/0:404 /cases/abc/statement:404 /cases/abc/edit:404 /debtors/abc:404 /debtors/99999:404 /agents/abc:404 /agents/99999:404; /users/abc/edit→User not found; 完成不存在任务→ok="Task completed"; 编辑不存在任务→Not found; 作废不存在结算→ok="Settlement voided"; /ptps/abc/fulfill→404'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:125:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-VAL 案件金额 / 日期 / 期限边界（绕过前端）
+not ok 7 - X-VAL 案件金额 / 日期 / 期限边界（绕过前端）
+  ---
+  duration_ms: 2866.5302
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:128:1'
+  failureType: 'testCodeFailure'
+  error: 'X-VAL-CASE: expected 服务端拒绝负数/非数字/溢出/非法日期/超范围期限; actual {"负本金":"已创建#26 P=-1000 I=0 欠款=0.00 到期=null 耗时28ms","非数字本金":"已创建#27 P=0 I=0 欠款=0.00 到期=null 耗时23ms","溢出本金1e309":"已创建#28 P=Infinity I=0 欠款=null 到期=null 耗时25ms","负利率":"已创建#29 P=1000 I=-608.33 欠款=391.67 到期=2027-01-01 耗时32ms","负固定利息":"已创建#30 P=1000 I=-300 欠款=700.00 到期=null 耗时26ms","非法起始日":"已创建#31 P=10000 I=0 欠款=0.00 到期=2028-02-14 耗时33ms","超长期限20000月":"已创建#32 P=1000 I=202912.67 欠款=203,912.67 到期=3692-09-01 耗时2652ms","小数期限":"已创建#33 P=900 I=0 欠款=900.00 到期=2026-02-01 耗时31ms","仪表盘总欠款":"∞","报表合计":"∞"}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:148:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-VAL 还款输入边界
+not ok 8 - X-VAL 还款输入边界
+  ---
+  duration_ms: 129.0372
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:150:1'
+  failureType: 'testCodeFailure'
+  error: 'X-VAL-PAY: expected 拒绝不足 1 分/超过 2 位小数/十六进制/未来日期/非白名单方式; actual {"金额 0.001（不足 1 分）":"Payment RCPT-2026-0009 recorded","金额 100.005（3 位小数）":"Payment RCPT-2026-0010 recorded","金额十六进制 0x10":"Payment RCPT-2026-0011 recorded","金额 Infinity":"Invalid amount","金额科学计数 1e2":"Payment RCPT-2026-0012 recorded","未来日期 2099-01-01":"Payment RCPT-2026-0013 recorded","早于放款 2000-01-01":"Payment RCPT-2026-0014 recorded","日期带时间 2026-10-01T10:00":"Invalid payment date","方式任意字符串":"Payment RCPT-2026-0015 recorded","超长 Reference 5000 字":"Payment RCPT-2026-0016 recorded","作为结果：重组可选日期":"2099-01-01~2026-10-24"}；库内金额 0.001,100.005,16,100,1,1,1,1'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:170:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-VAL PTP / 计划 / 通话 / 任务 / 债务人 / 催收员 输入
+not ok 9 - X-VAL PTP / 计划 / 通话 / 任务 / 债务人 / 催收员 输入
+  ---
+  duration_ms: 244.8424
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:172:1'
+  failureType: 'testCodeFailure'
+  error: 'X-VAL-MISC: expected 非法输入给出友好错误，不出现 500；业务上不合理值被拒绝; actual 500 次数 5；{"PTP 缺到期日":"500(TypeError: Provided value cannot be bound to SQLite parameter 3.)","PTP 到期日 abc":"PTP created","PTP 到期日为过去 2020-01-01":"PTP created","计划首期 abc":"Installment plan created","通话 result=bogus":"500(Error: CHECK constraint failed: result IN (&#39;answered&#39;,&#39;)","通话时长 -60":"Call logged","空备注":"Note added","任务缺标题":"500(TypeError: Provided value cannot be bound to SQLite parameter 4.)","任务 type=bogus":"500(Error: CHECK constraint failed: type IN (&#39;visit&#39;,&#39;legal)","任务编辑空标题":"Task updated","债务人 risk=bogus":"500(Error: CHECK constraint failed: risk_level IN (&#39;low&#39;,&#39;m)","债务人负薪资":"Debtor created","债务人名 5 万字":"Debtor created","债务人名 20 万字（超 body 限制）":413,"催收员佣金率 0":"rate=5","催收员佣金率 -10":"rate=-10 target=-1","用户关联不存在的催收员 99999":"User qa_ghost created","结算 period=bogus":"Settlement recorded","结算 1e20":"Settlement recorded","状态 bogus":"Invalid status"}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:198:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-ERR 500 页面泄露堆栈 / 服务存活
+not ok 10 - X-ERR 500 页面泄露堆栈 / 服务存活
+  ---
+  duration_ms: 7.0622
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:202:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    X-ERR: expected 异常返回友好错误页，不泄露堆栈/绝对路径；服务不崩溃; actual HTTP 500; 泄露堆栈与路径=true（片段: Error: FOREIGN KEY constraint failed<br> &nbsp; &nbsp;at run (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\src\db\index.js:105:57)）; 之后 /health=ok; 未知路由 404 “<!DOCTYPE html>
+    <html lang="en">
+    <head>
+    ”
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:207:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-CONC-1 同一 PTP 并发 5 个 fulfill
+ok 11 - X-CONC-1 同一 PTP 并发 5 个 fulfill
+  ---
+  duration_ms: 57.3003
+  type: 'test'
+  ...
+# Subtest: X-CONC-2 并发两笔全额还款
+ok 12 - X-CONC-2 并发两笔全额还款
+  ---
+  duration_ms: 34.8915
+  type: 'test'
+  ...
+# Subtest: X-CONC-3 双击/并发创建 PTP 与分期计划
+not ok 13 - X-CONC-3 双击/并发创建 PTP 与分期计划
+  ---
+  duration_ms: 73.6159
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:225:1'
+  failureType: 'testCodeFailure'
+  error: 'X-CONC-3: expected 重复提交不应生成重复 PTP/计划；承诺总额不应超过欠款; actual pending PTP 10 条合计 RM 4000（欠款 RM 1,000）；计划 2 个'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:231:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-CONC-4 收据号并发唯一
+ok 14 - X-CONC-4 收据号并发唯一
+  ---
+  duration_ms: 130.6223
+  type: 'test'
+  ...
+# Subtest: X-OVERPAY 计息案件提前按 max 还清，多收部分被静默丢弃
+not ok 15 - X-OVERPAY 计息案件提前按 max 还清，多收部分被静默丢弃
+  ---
+  duration_ms: 84.6937
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:241:1'
+  failureType: 'testCodeFailure'
+  error: 'X-OVERPAY: expected 恒等式 Outstanding = Principal + Interest − Paid 成立；或 max 只允许当日结清额; actual 弹窗 max=11,825.00（按合同期计到到期日）；今天还 max 后：Principal 10,000.00 + Interest 265.00 − Paid 11,825.00 = -1,560.00，页面 Outstanding 0.00；多收 RM 1,560.00 无任何记录；回收率 115%'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:247:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-EDITCAP 编辑计息案件还款的上限可超过真实应还
+not ok 16 - X-EDITCAP 编辑计息案件还款的上限可超过真实应还
+  ---
+  duration_ms: 65.0962
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:249:1'
+  failureType: 'testCodeFailure'
+  error: 'X-EDITCAP: expected 编辑后金额不应超过该日真实应还（10,300.00）; actual 编辑上限=11,718.25，Payment updated；结果 Principal 10,000.00 Interest 300.00 Paid 11,718.25 Outstanding 0.00'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:256:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-BREAK-FULFILLED 已履行的 PTP 仍可被 Break
+not ok 17 - X-BREAK-FULFILLED 已履行的 PTP 仍可被 Break
+  ---
+  duration_ms: 81.6882
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:258:1'
+  failureType: 'testCodeFailure'
+  error: 'X-BREAK-FULFILLED: expected 已履行/已违约的 PTP 再 Break 应被拒绝（PTP already resolved）; actual Break 已履行 PTP → PTP broken；再 Break → PTP broken；PTP 状态 broken；还款仍 1 笔；ptp_broken 时间线 2 条'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:266:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-DEMO-FK 演示催收员有自建数据时删除演示数据
+not ok 18 - X-DEMO-FK 演示催收员有自建数据时删除演示数据
+  ---
+  duration_ms: 54.7259
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:268:1'
+  failureType: 'testCodeFailure'
+  error: 'X-DEMO-FK: expected Delete demo data 不报错，自建数据保留; actual HTTP 500 Error: FOREIGN KEY constraint failed；失败后演示案件剩余 0、演示还款剩余 0（deleteDemo 无事务，半删除）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:274:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-CSV-INJ CSV 公式注入
+not ok 19 - X-CSV-INJ CSV 公式注入
+  ---
+  duration_ms: 32.9259
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:277:1'
+  failureType: 'testCodeFailure'
+  error: 'X-CSV-INJ: expected 以 = + - @ 开头的单元格应被转义（加前导单引号）; actual CASE-2026-0023,"=HYPERLINK(""http://evil.example"",""点我"")",,,1,0,medium,New,2026-10-24'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:282:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-TIMING 登录用户名枚举（响应时间）
+not ok 20 - X-TIMING 登录用户名枚举（响应时间）
+  ---
+  duration_ms: 973.5241
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:284:1'
+  failureType: 'testCodeFailure'
+  error: 'X-TIMING: expected 已存在用户错密码与不存在用户耗时相近（比值 0.67–1.5）; actual 已存在用户中位 19.9ms；不存在用户中位 74.9ms；比值 3.76；状态码 401（DUMMY_HASH 代价 10，用户哈希代价 8）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:295:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-HEADERS 会话 Cookie 与安全响应头
+not ok 21 - X-HEADERS 会话 Cookie 与安全响应头
+  ---
+  duration_ms: 35.5101
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:297:1'
+  failureType: 'testCodeFailure'
+  error: 'X-HEADERS: expected Cookie 带 SameSite/Secure；有防点击劫持等安全头; actual Set-Cookie 属性: connect.sid=…; Path=/; HttpOnly; x-frame-options=无, content-security-policy=无, x-content-type-options=无, strict-transport-security=无; x-powered-by=Express'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:301:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-FLASH 任意 URL 参数显示为系统提示
+not ok 22 - X-FLASH 任意 URL 参数显示为系统提示
+  ---
+  duration_ms: 20.8849
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:303:1'
+  failureType: 'testCodeFailure'
+  error: 'X-FLASH: expected ok/err 提示不应来自任意 URL 参数（内容伪造）; actual red:账号已被冻结，请致电 012-3456789 解锁'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:305:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-STATUS 手动把有欠款的案件标为 Fully Paid / agent 删除他人备注
+not ok 23 - X-STATUS 手动把有欠款的案件标为 Fully Paid / agent 删除他人备注
+  ---
+  duration_ms: 46.668
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:307:1'
+  failureType: 'testCodeFailure'
+  error: 'X-STATUS: expected 欠款 > 0 时不应可手动标 Fully Paid；agent 不应能删除他人备注且应留审计; actual agent1 标 Fully Paid → Status updated（欠款 5000，closed_at=2026-10-24 06:26:58）；agent1 删除 manager 备注 → Note deleted，已删除=true，备注审计 0 条'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:314:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-ORDER 同一秒内的时间线事件顺序
+not ok 24 - X-ORDER 同一秒内的时间线事件顺序
+  ---
+  duration_ms: 49.728
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:316:1'
+  failureType: 'testCodeFailure'
+  error: 'X-ORDER: expected 最新事件在最上（third → second → payment → created）; actual 页面顺序: Case CASE-2026-0025 created > Payment RCPT-2026-0032: RM 10.00 via ban > second > third（created_at 只精确到秒，同秒按插入先后升序）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:322:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-AUTOCLOSE 还款自动 Fully Paid 不写 status_change 时间线与 closed_at（E-08 复核）
+not ok 25 - X-AUTOCLOSE 还款自动 Fully Paid 不写 status_change 时间线与 closed_at（E-08 复核）
+  ---
+  duration_ms: 30.5862
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\x1-outside-manual.qa.js:324:1'
+  failureType: 'testCodeFailure'
+  error: 'X-AUTOCLOSE: expected 自动还清时记录结案时间并写状态变更; actual status=fully_paid closed_at=null status_change 事件=0'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\x1-outside-manual.qa.js:328:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 7
+# fail 18
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 8891.2647

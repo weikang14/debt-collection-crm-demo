@@ -1,0 +1,212 @@
+[
+ {
+  "id": "NAV-02",
+  "expected": "toggle persists across pages/reload; active group open",
+  "actual": "team before=False after toggle+nav+reload=True; on /settings admin group open=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-04",
+  "expected": "topbar + ☰; opens/closes; no horizontal scroll",
+  "actual": "toggle=True open=True closeByBackdrop=True noHScroll={'/': False, '/cases': True, '/cases/14': True, '/tasks': True, '/reports': True, '/commissions': True}",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "7.3-375",
+  "expected": "Records dialog fits 375px",
+  "actual": "[True, True, True]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-02",
+  "expected": "blank name blocked by browser",
+  "actual": "True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-03",
+  "expected": "no debtor blocked by browser",
+  "actual": "True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-04",
+  "expected": "blank title blocked by browser",
+  "actual": "True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-08",
+  "expected": "7-char password blocked by browser (minlength)",
+  "actual": "True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-04",
+  "expected": "role agent shows Linked Agent",
+  "actual": "True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-06",
+  "expected": "chip fills + highlights; typed 12 highlights 12mo",
+  "actual": "value=24 24=chip is-active | typed 12 → 12=chip is-active 24=chip",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-01",
+  "expected": "fixed: amount only; monthly/daily: rate only",
+  "actual": "{'fixed': (True, False), 'monthly': (False, True), 'daily': (False, True)}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-02",
+  "expected": "! toggles the formula for the current mode (and the formula must match D-01 whole-month rule)",
+  "actual": "toggle shown=True hidden=True; monthly text: 'Monthly rate (interest-first)\\ndaily rate = monthly% ÷ 100 ÷ 30\\ninterest = Σ(remaining principal × daily rate × days)\\ndays counted in whole days from Loan Start Date (same day = 0)\\neach payment clears interest first, then principal → paying principal shrinks later interest'",
+  "result": "FAIL",
+  "note": "公式文字仍为“daily rate = monthly% ÷ 100 ÷ 30”，与 v1.10.0 整月计息不符（src/views/cases/form.ejs:54）"
+ },
+ {
+  "id": "PAY-04",
+  "expected": "browser blocks > max inside the dialog",
+  "actual": "max=3214.02 overflow=True dialogOpen=True msg='Value must be less than or equal to 3214.02.'",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-05",
+  "expected": "0 blocked (min 0.01)",
+  "actual": "True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-16",
+  "expected": "date picker max = today; tomorrow invalid",
+  "actual": "max=2026-10-25 tomorrowInvalid=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-15",
+  "expected": "Records opens; × and backdrop close",
+  "actual": "open=True closeX=True closeBackdrop=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-07",
+  "expected": "Pay opens Record Payment prefilled with the row's unpaid amount",
+  "actual": "button=239.95 prefill=239.95 open=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-04",
+  "expected": "monthly/daily: rate shown+required; fixed: amount shown+required",
+  "actual": "{'monthly': (True, True, False, False), 'daily': (True, True, False, False), 'fixed': (False, False, True, True)}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-13",
+  "expected": "payment date min = effective date + 1 (case 14)",
+  "actual": "2026-10-16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-03",
+  "expected": "Fulfill dialog amount defaults to the PTP amount (editable)",
+  "actual": "ptp=1800 prefill=1800",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-02",
+  "expected": "browser blocks PTP amount > max",
+  "actual": "max=16108.75 overflow=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-07",
+  "expected": "browser blocks 1 and 61 installments",
+  "actual": "1→True 61→True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-02",
+  "expected": "picking a case locks Agent to its agent; no visit type",
+  "actual": "disabled=True agent=2 types=['follow_up', 'legal', 'reminder']",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-14",
+  "expected": "Edit opens; Reference O'Brien shown verbatim",
+  "actual": "open=True ref=\"O'Brien\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-03",
+  "expected": "x');alert(1);// shown as text, no script runs",
+  "actual": "bank=\"x');alert(1);//\" alerts=[]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-02",
+  "expected": "no alert() in any page or dialog",
+  "actual": "alerts during sweep=[]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-03",
+  "expected": "Settle prefilled with Pending (>0)",
+  "actual": "pending=0 prefill=''",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-04-confirm",
+  "expected": "Break asks for confirmation; dismiss keeps the PTP",
+  "actual": "confirm=['confirm:Mark this PTP as broken?'] url=http://127.0.0.1:3301/cases/14",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-07",
+  "expected": "print media hides buttons; A4 PDF produced",
+  "actual": "buttonsHidden=True pdfBytes=42277",
+  "result": "PASS",
+  "note": "PDF 存于 tests/qa/r2/results/ui/"
+ },
+ {
+  "id": "7.3-dialog",
+  "expected": "Cancel closes dialog",
+  "actual": "True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-STATUS-UI",
+  "expected": "agent on a Legal case: dropdown offers working statuses (selecting one lifts Legal)",
+  "actual": "['(disabled) legal', 'new', 'assigned', 'negotiation', 'ptp', 'partial_paid']",
+  "result": "FAIL",
+  "note": "与 X-STATUS 同一问题：页面上一选即生效"
+ }
+]

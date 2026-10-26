@@ -3,8 +3,8 @@ const fs = require('node:fs');
 const { DatabaseSync } = require('node:sqlite');
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
-fs.mkdirSync(DATA_DIR, { recursive: true });
 const DB_PATH = process.env.CRM_DB_PATH || path.join(DATA_DIR, 'crm.db');
+fs.mkdirSync(path.dirname(path.resolve(DB_PATH)), { recursive: true });
 
 const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON;');

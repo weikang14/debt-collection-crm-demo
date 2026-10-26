@@ -1,0 +1,214 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 221.4433
+  type: 'test'
+  ...
+# Subtest: PTP-01 新建 PTP（agent1 本人案件）
+ok 2 - PTP-01 新建 PTP（agent1 本人案件）
+  ---
+  duration_ms: 49.8818
+  type: 'test'
+  ...
+# Subtest: PTP-02 金额上限
+ok 3 - PTP-02 金额上限
+  ---
+  duration_ms: 11.8892
+  type: 'test'
+  ...
+# Subtest: PTP-03 履行
+ok 4 - PTP-03 履行
+  ---
+  duration_ms: 31.2529
+  type: 'test'
+  ...
+# Subtest: PTP-05 重复履行
+ok 5 - PTP-05 重复履行
+  ---
+  duration_ms: 4.554
+  type: 'test'
+  ...
+# Subtest: PTP-04 违约
+ok 6 - PTP-04 违约
+  ---
+  duration_ms: 74.7061
+  type: 'test'
+  ...
+# Subtest: PTP-06 新建分期计划
+ok 7 - PTP-06 新建分期计划
+  ---
+  duration_ms: 41.5277
+  type: 'test'
+  ...
+# Subtest: PTP-07 期数校验
+ok 8 - PTP-07 期数校验
+  ---
+  duration_ms: 19.4836
+  type: 'test'
+  ...
+# Subtest: PTP-08 总额过小
+ok 9 - PTP-08 总额过小
+  ---
+  duration_ms: 4.1153
+  type: 'test'
+  ...
+# Subtest: PTP-09 逐期履行
+ok 10 - PTP-09 逐期履行
+  ---
+  duration_ms: 26.2355
+  type: 'test'
+  ...
+# Subtest: PTP-10 取消计划
+ok 11 - PTP-10 取消计划
+  ---
+  duration_ms: 37.4025
+  type: 'test'
+  ...
+# Subtest: PTP-11 权限与范围
+ok 12 - PTP-11 权限与范围
+  ---
+  duration_ms: 47.7859
+  type: 'test'
+  ...
+# Subtest: RS-01 按钮可见性
+ok 13 - RS-01 按钮可见性
+  ---
+  duration_ms: 210.2583
+  type: 'test'
+  ...
+# Subtest: RS-02 弹窗信息
+ok 14 - RS-02 弹窗信息
+  ---
+  duration_ms: 27.6359
+  type: 'test'
+  ...
+# Subtest: RS-05 必填校验（含留空利率不当 0%）
+ok 15 - RS-05 必填校验（含留空利率不当 0%）
+  ---
+  duration_ms: 16.7907
+  type: 'test'
+  ...
+# Subtest: RS-06 期限范围
+ok 16 - RS-06 期限范围
+  ---
+  duration_ms: 10.3666
+  type: 'test'
+  ...
+# Subtest: RS-07 生效日越界
+ok 17 - RS-07 生效日越界
+  ---
+  duration_ms: 8.3985
+  type: 'test'
+  ...
+# Subtest: RS-08 重组成功
+ok 18 - RS-08 重组成功
+  ---
+  duration_ms: 34.1553
+  type: 'test'
+  ...
+# Subtest: RS-09 新还款计划
+ok 19 - RS-09 新还款计划
+  ---
+  duration_ms: 15.2526
+  type: 'test'
+  ...
+# Subtest: RS-10 重组历史
+ok 20 - RS-10 重组历史
+  ---
+  duration_ms: 16.6725
+  type: 'test'
+  ...
+# Subtest: RS-11 欠息不再生息
+ok 21 - RS-11 欠息不再生息
+  ---
+  duration_ms: 16.3669
+  type: 'test'
+  ...
+# Subtest: RS-12 旧还款锁定
+ok 22 - RS-12 旧还款锁定
+  ---
+  duration_ms: 25.1251
+  type: 'test'
+  ...
+# Subtest: RS-13 新还款日期下限
+ok 23 - RS-13 新还款日期下限
+  ---
+  duration_ms: 25.4558
+  type: 'test'
+  ...
+# Subtest: RS-14 案件条款锁定
+ok 24 - RS-14 案件条款锁定
+  ---
+  duration_ms: 50.6747
+  type: 'test'
+  ...
+# Subtest: PTP-12 重组后的履行日期
+ok 25 - PTP-12 重组后的履行日期
+  ---
+  duration_ms: 74.8007
+  type: 'test'
+  ...
+# Subtest: RS-16 撤销受限
+ok 26 - RS-16 撤销受限
+  ---
+  duration_ms: 62.0882
+  type: 'test'
+  ...
+# Subtest: RS-15 撤销重组
+ok 27 - RS-15 撤销重组
+  ---
+  duration_ms: 48.1749
+  type: 'test'
+  ...
+# Subtest: RS-17 多次重组
+ok 28 - RS-17 多次重组
+  ---
+  duration_ms: 71.0453
+  type: 'test'
+  ...
+# Subtest: RS-03 没有可选日期（当天已重组）
+ok 29 - RS-03 没有可选日期（当天已重组）
+  ---
+  duration_ms: 47.305
+  type: 'test'
+  ...
+# Subtest: RS-18 Fixed 重组
+ok 30 - RS-18 Fixed 重组
+  ---
+  duration_ms: 63.369
+  type: 'test'
+  ...
+# Subtest: RS-19 权限
+ok 31 - RS-19 权限
+  ---
+  duration_ms: 18.3627
+  type: 'test'
+  ...
+# Subtest: RS-20 不可重组
+ok 32 - RS-20 不可重组
+  ---
+  duration_ms: 206.2536
+  type: 'test'
+  ...
+# Subtest: RS-21 已到期贷款重组
+ok 33 - RS-21 已到期贷款重组
+  ---
+  duration_ms: 44.8275
+  type: 'test'
+  ...
+# Subtest: RS-22 演示案件 14
+ok 34 - RS-22 演示案件 14
+  ---
+  duration_ms: 21.597
+  type: 'test'
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 34
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2507.7781

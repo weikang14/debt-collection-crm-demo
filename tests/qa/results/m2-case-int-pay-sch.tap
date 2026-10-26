@@ -1,0 +1,350 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 250.4134
+  type: 'test'
+  ...
+# Subtest: CASE-01 列表筛选
+ok 2 - CASE-01 列表筛选
+  ---
+  duration_ms: 40.6197
+  type: 'test'
+  ...
+# Subtest: CASE-02 导出 CSV
+ok 3 - CASE-02 导出 CSV
+  ---
+  duration_ms: 9.5045
+  type: 'test'
+  ...
+# Subtest: CASE-03 新建必填
+ok 4 - CASE-03 新建必填
+  ---
+  duration_ms: 11.3804
+  type: 'test'
+  ...
+# Subtest: CASE-04 新建成功
+ok 5 - CASE-04 新建成功
+  ---
+  duration_ms: 29.7467
+  type: 'test'
+  ...
+# Subtest: CASE-05 默认值
+ok 6 - CASE-05 默认值
+  ---
+  duration_ms: 4.5385
+  type: 'test'
+  ...
+# Subtest: CASE-07 到期日（月末对齐）
+ok 7 - CASE-07 到期日（月末对齐）
+  ---
+  duration_ms: 91.9434
+  type: 'test'
+  ...
+# Subtest: CASE-08 编辑案件
+ok 8 - CASE-08 编辑案件
+  ---
+  duration_ms: 21.39
+  type: 'test'
+  ...
+# Subtest: CASE-09 新建 / 编辑权限
+ok 9 - CASE-09 新建 / 编辑权限
+  ---
+  duration_ms: 85.926
+  type: 'test'
+  ...
+# Subtest: CASE-10 账面区
+ok 10 - CASE-10 账面区
+  ---
+  duration_ms: 39.8159
+  type: 'test'
+  ...
+# Subtest: CASE-11 修改状态
+ok 11 - CASE-11 修改状态
+  ---
+  duration_ms: 22.8452
+  type: 'test'
+  ...
+# Subtest: CASE-12 结案时间
+ok 12 - CASE-12 结案时间
+  ---
+  duration_ms: 91.9951
+  type: 'test'
+  ...
+# Subtest: CASE-13 备注增删改
+ok 13 - CASE-13 备注增删改
+  ---
+  duration_ms: 36.6877
+  type: 'test'
+  ...
+# Subtest: CASE-14 通话记录
+ok 14 - CASE-14 通话记录
+  ---
+  duration_ms: 23.8643
+  type: 'test'
+  ...
+# Subtest: CASE-15 Records 弹窗（顺序；开关见 ui.qa.py）
+ok 15 - CASE-15 Records 弹窗（顺序；开关见 ui.qa.py）
+  ---
+  duration_ms: 18.5091
+  type: 'test'
+  ...
+# Subtest: CASE-16 时间线（倒序与徽章颜色）
+ok 16 - CASE-16 时间线（倒序与徽章颜色）
+  ---
+  duration_ms: 7975.8574
+  type: 'test'
+  ...
+# Subtest: CASE-17 Next Action
+ok 17 - CASE-17 Next Action
+  ---
+  duration_ms: 26.63
+  type: 'test'
+  ...
+# Subtest: CASE-18 催收员越权
+ok 18 - CASE-18 催收员越权
+  ---
+  duration_ms: 14.3555
+  type: 'test'
+  ...
+# Subtest: CASE-19 审计员只读
+ok 19 - CASE-19 审计员只读
+  ---
+  duration_ms: 13.4427
+  type: 'test'
+  ...
+# Subtest: CASE-20 财务视图
+ok 20 - CASE-20 财务视图
+  ---
+  duration_ms: 10.3578
+  type: 'test'
+  ...
+# Subtest: INT-03 Fixed 模式
+ok 21 - INT-03 Fixed 模式
+  ---
+  duration_ms: 38.4185
+  type: 'test'
+  ...
+# Subtest: INT-04 Monthly 模式
+ok 22 - INT-04 Monthly 模式
+  ---
+  duration_ms: 34.2985
+  type: 'test'
+  ...
+# Subtest: INT-05 Annual 模式
+ok 23 - INT-05 Annual 模式
+  ---
+  duration_ms: 45.6521
+  type: 'test'
+  ...
+# Subtest: INT-06 + PAY-15 先息后本 / 提前还本省息
+ok 24 - INT-06 + PAY-15 先息后本 / 提前还本省息
+  ---
+  duration_ms: 39.7077
+  type: 'test'
+  ...
+# Subtest: INT-07 当天不计息
+ok 25 - INT-07 当天不计息
+  ---
+  duration_ms: 1165.0104
+  type: 'test'
+  ...
+# Subtest: INT-08 到期后停止计息
+ok 26 - INT-08 到期后停止计息
+  ---
+  duration_ms: 36.0984
+  type: 'test'
+  ...
+# Subtest: INT-09 起始日缺失
+ok 27 - INT-09 起始日缺失
+  ---
+  duration_ms: 27.4898
+  type: 'test'
+  ...
+# Subtest: INT-10 改回 Fixed
+ok 28 - INT-10 改回 Fixed
+  ---
+  duration_ms: 42.7886
+  type: 'test'
+  ...
+# Subtest: PAY-01 记一笔还款
+ok 29 - PAY-01 记一笔还款
+  ---
+  duration_ms: 41.5306
+  type: 'test'
+  ...
+# Subtest: PAY-02 部分还款状态
+ok 30 - PAY-02 部分还款状态
+  ---
+  duration_ms: 0.4114
+  type: 'test'
+  ...
+# Subtest: PAY-03 + SCH-09 全额还清（Fixed 计划）
+ok 31 - PAY-03 + SCH-09 全额还清（Fixed 计划）
+  ---
+  duration_ms: 34.1409
+  type: 'test'
+  ...
+# Subtest: PAY-04 超额拦截
+ok 32 - PAY-04 超额拦截
+  ---
+  duration_ms: 12.1091
+  type: 'test'
+  ...
+# Subtest: PAY-05 无效金额
+ok 33 - PAY-05 无效金额
+  ---
+  duration_ms: 14.2608
+  type: 'test'
+  ...
+# Subtest: PAY-06 无效日期
+ok 34 - PAY-06 无效日期
+  ---
+  duration_ms: 5.1799
+  type: 'test'
+  ...
+# Subtest: PAY-07 终态不被改写
+ok 35 - PAY-07 终态不被改写
+  ---
+  duration_ms: 275.378
+  type: 'test'
+  ...
+# Subtest: PAY-08 PTP 状态优先
+ok 36 - PAY-08 PTP 状态优先
+  ---
+  duration_ms: 48.1106
+  type: 'test'
+  ...
+# Subtest: PAY-09 编辑还款
+ok 37 - PAY-09 编辑还款
+  ---
+  duration_ms: 57.4626
+  type: 'test'
+  ...
+# Subtest: PAY-10 作废还款（含 Fully Paid 回 Negotiation）
+ok 38 - PAY-10 作废还款（含 Fully Paid 回 Negotiation）
+  ---
+  duration_ms: 69.5815
+  type: 'test'
+  ...
+# Subtest: PAY-11 催收员不能改账
+ok 39 - PAY-11 催收员不能改账
+  ---
+  duration_ms: 21.6184
+  type: 'test'
+  ...
+# Subtest: PAY-12 收据号连续
+ok 40 - PAY-12 收据号连续
+  ---
+  duration_ms: 45.7845
+  type: 'test'
+  ...
+# Subtest: PAY-13 作废后的收据号（期望不复用）
+not ok 41 - PAY-13 作废后的收据号（期望不复用）
+  ---
+  duration_ms: 57.6596
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m2-case-int-pay-sch.qa.js:335:1'
+  failureType: 'testCodeFailure'
+  error: 'PAY-13: expected 作废的收据号不再使用; actual 作废 RCPT-2026-0019 后新还款收据号 = RCPT-2026-0019；时间线同号记录: Payment RCPT-2026-0019: RM 10.00 via bank_transfer | Payment RCPT-2026-0019 voided (RM 10.00) | Payment RCPT-2026-0019: RM 20.00 via bank_transfer'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m2-case-int-pay-sch.qa.js:342:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-14 Reference 含单引号（期望 Edit 正常）
+not ok 42 - PAY-14 Reference 含单引号（期望 Edit 正常）
+  ---
+  duration_ms: 36.6305
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m2-case-int-pay-sch.qa.js:344:1'
+  failureType: 'testCodeFailure'
+  error: "PAY-14: expected 编辑弹窗正常打开; actual onclick 源码: openEditPayment(26, 10, '2026-10-24', 'bank_transfer', 'O&#39;Brien', '')；HTML 解码后 JS 语法有效=false（浏览器点击验证见 ui.qa.py）"
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m2-case-int-pay-sch.qa.js:351:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-01 显示条件
+ok 43 - SCH-01 显示条件
+  ---
+  duration_ms: 104.6597
+  type: 'test'
+  ...
+# Subtest: SCH-02 期数与日期
+ok 44 - SCH-02 期数与日期
+  ---
+  duration_ms: 27.1891
+  type: 'test'
+  ...
+# Subtest: SCH-03 计息模式金额
+ok 45 - SCH-03 计息模式金额
+  ---
+  duration_ms: 32.2578
+  type: 'test'
+  ...
+# Subtest: SCH-04 Fixed 等额分期
+ok 46 - SCH-04 Fixed 等额分期
+  ---
+  duration_ms: 26.6853
+  type: 'test'
+  ...
+# Subtest: SCH-05 依次抵扣
+ok 47 - SCH-05 依次抵扣
+  ---
+  duration_ms: 36.8808
+  type: 'test'
+  ...
+# Subtest: SCH-06 状态
+ok 48 - SCH-06 状态
+  ---
+  duration_ms: 62.298
+  type: 'test'
+  ...
+# Subtest: SCH-07 Pay 按钮
+ok 49 - SCH-07 Pay 按钮
+  ---
+  duration_ms: 12.5724
+  type: 'test'
+  ...
+# Subtest: SCH-08 只读角色
+ok 50 - SCH-08 只读角色
+  ---
+  duration_ms: 10.0136
+  type: 'test'
+  ...
+# Subtest: SCH-09 提前还清（计息案件）
+ok 51 - SCH-09 提前还清（计息案件）
+  ---
+  duration_ms: 51.7409
+  type: 'test'
+  ...
+# Subtest: SCH-10 实时重算
+ok 52 - SCH-10 实时重算
+  ---
+  duration_ms: 50.4913
+  type: 'test'
+  ...
+1..52
+# tests 52
+# suites 0
+# pass 50
+# fail 2
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 12201.8407

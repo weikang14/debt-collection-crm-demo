@@ -1,0 +1,2186 @@
+[
+ {
+  "id": "AUTH-01",
+  "expected": "进入 Dashboard；显示 System Admin/admin；audit login",
+  "actual": "login 302→/; sidebar who=true; audit=User admin logged in",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-02",
+  "expected": "停留登录页，红色 Invalid username or password",
+  "actual": "HTTP 401; true",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-03",
+  "expected": "提示与 AUTH-02 完全相同",
+  "actual": "status 401/401, body identical=true, 耗时 78ms",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-04",
+  "expected": "Invalid username or password",
+  "actual": "deactivate=User updated; login HTTP 401",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-05",
+  "expected": "第 6 次提示 Too many attempts. Try again later.",
+  "actual": "前5次 401,401,401,401,401；第6次(正确密码) HTTP 429；另一 IP 正常登录=true。15 分钟锁定由代码 LOCK_MS=15*60*1000 确认；重启清零见 m1-restart 步骤",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-06",
+  "expected": "跳回 Dashboard",
+  "actual": "302→/",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-07",
+  "expected": "全部重定向 /login",
+  "actual": "/cases:302→/login /reports:302→/login /cases/2:302→/login",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-08",
+  "expected": "回登录页；audit logout；旧会话需重新登录",
+  "actual": "logout→/login; audit=true; 旧cookie访问 / → 302 /login",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-09",
+  "expected": "无需登录，列 5 个账号；登录页无链接",
+  "actual": "HTTP 200, 账号行 5, 登录页含链接=false",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-10",
+  "expected": "登录页 v1.8.0；/version 最新在上",
+  "actual": "登录页 v1.8.0=true; 版本顺序 1.8.0 > 1.7.0 > 1.6.0 > 1.5.1 > 1.5.0 > 1.4.0 > 1.3.0 > 1.2.0 > 1.1.0 > 1.0.0",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-11",
+  "expected": "纯文本 ok",
+  "actual": "200 \"ok\" text/plain; charset=utf-8",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "AUTH-12",
+  "expected": "全部 403 Forbidden",
+  "actual": "/users:403 /settings:403 /demo-tools:403 /audit-log:403 /agents:403 /cases/new:403",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "NAV-01",
+  "expected": "与第 3 章侧边栏对照一致",
+  "actual": "{\"admin\":\"Dashboard,Debtors,Cases,Tasks,Team,Agents,Users,Reports,Commissions,Admin,Settings,Demo Data,Audit Log,Search\",\"manager\":\"Dashboard,Debtors,Cases,Tasks,Team,Agents,Reports,Commissions,Search\",\"agent1\":\"Dashboard,Debtors,Cases,Tasks,Reports,Commissions,Search\",\"finance\":\"Dashboard,Debtors,Cases,Tasks,Reports,Commissions,Search\",\"auditor\":\"Dashboard,Debtors,Cases,Tasks,Team,Agents,Reports,",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "NAV-03",
+  "expected": "对应菜单项高亮",
+  "actual": "13 个页面均高亮",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "NAV-05",
+  "expected": "成功绿色、失败红色提示条",
+  "actual": "成功=green:Debtor created；失败=red:Name is required",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "NAV-06",
+  "expected": "标题格式“页面名 — Debt Collection CRM”",
+  "actual": "不符合: /cases/2/statement → \"Case Statement CASE-2026-D002\"; /cases/99999 → \"Debt Collection CRM\"",
+  "result": "FAIL",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-01",
+  "expected": "Collected Today +100，payments +1",
+  "actual": "Payment RCPT-2026-0001 recorded; collected 0→100; count 0→1",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-02",
+  "expected": "不计入 Collected Today",
+  "actual": "Payment RCPT-2026-0002 recorded; collected 100→100",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-03",
+  "expected": "active=非终态（含 Fully Paid）；legal=Legal 数",
+  "actual": "页面 active=14 legal=2；库 active=14（含 fully_paid 2）legal=2",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-04",
+  "expected": "due+1；broken+1；overdue=已过期 pending 数",
+  "actual": "PTP created/PTP broken; due 0→1; broken 1→2; overdue 页面0/库0",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-05",
+  "expected": "两者相等",
+  "actual": "dashboard 152801；reports Total 152,801.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-06",
+  "expected": "opened+1，closed+1",
+  "actual": "新案 21; Status updated; opened 0→1; closed 0→1",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-07",
+  "expected": "overdue+1；upcoming=14 天内（含逾期）关联未终结案件的待办",
+  "actual": "overdue 1→2; upcoming 2→3（库 3）",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-08",
+  "expected": "四档；只计欠款>0 未终结；最大档满格",
+  "actual": "[{\"lbl\":\"0–30\",\"w\":1,\"v\":500},{\"lbl\":\"31–60\",\"w\":100,\"v\":85949},{\"lbl\":\"61–90\",\"w\":0,\"v\":0},{\"lbl\":\"90+\",\"w\":0,\"v\":0}] 期望 [500,85949,0,0]",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-09",
+  "expected": "≤10 条；按到期排序；徽章 late红/Today金/in Nd灰；链接案件",
+  "actual": "[{\"id\":\"3\",\"cls\":\"is-red\",\"lbl\":\"1d late\"},{\"id\":\"15\",\"cls\":\"is-gold\",\"lbl\":\"Today\"},{\"id\":\"2\",\"cls\":\"is-neutral\",\"lbl\":\"in 1d\"},{\"id\":\"13\",\"cls\":\"is-neutral\",\"lbl\":\"in 10d\"}]",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-10",
+  "expected": "前四角色可见（≤5，按收款降序）；agent 不可见",
+  "actual": "{\"admin\":\"可见4行降序\",\"manager\":\"可见4行降序\",\"finance\":\"可见4行降序\",\"auditor\":\"可见4行降序\",\"agent1\":\"不可见\"}",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-11",
+  "expected": "新记录在最上；≤12 条；可点进案件",
+  "actual": "条数 12; 首条=Call: answered (30s) — QA recent activity call CASE-2026-D013 · System Admin · 2",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DASH-12",
+  "expected": "所有数字/列表/动态只含 agent1 名下",
+  "actual": "页面 {\"collected\":100,\"payments\":1,\"active\":2,\"legal\":1,\"ptpDue\":0,\"ptpOverdue\":0,\"ptpBroken\":0,\"outstanding\":42294,\"opened\":0,\"closed\":0,\"overdueTasks\":1,\"upcoming\":1}；期望 {\"outstanding\":42294,\"active\":2,\"legal\":1,\"collected\":100,\"ptpBroken\":0,\"overdueTasks\":1}；动态案件 13,5,9,17（本人 5,9,13,17）",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-01",
+  "expected": "结果符合条件；按姓名排序",
+  "actual": "high 5 条; 'Lim' → Sarah Lim; IC → Ravi Chandran; phone → Nadia Hassan; 排序=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-02",
+  "expected": "留空被浏览器拦截；只填空格服务端提示 Name is required",
+  "actual": "required 属性=true; 空格提交 → Name is required",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-03",
+  "expected": "回列表并提示 Debtor created；audit create debtor",
+  "actual": "/debtors?ok=Debtor+created; guarantor=QA 担保人; audit=Created debtor QA 债务人甲",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-04",
+  "expected": "提示 Saved，详情为新值；audit update debtor",
+  "actual": "Saved; 新电话=true; risk high=true; audit=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-05",
+  "expected": "列出该债务人案件（号/欠款/状态），可点进",
+  "actual": "14:CASE-2026-D014:16,151.99 | 2:CASE-2026-D002:3,370.13",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-06",
+  "expected": "列表只含本人案件债务人；越权 403",
+  "actual": "列表 1,5,9（期望 1,5,9）；/debtors/2 → 403",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-07",
+  "expected": "可以查看；没有 + New Debtor 与 Edit",
+  "actual": "finance: list 200 new=false detail 200 edit=false; auditor: list 200 new=false detail 200 edit=false",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-08",
+  "expected": "提示 Debtor created，但列表里看不到（E-06 现状）",
+  "actual": "Debtor created; 列表可见=false",
+  "result": "PASS",
+  "note": "行为与手册描述一致；E-06 体验问题另列发现",
+  "f": "m1"
+ },
+ {
+  "id": "DEB-09",
+  "expected": "原样显示为文本",
+  "actual": "列表转义=true; 详情转义=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m1"
+ },
+ {
+  "id": "CASE-01",
+  "expected": "结果符合条件；按开案时间倒序",
+  "actual": "negotiation→20,14,3; urgent→20,16,12,8,4; q=D007→7; q=Sarah→14,2; 倒序=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-02",
+  "expected": "cases.csv 带筛选；列正确",
+  "actual": "attachment; filename=\"cases.csv\"; 表头 Case No,Debtor,Debtor Phone,Agent,Outstanding,Paid,Priority,Status,Opened; 行数 3; 导出链接 /cases?format=csv&status=negotiation&priority=high&q=a",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-03",
+  "expected": "浏览器拦截；服务端提示 Debtor and principal are required",
+  "actual": "required 属性 debtor=true principal=true; 无债务人→Debtor and principal are required; 无本金→Debtor and principal are required",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-04",
+  "expected": "跳详情+Case created；号 CASE-年份-0001；时间线 created；audit create case",
+  "actual": "/cases/21?ok=Case+created; case_no=CASE-2026-0001; flash=green:Case created; audit=Created case CASE-2026-0001",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-05",
+  "expected": "Priority=medium，Status=New",
+  "actual": "priority medium selected=true; status new selected=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-07",
+  "expected": "Maturity=2026-02-28；缺起始日或期限时不显示",
+  "actual": "到期日=2026-02-28; 缺期限显示=null; 缺起始日显示=null",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-08",
+  "expected": "提示 Saved；详情更新；audit update case",
+  "actual": "Saved; agent=2 priority=high; remark 显示=true; audit=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-09",
+  "expected": "看不到 + New Case/Edit Case；/cases/new 403",
+  "actual": "agent1: +New=false Edit=false /cases/new=403; finance: +New=false Edit=false /cases/new=403; auditor: +New=false Edit=false /cases/new=403",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-10",
+  "expected": "Total Outstanding；x% recovered=已还÷(本金+利息)；Principal/Interest/Paid/Maturity；opened N days ago",
+  "actual": "Outstanding=10,718.25; 9%（期望 9%）; P=10,000.00 I=1,718.25 Paid=1,000.00 M=2027-01-01; opened 0 days ago",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-11",
+  "expected": "自动提交；Status updated；蓝色 status_change “Status changed a → b”；audit",
+  "actual": "onchange 自动提交=true; Status updated; 时间线=true; audit=Status new → legal",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-12",
+  "expected": "记录结案时间；Dashboard closed 当天 +1",
+  "actual": "closed:有 fully_paid:有 cancelled:有; dashboard closed=3",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-13",
+  "expected": "Note added/updated/deleted；仅 note 可编辑删除",
+  "actual": "Note added/Note updated/Note deleted; 删除确认框=true; 篡改 status_change 事件后内容=Status changed new → legal",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-14",
+  "expected": "Call logged；Records→Calls；时间线 Call: answered (60s) — 备注",
+  "actual": "Call logged; Calls 表=true; 时间线=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-15",
+  "expected": "依次 Repayment Schedule、Restructure History、Payments、Promise to Pay、Calls、Tasks",
+  "actual": "Repayment Schedule | Restructure History | Payments | Promise to Pay | Calls | Tasks",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-16",
+  "expected": "倒序；payment/ptp_fulfilled 绿，ptp_broken/legal 红，ptp_created/restructure 金，status_change/call 蓝，note 灰",
+  "actual": "时间线 status_change:is-blue, restructure:is-gold, ptp_broken:is-red, status_change:is-blue, ptp_created:is-gold, payment:is-green, ptp_fulfilled:is-green, ptp_created:is-gold, call:is-blue, note:is-neutral, note:is-neutral；legal 类型无界面入口未覆盖",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-17",
+  "expected": "显示最早到期的待办（日期 · 标题）",
+  "actual": "Next Action = \"2026-10-26 · QA earlier task\"",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-18",
+  "expected": "404 Case not found or access denied",
+  "actual": "/cases/2 → 404; /statement → 404",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-19",
+  "expected": "无 Record Payment/Restructure/New PTP/New Plan/Log Call/Edit Case/状态框/备注框；有 Records 与 Print statement",
+  "actual": "{\"pay\":false,\"rs\":false,\"ptp\":false,\"plan\":false,\"call\":false,\"edit\":false,\"status\":false,\"note\":false,\"records\":true,\"stmt\":true,\"payEdit\":false,\"voidBtn\":false}",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "CASE-20",
+  "expected": "有 Record Payment，Payments 有 Edit/Void；无 New PTP/New Plan/Log Call/状态框/备注框",
+  "actual": "{\"pay\":true,\"rs\":false,\"ptp\":false,\"plan\":false,\"call\":false,\"edit\":false,\"status\":false,\"note\":false,\"records\":true,\"stmt\":true,\"payEdit\":true,\"voidBtn\":true}",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "INT-03",
+  "expected": "Total Outstanding = 1,200.00",
+  "actual": "1,200.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "INT-04",
+  "expected": "利息 1,825.00；Total 11,825.00（计到 2027-01-01）",
+  "actual": "I=1,825.00 T=11,825.00 M=2027-01-01",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "INT-05",
+  "expected": "利息 6,570.00；Total 43,070.00",
+  "actual": "I=6,570.00 T=43,070.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "INT-06",
+  "expected": "先冲 300 利息、700 冲本金；总利息 1,718.25；Total 10,718.25",
+  "actual": "Payment RCPT-2026-0003 recorded; I=1,718.25 T=10,718.25",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-15",
+  "expected": "11,825.00 → 10,718.25，降幅 1,106.75",
+  "actual": "11,825.00 → 10,718.25",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "INT-07",
+  "expected": "利息 0.00，多次刷新不变；次日 +1 天利息",
+  "actual": "刷新 0.00/0.00；caseBalance(asOf=明天)=5（期望 10000×0.0005=5.00；“次日”用纯函数注入日期验证）",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "INT-08",
+  "expected": "利息不再增加（封顶到期日 2025-09-01，92 天 = 460.00）",
+  "actual": "页面利息 460.00；asOf 2026-12-31 → 460",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "INT-09",
+  "expected": "Loan Start Date 取开案日并注明 (unset, defaults to opened)",
+  "actual": "注明=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "INT-10",
+  "expected": "利率清零，按 Interest Amount 计算",
+  "actual": "rate=0 mode=fixed Total=1,050.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-01",
+  "expected": "Payment RCPT-年份-序号 recorded；欠款减少；Payments 有；绿色 payment；audit payment",
+  "actual": "Payment RCPT-2026-0004 recorded; Total=1,900.00; ref=QA-REF-1 bank=Maybank; 日期默认今天(JS)=true; audit=Recorded payment RCPT-2026-0004 amount 100",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-02",
+  "expected": "Assigned → Partial Paid",
+  "actual": "partial_paid",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-03",
+  "expected": "Fully Paid；欠款 0.00；计划全部 Paid",
+  "actual": "Payment RCPT-2026-0005 recorded; status=fully_paid; Total=0.00; 计划 Paid,Paid,Paid",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-04",
+  "expected": "浏览器 max 拦截；服务端 Amount exceeds outstanding",
+  "actual": "max 属性=true; 服务端 → Amount exceeds outstanding（弹窗内拦截见 ui.qa.py）",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-05",
+  "expected": "浏览器 min 拦截；服务端 Invalid amount",
+  "actual": "0→Invalid amount; -5→Invalid amount",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-06",
+  "expected": "Invalid payment date",
+  "actual": "Invalid payment date",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-07",
+  "expected": "欠款减少，状态不变（含还清后）",
+  "actual": "legal:legal/0 bankruptcy:bankruptcy/0 deceased:deceased/0 closed:closed/0 cancelled:cancelled/0",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-08",
+  "expected": "状态保持 PTP",
+  "actual": "Payment RCPT-2026-0016 recorded; status=ptp",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-09",
+  "expected": "上限=欠款+原金额；Payment updated；时间线 edited: RM a → RM b；audit payment_edit",
+  "actual": "前端上限公式=true; 超上限→Amount exceeds outstanding; Payment updated; Total=1,850.00; audit=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-10",
+  "expected": "Payment voided；欠款恢复；时间线 voided；audit；Fully Paid 作废后回 Negotiation",
+  "actual": "Payment voided; Total=2,000.00; audit=true; 还清=fully_paid → 作废后=negotiation",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-11",
+  "expected": "无 Actions 列；编辑/作废 403",
+  "actual": "edit 403; void 403",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-12",
+  "expected": "按年递增 1",
+  "actual": "0017 → 0018",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-13",
+  "expected": "作废的收据号不再使用",
+  "actual": "作废 RCPT-2026-0019 后新还款收据号 = RCPT-2026-0019；时间线同号记录: Payment RCPT-2026-0019: RM 10.00 via bank_transfer | Payment RCPT-2026-0019 voided (RM 10.00) | Payment RCPT-2026-0019: RM 20.00 via bank_transfer",
+  "result": "FAIL",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PAY-14",
+  "expected": "编辑弹窗正常打开",
+  "actual": "onclick 源码: openEditPayment(26, 10, '2026-10-24', 'bank_transfer', 'O&#39;Brien', '')；HTML 解码后 JS 语法有效=false（浏览器点击验证见 ui.qa.py）",
+  "result": "FAIL",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-01",
+  "expected": "两项都填写才显示计划",
+  "actual": "都填=true 缺期限=false 缺起始=false",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-02",
+  "expected": "3 行：2026-02-28、2026-03-31、2026-04-30",
+  "actual": "2026-02-28,2026-03-31,2026-04-30",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-03",
+  "expected": "155.00 / 140.00 / 10,155.00",
+  "actual": "155.00 / 140.00 / 10,155.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-04",
+  "expected": "333.33 / 333.33 / 333.34",
+  "actual": "333.33 / 333.33 / 333.34",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-05",
+  "expected": "第 1、2 期还清；第 3 期已还 133.34 剩 799.99；最后一期 933.37",
+  "actual": "933.33/933.33/0.00/Paid | 933.33/933.33/0.00/Paid | 933.33/133.34/799.99/Overdue … 末期 933.37",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-06",
+  "expected": "Paid/Overdue/Partially Paid/Pending 判定正确",
+  "actual": "还50: Overdue,Overdue,Pending；再还200: Paid,Paid,Partially Paid,Pending",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-07",
+  "expected": "只有最早未还清一期有 Pay，预填该期未还金额",
+  "actual": "Pay 列: —,—,50,—,—…（第 3 期剩 50.00）；预填写入 #pay-amount 见 ui.qa.py",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-08",
+  "expected": "auditor 无 Actions 列",
+  "actual": "actions=,,",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-09",
+  "expected": "所有期 Paid，Outstanding 全为 0",
+  "actual": "打开详情前库内欠款=10000; max=11825; Payment RCPT-2026-0024 recorded; 还后 Total=0.00; 计划 Paid/0.00; 账面 Interest=265.00 Paid=11,825.00（恒等式见手册外 X-OVERPAY）",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "SCH-10",
+  "expected": "计划按新条款重算",
+  "actual": "改前 3 期首期 12.40；改后 6 期首期 24.80",
+  "result": "PASS",
+  "note": "",
+  "f": "m2"
+ },
+ {
+  "id": "PTP-01",
+  "expected": "PTP created；状态 PTP；金色时间线；audit ptp_create",
+  "actual": "PTP created; status=ptp; audit=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-02",
+  "expected": "浏览器 max；服务端 Amount exceeds outstanding",
+  "actual": "max 属性=true; Amount exceeds outstanding",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-03",
+  "expected": "PTP fulfilled and payment recorded；fulfilled；自动还款备注 PTP fulfilled；欠款减少；audit 两条",
+  "actual": "金额预填=true; PTP fulfilled and payment recorded; payment RCPT-2026-0001 remark=PTP fulfilled; 欠款=2500; status=partial_paid",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-05",
+  "expected": "PTP already resolved，不重复记账",
+  "actual": "PTP already resolved; 还款笔数 1→1",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-04",
+  "expected": "PTP broken；broken；无其他 pending 时回 Negotiation（无确认框 E-12）",
+  "actual": "PTP broken; 状态 ptp→negotiation; Break 无确认框=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-06",
+  "expected": "3 条 333.33/333.33/333.34，到期日按月顺延（月末对齐）；标题 0/3 paid；状态 PTP",
+  "actual": "Installment plan created; 333.33@2026-01-31 333.33@2026-02-28 333.34@2026-03-31; 标题=true; status=ptp",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-07",
+  "expected": "浏览器拦截；服务端 Installments must be 2–60",
+  "actual": "1→Installments must be 2–60; 61→Installments must be 2–60",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-08",
+  "expected": "Total too small for the number of installments",
+  "actual": "Total too small for the number of installments",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-09",
+  "expected": "标题 1/3 paid；状态保持 PTP",
+  "actual": "PTP fulfilled and payment recorded; 1/3=true; status=ptp",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-10",
+  "expected": "pending 期变 broken；时间线 Installment plan cancelled (N…)；回 Negotiation；audit",
+  "actual": "Installment plan cancelled; fulfilled,broken,broken; status=negotiation; 确认框=true; audit=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-11",
+  "expected": "finance/auditor 无按钮；agent1 越权 403",
+  "actual": "finance: fulfill=false break=false cancel=false; auditor: fulfill=false break=false cancel=false; agent1 fulfill 403 break 403; PTP 仍 pending",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-01",
+  "expected": "仅 admin/manager 打开未结清案件可见",
+  "actual": "{\"admin\":true,\"manager\":true,\"agent1\":false,\"finance\":false,\"auditor\":false,\"closed\":false,\"canc\":false,\"paid\":false}",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-02",
+  "expected": "显示截至今天剩余本金/未付利息；默认今天；下限=起算日/最近还款日/上次重组次日最晚者；上限今天",
+  "actual": "本金 9,300.00 利息 1,097.40（期望 1,097.40）; min=2026-03-02 max=2026-10-24 value=2026-10-24",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-05",
+  "expected": "依次提示 Interest rate is required / Interest amount is required / Tenure must be 1–120 months / Reason is required；未建重组",
+  "actual": "{\"rate\":\"Interest rate is required\",\"amt\":\"Interest amount is required\",\"tenure\":\"Tenure must be 1–120 months\",\"reason\":\"Reason is required\"} 重组数=0",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-06",
+  "expected": "0/121/1.5 均提示 Tenure must be 1–120 months",
+  "actual": "Tenure must be 1–120 months | Tenure must be 1–120 months | Tenure must be 1–120 months",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-07",
+  "expected": "Effective date must be between 下限 and 今天",
+  "actual": "Effective date must be between 2026-03-02 and 2026-10-24 | Effective date must be between 2026-03-02 and 2026-10-24",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-08",
+  "expected": "Restructured；Maturity=生效日+18 月；Restructured on；金色时间线；audit",
+  "actual": "Restructured; Maturity=2027-10-01; 时间线=true; audit=Restructured from 2026-04-01 (18 months)",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-09",
+  "expected": "标题 since restructure on 日期；首行挂账 2026-04-01 139.50；之后 18 期",
+  "actual": "首行 {\"due\":\"2026-04-01\",\"arrears\":true,\"exp\":\"139.50\",\"paid\":\"0.00\",\"out\":\"139.50\",\"status\":\"Overdue\"}; 行数 19; 第2行 2026-05-01 111.60",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-10",
+  "expected": "卡片显示生效日/新条款/期限/操作人/截点本金/挂账欠息/原因；Superseded 未还期显示 Restructured",
+  "actual": " Restructure History 2026-04-01 · 1.2%/month · 18 months · by Collection Manager Principal at cut RM 9,300.00 · Arrears carried RM 139.50 Reason: QA 降低月供 Undo Superseded schedule (12 rows) Due Date Expected Paid Outstanding Status 2026-02-01 155.00 155.00 0.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-11",
+  "expected": "挂账 139.50；Total 11,478.06；总利息 2,478.06",
+  "actual": "Total=11,478.06 Interest=2,478.06",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-12",
+  "expected": "Locked · restructured，无 Edit/Void；直接提交提示锁定",
+  "actual": "edit→This payment belongs to a restructured period; undo the restructure first; void→This payment belongs to a restructured period; undo the restructure first",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-13",
+  "expected": "日期框 min=生效日；绕过提示 Payment date must be on or after the restructure date (日期)",
+  "actual": "Payment date must be on or after the restructure date (2026-04-01)",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-14",
+  "expected": "提示锁定；条款只读/禁用；快捷按钮隐藏；其他字段可保存；篡改不改条款",
+  "actual": "UI 锁定=true; Saved; 条款未变=true; priority=urgent agent=2; Total=11,478.06",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "PTP-12",
+  "expected": "日期框不能早于生效日；绕过提示 Payment date must be on or after the restructure date (日期)",
+  "actual": "Payment date must be on or after the restructure date (2026-04-01)",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-16",
+  "expected": "生效日后有还款时 Undo 消失；直接提交提示 Payments exist…；作废后可撤销",
+  "actual": "有还款时 Undo=false; 提交→Payments exist on or after the effective date; void them first; 作废后 Undo=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-15",
+  "expected": "Restructure undone；恢复原条款；时间线 Restructure undone: from 日期；audit；Edit Case 解锁",
+  "actual": "Restructure undone; Total=10,718.25; 解锁=true; audit=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-17",
+  "expected": "新生效日≥上次次日；新的在上；只有最新有 Undo；撤销较早提示 Only the latest restructure can be undone",
+  "actual": "同日→Effective date must be between 2026-05-02 and 2026-10-24; 第二次→Restructured; 新在上=true; Undo 数=1; 撤销旧→Only the latest restructure can be undone",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-03",
+  "expected": "红色提示 No valid effective date today — it must be on or after …",
+  "actual": "No valid effective date today — it must be on or after 2026-10-25.",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-18",
+  "expected": "（截点本金+500）/12 等额；挂账行最前",
+  "actual": "首行 1,200.00(arrears=true); 其余 875.00; 行数 13",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-19",
+  "expected": "agent、finance 返回 403",
+  "actual": "agent1:403/403 finance:403/403",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-20",
+  "expected": "This case cannot be restructured",
+  "actual": "This case cannot be restructured | This case cannot be restructured | This case cannot be restructured",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-21",
+  "expected": "截点欠息只计到原到期日（2025-07-01，181 天 = 905.00）",
+  "actual": "arrears_at_cut=905 principal_at_cut=10000",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "RS-22",
+  "expected": "挂账行、新计划、重组历史（10 天前、1.2%/月、18 个月、原因）",
+  "actual": "首行 {\"due\":\"2026-10-14\",\"arrears\":true,\"exp\":\"241.43\",\"paid\":\"0.00\",\"out\":\"241.43\",\"status\":\"Overdue\"}; 行数 19",
+  "result": "PASS",
+  "note": "",
+  "f": "m3"
+ },
+ {
+  "id": "TASK-01",
+  "expected": "各筛选结果符合；逾期待办红色 · overdue",
+  "actual": "{\"status\":[\"4\",\"4\"],\"type\":[\"2,6\",\"2,6\"],\"overdue\":[\"2,7\",\"2,7\"],\"w1\":[\"1,2,4,7\",\"1,2,4,7\"],\"w7\":[\"1,2,3,4,5,7\",\"1,2,3,4,5,7\"],\"w14\":[\"1,2,3,4,5,7\",\"1,2,3,4,5,7\"],\"w30\":[\"1,2,3,4,5,6,7\",\"1,2,3,4,5,6,7\"]} 红色逾期=true",
+  "result": "PASS",
+  "note": "Due within “Today” 选项实际为 window=1（今天+1 天内），见发现",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-02",
+  "expected": "Agent 自动带出案件催收员并锁定；Task created",
+  "actual": "Task created; 提交 agent_id=1 → 实际 2（案件 2 属 agent2）; 前端锁定脚本存在=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-03",
+  "expected": "① 归所选催收员；② 归 agent1 自己",
+  "actual": "admin 选 3 → 3; agent1（提交 agent_id=3）→ 1",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-04",
+  "expected": "浏览器拦截",
+  "actual": "required=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-05",
+  "expected": "Task updated",
+  "actual": "Task updated; QA case task v2/visit/2026-10-28/n2",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-06",
+  "expected": "Task completed；done；Complete 消失",
+  "actual": "Task completed; status=done",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-07",
+  "expected": "只看自己的任务；越权提示 Forbidden",
+  "actual": "列表 1,4,5,6,10（本人 1,4,5,6,10）; complete→Forbidden; edit→Forbidden",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-08",
+  "expected": "Invalid case",
+  "actual": "Invalid case",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-09",
+  "expected": "没有 + New Task；Actions 列显示 —",
+  "actual": "finance: new=false edit=false dash=true; auditor: new=false edit=false dash=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "TASK-10",
+  "expected": "Upcoming Follow-ups 出现，徽章 in 3d",
+  "actual": "true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AGT-01",
+  "expected": "Collected 降序；Commission=Collected×Rate%；达成率颜色",
+  "actual": "[{\"id\":\"2\",\"col\":24516,\"rate\":5,\"com\":\"1,225.80\",\"cls\":\"is-red\",\"pct\":5},{\"id\":\"4\",\"col\":7965,\"rate\":4,\"com\":\"318.60\",\"cls\":\"is-red\",\"pct\":3},{\"id\":\"1\",\"col\":2916,\"rate\":5,\"com\":\"145.80\",\"cls\":\"is-red\",\"pct\":1},{\"id\":\"3\",\"col\":0,\"rate\":6,\"com\":\"0.00\",\"cls\":\"is-red\",\"pct\":0}]",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AGT-02",
+  "expected": "结果符合条件",
+  "actual": "Consumer→1,2; active→1,2,3,4; inactive→空",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AGT-03",
+  "expected": "Name is required；Commission 默认 5；Status 默认 Active；Agent created",
+  "actual": "Name is required; 默认 5=true; Active 默认=true; Agent created",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AGT-04",
+  "expected": "详情 Active=No；新建/编辑案件、新建用户下拉不出现",
+  "actual": "Saved; Active No=true; 下拉 new=false edit=false user=false",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AGT-05",
+  "expected": "联系方式、部门、目标、已收、案件数、佣金率、达成率与进度条、名下案件",
+  "actual": "Lim Wei Sheng — Debt Collection CRM &#9776; Debt Collection CRM D Debt Collection CRM Dashboard Debtors Cases Tasks Team &rsaquo; Agents Users Reports Commissions Admin &rsaquo; Settings Demo Data Audit Log Search System",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AGT-06",
+  "expected": "auditor 只读；agent1/finance 403",
+  "actual": "auditor 200 new=false POST=403; agent1 403; finance 403",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-01",
+  "expected": "User xxx created；可立即登录",
+  "actual": "User qa_fin created; login 302→/",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-02",
+  "expected": "Username, full name, password and role are required",
+  "actual": "Username, full name, password and role are required | Username, full name, password and role are required | Username, full name, password and role are required | Username, full name, password and role are required",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-03",
+  "expected": "只有 admin、manager、agent、finance、auditor",
+  "actual": "admin,manager,agent,finance,auditor",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-04",
+  "expected": "出现 Linked Agent；不选提示 Agent accounts must be linked to an agent",
+  "actual": "Agent accounts must be linked to an agent",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-05",
+  "expected": "Could not create user (username may already exist)",
+  "actual": "Could not create user (username may already exist)",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-06",
+  "expected": "User updated",
+  "actual": "User updated; QA Agent Now/agent/4/1",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-07",
+  "expected": "分别提示 You cannot change your own admin role / You cannot deactivate your own account",
+  "actual": "You cannot change your own admin role | You cannot deactivate your own account | toggle→You cannot deactivate your own account",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-08",
+  "expected": "3 位：浏览器拦截+服务端提示；4 位以上 Password updated for xxx 且立即生效",
+  "actual": "minlength=true; 3位→Password must be at least 4 characters; Password updated for qa_fin; 新密码登录→/",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-09",
+  "expected": "列表 disabled 并排到后面；无法登录",
+  "actual": "顺序末尾=qa_off; login 401",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-10",
+  "expected": "A 的会话立即失效",
+  "actual": "停用后 GET /cases → 200; 仍可记账 POST → Payment RCPT-2026-0001 recorded",
+  "result": "FAIL",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-11",
+  "expected": "需要重新登录才生效（手册描述的现状，E-03）",
+  "actual": "改为 auditor 后旧会话记账 → Payment RCPT-2026-0002 recorded; 重新登录后 → 403",
+  "result": "PASS",
+  "note": "行为与手册描述一致；风险并入 E-03 发现",
+  "f": "m4"
+ },
+ {
+  "id": "USR-12",
+  "expected": "1 位密码被拒绝",
+  "actual": "User qa_pw1 created; 1 位密码登录 → /",
+  "result": "FAIL",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "USR-13",
+  "expected": "create、update user 有记录，含 Reset password for xxx",
+  "actual": "create 5 条; update 5 条: Updated user qa_fin (agent) | Reset password for qa_fin | Updated user qa_off (auditor) | Updated user qa_sess (finance)",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "RPT-01",
+  "expected": "From=本月 1 日，To=今天",
+  "actual": "2026-10-01 ~ 2026-10-24",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "RPT-02",
+  "expected": "按状态分组+合计；最大组满格；不受日期影响",
+  "actual": "Legal:2/24,516.00/100% Partial Paid:3/24,055.00/98% Negotiation:3/23,872.87/97% PTP:2/20,381.00/83% New:2/14,418.00/59% Deceased:1/11,340.00/46% Bankruptcy:1/10,422.00/43% Cancelled:1/9,504.00/39% Closed:1/8,586.00/35% Assigned:2/5,854.13/24% Fully Paid:2/0.00/0%; Total 20 152,949.00; 日期改变后一致=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "RPT-03",
+  "expected": "Collected 只统计范围内；Commission=Collected×Rate%；有达成率条",
+  "actual": "10 月 {\"col\":\"234.56\",\"rate\":\"6\",\"com\":\"14.07\"}（库 234.56）; 9 月 {\"col\":\"1,000.00\",\"rate\":\"6\",\"com\":\"60.00\"}",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "RPT-04",
+  "expected": "只看自己范围欠款；无 Agent Performance；导出地址只显示页面",
+  "actual": "分组 Legal:1,Partial Paid:2,Cancelled:1（库 cancelled:1,legal:1,partial_paid:2）; export → text/html; charset=utf-8",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "RPT-05",
+  "expected": "三个文件名与列正确",
+  "actual": "cases-detailed.csv: Case No,Debtor,Agent,Principal,Interest,Paid,Outstanding,Status,Opened || outstanding-by-status.csv: Status,Cases,Outstanding || agent-performance.csv: Agent,Collected,Rate %,Commission,Target",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "RPT-06",
+  "expected": "带 BOM；金额无多余小数尾差",
+  "actual": "BOM=true; 尾差单元格: performance:14.0736",
+  "result": "FAIL",
+  "note": "Excel 实际打开未执行（本机自动化不驱动 Excel），以文件内容判定",
+  "f": "m4"
+ },
+ {
+  "id": "COM-01",
+  "expected": "默认当前月（MYT）；Collected 只统计该月",
+  "actual": "默认月 2026-10; 10 月 234.56（库 234.56）; 9 月 1,000.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "COM-02",
+  "expected": "Earned=Collected×Rate%；Pending=Earned−Settled；负数红色",
+  "actual": "{\"Lim Wei Sheng\":{\"col\":\"2,918.00\",\"rate\":\"5\",\"earned\":\"145.90\",\"settled\":\"300.00\",\"cls\":\"is-red\",\"pending\":\"-154.10\"},\"Nurul Ain\":{\"col\":\"24,516.00\",\"rate\":\"5\",\"earned\":\"1,225.80\",\"settled\":\"0.00\",\"cls\":\"\",\"pending\":\"1,225.80\"},\"QA 新催收员\":{\"col\":\"0.00\",\"rate\":\"5\",\"earned\":\"0.00\",\"settled\":\"0.00\",\"cls\":\"\",\"pending\":\"0.00\"},\"Rajesh Kumar\":{\"col\":\"234.56\",\"rate\":\"6\",\"earned\":\"14.07\",\"settled\":\"150.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "COM-03",
+  "expected": "Pending>0 时预填；Settlement recorded；出现在历史；audit commission_settle",
+  "actual": "data-pending=-135.93（页面 Pending -135.93）; 预填逻辑=true; Settlement recorded; audit=Settled RM 10.5 for 2026-10",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "COM-04",
+  "expected": "浏览器 min 拦截；服务端 Invalid amount",
+  "actual": "Invalid amount | Invalid amount",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "COM-05",
+  "expected": "Settlement voided；Settled/Pending 回退；audit commission_void",
+  "actual": "Settlement voided; settled 160.50→150.00; pending -146.43→-135.93",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "COM-06",
+  "expected": "只看到自己一行和自己的结算记录；没有 Settle/Void",
+  "actual": "行 Lim Wei Sheng; 历史 Lim Wei Sheng; POST settle → 403",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "COM-07",
+  "expected": "auditor 可查看，没有 Settle/Void",
+  "actual": "5 行; POST → 403",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SRCH-01",
+  "expected": "列出匹配的案件",
+  "actual": "{\"caseNo\":[10],\"name\":[15,3],\"ic\":[17,5],\"phone\":[11]}",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SRCH-02",
+  "expected": "没有结果",
+  "actual": "结果 0",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SRCH-03",
+  "expected": "没有结果，不报错",
+  "actual": "200/200",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SRCH-04",
+  "expected": "最多显示 50 条",
+  "actual": "50 条",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SRCH-05",
+  "expected": "不报错，不执行脚本",
+  "actual": "':200:0:esc \":200:0:esc %:200:50:esc _:200:50:esc <script>alert(1)</script>:200:0:esc",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AUD-01",
+  "expected": "admin/auditor 可看；其他 403",
+  "actual": "{\"admin\":200,\"auditor\":200,\"manager\":403,\"agent1\":403,\"finance\":403}",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AUD-02",
+  "expected": "最近 200 条，倒序；列 Time/User/Action/Entity/Details/IP",
+  "actual": "显示 89 条（库 89）; 列正确=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AUD-03",
+  "expected": "只显示该动作",
+  "actual": "4 条，动作 payment",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AUD-05",
+  "expected": "没有修改或删除入口",
+  "actual": "POST 表单 0; POST /audit-log → 404; DELETE → 404",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SET-01",
+  "expected": "Company settings saved；audit update settings",
+  "actual": "Company settings saved; audit=Updated company settings (QA 放贷有限公司)",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SET-02",
+  "expected": "设置页预览；对账单抬头显示 Logo",
+  "actual": "Company settings saved; 预览=true; 对账单=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SET-03",
+  "expected": "Logo must be PNG, JPEG, SVG or WebP",
+  "actual": "Logo must be PNG, JPEG, SVG or WebP | Logo must be PNG, JPEG, SVG or WebP",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SET-04",
+  "expected": "保存失败并显示错误（File too large）",
+  "actual": "File too large",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SET-05",
+  "expected": "Logo 被移除",
+  "actual": "logo=''",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SET-06",
+  "expected": "新标签页；公司抬头、案件号、当天日期、债务人、本金/利息/已还/欠款、还款历史",
+  "actual": "内容完整=true 缺失=; target=_blank=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SET-07",
+  "expected": "打印时不出现按钮",
+  "actual": "print CSS 隐藏 .stmt-actions；PDF 生成见 ui.qa.py",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "SET-08",
+  "expected": "标题显示 Debt Collection CRM",
+  "actual": "<h1>Debt Collection CRM</h1>",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "DEMO-01",
+  "expected": "Demo data deleted - your trial data is kept；演示案件消失；自建保留；audit demo_delete",
+  "actual": "HTTP 302 Demo data deleted - your trial data is kept; 剩余演示案件 2（被自建数据引用而保留）; 自建案件保留=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "DEMO-02",
+  "expected": "Demo data reloaded；CASE-年份-D001…；自建数据不变；audit demo_reload",
+  "actual": "HTTP 302 Demo data reloaded; 演示案件 20",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "DEMO-03",
+  "expected": "不报错；编号互不冲突",
+  "actual": "delete 302; 新案 CASE-2026-0058; reload Demo data reloaded; 重复号 0",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "DEMO-04",
+  "expected": "该案件及相关数据保留，不报错",
+  "actual": "HTTP 302; 案件 13 保留=true",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "DEMO-05",
+  "expected": "非 admin 403",
+  "actual": "manager:403/403 agent1:403/403 finance:403/403 auditor:403/403",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "AUD-04",
+  "expected": "附录 C 各项操作均产生审计记录",
+  "actual": "缺失: 无；备注/任务相关审计 0 条（E-11 现状）",
+  "result": "PASS",
+  "note": "",
+  "f": "m4"
+ },
+ {
+  "id": "E2E-01",
+  "expected": "各检查点通过",
+  "actual": "1 建案:✓(CASE-2026-0001 new 计划12期) | 2 agent1 可见:✓(Cases 可见=true) | 3 通话+PTP:✓(status=ptp PTP due 0→1) | 4 履行:✓(RCPT-2026-0001 欠款 11825→11233.75 status=partial_paid) | 5 finance Pay + max 还清:✓(Pay 预填 115（第4期）; max 11097.76; status=fully_paid; 计划全 Paid=true; 本金+利息=10000 已还=11712.76) | 6 Closed:✓(closed 0→1（自动 Fully Paid 未计入 closed，见 E-08）) | 7 审计:✓(create>status_change>call>ptp_create>payment>ptp_ful",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "E2E-02",
+  "expected": "各检查点通过",
+  "actual": "建计划:✓(333.33/333.33/333.34 ptp) | 履行第1期:✓(ptp) | 取消计划:✓(fulfilled,broken,broken negotiation) | 转 Legal:✓(legal 1→2; 还款后 legal)",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "E2E-03",
+  "expected": "各检查点通过",
+  "actual": "示例A:✓(10,718.25) | 重组:✓(11,478.06) | finance 还款:✓(Payment date must be on or after the restructure date (2026-04-01) / Payment RCPT-2026-0007 recorded) | 撤销被拒:✓(Payments exist on or after the effective date; void them first) | 撤销成功:✓(Restructure undone 10,718.25 时间线重组记录 2)",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "E2E-04",
+  "expected": "各检查点通过",
+  "actual": "建档+账号:✓(User qa_newbie created) | 只看本人案件:✓(cases=7 debtors=7 /cases/2→404) | 看到案件任务:✗(案件 7 的任务 [{\"title\":\"Prepare LOD\",\"agent_id\":3}]；新人 Tasks 页可见=false) | 停用后无法登录:✓(401) | 停用档案:✓(新建案件下拉)",
+  "result": "FAIL",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "E2E-05",
+  "expected": "各检查点通过",
+  "actual": "核对:✓({\"col\":\"16,206.65\",\"rate\":\"5\",\"earned\":\"810.33\",\"settled\":\"300.00\",\"pending\":\"510.33\"}) | 全额结算:✓(0.00) | 作废+部分结算:✓(490.33) | agent1 只见自己:✓(Lim Wei Sheng) | CSV 与页面一致:✓(不一致 无；CSV 未取整值 Lim Wei Sheng:810.3325)",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "E2E-06",
+  "expected": "全部拒绝（403/404）；无数据被改；搜索/报表/佣金看不到 agent2",
+  "actual": "GET /cases/2:404 GET /cases/2/statement:404 GET /cases/2/edit:403 GET /debtors/2:403 GET /users:403 GET /settings:403 GET /audit-log:403 GET /agents:403 GET /cases/14:404 fulfill:403 break:403 task complete:302/Forbidden; 数据未变=true; 泄露=false",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-09",
+  "expected": "同 E2E-06 全部拒绝",
+  "actual": "见 E2E-06",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-01",
+  "expected": "不报错，不返回额外数据",
+  "actual": "/search:200:0 /cases:200:0 /cases:200:0 /cases:200:0 /debtors:200:0 /debtors:200:14 /tasks:200:0 /audit-log:200:0 /agents:200:0 /commissions:200:0 /reports:200:0 | /debtors 不过滤时 14 条（risk 非法值被忽略） | agent1 search 结果 0",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-02",
+  "expected": "所有页面原样显示为文本，不弹窗",
+  "actual": "16 个页面均已转义（浏览器弹窗检查见 ui.qa.py）",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-03",
+  "expected": "不执行脚本",
+  "actual": "解码后的 onclick: openEditPayment(13, 1, '2026-10-24', 'bank_transfer', 'x');alert(1);//', 'b') || openEditPayment(14, 1, '2026-10-24', 'cash');alert(document.cookie);//', '', '')；可执行注入 2 条（agent 角色写入 reference/method 均可；浏览器验证见 ui.qa.py）",
+  "result": "FAIL",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-04",
+  "expected": "bcrypt 哈希，无明文",
+  "actual": "admin:$2a$08$… manager:$2a$08$… agent1:$2a$08$…",
+  "result": "PASS",
+  "note": "代价因子 8（bcrypt.hashSync(pw, 8)），低于常见推荐 10–12",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-05",
+  "expected": "启动失败并报错 SESSION_SECRET must be set in production",
+  "actual": "exit=1; stderr=Error: SESSION_SECRET must be set in production\r",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-06",
+  "expected": "确认当前无 CSRF 令牌（已知风险 E-05，上线前评估）",
+  "actual": "跨站 Origin 的 POST → Status updated（ptp→deceased）; Set-Cookie: connect.sid=…; Path=/; HttpOnly（无 SameSite/Secure）",
+  "result": "PASS",
+  "note": "按手册此用例为“确认已知风险”，结果判 PASS；风险本身列为发现",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-07",
+  "expected": "同 AUTH-05",
+  "actual": "见 m1 AUTH-05（PASS）及 restart 验证",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SEC-08",
+  "expected": "正式环境停用演示账号、移除 /demo-accounts 与 Demo Data",
+  "actual": "未访问线上环境（范围限制）。代码层面：/demo-accounts 与 /demo-tools 无环境开关（src/app.js:30, :53），render.yaml 启动即 seed 演示账号；本地 /demo-accounts → 200",
+  "result": "BLOCKED",
+  "note": "不得访问线上 Render；属已知延后项（正式上线待办第 6 节）",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-01",
+  "expected": "冒烟项通过",
+  "actual": "5 账号登录 true,true,true,true,true",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-02",
+  "expected": "冒烟项通过",
+  "actual": "dashboard 200",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-03",
+  "expected": "冒烟项通过",
+  "actual": "CASE-2026-0001 计划 12 期首期 155.00",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-04",
+  "expected": "冒烟项通过",
+  "actual": "Payment RCPT-2026-0001 recorded 10,718.25 partial_paid",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-05",
+  "expected": "冒烟项通过",
+  "actual": "Amount exceeds outstanding（弹窗内拦截见 ui.qa.py）",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-06",
+  "expected": "冒烟项通过",
+  "actual": "Payment updated/Payment voided 欠款 10658.25→10718.25",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-07",
+  "expected": "冒烟项通过",
+  "actual": "Pay 按钮存在且带预填值",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-08",
+  "expected": "冒烟项通过",
+  "actual": "PTP fulfilled and payment recorded/Installment plan created/Installment plan cancelled",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-09",
+  "expected": "冒烟项通过",
+  "actual": "Restructured/true/Restructure undone",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-10",
+  "expected": "冒烟项通过",
+  "actual": "Call logged/Note added/Status updated",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-11",
+  "expected": "冒烟项通过",
+  "actual": "Task created/Task completed",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-12",
+  "expected": "冒烟项通过",
+  "actual": "reports 200 csv true,true,true",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-13",
+  "expected": "冒烟项通过",
+  "actual": "Settlement recorded/Settlement voided",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-14",
+  "expected": "冒烟项通过",
+  "actual": "statement 200",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-15",
+  "expected": "冒烟项通过",
+  "actual": "agent1 /cases/2 → 404",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-16",
+  "expected": "冒烟项通过",
+  "actual": "auditor 只读",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-17",
+  "expected": "冒烟项通过",
+  "actual": "本轮审计 10 条",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE-18",
+  "expected": "npm test 全部通过",
+  "actual": "见报告第 5 节 npm test 结果（171/171）",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "SMOKE",
+  "expected": "18 项全部通过",
+  "actual": "全部通过",
+  "result": "PASS",
+  "note": "",
+  "f": "m5"
+ },
+ {
+  "id": "X-RBAC",
+  "expected": "与第 3 章权限矩阵一致（允许的通过，不允许的 403/404/Forbidden）",
+  "actual": "183 个请求；不一致 0：",
+  "result": "PASS",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-RBAC-GET",
+  "expected": "GET 页面权限与矩阵一致",
+  "actual": "85 个请求全部一致",
+  "result": "PASS",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-SCOPE",
+  "expected": "全部拒绝且数据不变",
+  "actual": "403/403/404",
+  "result": "PASS",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-STALE",
+  "expected": "列表/仪表盘/CSV 与详情页欠款一致",
+  "actual": "建案后：列表 10,000.00，仪表盘 352,945.00→362,945.00，CSV「CASE-2026-0005,QA RBAC 债务人,Lim Wei Sheng,10000,0,0,10000,New,2026-10-24」；打开详情后：列表 11,825.00，仪表盘 364,770.00",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-VAL-ID",
+  "expected": "非数字/不存在 id 返回 404 或明确错误，不 500，不误报成功",
+  "actual": "/cases/abc:404 /cases/99999:404 /cases/-1:404 /cases/1.5:404 /cases/0:404 /cases/abc/statement:404 /cases/abc/edit:404 /debtors/abc:404 /debtors/99999:404 /agents/abc:404 /agents/99999:404; /users/abc/edit→User not found; 完成不存在任务→ok=\"Task completed\"; 编辑不存在任务→Not found; 作废不存在结算→ok=\"Settlement voided\"; /ptps/abc/fulfill→404",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-VAL-CASE",
+  "expected": "服务端拒绝负数/非数字/溢出/非法日期/超范围期限",
+  "actual": "{\"负本金\":\"已创建#26 P=-1000 I=0 欠款=0.00 到期=null 耗时28ms\",\"非数字本金\":\"已创建#27 P=0 I=0 欠款=0.00 到期=null 耗时23ms\",\"溢出本金1e309\":\"已创建#28 P=Infinity I=0 欠款=null 到期=null 耗时25ms\",\"负利率\":\"已创建#29 P=1000 I=-608.33 欠款=391.67 到期=2027-01-01 耗时32ms\",\"负固定利息\":\"已创建#30 P=1000 I=-300 欠款=700.00 到期=null 耗时26ms\",\"非法起始日\":\"已创建#31 P=10000 I=0 欠款=0.00 到期=2028-02-14 耗时33ms\",\"超长期限20000月\":\"已创建#32 P=1000 I=202912.67 欠款=203,912.67 到期=3692-09-",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-VAL-PAY",
+  "expected": "拒绝不足 1 分/超过 2 位小数/十六进制/未来日期/非白名单方式",
+  "actual": "{\"金额 0.001（不足 1 分）\":\"Payment RCPT-2026-0009 recorded\",\"金额 100.005（3 位小数）\":\"Payment RCPT-2026-0010 recorded\",\"金额十六进制 0x10\":\"Payment RCPT-2026-0011 recorded\",\"金额 Infinity\":\"Invalid amount\",\"金额科学计数 1e2\":\"Payment RCPT-2026-0012 recorded\",\"未来日期 2099-01-01\":\"Payment RCPT-2026-0013 recorded\",\"早于放款 2000-01-01\":\"Payment RCPT-2026-0014 recorded\",\"日期带时间 2026-10-01T10:00\":\"Invalid payment date\",\"方式任意字符串\":\"Pay",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-VAL-MISC",
+  "expected": "非法输入给出友好错误，不出现 500；业务上不合理值被拒绝",
+  "actual": "500 次数 5；{\"PTP 缺到期日\":\"500(TypeError: Provided value cannot be bound to SQLite parameter 3.)\",\"PTP 到期日 abc\":\"PTP created\",\"PTP 到期日为过去 2020-01-01\":\"PTP created\",\"计划首期 abc\":\"Installment plan created\",\"通话 result=bogus\":\"500(Error: CHECK constraint failed: result IN (&#39;answered&#39;,&#39;)\",\"通话时长 -60\":\"Call logged\",\"空备注\":\"Note added\",\"任务缺标题\":\"500(TypeError: Provided value cannot be bound to SQLite p",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-ERR",
+  "expected": "异常返回友好错误页，不泄露堆栈/绝对路径；服务不崩溃",
+  "actual": "HTTP 500; 泄露堆栈与路径=true（片段: Error: FOREIGN KEY constraint failed<br> &nbsp; &nbsp;at run (C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\src\\db\\index.js:105:57)）; 之后 /health=ok; 未知路由 404 “<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n”",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-CONC-1",
+  "expected": "只记 1 笔还款，其余提示 PTP already resolved",
+  "actual": "还款 1 笔；响应 ok / PTP already resolved / PTP already resolved / PTP already resolved / PTP already resolved",
+  "result": "PASS",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-CONC-2",
+  "expected": "只有一笔成功，另一笔 Amount exceeds outstanding",
+  "actual": "Payment RCPT-2026-0018 recorded / Amount exceeds outstanding; 库 1 笔 700",
+  "result": "PASS",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-CONC-3",
+  "expected": "重复提交不应生成重复 PTP/计划；承诺总额不应超过欠款",
+  "actual": "pending PTP 10 条合计 RM 4000（欠款 RM 1,000）；计划 2 个",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-CONC-4",
+  "expected": "10 笔并发还款收据号唯一、无 500",
+  "actual": "RCPT-2026-0019,RCPT-2026-0020,RCPT-2026-0021,RCPT-2026-0022,RCPT-2026-0023,RCPT-2026-0024,RCPT-2026-0025,RCPT-2026-0026,RCPT-2026-0027,RCPT-2026-0028",
+  "result": "PASS",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-OVERPAY",
+  "expected": "恒等式 Outstanding = Principal + Interest − Paid 成立；或 max 只允许当日结清额",
+  "actual": "弹窗 max=11,825.00（按合同期计到到期日）；今天还 max 后：Principal 10,000.00 + Interest 265.00 − Paid 11,825.00 = -1,560.00，页面 Outstanding 0.00；多收 RM 1,560.00 无任何记录；回收率 115%",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-EDITCAP",
+  "expected": "编辑后金额不应超过该日真实应还（10,300.00）",
+  "actual": "编辑上限=11,718.25，Payment updated；结果 Principal 10,000.00 Interest 300.00 Paid 11,718.25 Outstanding 0.00",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-BREAK-FULFILLED",
+  "expected": "已履行/已违约的 PTP 再 Break 应被拒绝（PTP already resolved）",
+  "actual": "Break 已履行 PTP → PTP broken；再 Break → PTP broken；PTP 状态 broken；还款仍 1 笔；ptp_broken 时间线 2 条",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-DEMO-FK",
+  "expected": "Delete demo data 不报错，自建数据保留",
+  "actual": "HTTP 500 Error: FOREIGN KEY constraint failed；失败后演示案件剩余 0、演示还款剩余 0（deleteDemo 无事务，半删除）",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-CSV-INJ",
+  "expected": "以 = + - @ 开头的单元格应被转义（加前导单引号）",
+  "actual": "CASE-2026-0023,\"=HYPERLINK(\"\"http://evil.example\"\",\"\"点我\"\")\",,,1,0,medium,New,2026-10-24",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-TIMING",
+  "expected": "已存在用户错密码与不存在用户耗时相近（比值 0.67–1.5）",
+  "actual": "已存在用户中位 19.9ms；不存在用户中位 74.9ms；比值 3.76；状态码 401（DUMMY_HASH 代价 10，用户哈希代价 8）",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-HEADERS",
+  "expected": "Cookie 带 SameSite/Secure；有防点击劫持等安全头",
+  "actual": "Set-Cookie 属性: connect.sid=…; Path=/; HttpOnly; x-frame-options=无, content-security-policy=无, x-content-type-options=无, strict-transport-security=无; x-powered-by=Express",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-FLASH",
+  "expected": "ok/err 提示不应来自任意 URL 参数（内容伪造）",
+  "actual": "red:账号已被冻结，请致电 012-3456789 解锁",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-STATUS",
+  "expected": "欠款 > 0 时不应可手动标 Fully Paid；agent 不应能删除他人备注且应留审计",
+  "actual": "agent1 标 Fully Paid → Status updated（欠款 5000，closed_at=2026-10-24 06:26:58）；agent1 删除 manager 备注 → Note deleted，已删除=true，备注审计 0 条",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-ORDER",
+  "expected": "最新事件在最上（third → second → payment → created）",
+  "actual": "页面顺序: Case CASE-2026-0025 created > Payment RCPT-2026-0032: RM 10.00 via ban > second > third（created_at 只精确到秒，同秒按插入先后升序）",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "X-AUTOCLOSE",
+  "expected": "自动还清时记录结案时间并写状态变更",
+  "actual": "status=fully_paid closed_at=null status_change 事件=0",
+  "result": "FAIL",
+  "note": "",
+  "f": "x1"
+ },
+ {
+  "id": "PERF-01",
+  "expected": "各页面本地 1 秒内打开（计息案件详情每次重算）",
+  "actual": "52 个页面；最慢 /cases/20 16ms；超时/异常 无",
+  "result": "PASS",
+  "note": "",
+  "f": "p1"
+ },
+ {
+  "id": "TZ-01",
+  "expected": "时间线/审计显示 MYT",
+  "actual": "库内 UTC 2026-10-24 06:27:00 → 页面应为 2026-10-24 14:27；页面包含=true",
+  "result": "PASS",
+  "note": "",
+  "f": "p1"
+ },
+ {
+  "id": "TZ-02",
+  "expected": "MYT 当天凌晨开的案件计入今日新开",
+  "actual": "opened_at=2026-10-23 19:00:00 UTC（= 2026-10-24 03:00 MYT）；今日新开 2 → 1",
+  "result": "FAIL",
+  "note": "代码：src/routes/dashboard.js:16-17 date(opened_at) 未 +8 小时",
+  "f": "p1"
+ },
+ {
+  "id": "TZ-03",
+  "expected": "所有“今天”按 MYT",
+  "actual": "reports 默认 To 用服务器时区 dayjs()=true; 收据号/案件号年份用服务器时区 new Date().getFullYear()=true; seed 演示日期用服务器时区 dayjs()=true; 佣金默认月份用 MYT=true",
+  "result": "FAIL",
+  "note": "服务器为 UTC（如 Render）时生效；本机为 UTC+8 无法实测",
+  "f": "p1"
+ },
+ {
+  "id": "DATA-01",
+  "expected": "旧库自动迁移，原有数据不丢失",
+  "actual": "旧 seed exit=0，迁移 exit=0 ；迁移前 {\"cases\":20,\"payments\":4,\"ptps\":4,\"tasks\":4,\"timeline_events\":28,\"users\":7}（next_action_at 列=1）；迁移后 {\"cases\":20,\"payments\":4,\"ptps\":4,\"timeline_events\":28,\"users\":7}；interest_charged=true timeline 含 restructure=true case_restructures=true",
+  "result": "PASS",
+  "note": "",
+  "f": "p1"
+ },
+ {
+  "id": "DATA-02",
+  "expected": "data/backups 生成带时间戳副本，可还原",
+  "actual": "未执行：src/db/backup.js:7 写死 data/crm.db，不读 CRM_DB_PATH（含 CRM_DB_PATH=false）；按安全规则不得读写 data/crm.db",
+  "result": "BLOCKED",
+  "note": "",
+  "f": "p1"
+ },
+ {
+  "id": "NAV-02",
+  "expected": "保留上次展开状态；当前页所在分组始终展开",
+  "actual": "初始=False 点开=True 换页=True 刷新=True 收起后换页=False 进入/agents(已存收起)=True",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "NAV-04",
+  "expected": "375px：顶栏+☰；☰ 打开、遮罩关闭；无横向滚动",
+  "actual": "topbar=True ☰=True 打开=True(left=0) 遮罩关闭=True; 横向溢出页面: 无; 还款弹窗 [15, 360, 375]",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "CASE-06",
+  "expected": "点按钮填入并高亮；手动输入相同数字也高亮",
+  "actual": "按钮 ['3mo', '6mo', '9mo', '12mo', '18mo', '24mo', '36mo', '48mo', '60mo']; 点3mo→tenure=3 高亮=True; 输入12→12mo 高亮=True 3mo 取消=True",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "CASE-15",
+  "expected": "Records 弹窗点 × 或遮罩关闭（Cancel 亦可）",
+  "actual": "打开=True ×关闭=True 遮罩关闭=True PTP Cancel 关闭=True",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "INT-01",
+  "expected": "Fixed 只显示 Interest Amount；Monthly/Annual 只显示 Interest Rate %",
+  "actual": "{\"fixed\": [true, false], \"monthly\": [false, true], \"daily\": [false, true]}",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "INT-02",
+  "expected": "点 ! 展开/收起当前模式公式",
+  "actual": "初始=False 点击=True 再点=False; 公式=\"Monthly rate (interest-first)\ndaily rate = monthly% ÷ 100 ÷ \"",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "PAY-04",
+  "expected": "浏览器在弹窗内拦截并提示",
+  "actual": "max=13176.0; (True, True, 'Value must be less than or equal to 13176.')",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "PAY-05",
+  "expected": "0/负数浏览器拦截",
+  "actual": "0→(True, True, 'Value must be greater than or equal to 0.01.'); -5→(True, True, 'Value must be greater than or equal to 0.01.')",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "PAY-14",
+  "expected": "含单引号时 Edit 弹窗正常打开",
+  "actual": "{\"editOpened\": false, \"alerts\": [], \"pageerror\": [\"missing ) after argument list\"]}",
+  "result": "FAIL",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "SEC-03",
+  "expected": "Reference 注入不执行脚本",
+  "actual": "{\"editOpened\": true, \"alerts\": [\"XSS-SEC03\"], \"pageerror\": []}",
+  "result": "FAIL",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "SEC-02",
+  "expected": "所有页面原样显示为文本，不弹窗",
+  "actual": "弹窗 无; 访问 10 页; 备注编辑框回显原文=True",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "SCH-07",
+  "expected": "只有最早一期有 Pay；点后打开 Record Payment 并预填该期未还金额",
+  "actual": "Pay 按钮数 1; 预填 47.25（onclick 47.25）; 弹窗打开=True",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "RS-04",
+  "expected": "Monthly/Annual 显示利率且必填；Fixed 显示固定利息且必填",
+  "actual": "{\"monthly\": [true, true, false, false], \"daily\": [true, true, false, false], \"fixed\": [false, false, true, true]}",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "RS-05-UI",
+  "expected": "留空利率时浏览器拦截（补充）",
+  "actual": "Please fill out this field.",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "TASK-02-UI",
+  "expected": "选择案件后 Agent 自动带出并锁定",
+  "actual": "选案件 D002 → disabled=True agent=2; 清空案件 → disabled=False",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "COM-03-UI",
+  "expected": "Settle 金额预填为 Pending（大于 0 时）",
+  "actual": "[('Lim Wei Sheng', -154.1, ''), ('Nurul Ain', 1225.8, '1225.80'), ('Rajesh Kumar', -150.0, ''), ('Tan Mei Ling', 318.6, '318.60')]",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "SET-07",
+  "expected": "打印预览中不出现按钮；可另存为 PDF",
+  "actual": "print 隐藏按钮=True; 屏幕显示=True; A4 PDF 86007 字节（tests/qa/results/statement-case5.pdf）; 抬头=\"QA 放贷有限公司\n吉隆坡 QA 路 1 号\nTel: 03-1234567\nq\"",
+  "result": "PASS",
+  "note": "中文与金额显示请人工打开 PDF 确认",
+  "f": "ui"
+ },
+ {
+  "id": "X-DBLCLICK",
+  "expected": "双击提交只生成 1 条 PTP / 1 个计划",
+  "actual": "双击“Add PTP”后独立 PTP 1 条；双击“Create Plan”后计划 1 个",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "COMPAT-EDGE",
+  "expected": "Edge：登录、dialog 弹窗、日期输入、还款拦截、重组弹窗正常",
+  "actual": "Edge 154.0.4258.53: 还款弹窗=True 超额拦截=True 重组弹窗=True date 输入=date",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "COMPAT-CHROME",
+  "expected": "Chrome 最新版全部 P0",
+  "actual": "Chrome 156.0.8078.47：本脚本全部界面用例在 Chrome 执行；P0 HTTP 用例与浏览器无关",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "COMPAT-FF-SAFARI",
+  "expected": "Firefox/Safari 抽测",
+  "actual": "本机未安装 Firefox / Safari（Playwright 未下载 firefox、webkit 内核，按要求不安装）",
+  "result": "未执行",
+  "note": "",
+  "f": "ui"
+ },
+ {
+  "id": "JS-ERRORS",
+  "expected": "admin 浏览各页无 JS 运行时错误",
+  "actual": "无",
+  "result": "PASS",
+  "note": "",
+  "f": "ui"
+ }
+]

@@ -1,0 +1,44 @@
+[
+ {
+  "id": "PERF-01",
+  "expected": "各页面本地 1 秒内打开（计息案件详情每次重算）",
+  "actual": "52 个页面；最慢 /cases/20 16ms；超时/异常 无",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TZ-01",
+  "expected": "时间线/审计显示 MYT",
+  "actual": "库内 UTC 2026-10-24 06:27:00 → 页面应为 2026-10-24 14:27；页面包含=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TZ-02",
+  "expected": "MYT 当天凌晨开的案件计入今日新开",
+  "actual": "opened_at=2026-10-23 19:00:00 UTC（= 2026-10-24 03:00 MYT）；今日新开 2 → 1",
+  "result": "FAIL",
+  "note": "代码：src/routes/dashboard.js:16-17 date(opened_at) 未 +8 小时"
+ },
+ {
+  "id": "TZ-03",
+  "expected": "所有“今天”按 MYT",
+  "actual": "reports 默认 To 用服务器时区 dayjs()=true; 收据号/案件号年份用服务器时区 new Date().getFullYear()=true; seed 演示日期用服务器时区 dayjs()=true; 佣金默认月份用 MYT=true",
+  "result": "FAIL",
+  "note": "服务器为 UTC（如 Render）时生效；本机为 UTC+8 无法实测"
+ },
+ {
+  "id": "DATA-01",
+  "expected": "旧库自动迁移，原有数据不丢失",
+  "actual": "旧 seed exit=0，迁移 exit=0 ；迁移前 {\"cases\":20,\"payments\":4,\"ptps\":4,\"tasks\":4,\"timeline_events\":28,\"users\":7}（next_action_at 列=1）；迁移后 {\"cases\":20,\"payments\":4,\"ptps\":4,\"timeline_events\":28,\"users\":7}；interest_charged=true timeline 含 restructure=true case_restructures=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DATA-02",
+  "expected": "data/backups 生成带时间戳副本，可还原",
+  "actual": "未执行：src/db/backup.js:7 写死 data/crm.db，不读 CRM_DB_PATH（含 CRM_DB_PATH=false）；按安全规则不得读写 data/crm.db",
+  "result": "BLOCKED",
+  "note": ""
+ }
+]

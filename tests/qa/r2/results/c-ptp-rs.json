@@ -1,0 +1,289 @@
+[
+ {
+  "id": "PTP-01",
+  "expected": "banner/status/timeline/audit",
+  "actual": "PTP created; \"PTP RM 500.00 due 2026-10-28\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-02",
+  "expected": "\"Amount exceeds outstanding\"; input max set",
+  "actual": "Amount exceeds outstanding; o=11800",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-03",
+  "expected": "PTP payment recorded; fulfilled; payment 500; balance down; audit both",
+  "actual": "PTP payment recorded; receipt=RCPT-2026-0001; status now partial_paid; audit=payment,ptp_fulfilled",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-03b",
+  "expected": "fulfill dialog amount defaults to PTP amount (HTTP: openFulfill(id, amount))",
+  "actual": "n/a (no pending)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-05",
+  "expected": "refused; payment count unchanged; Break also refused",
+  "actual": "PTP already resolved / PTP already resolved",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-04",
+  "expected": "PTP broken; broken; case → negotiation (manual text \"no confirm\" is stale: confirm exists)",
+  "actual": "PTP broken; case=negotiation; confirm=true",
+  "result": "PASS",
+  "note": "手册写“Break 没有确认框（见附录 E-12）”，与附录 E-12“已加确认框”矛盾；实际有确认框"
+ },
+ {
+  "id": "PTP-06",
+  "expected": "split, dates, header, status",
+  "actual": "Installment plan created; 333.33,333.33,333.34; 2026-10-25,2026-11-25,2026-12-25; \"Installment Plan · RM 1,000.00 · 0/3 kept\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-07",
+  "expected": "\"Installments must be 2–60\"",
+  "actual": "Installments must be 2–60 / Installments must be 2–60",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-08",
+  "expected": "\"Total too small for the number of installments\"",
+  "actual": "Total too small for the number of installments",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-09",
+  "expected": "\"1/3 kept\"; status ptp",
+  "actual": "\"Installment Plan · RM 1,000.00 · 1/3 kept\" status=ptp",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-10",
+  "expected": "banner, 2 broken, timeline text, status, audit",
+  "actual": "Installment plan cancelled; fulfilled,broken,broken; \"Installment plan cancelled (2 pending installment(s) broken)\"; status=negotiation",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-11",
+  "expected": "no Fulfill/Break/Cancel; 403s",
+  "actual": "fin/aud buttons=false/false; agent1 fulfill=403 break=403; finance fulfill=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-13",
+  "expected": "Due date cannot be in the past / First due date cannot be in the past",
+  "actual": "Due date cannot be in the past / First due date cannot be in the past",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-14",
+  "expected": "\"Promised total RM 1,200.00 exceeds the settlement amount on <d2> (RM y)\"",
+  "actual": "PTP created; Promised total RM 1,200.00 exceeds the settlement amount on 2026-11-14 (RM 1,156.50)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-15",
+  "expected": "partially kept, blue, \"PTP partially kept: RM 120.00 of RM 300.00\", no new PTP",
+  "actual": "partially kept/is-blue; \"PTP partially kept: RM 120.00 of RM 300.00\"; case status=partial_paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-16",
+  "expected": "refusals",
+  "actual": "Not allowed while the case is Bankruptcy | Not allowed while the case is Bankruptcy | Record this payment with a reason instead (bankrupt / deceased case)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PTP-12",
+  "expected": "\"Payment date must be after the restructure date (2026-10-20)\"; min=eff+1",
+  "actual": "Restructured; Payment date must be after the restructure date (2026-10-20); min attr=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-01",
+  "expected": "only admin/manager on open case; none on closed/cancelled/paid/bankrupt/deceased",
+  "actual": "open={\"admin\":true,\"manager\":true,\"agent2\":false,\"finance\":false,\"auditor\":false} term={\"closed\":false,\"cancelled\":false,\"fully_paid\":false,\"bankruptcy\":false,\"deceased\":false,\"legal\":true}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-02",
+  "expected": "principal 9,304.84; min=max(start,last payment,prev+1)=2026-03-02; max=value=today",
+  "actual": "9,304.84,1,080.56; range=2026-03-02,2026-10-25,2026-10-25",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-03",
+  "expected": "red \"No valid effective date today — it must be on or after …\"",
+  "actual": "No valid effective date today — it must be on or after 2026-10-26.",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-05",
+  "expected": "four messages; blank rate not 0%",
+  "actual": "Interest rate is required | Interest amount is required | Tenure must be 1–120 months | Reason is required",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-06",
+  "expected": "\"Tenure must be 1–120 months\"",
+  "actual": "Tenure must be 1–120 months | Tenure must be 1–120 months | Tenure must be 1–120 months",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-07",
+  "expected": "\"Effective date must be between 2026-08-27 and 2026-10-25\"",
+  "actual": "Effective date must be between 2026-08-27 and 2026-10-25 | Effective date must be between 2026-08-27 and 2026-10-25",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-08",
+  "expected": "Maturity 2027-10-01 + \"Restructured on 2026-04-01\"; gold timeline w/ terms, cut, arrears, reason; audit",
+  "actual": "Restructured; mat=2027-10-01; \"Restructure: from 2026-04-01, 1.2%/month, 18 months. Principal RM 9,304.84, arrears RM 135.07 carried. Reason: Example B\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-09",
+  "expected": "heading \"since restructure on\"; row 1 = 2026-04-01 arrears 135.07; then monthly",
+  "actual": "head=true; first={\"due\":\"2026-04-01\",\"arrears\":true,\"expected\":135.07,\"paid\":0,\"outstanding\":135.07,\"status\":\"Overdue\",\"action\":\"<button type=\\\"button\\\" class=\\\"btn btn-sm btn-gold\\\" onclick=\\\"payInstallment(135.07)\\\">Pay</button>\"}; n=19",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-11",
+  "expected": "interest 2,449.75; outstanding 11,449.75; 111.66 per month; arrears fixed",
+  "actual": "I=2,449.75 O=11,449.75 row2=111.66 last=9416.5",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-10",
+  "expected": "eff, terms, tenure, by, cut, arrears, reason; superseded shows Restructured",
+  "actual": " Restructure History 2026-04-01 · 1.2%/month · 18 months · by Collection Manager Principal at cut RM 9,304.84 · Arrears carried RM 135.07 Reason: Example B Undo Superseded schedule (12 rows) Due Date ",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-12",
+  "expected": "\"Locked · restructured\"; edit/void refused",
+  "actual": "This payment belongs to a restructured period; undo the restructure first | This payment belongs to a restructured period; undo the restructure first",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-13",
+  "expected": "\"Payment date must be after the restructure date (2026-04-01)\"; min=2026-04-02",
+  "actual": "Payment date must be after the restructure date (2026-04-01)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-14",
+  "expected": "notice, readonly, disabled mode, no chips; terms unchanged; priority saved",
+  "actual": "ui=true; Saved; before={\"principal_amount\":10000,\"interest_rate\":1.5,\"tenure\":12,\"loan_start_date\":\"2026-01-01\",\"outstanding_amount\":11449.75} after={\"principal_amount\":10000,\"interest_rate\":1.5,\"tenure\":12,\"loan_start_date\":\"2026-01-01\",\"outstanding_amount\":11449.75,\"priority\":\"urgent\",\"agent_id\":2}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-16",
+  "expected": "Undo hidden; \"Payments exist after the effective date; void them first\"; after void Undo back",
+  "actual": "Payment RCPT-2026-0006 recorded; Payments exist after the effective date; void them first; undoBack=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-15",
+  "expected": "Restructure undone; back to 10,696.06; timeline; audit; unlocked",
+  "actual": "Restructure undone; O=10,696.06; \"Restructure undone: from 2026-04-01\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-17",
+  "expected": "min = prev+1; newest on top; only latest has Undo; older → \"Only the latest restructure can be undone\"",
+  "actual": "Effective date must be between 2026-03-02 and 2026-10-25; Restructured; undo=6; Only the latest restructure can be undone",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-18",
+  "expected": "arrears row then 12 equal rows summing to cut+500",
+  "actual": "Restructured; cut=10000 arrears=304.84; rows=304.84,875,875…875",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-19",
+  "expected": "all 403",
+  "actual": "403,403,403,403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-20",
+  "expected": "\"This case cannot be restructured\"",
+  "actual": "This case cannot be restructured | This case cannot be restructured | This case cannot be restructured | This case cannot be restructured | This case cannot be restructured",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-21",
+  "expected": "arrears = 10000×1.5%×6 = 900.00",
+  "actual": "Restructured; arrears=900",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-22",
+  "expected": "arrears row, new plan, history 10 days ago 1.2%/month 18 months, reason",
+  "actual": "first=2026-10-15/239.95;  Restructure History 2026-10-15 · 1.2%/month · 18 months · by Collection Manager Principal at cut RM 13,050.00 · Arrears",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-23",
+  "expected": "\"A restructure cannot raise the interest rate (14.4% → 18% p.a.)\"",
+  "actual": "A restructure cannot raise the interest rate (14.4% → 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-24",
+  "expected": "\"Interest rate exceeds the 18% p.a. limit …\"",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 24% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-25",
+  "expected": "cut principal = 10000 − (1000 − 300) ; arrears 0; Undo still offered",
+  "actual": "unpaid before=300; dialog=9,300.00,0.00; cut=9300/0; undo=true; opened=2026-10-25 05:14:19",
+  "result": "PASS",
+  "note": ""
+ }
+]

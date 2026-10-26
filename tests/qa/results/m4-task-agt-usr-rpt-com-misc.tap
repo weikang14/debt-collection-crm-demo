@@ -1,0 +1,448 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 220.5819
+  type: 'test'
+  ...
+# Subtest: TASK-01 列表与筛选
+ok 2 - TASK-01 列表与筛选
+  ---
+  duration_ms: 78.8368
+  type: 'test'
+  ...
+# Subtest: TASK-02 新建（关联案件，Agent 跟随案件）
+ok 3 - TASK-02 新建（关联案件，Agent 跟随案件）
+  ---
+  duration_ms: 14.4033
+  type: 'test'
+  ...
+# Subtest: TASK-03 新建（不关联案件）
+ok 4 - TASK-03 新建（不关联案件）
+  ---
+  duration_ms: 15.3374
+  type: 'test'
+  ...
+# Subtest: TASK-04 标题必填
+ok 5 - TASK-04 标题必填
+  ---
+  duration_ms: 6.5784
+  type: 'test'
+  ...
+# Subtest: TASK-05 编辑
+ok 6 - TASK-05 编辑
+  ---
+  duration_ms: 8.1046
+  type: 'test'
+  ...
+# Subtest: TASK-06 完成
+ok 7 - TASK-06 完成
+  ---
+  duration_ms: 12.63
+  type: 'test'
+  ...
+# Subtest: TASK-07 催收员范围
+ok 8 - TASK-07 催收员范围
+  ---
+  duration_ms: 10.1823
+  type: 'test'
+  ...
+# Subtest: TASK-08 越权关联案件
+ok 9 - TASK-08 越权关联案件
+  ---
+  duration_ms: 3.0019
+  type: 'test'
+  ...
+# Subtest: TASK-09 只读角色
+ok 10 - TASK-09 只读角色
+  ---
+  duration_ms: 10.9718
+  type: 'test'
+  ...
+# Subtest: TASK-10 与仪表盘联动
+ok 11 - TASK-10 与仪表盘联动
+  ---
+  duration_ms: 14.0583
+  type: 'test'
+  ...
+# Subtest: AGT-01 列表
+ok 12 - AGT-01 列表
+  ---
+  duration_ms: 20.6568
+  type: 'test'
+  ...
+# Subtest: AGT-02 筛选
+ok 13 - AGT-02 筛选
+  ---
+  duration_ms: 16.1416
+  type: 'test'
+  ...
+# Subtest: AGT-03 新建
+ok 14 - AGT-03 新建
+  ---
+  duration_ms: 15.7203
+  type: 'test'
+  ...
+# Subtest: AGT-04 停用
+ok 15 - AGT-04 停用
+  ---
+  duration_ms: 34.3584
+  type: 'test'
+  ...
+# Subtest: AGT-05 详情
+ok 16 - AGT-05 详情
+  ---
+  duration_ms: 5.7112
+  type: 'test'
+  ...
+# Subtest: AGT-06 权限
+ok 17 - AGT-06 权限
+  ---
+  duration_ms: 23.2328
+  type: 'test'
+  ...
+# Subtest: USR-01 新建员工账号
+ok 18 - USR-01 新建员工账号
+  ---
+  duration_ms: 52.3054
+  type: 'test'
+  ...
+# Subtest: USR-02 必填
+ok 19 - USR-02 必填
+  ---
+  duration_ms: 8.3585
+  type: 'test'
+  ...
+# Subtest: USR-03 角色列表
+ok 20 - USR-03 角色列表
+  ---
+  duration_ms: 4.8461
+  type: 'test'
+  ...
+# Subtest: USR-04 催收员账号
+ok 21 - USR-04 催收员账号
+  ---
+  duration_ms: 6.839
+  type: 'test'
+  ...
+# Subtest: USR-05 用户名重复
+ok 22 - USR-05 用户名重复
+  ---
+  duration_ms: 21.1027
+  type: 'test'
+  ...
+# Subtest: USR-06 编辑
+ok 23 - USR-06 编辑
+  ---
+  duration_ms: 10.8495
+  type: 'test'
+  ...
+# Subtest: USR-07 防止锁死自己
+ok 24 - USR-07 防止锁死自己
+  ---
+  duration_ms: 8.5771
+  type: 'test'
+  ...
+# Subtest: USR-08 重置密码
+ok 25 - USR-08 重置密码
+  ---
+  duration_ms: 58.0654
+  type: 'test'
+  ...
+# Subtest: USR-09 停用账号
+ok 26 - USR-09 停用账号
+  ---
+  duration_ms: 127.6055
+  type: 'test'
+  ...
+# Subtest: USR-10 停用后的已登录会话（期望立即失效）
+not ok 27 - USR-10 停用后的已登录会话（期望立即失效）
+  ---
+  duration_ms: 95.142
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:184:1'
+  failureType: 'testCodeFailure'
+  error: 'USR-10: expected A 的会话立即失效; actual 停用后 GET /cases → 200; 仍可记账 POST → Payment RCPT-2026-0001 recorded'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:191:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-11 角色变更生效时间
+ok 28 - USR-11 角色变更生效时间
+  ---
+  duration_ms: 112.2928
+  type: 'test'
+  ...
+# Subtest: USR-12 新建时的密码长度（期望至少 4 位）
+not ok 29 - USR-12 新建时的密码长度（期望至少 4 位）
+  ---
+  duration_ms: 51.0474
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:201:1'
+  failureType: 'testCodeFailure'
+  error: 'USR-12: expected 1 位密码被拒绝; actual User qa_pw1 created; 1 位密码登录 → /'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:203:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-13 审计
+ok 30 - USR-13 审计
+  ---
+  duration_ms: 0.8732
+  type: 'test'
+  ...
+# Subtest: RPT-01 默认日期
+ok 31 - RPT-01 默认日期
+  ---
+  duration_ms: 6.3253
+  type: 'test'
+  ...
+# Subtest: RPT-02 欠款按状态
+ok 32 - RPT-02 欠款按状态
+  ---
+  duration_ms: 20.3948
+  type: 'test'
+  ...
+# Subtest: RPT-03 催收员业绩（日期范围）
+ok 33 - RPT-03 催收员业绩（日期范围）
+  ---
+  duration_ms: 58.2566
+  type: 'test'
+  ...
+# Subtest: RPT-04 催收员视图
+ok 34 - RPT-04 催收员视图
+  ---
+  duration_ms: 10.5374
+  type: 'test'
+  ...
+# Subtest: RPT-05 CSV 导出
+ok 35 - RPT-05 CSV 导出
+  ---
+  duration_ms: 9.0249
+  type: 'test'
+  ...
+# Subtest: RPT-06 Excel 兼容（BOM + 无小数尾差）
+not ok 36 - RPT-06 Excel 兼容（BOM + 无小数尾差）
+  ---
+  duration_ms: 8.916
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:254:1'
+  failureType: 'testCodeFailure'
+  error: 'RPT-06: expected 带 BOM；金额无多余小数尾差; actual BOM=true; 尾差单元格: performance:14.0736'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:260:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: COM-01 月份
+ok 37 - COM-01 月份
+  ---
+  duration_ms: 12.2957
+  type: 'test'
+  ...
+# Subtest: COM-02 计算（含负数红色）
+ok 38 - COM-02 计算（含负数红色）
+  ---
+  duration_ms: 5.8393
+  type: 'test'
+  ...
+# Subtest: COM-03 结算
+ok 39 - COM-03 结算
+  ---
+  duration_ms: 23.1324
+  type: 'test'
+  ...
+# Subtest: COM-04 金额校验
+ok 40 - COM-04 金额校验
+  ---
+  duration_ms: 12.2473
+  type: 'test'
+  ...
+# Subtest: COM-05 作废结算
+ok 41 - COM-05 作废结算
+  ---
+  duration_ms: 28.0826
+  type: 'test'
+  ...
+# Subtest: COM-06 催收员视图
+ok 42 - COM-06 催收员视图
+  ---
+  duration_ms: 10.0229
+  type: 'test'
+  ...
+# Subtest: COM-07 只读角色
+ok 43 - COM-07 只读角色
+  ---
+  duration_ms: 11.494
+  type: 'test'
+  ...
+# Subtest: SRCH-01 多字段搜索
+ok 44 - SRCH-01 多字段搜索
+  ---
+  duration_ms: 22.3234
+  type: 'test'
+  ...
+# Subtest: SRCH-02 催收员范围
+ok 45 - SRCH-02 催收员范围
+  ---
+  duration_ms: 4.2939
+  type: 'test'
+  ...
+# Subtest: SRCH-03 空搜索
+ok 46 - SRCH-03 空搜索
+  ---
+  duration_ms: 8.0825
+  type: 'test'
+  ...
+# Subtest: SRCH-04 结果上限
+ok 47 - SRCH-04 结果上限
+  ---
+  duration_ms: 813.0936
+  type: 'test'
+  ...
+# Subtest: SRCH-05 特殊字符
+ok 48 - SRCH-05 特殊字符
+  ---
+  duration_ms: 45.9142
+  type: 'test'
+  ...
+# Subtest: AUD-01 访问权限
+ok 49 - AUD-01 访问权限
+  ---
+  duration_ms: 20.5732
+  type: 'test'
+  ...
+# Subtest: AUD-02 内容
+ok 50 - AUD-02 内容
+  ---
+  duration_ms: 6.0894
+  type: 'test'
+  ...
+# Subtest: AUD-03 筛选
+ok 51 - AUD-03 筛选
+  ---
+  duration_ms: 4.4166
+  type: 'test'
+  ...
+# Subtest: AUD-05 不可修改
+ok 52 - AUD-05 不可修改
+  ---
+  duration_ms: 12.1373
+  type: 'test'
+  ...
+# Subtest: SET-01 保存公司信息
+ok 53 - SET-01 保存公司信息
+  ---
+  duration_ms: 17.7919
+  type: 'test'
+  ...
+# Subtest: SET-02 上传 Logo
+ok 54 - SET-02 上传 Logo
+  ---
+  duration_ms: 21.5501
+  type: 'test'
+  ...
+# Subtest: SET-03 Logo 格式
+ok 55 - SET-03 Logo 格式
+  ---
+  duration_ms: 5.7693
+  type: 'test'
+  ...
+# Subtest: SET-04 Logo 大小
+ok 56 - SET-04 Logo 大小
+  ---
+  duration_ms: 5.7459
+  type: 'test'
+  ...
+# Subtest: SET-05 移除 Logo
+ok 57 - SET-05 移除 Logo
+  ---
+  duration_ms: 10.6389
+  type: 'test'
+  ...
+# Subtest: SET-06 对账单内容
+ok 58 - SET-06 对账单内容
+  ---
+  duration_ms: 24.3353
+  type: 'test'
+  ...
+# Subtest: SET-07 打印（CSS 层）
+ok 59 - SET-07 打印（CSS 层）
+  ---
+  duration_ms: 3.6722
+  type: 'test'
+  ...
+# Subtest: SET-08 未设置公司名
+ok 60 - SET-08 未设置公司名
+  ---
+  duration_ms: 13.4406
+  type: 'test'
+  ...
+# Subtest: DEMO-01 删除演示数据
+ok 61 - DEMO-01 删除演示数据
+  ---
+  duration_ms: 69.3604
+  type: 'test'
+  ...
+# Subtest: DEMO-02 重新载入
+ok 62 - DEMO-02 重新载入
+  ---
+  duration_ms: 366.8473
+  type: 'test'
+  ...
+# Subtest: DEMO-03 编号不冲突
+ok 63 - DEMO-03 编号不冲突
+  ---
+  duration_ms: 469.1391
+  type: 'test'
+  ...
+# Subtest: DEMO-04 被使用过的演示案件
+ok 64 - DEMO-04 被使用过的演示案件
+  ---
+  duration_ms: 443.6302
+  type: 'test'
+  ...
+# Subtest: DEMO-05 权限
+ok 65 - DEMO-05 权限
+  ---
+  duration_ms: 25.9938
+  type: 'test'
+  ...
+# Subtest: AUD-04 覆盖范围
+ok 66 - AUD-04 覆盖范围
+  ---
+  duration_ms: 282.0688
+  type: 'test'
+  ...
+1..66
+# tests 66
+# suites 0
+# pass 63
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4796.8371

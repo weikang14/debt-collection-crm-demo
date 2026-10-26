@@ -1,0 +1,156 @@
+[
+ {
+  "id": "NAV-02",
+  "expected": "保留上次展开状态；当前页所在分组始终展开",
+  "actual": "初始=False 点开=True 换页=True 刷新=True 收起后换页=False 进入/agents(已存收起)=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-04",
+  "expected": "375px：顶栏+☰；☰ 打开、遮罩关闭；无横向滚动",
+  "actual": "topbar=True ☰=True 打开=True(left=0) 遮罩关闭=True; 横向溢出页面: 无; 还款弹窗 [15, 360, 375]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-06",
+  "expected": "点按钮填入并高亮；手动输入相同数字也高亮",
+  "actual": "按钮 ['3mo', '6mo', '9mo', '12mo', '18mo', '24mo', '36mo', '48mo', '60mo']; 点3mo→tenure=3 高亮=True; 输入12→12mo 高亮=True 3mo 取消=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-15",
+  "expected": "Records 弹窗点 × 或遮罩关闭（Cancel 亦可）",
+  "actual": "打开=True ×关闭=True 遮罩关闭=True PTP Cancel 关闭=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-01",
+  "expected": "Fixed 只显示 Interest Amount；Monthly/Annual 只显示 Interest Rate %",
+  "actual": "{\"fixed\": [true, false], \"monthly\": [false, true], \"daily\": [false, true]}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-02",
+  "expected": "点 ! 展开/收起当前模式公式",
+  "actual": "初始=False 点击=True 再点=False; 公式=\"Monthly rate (interest-first)\ndaily rate = monthly% ÷ 100 ÷ \"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-04",
+  "expected": "浏览器在弹窗内拦截并提示",
+  "actual": "max=13176.0; (True, True, 'Value must be less than or equal to 13176.')",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-05",
+  "expected": "0/负数浏览器拦截",
+  "actual": "0→(True, True, 'Value must be greater than or equal to 0.01.'); -5→(True, True, 'Value must be greater than or equal to 0.01.')",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-14",
+  "expected": "含单引号时 Edit 弹窗正常打开",
+  "actual": "{\"editOpened\": false, \"alerts\": [], \"pageerror\": [\"missing ) after argument list\"]}",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SEC-03",
+  "expected": "Reference 注入不执行脚本",
+  "actual": "{\"editOpened\": true, \"alerts\": [\"XSS-SEC03\"], \"pageerror\": []}",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SEC-02",
+  "expected": "所有页面原样显示为文本，不弹窗",
+  "actual": "弹窗 无; 访问 10 页; 备注编辑框回显原文=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-07",
+  "expected": "只有最早一期有 Pay；点后打开 Record Payment 并预填该期未还金额",
+  "actual": "Pay 按钮数 1; 预填 47.25（onclick 47.25）; 弹窗打开=True",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-04",
+  "expected": "Monthly/Annual 显示利率且必填；Fixed 显示固定利息且必填",
+  "actual": "{\"monthly\": [true, true, false, false], \"daily\": [true, true, false, false], \"fixed\": [false, false, true, true]}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-05-UI",
+  "expected": "留空利率时浏览器拦截（补充）",
+  "actual": "Please fill out this field.",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-02-UI",
+  "expected": "选择案件后 Agent 自动带出并锁定",
+  "actual": "选案件 D002 → disabled=True agent=2; 清空案件 → disabled=False",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-03-UI",
+  "expected": "Settle 金额预填为 Pending（大于 0 时）",
+  "actual": "[('Lim Wei Sheng', -154.1, ''), ('Nurul Ain', 1225.8, '1225.80'), ('Rajesh Kumar', -150.0, ''), ('Tan Mei Ling', 318.6, '318.60')]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-07",
+  "expected": "打印预览中不出现按钮；可另存为 PDF",
+  "actual": "print 隐藏按钮=True; 屏幕显示=True; A4 PDF 86007 字节（tests/qa/results/statement-case5.pdf）; 抬头=\"QA 放贷有限公司\n吉隆坡 QA 路 1 号\nTel: 03-1234567\nq\"",
+  "result": "PASS",
+  "note": "中文与金额显示请人工打开 PDF 确认"
+ },
+ {
+  "id": "X-DBLCLICK",
+  "expected": "双击提交只生成 1 条 PTP / 1 个计划",
+  "actual": "双击“Add PTP”后独立 PTP 1 条；双击“Create Plan”后计划 1 个",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COMPAT-EDGE",
+  "expected": "Edge：登录、dialog 弹窗、日期输入、还款拦截、重组弹窗正常",
+  "actual": "Edge 154.0.4258.53: 还款弹窗=True 超额拦截=True 重组弹窗=True date 输入=date",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COMPAT-CHROME",
+  "expected": "Chrome 最新版全部 P0",
+  "actual": "Chrome 156.0.8078.47：本脚本全部界面用例在 Chrome 执行；P0 HTTP 用例与浏览器无关",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COMPAT-FF-SAFARI",
+  "expected": "Firefox/Safari 抽测",
+  "actual": "本机未安装 Firefox / Safari（Playwright 未下载 firefox、webkit 内核，按要求不安装）",
+  "result": "未执行",
+  "note": ""
+ },
+ {
+  "id": "JS-ERRORS",
+  "expected": "admin 浏览各页无 JS 运行时错误",
+  "actual": "无",
+  "result": "PASS",
+  "note": ""
+ }
+]

@@ -1,0 +1,252 @@
+TAP version 13
+# Subtest: setup sessions
+ok 1 - setup sessions
+  ---
+  duration_ms: 208.9358
+  type: 'test'
+  ...
+# Subtest: AUTH-01 正确账号登录
+ok 2 - AUTH-01 正确账号登录
+  ---
+  duration_ms: 62.414
+  type: 'test'
+  ...
+# Subtest: AUTH-02 密码错误
+ok 3 - AUTH-02 密码错误
+  ---
+  duration_ms: 23.1958
+  type: 'test'
+  ...
+# Subtest: AUTH-03 用户名不存在
+ok 4 - AUTH-03 用户名不存在
+  ---
+  duration_ms: 104.0734
+  type: 'test'
+  ...
+# Subtest: AUTH-04 停用账号登录
+ok 5 - AUTH-04 停用账号登录
+  ---
+  duration_ms: 123.6682
+  type: 'test'
+  ...
+# Subtest: AUTH-05 登录失败限流（使用 [::1] 来源地址，避免锁住主测试 IP 127.0.0.1）
+ok 6 - AUTH-05 登录失败限流（使用 [::1] 来源地址，避免锁住主测试 IP 127.0.0.1）
+  ---
+  duration_ms: 145.3666
+  type: 'test'
+  ...
+# Subtest: AUTH-06 已登录访问登录页
+ok 7 - AUTH-06 已登录访问登录页
+  ---
+  duration_ms: 2.6642
+  type: 'test'
+  ...
+# Subtest: AUTH-07 未登录访问受保护页面
+ok 8 - AUTH-07 未登录访问受保护页面
+  ---
+  duration_ms: 6.1462
+  type: 'test'
+  ...
+# Subtest: AUTH-08 退出登录
+ok 9 - AUTH-08 退出登录
+  ---
+  duration_ms: 33.3398
+  type: 'test'
+  ...
+# Subtest: AUTH-09 演示账号页
+ok 10 - AUTH-09 演示账号页
+  ---
+  duration_ms: 7.1334
+  type: 'test'
+  ...
+# Subtest: AUTH-10 版本信息
+ok 11 - AUTH-10 版本信息
+  ---
+  duration_ms: 16.1946
+  type: 'test'
+  ...
+# Subtest: AUTH-11 健康检查
+ok 12 - AUTH-11 健康检查
+  ---
+  duration_ms: 2.3163
+  type: 'test'
+  ...
+# Subtest: AUTH-12 越权 URL（agent1）
+ok 13 - AUTH-12 越权 URL（agent1）
+  ---
+  duration_ms: 28.45
+  type: 'test'
+  ...
+# Subtest: NAV-01 菜单按角色显示
+ok 14 - NAV-01 菜单按角色显示
+  ---
+  duration_ms: 39.7267
+  type: 'test'
+  ...
+# Subtest: NAV-03 当前页高亮
+ok 15 - NAV-03 当前页高亮
+  ---
+  duration_ms: 100.0352
+  type: 'test'
+  ...
+# Subtest: NAV-05 操作结果提示（HTTP 层）
+ok 16 - NAV-05 操作结果提示（HTTP 层）
+  ---
+  duration_ms: 25.0071
+  type: 'test'
+  ...
+# Subtest: NAV-06 浏览器标签标题
+not ok 17 - NAV-06 浏览器标签标题
+  ---
+  duration_ms: 131.2588
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m1-auth-nav-dash-deb.qa.js:123:1'
+  failureType: 'testCodeFailure'
+  error: 'NAV-06: expected 标题格式“页面名 — Debt Collection CRM”; actual 不符合: /cases/2/statement → "Case Statement CASE-2026-D002"; /cases/99999 → "Debt Collection CRM"'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:71:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m1-auth-nav-dash-deb.qa.js:131:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: DASH-01 今日收款
+ok 18 - DASH-01 今日收款
+  ---
+  duration_ms: 36.8234
+  type: 'test'
+  ...
+# Subtest: DASH-02 非今日还款
+ok 19 - DASH-02 非今日还款
+  ---
+  duration_ms: 27.6227
+  type: 'test'
+  ...
+# Subtest: DASH-03 案件数
+ok 20 - DASH-03 案件数
+  ---
+  duration_ms: 7.34
+  type: 'test'
+  ...
+# Subtest: DASH-04 PTP 指标
+ok 21 - DASH-04 PTP 指标
+  ---
+  duration_ms: 65.0854
+  type: 'test'
+  ...
+# Subtest: DASH-05 总欠款与报表一致
+ok 22 - DASH-05 总欠款与报表一致
+  ---
+  duration_ms: 11.2837
+  type: 'test'
+  ...
+# Subtest: DASH-06 今日新开 / 结案
+ok 23 - DASH-06 今日新开 / 结案
+  ---
+  duration_ms: 72.7484
+  type: 'test'
+  ...
+# Subtest: DASH-07 逾期与即将到期任务
+ok 24 - DASH-07 逾期与即将到期任务
+  ---
+  duration_ms: 34.7728
+  type: 'test'
+  ...
+# Subtest: DASH-08 账龄分布
+ok 25 - DASH-08 账龄分布
+  ---
+  duration_ms: 9.6231
+  type: 'test'
+  ...
+# Subtest: DASH-09 待跟进列表
+ok 26 - DASH-09 待跟进列表
+  ---
+  duration_ms: 14.4566
+  type: 'test'
+  ...
+# Subtest: DASH-10 排行榜可见性
+ok 27 - DASH-10 排行榜可见性
+  ---
+  duration_ms: 41.9173
+  type: 'test'
+  ...
+# Subtest: DASH-11 最近动态
+ok 28 - DASH-11 最近动态
+  ---
+  duration_ms: 1144.5076
+  type: 'test'
+  ...
+# Subtest: DASH-12 催收员数据范围（agent1）
+ok 29 - DASH-12 催收员数据范围（agent1）
+  ---
+  duration_ms: 15.18
+  type: 'test'
+  ...
+# Subtest: DEB-01 列表与筛选
+ok 30 - DEB-01 列表与筛选
+  ---
+  duration_ms: 23.7402
+  type: 'test'
+  ...
+# Subtest: DEB-02 新建必填
+ok 31 - DEB-02 新建必填
+  ---
+  duration_ms: 5.7525
+  type: 'test'
+  ...
+# Subtest: DEB-03 新建成功
+ok 32 - DEB-03 新建成功
+  ---
+  duration_ms: 10.3865
+  type: 'test'
+  ...
+# Subtest: DEB-04 编辑
+ok 33 - DEB-04 编辑
+  ---
+  duration_ms: 16.1499
+  type: 'test'
+  ...
+# Subtest: DEB-05 详情页案件列表
+ok 34 - DEB-05 详情页案件列表
+  ---
+  duration_ms: 6.0336
+  type: 'test'
+  ...
+# Subtest: DEB-06 催收员数据范围
+ok 35 - DEB-06 催收员数据范围
+  ---
+  duration_ms: 9.6566
+  type: 'test'
+  ...
+# Subtest: DEB-07 只读角色
+ok 36 - DEB-07 只读角色
+  ---
+  duration_ms: 19.4928
+  type: 'test'
+  ...
+# Subtest: DEB-08 催收员新建债务人
+ok 37 - DEB-08 催收员新建债务人
+  ---
+  duration_ms: 14.62
+  type: 'test'
+  ...
+# Subtest: DEB-09 特殊字符
+ok 38 - DEB-09 特殊字符
+  ---
+  duration_ms: 20.7818
+  type: 'test'
+  ...
+1..38
+# tests 38
+# suites 0
+# pass 37
+# fail 1
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 3435.2922
