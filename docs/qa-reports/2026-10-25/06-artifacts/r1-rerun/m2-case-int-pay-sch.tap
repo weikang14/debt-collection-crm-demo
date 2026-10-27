@@ -1,0 +1,795 @@
+TAP version 13
+# Subtest: setup
+not ok 1 - setup
+  ---
+  duration_ms: 480.48891
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:17:1'
+  failureType: 'testCodeFailure'
+  error: 'debtor create {"status":302,"location":"/debtors","ok":null,"err":null,"text":"Found. Redirecting to /debtors","headers":{}}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'Debtor created'
+  actual: ~
+  operator: '=='
+  stack: |-
+    newDebtor (/home/user/debt-collection-crm-demo/tests/qa/_client.js:89:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:19:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: CASE-01 列表筛选
+ok 2 - CASE-01 列表筛选
+  ---
+  duration_ms: 28.746504
+  type: 'test'
+  ...
+# Subtest: CASE-02 导出 CSV
+ok 3 - CASE-02 导出 CSV
+  ---
+  duration_ms: 8.075149
+  type: 'test'
+  ...
+# Subtest: CASE-03 新建必填
+not ok 4 - CASE-03 新建必填
+  ---
+  duration_ms: 9.911568
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:53:1'
+  failureType: 'testCodeFailure'
+  error: 'CASE-03: expected 浏览器拦截；服务端提示 Debtor and principal are required; actual required 属性 debtor=true principal=true; 无债务人→null; 无本金→null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:57:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-04 新建成功
+not ok 5 - CASE-04 新建成功
+  ---
+  duration_ms: 3.270579
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:60:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of null (reading '1')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:62:49)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-05 默认值
+ok 6 - CASE-05 默认值
+  ---
+  duration_ms: 3.687384
+  type: 'test'
+  ...
+# Subtest: CASE-07 到期日（月末对齐）
+not ok 7 - CASE-07 到期日（月末对齐）
+  ---
+  duration_ms: 3.591132
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:71:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:72:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-08 编辑案件
+not ok 8 - CASE-08 编辑案件
+  ---
+  duration_ms: 0.751753
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:78:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:32:23)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:79:13)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-09 新建 / 编辑权限
+ok 9 - CASE-09 新建 / 编辑权限
+  ---
+  duration_ms: 63.181623
+  type: 'test'
+  ...
+# Subtest: CASE-10 账面区
+not ok 10 - CASE-10 账面区
+  ---
+  duration_ms: 5.557202
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:93:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:94:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-11 修改状态
+not ok 11 - CASE-11 修改状态
+  ---
+  duration_ms: 0.873819
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:101:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:32:23)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:102:18)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-12 结案时间
+not ok 12 - CASE-12 结案时间
+  ---
+  duration_ms: 3.456145
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:109:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:112:16)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-13 备注增删改
+not ok 13 - CASE-13 备注增删改
+  ---
+  duration_ms: 4.142442
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:119:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:121:13)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-14 通话记录
+not ok 14 - CASE-14 通话记录
+  ---
+  duration_ms: 8.336284
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:135:1'
+  failureType: 'testCodeFailure'
+  error: 'CASE-14: expected Call logged；Records→Calls；时间线 Call: answered (60s) — 备注; actual null; Calls 表=false; 时间线=false'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:139:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-15 Records 弹窗（顺序；开关见 ui.qa.py）
+ok 15 - CASE-15 Records 弹窗（顺序；开关见 ui.qa.py）
+  ---
+  duration_ms: 21.428374
+  type: 'test'
+  ...
+# Subtest: CASE-16 时间线（倒序与徽章颜色）
+not ok 16 - CASE-16 时间线（倒序与徽章颜色）
+  ---
+  duration_ms: 2.957742
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:147:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:148:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-17 Next Action
+not ok 17 - CASE-17 Next Action
+  ---
+  duration_ms: 7.761377
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:167:1'
+  failureType: 'testCodeFailure'
+  error: 'CASE-17: expected 显示最早到期的待办（日期 · 标题）; actual Next Action = "undefined"'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:172:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: CASE-18 催收员越权
+ok 18 - CASE-18 催收员越权
+  ---
+  duration_ms: 5.550756
+  type: 'test'
+  ...
+# Subtest: CASE-19 审计员只读
+ok 19 - CASE-19 审计员只读
+  ---
+  duration_ms: 12.415253
+  type: 'test'
+  ...
+# Subtest: CASE-20 财务视图
+ok 20 - CASE-20 财务视图
+  ---
+  duration_ms: 9.570548
+  type: 'test'
+  ...
+# Subtest: INT-03 Fixed 模式
+not ok 21 - INT-03 Fixed 模式
+  ---
+  duration_ms: 2.801681
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:193:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:194:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-04 Monthly 模式
+not ok 22 - INT-04 Monthly 模式
+  ---
+  duration_ms: 2.571716
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:198:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:199:8)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-05 Annual 模式
+not ok 23 - INT-05 Annual 模式
+  ---
+  duration_ms: 2.429259
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:203:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:204:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-06 + PAY-15 先息后本 / 提前还本省息
+not ok 24 - INT-06 + PAY-15 先息后本 / 提前还本省息
+  ---
+  duration_ms: 9.289659
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:208:1'
+  failureType: 'testCodeFailure'
+  error: 'INT-06: expected 先冲 300 利息、700 冲本金；总利息 1,718.25；Total 10,718.25; actual null; I=null T=null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:213:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-07 当天不计息
+not ok 25 - INT-07 当天不计息
+  ---
+  duration_ms: 6.047974
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:216:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:217:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-08 到期后停止计息
+not ok 26 - INT-08 到期后停止计息
+  ---
+  duration_ms: 2.880056
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:223:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:224:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-09 起始日缺失
+not ok 27 - INT-09 起始日缺失
+  ---
+  duration_ms: 3.076859
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:229:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:230:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: INT-10 改回 Fixed
+not ok 28 - INT-10 改回 Fixed
+  ---
+  duration_ms: 3.274277
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:234:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:235:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-01 记一笔还款
+not ok 29 - PAY-01 记一笔还款
+  ---
+  duration_ms: 2.5176
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:244:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:245:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-02 部分还款状态
+not ok 30 - PAY-02 部分还款状态
+  ---
+  duration_ms: 0.509812
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:255:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:32:23)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:256:46)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-03 + SCH-09 全额还清（Fixed 计划）
+not ok 31 - PAY-03 + SCH-09 全额还清（Fixed 计划）
+  ---
+  duration_ms: 2.436613
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:258:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:259:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-04 超额拦截
+not ok 32 - PAY-04 超额拦截
+  ---
+  duration_ms: 3.57822
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:265:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:32:23)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:266:40)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-05 无效金额
+not ok 33 - PAY-05 无效金额
+  ---
+  duration_ms: 8.960481
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:271:1'
+  failureType: 'testCodeFailure'
+  error: 'PAY-05: expected 浏览器 min 拦截；服务端 Invalid amount; actual 0→null; -5→null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:275:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-06 无效日期
+not ok 34 - PAY-06 无效日期
+  ---
+  duration_ms: 3.156237
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:277:1'
+  failureType: 'testCodeFailure'
+  error: 'PAY-06: expected Invalid payment date; actual null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:279:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-07 终态不被改写
+not ok 35 - PAY-07 终态不被改写
+  ---
+  duration_ms: 2.632425
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:281:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:284:16)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-08 PTP 状态优先
+not ok 36 - PAY-08 PTP 状态优先
+  ---
+  duration_ms: 2.352218
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:292:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:293:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-09 编辑还款
+not ok 37 - PAY-09 编辑还款
+  ---
+  duration_ms: 0.475855
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:298:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:299:15)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-10 作废还款（含 Fully Paid 回 Negotiation）
+not ok 38 - PAY-10 作废还款（含 Fully Paid 回 Negotiation）
+  ---
+  duration_ms: 0.329279
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:309:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:310:15)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-11 催收员不能改账
+ok 39 - PAY-11 催收员不能改账
+  ---
+  duration_ms: 17.49805
+  type: 'test'
+  ...
+# Subtest: PAY-12 收据号连续
+not ok 40 - PAY-12 收据号连续
+  ---
+  duration_ms: 2.467001
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:329:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:330:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-13 作废后的收据号（期望不复用）
+not ok 41 - PAY-13 作废后的收据号（期望不复用）
+  ---
+  duration_ms: 2.377828
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:335:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:336:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PAY-14 Reference 含单引号（期望 Edit 正常）
+not ok 42 - PAY-14 Reference 含单引号（期望 Edit 正常）
+  ---
+  duration_ms: 2.770524
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:344:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:345:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-01 显示条件
+not ok 43 - SCH-01 显示条件
+  ---
+  duration_ms: 2.521928
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:355:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:356:13)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-02 期数与日期
+not ok 44 - SCH-02 期数与日期
+  ---
+  duration_ms: 2.141252
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:361:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:362:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-03 计息模式金额
+not ok 45 - SCH-03 计息模式金额
+  ---
+  duration_ms: 3.663813
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:366:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:367:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-04 Fixed 等额分期
+not ok 46 - SCH-04 Fixed 等额分期
+  ---
+  duration_ms: 2.125266
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:371:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:372:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-05 依次抵扣
+not ok 47 - SCH-05 依次抵扣
+  ---
+  duration_ms: 2.176633
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:376:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:377:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-06 状态
+not ok 48 - SCH-06 状态
+  ---
+  duration_ms: 2.135714
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:383:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:384:8)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-07 Pay 按钮
+not ok 49 - SCH-07 Pay 按钮
+  ---
+  duration_ms: 2.919909
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:392:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of null (reading 'map')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:394:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-08 只读角色
+not ok 50 - SCH-08 只读角色
+  ---
+  duration_ms: 2.573049
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:398:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of null (reading 'every')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:400:44)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-09 提前还清（计息案件）
+not ok 51 - SCH-09 提前还清（计息案件）
+  ---
+  duration_ms: 2.73893
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:402:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:403:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SCH-10 实时重算
+not ok 52 - SCH-10 实时重算
+  ---
+  duration_ms: 3.659375
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:410:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m2-case-int-pay-sch.qa.js:411:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..52
+# tests 52
+# suites 0
+# pass 9
+# fail 43
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1711.209557

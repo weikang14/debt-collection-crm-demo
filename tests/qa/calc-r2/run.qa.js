@@ -137,10 +137,9 @@ async function main() {
     v = await view(e1); x = expectCase(terms[e1], pays[e1]);
     cmpCase(g, 'E1', '示例E 再还 150', x, v, ['dpd', 'overdue', 'schedule']);
     // INT-07: start today, no tenure
-    const z = await newC('起始=今天 无期限', { principal_amount: 10000, interest_mode: 'monthly', interest_rate: 1.5, loan_start_date: T });
-    v = await view(z);
-    cmp(g, 'INT07', 'INT-07 起始=今天、无期限：利息', '同一天 0 天', '0.00', v.interest);
-    cmp(g, 'INT07.dpd', 'INT-07 无计划：DPD/Overdue 不显示', 'null', 'null', String(v.dpd));
+    // v1.11.0 (N-02): a loan that charges interest needs a tenure, so this case can no longer be created
+    const zr = await C.newCase(s, debtor, { principal_amount: 10000, interest_mode: 'monthly', interest_rate: 1.5, loan_start_date: T });
+    chk(g, 'INT07', 'INT-07 起始=今天、无期限（v1.11.0：收利息必须填期限）', '被拒：Tenure is required for a loan that charges interest', !zr.id && /Tenure is required/.test(zr.err || ''), zr.id ? `建成了 #${zr.id}` : zr.err);
     // short loan 1 month
     const sh = await newC('1个月短期贷 10-01', { principal_amount: 10000, interest_mode: 'monthly', interest_rate: 1.5, loan_start_date: '2026-10-01', tenure: 1 });
     v = await view(sh); x = expectCase(terms[sh]);
@@ -537,7 +536,8 @@ async function main() {
   {
     const g = 'COM';
     const aA = await C.newAgent(s, 'QA R2 Agent A', 5), aB = await C.newAgent(s, 'QA R2 Agent B', 7.5);
-    const id = await newC('改派佣金', { principal_amount: 5000, interest_mode: 'fixed', interest_amount: 0, agent_id: aA });
+    // v1.11.0 (N-14): a payment can't predate the loan start, so start the loan before the back-dated payment
+    const id = await newC('改派佣金', { principal_amount: 5000, interest_mode: 'fixed', interest_amount: 0, loan_start_date: addDays(T, -30), agent_id: aA });
     await payOk(id, T, '933.63');
     await s.post('/tasks/new', { case_id: String(id), title: 'QA 待办', type: 'follow_up', due_date: addDays(T, 3) });
     await s.post('/tasks/new', { case_id: String(id), title: 'QA 已完成', type: 'follow_up', due_date: T });

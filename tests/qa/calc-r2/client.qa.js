@@ -74,6 +74,7 @@ const pay = (s, id, date, amount, extra = {}) => s.post(`/cases/${id}/payments`,
 const lastPaymentId = id => (q1('SELECT id FROM payments WHERE case_id=? ORDER BY id DESC LIMIT 1', id) || {}).id;
 
 // ---------- page parsers ----------
+const v111 = (h) => /ledger-lbl">Settlement Today/.test(h);
 const lval = (h, lbl) => { const m = h.match(new RegExp(`ledger-lbl">${lbl}</div><div class="ledger-val[^"]*">([^<]+)<`)); return m ? m[1].trim() : null; };
 function parseSchedule(html) { // rows of every scheduleTable in order, split by table
   return [...html.matchAll(/<table class="data"><thead><tr><th>Due Date<\/th>[\s\S]*?<\/table>/g)].map(t =>
@@ -97,12 +98,13 @@ async function caseView(s, id) {
   const timeline = [...h.matchAll(/<li><span class="badge [^"]*">([a-z_]+)<\/span>\s*([\s\S]*?)<span class="meta">/g)].map(m => ({ type: m[1], text: ent(m[2].replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim()) }));
   return {
     status: (h.match(/<h1>[^<]*<span class="badge [^"]*"><span class="dot"><\/span>([^<]+)<\/span>/) || [])[1],
-    outstanding: fx(num((h.match(/ledger-amt"><span class="ledger-cur">RM<\/span>([\d,.-]+)/) || [])[1])),
+    // v1.11.0 (G-24): the big number is Settlement Today; the contract balance is the "Contract Balance" cell
+    outstanding: fx(num(v111(h) ? lval(h, 'Contract Balance') : (h.match(/ledger-amt"><span class="ledger-cur">RM<\/span>([\d,.-]+)/) || [])[1])),
     recovered: num((h.match(/<b>(\d+)% recovered<\/b>/) || [])[1]),
     principal: fx(num(lval(h, 'Principal'))), interest: fx(num(lval(h, 'Interest'))), paid: fx(num(lval(h, 'Paid'))),
-    settlement: fx(num(lval(h, 'Settlement Today'))),
+    settlement: fx(num(v111(h) ? (h.match(/ledger-amt"><span class="ledger-cur">RM<\/span>([\d,.-]+)/) || [])[1] : lval(h, 'Settlement Today'))),
     overdue: od ? fx(num(od[1])) : null, dpdText: od ? od[2].trim() : null,
-    dpd: od ? (/(\d+) days past due/.test(od[2]) ? Number(od[2].match(/(\d+) days past due/)[1]) : 0) : null,
+    dpd: od ? (/(\d+) days? past due/.test(od[2]) ? Number(od[2].match(/(\d+) days? past due/)[1]) : 0) : null,
     maturity: lval(h, 'Maturity Date'),
     schedule: hasSched ? tables[0] || [] : [], superseded: hasSched ? tables.slice(1) : tables,
     cut: cut ? { principal: fx(num(cut[1])), arrears: fx(num(cut[2])) } : null, range: rng ? { min: rng[1], max: rng[2] } : null,
@@ -117,7 +119,7 @@ async function statementView(s, id) {
   const od = h.match(/<div><span>Overdue<\/span>RM ([\d,.]+)([^<]*)<\/div>/);
   return { principal: fx(num(g('Principal'))), interest: fx(num(g('Interest'))), paid: fx(num(g('Paid'))),
     outstanding: fx(num(g('Outstanding \\(contract, to maturity\\)'))), settlementDate: sett && sett[1], settlement: sett ? fx(num(sett[2])) : null,
-    overdue: od ? fx(num(od[1])) : null, dpd: od ? (/(\d+) days past due/.test(od[2]) ? Number(od[2].match(/(\d+) days/)[1]) : 0) : null, html: h };
+    overdue: od ? fx(num(od[1])) : null, dpd: od ? (/(\d+) days? past due/.test(od[2]) ? Number(od[2].match(/(\d+) days?/)[1]) : 0) : null, html: h };
 }
 async function dashboard(s) {
   const h = (await s.get('/')).text;

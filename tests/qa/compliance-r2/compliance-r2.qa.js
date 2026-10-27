@@ -73,7 +73,8 @@ async function newCase(mgr, f) {
 // Settlement Today value shown on the case page.
 async function settlementShown(s, id) {
   const t = (await s.get(`/cases/${id}`)).text;
-  const m = t.match(/Settlement Today<\/div><div class="ledger-val">([\d,\.]+)/);
+  // v1.11.0 (G-24): Settlement Today became the big ledger number
+  const m = t.match(/Settlement Today<\/div><div class="ledger-val">([\d,\.]+)/) || (/ledger-lbl">Settlement Today/.test(t) && t.match(/ledger-amt"><span class="ledger-cur">RM<\/span>([\d,.]+)/));
   return m ? num(m[1]) : null;
 }
 

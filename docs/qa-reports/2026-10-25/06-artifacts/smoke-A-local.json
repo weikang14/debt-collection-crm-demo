@@ -1,0 +1,115 @@
+{
+ "base": "http://127.0.0.1:3305",
+ "browser": "Playwright Chromium 153.0.8010.12",
+ "run_at_myt": "2026-10-27 10:06:44.364661+00:00",
+ "results": [
+  {
+   "id": "A-1",
+   "expected": "登录页显示 v1.11.0 和红色提示；登录后每个页面顶部也有",
+   "actual": "login version=v1.11.0; login banner=True (rgb(178, 58, 48) / rgb(247, 233, 232)); pages missing banner=none",
+   "result": "PASS"
+  },
+  {
+   "id": "A-2",
+   "expected": "up to date；Arrears (carried) 与第一期同日；重组历史 10 天前 1.2%/月 18 个月",
+   "actual": "overdue cell=\"OVERDUE\n0.00\nup to date\"; arrears due=['2026-11-17'] first instalment=['2026-11-17']; history=[('2026-10-17', '1.2%/month · 18 months · by Collection Manager')]; expected effective=2026-10-17",
+   "result": "PASS"
+  },
+  {
+   "id": "A-3",
+   "expected": "主数字 Settlement Today；旁边 Contract Balance（含未到期利息）与逾期；逾期 ≤ 结清额",
+   "actual": "lead=\"Settlement Today (clears the loan if paid today)\" RM2,932.65; Contract Balance=\"Contract Balance3,363.00 incl. interest not yet due\"; Overdue=\"Overdue42.75 28 days past due\"",
+   "result": "PASS"
+  },
+  {
+   "id": "A-4",
+   "expected": "案件 5 下拉只有 New/Assigned/Negotiation/PTP/Partial Paid；17、10 无下拉，显示“only a manager can change it”",
+   "actual": "case5 options=['New', 'Assigned', 'Negotiation', 'PTP', 'Partial Paid']; case17 select=False, note=True; case10 select=False, note=True",
+   "result": "PASS"
+  },
+  {
+   "id": "A-5",
+   "expected": "24 被拒（浏览器先拦截）；12 保存成功并出现红框；审计 “max_annual_rate: 18 → 12”；改回 18 后红框消失",
+   "actual": "browser: valid=False msg=\"Value must be less than or equal to 18.\"; server POST 24 → \"Max annual interest rate must be above 0 and at most 18% (the legal limit)\" (cap still 18); 12 → \"Company settings saved\"; red box=\"Open loans above the 12% p.a. cap: CASE-2026-D002 (18%), CASE-2026-D004 (18%), CASE-2026-D014 (18%), CASE-2026-D020 (18%) — re-plan them with a restructure\"; audit match=True; back to 18 → box gone=True, value=18",
+   "result": "PASS"
+  },
+  {
+   "id": "A-6",
+   "expected": "①② “Tenure is required for a loan that charges interest”；③ 超过 18% p.a. 被拒；都没建成",
+   "actual": "① Fixed 200 无期限: \"Tenure is required for a loan that charges interest\" created=False; ② Monthly 1.5 无期限: \"Tenure is required for a loan that charges interest\" created=False; ③ Monthly 1.5004 12 月: \"浏览器拦截 ['interest_rate: Please enter a valid value. The two nearest valid values are 1.5 and 1.51.']；绕过浏览器直接提交 → Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)\" created=False",
+   "result": "PASS"
+  },
+  {
+   "id": "A-7",
+   "expected": "提交后按钮变灰；只生成一笔还款、一个收据号",
+   "actual": "two clicks 10.00 → 1 row(s); dblclick 11.00 → 1 row(s); receipts on page=['RCPT-2026-0001']",
+   "result": "PASS"
+  },
+  {
+   "id": "A-8",
+   "expected": "提示 “Payment date cannot be before the loan start date (2026-09-15)”，未入账",
+   "actual": "date 2026-09-14 → \"Payment date cannot be before the loan start date (2026-09-15)\"; receipts 6→6; Loan Start Date on detail page=not shown (Fixed loan), from Edit=2026-09-15",
+   "result": "PASS"
+  },
+  {
+   "id": "A-9",
+   "expected": "PTP 自动 broken；时间线 “1 pending promise(s) closed: case marked Bankruptcy”；无 New PTP/New Plan/Restructure/Log Call/Fulfill",
+   "actual": "banner=\"Status updated\"; timeline match=True; PTP broken=True pending=True; buttons shown=[]; Fulfill=False",
+   "result": "PASS"
+  },
+  {
+   "id": "A-10",
+   "expected": "follow_up 被拒 “Only legal tasks can be added to a bankrupt or deceased case”；legal 可以建",
+   "actual": "follow_up → \"Only legal tasks can be added to a bankrupt or deceased case\"; legal → \"Task created\"; on task list: legal=True, follow_up=False",
+   "result": "PASS"
+  },
+  {
+   "id": "A-11",
+   "expected": "Reason 必填（浏览器拦截）；原因显示在 Payments 的 Remark、时间线和 Audit Log",
+   "actual": "empty reason blocked=True; banner=\"Payment RCPT-2026-0003 recorded\"; Payments remark=True; timeline=True; audit=True",
+   "result": "PASS"
+  },
+  {
+   "id": "A-12",
+   "expected": "不填原因提示 “A reason is required to lift Bankruptcy”；填了可以改，审计记下原因",
+   "actual": "no reason → \"A reason is required to lift Bankruptcy\"; with reason → \"Status updated\", status now=negotiation; audit has reason=True",
+   "result": "PASS"
+  },
+  {
+   "id": "A-13",
+   "expected": "提示 “A rate-based loan cannot be restructured to a fixed amount (pending legal review)”",
+   "actual": "\"A rate-based loan cannot be restructured to a fixed amount (pending legal review)\"",
+   "result": "PASS"
+  },
+  {
+   "id": "A-14",
+   "expected": "Monthly 说明为整月计息 + 不足月按当月实际天数；三种模式切换正常，无脚本错误",
+   "actual": "{'monthly': 'Monthly rate (interest-first) interest = remaining principal × monthly% for each full month from the Loan Start Date (28- and 31-day months alike) a part month is pro-rated by the actual days in that month each payment clears interest first, then principal → paying principal shrinks later interest', 'daily': 'Annual rate (interest-first) daily rate = annual% ÷ 100 ÷ 365 interest = Σ(remaining principal × daily rate × days) days counted in whole days from Loan Start Date (same day = 0) each payment clears interest first, then principal → paying principal shrinks later interest', 'fixed': 'Fixed amount outstanding = principal + interest − paid'}; js errors=[]",
+   "result": "PASS"
+  },
+  {
+   "id": "A-15",
+   "expected": "375px 无横向滚动；Upcoming Follow-ups 表格在框内滚动；☰ 能开关侧栏",
+   "actual": "no h-scroll={'/': True, '/cases': True, '/cases/2': True}; follow-ups box={'overflowX': 'auto', 'tableW': 781, 'boxW': 345}; ☰ opens=True; closed by tapping outside=True; ☰ covered by the open sidebar=True",
+   "result": "PASS"
+  },
+  {
+   "id": "B-14-PDF",
+   "expected": "对账单可以打印（打印样式隐藏按钮，生成 PDF）",
+   "actual": "buttons hidden in print=True; statement-case14.pdf 44554 B, statement-case5.pdf 60095 B",
+   "result": "PASS"
+  },
+  {
+   "id": "X-INT-14b",
+   "expected": "利率上限调到 12 后，演示案件 2 只改催收员/备注应能保存（条款没动）",
+   "actual": "Edit 页只改 Agent 和 Remark → \"Interest rate exceeds the 12% p.a. limit (this loan: 18% p.a.)\"（上限已改回 18）",
+   "result": "FAIL"
+  },
+  {
+   "id": "JS-ERRORS",
+   "expected": "全程无页面脚本错误",
+   "actual": "none",
+   "result": "PASS"
+  }
+ ]
+}

@@ -27,7 +27,12 @@ def post(page, url, data):
     return page.request.post(BASE + url, form=data, headers={"origin": BASE})
 
 with sync_playwright() as pw:
-    b = pw.chromium.launch(channel="chrome", headless=True)
+    # no Chrome on this host (e.g. a cloud container) -> Playwright's bundled Chromium
+    try:
+        b = pw.chromium.launch(channel="chrome", headless=True)
+    except Exception:
+        b = pw.chromium.launch(headless=True)
+        print("NOTE: Chrome channel unavailable, using Playwright Chromium " + b.version)
     alerts = []
     ctx = b.new_context(viewport={"width": 1366, "height": 900})
     dlgmode = {"dialog": "accept"}

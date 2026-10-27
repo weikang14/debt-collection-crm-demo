@@ -1,0 +1,396 @@
+TAP version 13
+# Subtest: setup
+not ok 1 - setup
+  ---
+  duration_ms: 560.661404
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:12:1'
+  failureType: 'testCodeFailure'
+  error: 'debtor create {"status":302,"location":"/debtors","ok":null,"err":null,"text":"Found. Redirecting to /debtors","headers":{}}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'Debtor created'
+  actual: ~
+  operator: '=='
+  stack: |-
+    newDebtor (/home/user/debt-collection-crm-demo/tests/qa/_client.js:89:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:14:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: X-RBAC 写操作越权矩阵
+not ok 2 - X-RBAC 写操作越权矩阵
+  ---
+  duration_ms: 29.500075
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:23:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:10:23)
+    /home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:31:57
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:72:35)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-RBAC-GET 只读页面越权
+not ok 3 - X-RBAC-GET 只读页面越权
+  ---
+  duration_ms: 239.780721
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:82:1'
+  failureType: 'testCodeFailure'
+  error: 'X-RBAC-GET: expected GET 页面权限与矩阵一致; actual admin GET /cases/undefined/edit → 404 | manager GET /cases/undefined/edit → 404 | agent1 GET /debtors/new → 403 | admin GET /debtors/undefined/edit → 404 | manager GET /debtors/undefined/edit → 404 | agent1 GET /debtors/undefined/edit → 404'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:89:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-SCOPE agent 写他人债务人 / 他人任务 / 他人案件状态
+not ok 4 - X-SCOPE agent 写他人债务人 / 他人任务 / 他人案件状态
+  ---
+  duration_ms: 0.592361
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:91:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:10:23)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:92:46)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-STALE 新建计息案件在列表/仪表盘显示的欠款未含利息（打开详情才重算）
+not ok 5 - X-STALE 新建计息案件在列表/仪表盘显示的欠款未含利息（打开详情才重算）
+  ---
+  duration_ms: 18.894606
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:98:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:100:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-VAL 非数字 / 不存在的 id
+not ok 6 - X-VAL 非数字 / 不存在的 id
+  ---
+  duration_ms: 36.024965
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:118:1'
+  failureType: 'testCodeFailure'
+  error: 'X-VAL-ID: expected 非数字/不存在 id 返回 404 或明确错误，不 500，不误报成功; actual /cases/abc:404 /cases/99999:404 /cases/-1:404 /cases/1.5:404 /cases/0:404 /cases/abc/statement:404 /cases/abc/edit:404 /debtors/abc:404 /debtors/99999:404 /agents/abc:404 /agents/99999:404; /users/abc/edit→null; 完成不存在任务→ok="null"; 编辑不存在任务→null; 作废不存在结算→ok="null"; /ptps/abc/fulfill→404'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:125:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-VAL 案件金额 / 日期 / 期限边界（绕过前端）
+ok 7 - X-VAL 案件金额 / 日期 / 期限边界（绕过前端）
+  ---
+  duration_ms: 34.727408
+  type: 'test'
+  ...
+# Subtest: X-VAL 还款输入边界
+not ok 8 - X-VAL 还款输入边界
+  ---
+  duration_ms: 2.621514
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:150:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:151:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-VAL PTP / 计划 / 通话 / 任务 / 债务人 / 催收员 输入
+not ok 9 - X-VAL PTP / 计划 / 通话 / 任务 / 债务人 / 催收员 输入
+  ---
+  duration_ms: 6.207464
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:172:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:173:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-ERR 500 页面泄露堆栈 / 服务存活
+ok 10 - X-ERR 500 页面泄露堆栈 / 服务存活
+  ---
+  duration_ms: 15.942519
+  type: 'test'
+  ...
+# Subtest: X-CONC-1 同一 PTP 并发 5 个 fulfill
+not ok 11 - X-CONC-1 同一 PTP 并发 5 个 fulfill
+  ---
+  duration_ms: 2.803062
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:211:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:212:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-CONC-2 并发两笔全额还款
+not ok 12 - X-CONC-2 并发两笔全额还款
+  ---
+  duration_ms: 3.161849
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:219:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:220:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-CONC-3 双击/并发创建 PTP 与分期计划
+not ok 13 - X-CONC-3 双击/并发创建 PTP 与分期计划
+  ---
+  duration_ms: 5.360178
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:225:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:226:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-CONC-4 收据号并发唯一
+not ok 14 - X-CONC-4 收据号并发唯一
+  ---
+  duration_ms: 2.821248
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:233:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:234:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-OVERPAY 计息案件提前按 max 还清，多收部分被静默丢弃
+not ok 15 - X-OVERPAY 计息案件提前按 max 还清，多收部分被静默丢弃
+  ---
+  duration_ms: 2.382153
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:241:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:242:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-EDITCAP 编辑计息案件还款的上限可超过真实应还
+not ok 16 - X-EDITCAP 编辑计息案件还款的上限可超过真实应还
+  ---
+  duration_ms: 2.169573
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:249:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:250:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-BREAK-FULFILLED 已履行的 PTP 仍可被 Break
+not ok 17 - X-BREAK-FULFILLED 已履行的 PTP 仍可被 Break
+  ---
+  duration_ms: 1.977685
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:258:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:259:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-DEMO-FK 演示催收员有自建数据时删除演示数据
+not ok 18 - X-DEMO-FK 演示催收员有自建数据时删除演示数据
+  ---
+  duration_ms: 17.636652
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:268:1'
+  failureType: 'testCodeFailure'
+  error: 'X-DEMO-FK: expected Delete demo data 不报错，自建数据保留; actual HTTP 302 ；失败后演示案件剩余 0、演示还款剩余 0（deleteDemo 无事务，半删除）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:274:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-CSV-INJ CSV 公式注入
+not ok 19 - X-CSV-INJ CSV 公式注入
+  ---
+  duration_ms: 12.348749
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:277:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/21 Found. Redirecting to /cases/21'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:280:3)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-TIMING 登录用户名枚举（响应时间）
+ok 20 - X-TIMING 登录用户名枚举（响应时间）
+  ---
+  duration_ms: 2034.880586
+  type: 'test'
+  ...
+# Subtest: X-HEADERS 会话 Cookie 与安全响应头
+not ok 21 - X-HEADERS 会话 Cookie 与安全响应头
+  ---
+  duration_ms: 92.807364
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:297:1'
+  failureType: 'testCodeFailure'
+  error: 'X-HEADERS: expected Cookie 带 SameSite/Secure；有防点击劫持等安全头; actual Set-Cookie 属性: connect.sid=…; Path=/; Expires=Tue, 27 Oct 2026 03:49:48 GMT; HttpOnly; x-frame-options=DENY, content-security-policy=无, x-content-type-options=nosniff, strict-transport-security=无; x-powered-by=null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:301:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-FLASH 任意 URL 参数显示为系统提示
+ok 22 - X-FLASH 任意 URL 参数显示为系统提示
+  ---
+  duration_ms: 4.69431
+  type: 'test'
+  ...
+# Subtest: X-STATUS 手动把有欠款的案件标为 Fully Paid / agent 删除他人备注
+not ok 23 - X-STATUS 手动把有欠款的案件标为 Fully Paid / agent 删除他人备注
+  ---
+  duration_ms: 2.894842
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:307:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:308:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-ORDER 同一秒内的时间线事件顺序
+not ok 24 - X-ORDER 同一秒内的时间线事件顺序
+  ---
+  duration_ms: 3.48975
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:316:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:317:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: X-AUTOCLOSE 还款自动 Fully Paid 不写 status_change 时间线与 closed_at（E-08 复核）
+not ok 25 - X-AUTOCLOSE 还款自动 Fully Paid 不写 status_change 时间线与 closed_at（E-08 复核）
+  ---
+  duration_ms: 3.015197
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:324:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/x1-outside-manual.qa.js:325:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..25
+# tests 25
+# suites 0
+# pass 4
+# fail 21
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4016.876367

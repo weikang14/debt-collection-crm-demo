@@ -1,0 +1,107 @@
+[
+ {
+  "id": "CASE-01",
+  "expected": "结果符合条件；按开案时间倒序",
+  "actual": "negotiation→20,14,3; urgent→20,16,12,8,4; q=D007→7; q=Sarah→14,2; 倒序=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-02",
+  "expected": "cases.csv 带筛选；列正确",
+  "actual": "attachment; filename=\"cases.csv\"; 表头 Case No,Debtor,Debtor Phone,Agent,Outstanding,Paid,Priority,Status,Opened; 行数 3; 导出链接 /cases?format=csv&status=negotiation&priority=high&q=a",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-03",
+  "expected": "浏览器拦截；服务端提示 Debtor and principal are required",
+  "actual": "required 属性 debtor=true principal=true; 无债务人→null; 无本金→null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-05",
+  "expected": "Priority=medium，Status=New",
+  "actual": "priority medium selected=true; status new selected=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-09",
+  "expected": "看不到 + New Case/Edit Case；/cases/new 403",
+  "actual": "agent1: +New=false Edit=false /cases/new=403; finance: +New=false Edit=false /cases/new=403; auditor: +New=false Edit=false /cases/new=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-14",
+  "expected": "Call logged；Records→Calls；时间线 Call: answered (60s) — 备注",
+  "actual": "null; Calls 表=false; 时间线=false",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-15",
+  "expected": "依次 Repayment Schedule、Restructure History、Payments、Promise to Pay、Calls、Tasks",
+  "actual": "Repayment Schedule | Restructure History | Payments | Promise to Pay | Calls | Tasks",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-17",
+  "expected": "显示最早到期的待办（日期 · 标题）",
+  "actual": "Next Action = \"undefined\"",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-18",
+  "expected": "404 Case not found or access denied",
+  "actual": "/cases/2 → 404; /statement → 404",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-19",
+  "expected": "无 Record Payment/Restructure/New PTP/New Plan/Log Call/Edit Case/状态框/备注框；有 Records 与 Print statement",
+  "actual": "{\"pay\":false,\"rs\":false,\"ptp\":false,\"plan\":false,\"call\":false,\"edit\":false,\"status\":false,\"note\":false,\"records\":true,\"stmt\":true,\"payEdit\":false,\"voidBtn\":false}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-20",
+  "expected": "有 Record Payment，Payments 有 Edit/Void；无 New PTP/New Plan/Log Call/状态框/备注框",
+  "actual": "{\"pay\":true,\"rs\":false,\"ptp\":false,\"plan\":false,\"call\":false,\"edit\":false,\"status\":false,\"note\":false,\"records\":true,\"stmt\":true,\"payEdit\":true,\"voidBtn\":true}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-06",
+  "expected": "先冲 300 利息、700 冲本金；总利息 1,718.25；Total 10,718.25",
+  "actual": "null; I=null T=null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PAY-05",
+  "expected": "浏览器 min 拦截；服务端 Invalid amount",
+  "actual": "0→null; -5→null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PAY-06",
+  "expected": "Invalid payment date",
+  "actual": "null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PAY-11",
+  "expected": "无 Actions 列；编辑/作废 403",
+  "actual": "edit 403; void 403",
+  "result": "PASS",
+  "note": ""
+ }
+]
