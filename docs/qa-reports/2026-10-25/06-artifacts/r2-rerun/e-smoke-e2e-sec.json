@@ -1,0 +1,240 @@
+[
+ {
+  "id": "SMOKE-01",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-02",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-03",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-04",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-05",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-06",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-07",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-08",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-09",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-10",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-11",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-12",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-13",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-14",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-15",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-16",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-17",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-18",
+  "expected": "smoke item",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-19",
+  "expected": "smoke item",
+  "actual": "see §6 npm test",
+  "result": "见 npm test",
+  "note": ""
+ },
+ {
+  "id": "E2E-01",
+  "expected": "all 7 checkpoints",
+  "actual": "steps=YYYYYYY; 1:CASE-2026-0001 prev=null new | 3:due 0→1 | 4:RCPT-2026-0001 11,210.00 partial_paid | 5:prefill=100 settle=9400 paid=10000 (interest 0 — start today) closed 0→1 fully_paid | 7:create,status_change,call,ptp_create,payment,ptp_fulfilled,payment,payment,status_change",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "E2E-02",
+  "expected": "4 checkpoints",
+  "actual": "YYYY; legal 2→3; agent set legal → Only a manager can set Legal",
+  "result": "PASS",
+  "note": "手册第 2 步写“1/3 paid”，页面实际为“1/3 kept”（手册文字）；第 4 步“改为 Legal”须由 manager 执行（D-12）"
+ },
+ {
+  "id": "E2E-03",
+  "expected": "5 checkpoints",
+  "actual": "YYYYY 11,449.75 / 10,696.06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "E2E-04",
+  "expected": "5 checkpoints",
+  "actual": "YNNYY cases= debtors=",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "E2E-05",
+  "expected": "5 checkpoints",
+  "actual": "YYYYY Lim {\"collected\":13259.33,\"earned\":662.97,\"settled\":100,\"pending\":562.97}; csv mismatch=",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "E2E-06",
+  "expected": "all refused, nothing changed, no agent2 data in search/reports/commissions",
+  "actual": "{\"case2\":404,\"stmt\":404,\"edit\":403,\"debtor\":403,\"fulfill\":403,\"brk\":403,\"task\":\"Forbidden\",\"users\":403,\"settings\":403,\"audit\":403,\"agents\":403,\"pay2\":404,\"status2\":404} unchanged=true search=0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-09",
+  "expected": "= E2E-06",
+  "actual": "see E2E-06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-01",
+  "expected": "all 200, no injected rows",
+  "actual": "/search:200:0 /cases:200:0 /cases:200:0 /cases:200:0 /debtors:200:0 /debtors:200:14 /tasks:200:0 /tasks:200:0 /agents:200:0 /audit-log:200:0 /reports:200:0 /commissions:200:0 (debtors total=14; agent1 search rows=0)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-02",
+  "expected": "no raw payload in any page",
+  "actual": "17 pages escaped (browser alert check: ui.qa.py)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-03",
+  "expected": "only inside escaped data-* attributes",
+  "actual": "data-ref escaped",
+  "result": "PASS",
+  "note": "浏览器弹窗验证见 ui.qa.py"
+ },
+ {
+  "id": "SEC-04",
+  "expected": "$2a$/$2b$ cost ≥10, no plaintext",
+  "actual": "admin:$2a$10$ manager:$2a$10$ agent1:$2a$10$ agent2:$2a$10$ agent3:$2a$10$ finance:$2a$10$ auditor:$2a$10$ qa_newbie:$2a$10$",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-05",
+  "expected": "exits with \"SESSION_SECRET must be set in production\"",
+  "actual": "exit=1 stderr=Error: SESSION_SECRET must be set in production",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-06",
+  "expected": "403 \"Cross-site request blocked\"; same-origin ok",
+  "actual": "origin=403 referer=403 null=403 same=302 login=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-08",
+  "expected": "正式环境演示账号停用 / 移除 /demo-accounts 与 Demo Data",
+  "actual": "本轮不访问 Render；本地 demo 构建仍开放 /demo-accounts 与 Demo Data（设计如此）",
+  "result": "未执行",
+  "note": "【已知延后】K-07；上线前必须"
+ },
+ {
+  "id": "AUTH-05",
+  "expected": "5 fails → 6th correct refused (429)",
+  "actual": "ERROR: TypeError: fetch failed\n    at node:internal/deps/undici/undici:14902:13\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async Session.req (/home/user/debt-collection-crm-demo/tests/qa/r2/_client.js:41:17)\n    at async /home/user/debt-collection-crm-demo/tests/qa/r2/e-smoke-e2e-sec.qa.js:302:45\n    at async step (/home/user/debt-collection-crm-demo/tests/q",
+  "result": "BLOCKED",
+  "note": "script error"
+ }
+]

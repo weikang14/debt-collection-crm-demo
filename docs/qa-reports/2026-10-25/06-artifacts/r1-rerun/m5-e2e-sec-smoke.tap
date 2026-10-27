@@ -1,0 +1,220 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 585.415105
+  type: 'test'
+  ...
+# Subtest: E2E-01 新案件全生命周期
+not ok 2 - E2E-01 新案件全生命周期
+  ---
+  duration_ms: 8.124184
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:32:1'
+  failureType: 'testCodeFailure'
+  error: 'debtor create {"status":302,"location":"/debtors","ok":null,"err":null,"text":"Found. Redirecting to /debtors","headers":{}}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'Debtor created'
+  actual: ~
+  operator: '=='
+  stack: |-
+    newDebtor (/home/user/debt-collection-crm-demo/tests/qa/_client.js:89:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:34:13)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-02 分期违约转法务
+not ok 3 - E2E-02 分期违约转法务
+  ---
+  duration_ms: 73.414402
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:67:1'
+  failureType: 'testCodeFailure'
+  error: 'E2E-02: expected 各检查点通过; actual 建计划:✓(333.33/333.33/333.34 ptp) | 履行第1期:✗(ptp) | 取消计划:✓(fulfilled,broken,broken negotiation) | 转 Legal:✗(legal 1→1; 还款后 partial_paid)'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:84:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-03 重组与撤销
+not ok 4 - E2E-03 重组与撤销
+  ---
+  duration_ms: 6.763901
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:86:1'
+  failureType: 'testCodeFailure'
+  error: 'debtor create {"status":302,"location":"/debtors","ok":null,"err":null,"text":"Found. Redirecting to /debtors","headers":{}}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'Debtor created'
+  actual: ~
+  operator: '=='
+  stack: |-
+    newDebtor (/home/user/debt-collection-crm-demo/tests/qa/_client.js:89:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:88:13)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-04 新员工入职与离职
+not ok 5 - E2E-04 新员工入职与离职
+  ---
+  duration_ms: 96.627648
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:109:1'
+  failureType: 'testCodeFailure'
+  error: 'login qa_newbie failed: 401 '
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    as (/home/user/debt-collection-crm-demo/tests/qa/_client.js:59:53)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:117:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: E2E-05 月底佣金结算
+ok 6 - E2E-05 月底佣金结算
+  ---
+  duration_ms: 60.824115
+  type: 'test'
+  ...
+# Subtest: E2E-06 + SEC-09 越权巡检（agent1）
+not ok 7 - E2E-06 + SEC-09 越权巡检（agent1）
+  ---
+  duration_ms: 53.239107
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:159:1'
+  failureType: 'testCodeFailure'
+  error: 'E2E-06: expected 全部拒绝（403/404）；无数据被改；搜索/报表/佣金看不到 agent2; actual GET /cases/2:404 GET /cases/2/statement:404 GET /cases/2/edit:403 GET /debtors/2:403 GET /users:403 GET /settings:403 GET /audit-log:403 GET /agents:403 GET /cases/14:404 fulfill:403 break:403 task complete:302/null; 数据未变=true; 泄露=false'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:174:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SEC-01 SQL 注入
+ok 8 - SEC-01 SQL 注入
+  ---
+  duration_ms: 56.500461
+  type: 'test'
+  ...
+# Subtest: SEC-02 脚本注入（XSS）
+not ok 9 - SEC-02 脚本注入（XSS）
+  ---
+  duration_ms: 19.25223
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:192:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/21 Found. Redirecting to /cases/21'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:195:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SEC-03 事件属性注入（期望不执行）
+not ok 10 - SEC-03 事件属性注入（期望不执行）
+  ---
+  duration_ms: 10.184748
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:208:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/22 Found. Redirecting to /cases/22'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:209:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SEC-04 密码存储
+ok 11 - SEC-04 密码存储
+  ---
+  duration_ms: 0.914445
+  type: 'test'
+  ...
+# Subtest: SEC-05 生产会话密钥
+ok 12 - SEC-05 生产会话密钥
+  ---
+  duration_ms: 157.176735
+  type: 'test'
+  ...
+# Subtest: SEC-06 CSRF
+not ok 13 - SEC-06 CSRF
+  ---
+  duration_ms: 98.120869
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:227:1'
+  failureType: 'testCodeFailure'
+  error: 'SEC-06: expected 确认当前无 CSRF 令牌（已知风险 E-05，上线前评估）; actual 跨站 Origin 的 POST → null（ptp→ptp）; Set-Cookie: connect.sid=…; Path=/; Expires=Tue, 27 Oct 2026 03:49:42 GMT; HttpOnly（无 SameSite/Secure）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:234:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SEC-07 登录限流
+ok 14 - SEC-07 登录限流
+  ---
+  duration_ms: 0.398925
+  type: 'test'
+  ...
+# Subtest: SEC-08 演示账号（正式环境）
+ok 15 - SEC-08 演示账号（正式环境）
+  ---
+  duration_ms: 2.172321
+  type: 'test'
+  ...
+# Subtest: SMOKE 冒烟清单（本地 18 项）
+not ok 16 - SMOKE 冒烟清单（本地 18 项）
+  ---
+  duration_ms: 1889.84358
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:243:1'
+  failureType: 'testCodeFailure'
+  error: 'debtor create {"status":302,"location":"/debtors","ok":null,"err":null,"text":"Found. Redirecting to /debtors","headers":{}}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'Debtor created'
+  actual: ~
+  operator: '=='
+  stack: |-
+    newDebtor (/home/user/debt-collection-crm-demo/tests/qa/_client.js:89:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m5-e2e-sec-smoke.qa.js:250:13)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..16
+# tests 16
+# suites 0
+# pass 7
+# fail 9
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4003.571787

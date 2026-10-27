@@ -1,0 +1,79 @@
+[
+ {
+  "id": "PTP-02",
+  "expected": "浏览器 max；服务端 Amount exceeds outstanding",
+  "actual": "max 属性=false; null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PTP-07",
+  "expected": "浏览器拦截；服务端 Installments must be 2–60",
+  "actual": "1→null; 61→null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PTP-08",
+  "expected": "Total too small for the number of installments",
+  "actual": "null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PTP-11",
+  "expected": "finance/auditor 无按钮；agent1 越权 403",
+  "actual": "finance: fulfill=false break=false cancel=false; auditor: fulfill=false break=false cancel=false; agent1 fulfill 403 break 403; PTP 仍 pending",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-02",
+  "expected": "显示截至今天剩余本金/未付利息；默认今天；下限=起算日/最近还款日/上次重组次日最晚者；上限今天",
+  "actual": "本金 null 利息 null（期望 1,111.35）; min=null max=null value=null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-06",
+  "expected": "0/121/1.5 均提示 Tenure must be 1–120 months",
+  "actual": " |  | ",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-07",
+  "expected": "Effective date must be between 下限 and 今天",
+  "actual": "null | null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-10",
+  "expected": "卡片显示生效日/新条款/期限/操作人/截点本金/挂账欠息/原因；Superseded 未还期显示 Restructured",
+  "actual": "",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-11",
+  "expected": "挂账 139.50；Total 11,478.06；总利息 2,478.06",
+  "actual": "Total=null Interest=null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-13",
+  "expected": "日期框 min=生效日；绕过提示 Payment date must be on or after the restructure date (日期)",
+  "actual": "null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RS-22",
+  "expected": "挂账行、新计划、重组历史（10 天前、1.2%/月、18 个月、原因）",
+  "actual": "首行 {\"due\":\"2026-11-17\",\"arrears\":true,\"exp\":\"239.95\",\"paid\":\"0.00\",\"out\":\"239.95\",\"status\":\"Pending\"}; 行数 19",
+  "result": "FAIL",
+  "note": ""
+ }
+]

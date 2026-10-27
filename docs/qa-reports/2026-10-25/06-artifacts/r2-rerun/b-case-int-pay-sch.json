@@ -1,0 +1,443 @@
+[
+ {
+  "id": "CASE-01",
+  "expected": "status/priority/search correct; opened desc",
+  "actual": "legal=17,7 urgent=12,16,20,4,8 q=D014→14 Sarah→14,2",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-02",
+  "expected": "cases.csv, filtered, 9 columns",
+  "actual": "attachment; filename=\"cases.csv\"; header=Case No,Debtor,Debtor Phone,Agent,Outstanding,Paid,Priority,Status,Opened; rows=2",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-03",
+  "expected": "\"Debtor and principal are required\"",
+  "actual": "Debtor and principal are required / Debtor and principal are required",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-04",
+  "expected": "Case created; CASE-YYYY-0001 (+1); timeline; audit",
+  "actual": "ERROR: TypeError: Cannot read properties of undefined (reading 'case_no')\n    at /home/user/debt-collection-crm-demo/tests/qa/r2/b-case-int-pay-sch.qa.js:50:64\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async step (/home/user/debt-collection-crm-demo/tests/qa/r2/_run.js:14:9)\n    at async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/",
+  "result": "BLOCKED",
+  "note": "script error"
+ },
+ {
+  "id": "CASE-05",
+  "expected": "priority=medium, status=new",
+  "actual": "{\"priority\":\"medium\",\"status\":\"new\"}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-07",
+  "expected": "2026-02-28; none when tenure missing",
+  "actual": "with=2026-02-28 without=null",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-08",
+  "expected": "edit agent/priority/remark → Saved; audit old→new",
+  "actual": "ERROR: TypeError: Cannot read properties of undefined (reading 'details')\n    at /home/user/debt-collection-crm-demo/tests/qa/r2/b-case-int-pay-sch.qa.js:71:247\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async step (/home/user/debt-collection-crm-demo/tests/qa/r2/_run.js:14:9)\n    at async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa",
+  "result": "BLOCKED",
+  "note": "script error"
+ },
+ {
+  "id": "CASE-09",
+  "expected": "no buttons; GET/POST 403",
+  "actual": "[{\"u\":\"agent1\",\"newBtn\":false,\"edit\":false,\"nw\":403,\"ed\":403,\"post\":403,\"upd\":403},{\"u\":\"finance\",\"newBtn\":false,\"edit\":false,\"nw\":403,\"ed\":403,\"post\":403,\"upd\":403},{\"u\":\"auditor\",\"newBtn\":false,\"edit\":false,\"nw\":403,\"ed\":403,\"post\":403,\"upd\":403}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-10",
+  "expected": "all ledger items present",
+  "actual": "outstanding=10,696.06 settle=10,394.41 overdue=350.00 (87 days past due) 9% recovered I=1,696.06 mat=2027-01-01",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-11",
+  "expected": "Status updated; status_change event; audit",
+  "actual": "Status updated; \"Status changed assigned → legal\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-12",
+  "expected": "closed_at set (fully_paid covered by PAY-03/CASE-22)",
+  "actual": "[{\"id\":15,\"closed_at\":\"2026-10-27 01:52:31\"},{\"id\":19,\"closed_at\":\"2026-10-27 01:52:31\"}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-13",
+  "expected": "Note added / updated / deleted; non-note → Note not found",
+  "actual": "Note added/Note updated/Note deleted; payment event edit → Note not found",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-14",
+  "expected": "Call logged; Calls row; timeline text",
+  "actual": "Call logged; \"Call: answered (60s) — CASE-14 notes\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-15",
+  "expected": "Schedule, Restructure History, Payments, PTP, Calls, Tasks; schedule only with terms",
+  "actual": "positions=10386,14541,17725,17856,18637,18760",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-16",
+  "expected": "order + colours",
+  "actual": "badges=call:is-blue status_change:is-blue payment:is-green note:is-neutral",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-17",
+  "expected": "shows earliest (date · title)",
+  "actual": "Next Action 2026-10-29 · sooner task ",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-18",
+  "expected": "404 \"Case not found or access denied\"",
+  "actual": "404/404; edit=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-19",
+  "expected": "no action buttons/status/note; Records + statement available",
+  "actual": "found=none",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-20",
+  "expected": "Record Payment + Edit/Void; no PTP/Plan/Call/status/note",
+  "actual": "has=true banned=none",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-21",
+  "expected": "only New..Partial Paid; \"Only a manager can set …\"",
+  "actual": "opts=new,assigned,negotiation,ptp,partial_paid; Only a manager can set Fully Paid; Only a manager can set Closed",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-22",
+  "expected": "\"Cannot mark Fully Paid: RM x is still owed\"; unchanged",
+  "actual": "Cannot mark Fully Paid: RM 3,717.00 is still owed",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-23",
+  "expected": "no Edit/Delete on others; refused; own OK",
+  "actual": "btn=true; You can only change your own notes; You can only change your own notes; own=Note updated",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-24",
+  "expected": "no buttons; reason required; PTP/call refused",
+  "actual": "{\"10\":{\"buttons\":[],\"alert\":true,\"reasonReq\":true,\"noReason\":\"A reason is required to accept a payment on a Bankruptcy case\",\"ptp\":\"Not allowed while the case is Bankruptcy\",\"plan\":\"Not allowed while the case is Bankruptcy\",\"call\":\"Not allowed while the case is Bankruptcy\",\"rs\":\"This case cannot be restructured\",\"withReason\":\"Payment RCPT-2026-0002 recorded\",\"ok\":true},\"11\":{\"buttons\":[],\"alert\":true,\"reasonReq\":true,\"noReason\":\"A reason is required to accept a payment on a Deceased case\",\"ptp\":\"Not allowed while the case is Deceased\",\"plan\":\"Not allowed while the case is Deceased\",\"call\":\"Not",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-03",
+  "expected": "Fixed 1000+200 → 1,200.00",
+  "actual": "ERROR: Error: case create failed 302 /cases/new {\"type\":\"err\",\"text\":\"Tenure is required for a loan that charges interest\"}\n    at Object.newCase (/home/user/debt-collection-crm-demo/tests/qa/r2/_client.js:120:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async /home/user/debt-collection-crm-demo/tests/qa/r2/b-case-int-pay-sch.qa.js:207:16\n    at async step",
+  "result": "BLOCKED",
+  "note": "script error"
+ },
+ {
+  "id": "INT-04",
+  "expected": "Interest 1,800.00; Outstanding 11,800.00; maturity 2027-01-01",
+  "actual": "I=1,800.00 O=11,800.00 mat=2027-01-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-05",
+  "expected": "Interest 6,570.00; Outstanding 43,070.00",
+  "actual": "I=6,570.00 O=43,070.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-06",
+  "expected": "Interest 1,696.06; Outstanding 10,696.06",
+  "actual": "Payment RCPT-2026-0004 recorded; I=1,696.06 O=10,696.06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "EX-A-0615",
+  "expected": "示例 A：2026-06-15 结清额 9,784.19",
+  "actual": "Amount exceeds what is owed on 2026-06-15: at most RM 9784.19",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-07",
+  "expected": "start today, no tenure → 0.00; (proxy for next day) start yesterday → 1/31 month share",
+  "actual": "ERROR: Error: case create failed 302 /cases/new {\"type\":\"err\",\"text\":\"Tenure is required for a loan that charges interest\"}\n    at Object.newCase (/home/user/debt-collection-crm-demo/tests/qa/r2/_client.js:120:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async /home/user/debt-collection-crm-demo/tests/qa/r2/b-case-int-pay-sch.qa.js:231:16\n    at async step",
+  "result": "BLOCKED",
+  "note": "script error"
+ },
+ {
+  "id": "INT-08",
+  "expected": "interest capped at maturity (900.00); settlement today 10,900.00",
+  "actual": "I=900.00 settle=10,900.00",
+  "result": "PASS",
+  "note": "“隔几天再看”用已到期 1 年多的案件代替"
+ },
+ {
+  "id": "INT-09",
+  "expected": "no start date → defaults to opened",
+  "actual": "ERROR: Error: case create failed 302 /cases/new {\"type\":\"err\",\"text\":\"Tenure is required for a loan that charges interest\"}\n    at Object.newCase (/home/user/debt-collection-crm-demo/tests/qa/r2/_client.js:120:11)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async /home/user/debt-collection-crm-demo/tests/qa/r2/b-case-int-pay-sch.qa.js:247:16\n    at async step",
+  "result": "BLOCKED",
+  "note": "script error"
+ },
+ {
+  "id": "INT-10",
+  "expected": "rate 0, outstanding = 2,100",
+  "actual": "{\"interest_mode\":\"fixed\",\"interest_rate\":0,\"interest_from\":null,\"o\":2100}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-11",
+  "expected": "all three refused with limit message",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.) | Interest rate exceeds the 18% p.a. limit (this loan: 18.5% p.a.) | Interest rate exceeds the 18% p.a. limit (this loan: 20% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-12",
+  "expected": "24 → allowed; back to 18 → refused",
+  "actual": "24:null case=null; 18:Company settings saved; Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.)",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "INT-13",
+  "expected": "\"Total interest cannot exceed the principal\"",
+  "actual": "Total interest cannot exceed the principal",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-14",
+  "expected": "Saved; changing terms → cap error",
+  "actual": "null / Case not found",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PAY-01",
+  "expected": "\"Payment RCPT-YYYY-NNNN recorded\"; outstanding −100; row; green timeline; audit",
+  "actual": "Payment RCPT-2026-0005 recorded; 3996→3896; tl=\"Payment RCPT-2026-0005: RM 100.00 via cash\"; audit=\"Recorded payment RCPT-2026-0005 amount 100\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-02",
+  "expected": "negotiation→partial_paid; assigned→partial_paid",
+  "actual": "case3=partial_paid case2=partial_paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-03",
+  "expected": "Fully Paid + closed_at + event; 0.00; all Paid",
+  "actual": "max=3,214.02 attr=3214.02; Payment RCPT-2026-0007 recorded; {\"status\":\"fully_paid\",\"closed_at\":\"2026-10-27 01:52:32\",\"o\":0}; ev=\"Status changed negotiation → fully_paid\"; schedule=Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-04",
+  "expected": "\"Amount exceeds what is owed on 2026-10-27: at most RM <settlement>\"",
+  "actual": "settle=11,475.81 max attr=11475.81; Amount exceeds what is owed on 2026-10-27: at most RM 11475.81",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-05",
+  "expected": "Invalid amount",
+  "actual": "Invalid amount | Invalid amount | Invalid amount | Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-06",
+  "expected": "Invalid payment date",
+  "actual": "Invalid payment date",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-07",
+  "expected": "balance −10, status unchanged",
+  "actual": "[{\"id\":7,\"ok\":true,\"st\":\"legal→legal\",\"d\":10},{\"id\":8,\"ok\":true,\"st\":\"closed→closed\",\"d\":10},{\"id\":9,\"ok\":true,\"st\":\"cancelled→cancelled\",\"d\":10},{\"id\":10,\"ok\":true,\"st\":\"bankruptcy→bankruptcy\",\"d\":10},{\"id\":11,\"ok\":true,\"st\":\"deceased→deceased\",\"d\":10}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-08",
+  "expected": "status stays PTP",
+  "actual": "ptp",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-09",
+  "expected": "cap+0.01 refused; Payment updated; timeline a→b; audit old→new; cap accepted",
+  "actual": "over=\"Amount exceeds what is owed on 2026-10-27: at most RM 5737.90\"; Payment updated; \"Payment RCPT-2026-0014 edited: RM 200.00 → RM 250.00\"; audit=\"Edited payment RCPT-2026-0014: amount 200.00 → 250.00; method cash → cheque; reference R9 → R9b\"; atCap=Payment updated",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-10",
+  "expected": "Payment voided; balance back; →negotiation",
+  "actual": "Payment voided; fully_paid/0 → negotiation/17766 closed_at=null; \"Payment RCPT-2026-D002 voided (RM 17766.00)\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-11",
+  "expected": "no Actions column; 403",
+  "actual": "edit=403 void=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-12",
+  "expected": "consecutive +1",
+  "actual": "0015→0015",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PAY-13",
+  "expected": "voided number not reused",
+  "actual": "void 0015 → next 0016",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-14",
+  "expected": "data-ref escaped, no onclick splice",
+  "actual": "data-ref=\"TXN1003\"",
+  "result": "PASS",
+  "note": "弹窗交互见 ui.qa.py"
+ },
+ {
+  "id": "PAY-15",
+  "expected": "drop 1,103.94 (= 1,000 + 103.94 saved)",
+  "actual": "10,696.06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-16",
+  "expected": "\"Payment date cannot be in the future\"; max attr",
+  "actual": "Payment date cannot be in the future",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-17",
+  "expected": "11,800 refused (at most 10304.84); 10,304.84 → Fully Paid",
+  "actual": "Amount exceeds what is owed on 2026-03-02: at most RM 10304.84; Payment RCPT-2026-0018 recorded; {\"status\":\"fully_paid\",\"o\":0}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-01",
+  "expected": "only both → schedule",
+  "actual": "tenureOnly=false startOnly=false both=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-02",
+  "expected": "three month-end dates",
+  "actual": "2026-02-28,2026-03-31,2026-04-30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-03",
+  "expected": "expected 150, 150, 10150; dates 02-01,03-01,04-01",
+  "actual": "2026-02-01:150 2026-03-01:150 2026-04-01:10150",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-04",
+  "expected": "cent-exact split",
+  "actual": "333.33,333.33,333.34",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-05",
+  "expected": "rows 1-2 Paid; row 3 paid 133.34 / left 799.99; last 933.37",
+  "actual": "933.33/933.33/0/Paid 933.33/933.33/0/Paid 933.33/133.34/799.99/Overdue last=933.37",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-06",
+  "expected": "Paid / Overdue (past, unpaid) / Partially Paid (future, part) / Pending",
+  "actual": "after150=2026-09-01:Paid 2026-10-01:Overdue 2026-11-01:Pending 2026-12-01:Pending 2027-01-01:Pending 2027-02-01:Pending | after250=Paid,Paid,Pending,Pending,Pending,Pending",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SCH-07",
+  "expected": "one Pay button on first unpaid row; amount = min(row, settlement)",
+  "actual": "payRows=1 first=1 prefill=35.5 settle=2882.65",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-08",
+  "expected": "no Actions/Pay",
+  "actual": "actions=false",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-09",
+  "expected": "all Paid / 0 outstanding",
+  "actual": "max=10222.58 Payment RCPT-2026-0022 recorded rows=Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-10",
+  "expected": "6 rows at 100.00",
+  "actual": "100,100,100,100,100,10100",
+  "result": "PASS",
+  "note": ""
+ }
+]

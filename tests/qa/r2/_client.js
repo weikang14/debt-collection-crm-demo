@@ -86,8 +86,14 @@ function saveResults(name) {
 // ---- HTML helpers -----------------------------------------------------------
 const has = (html, s) => String(html).includes(s);
 const strip = (html) => decode(String(html).replace(/<script[\s\S]*?<\/script>/g, '').replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ');
-const ledgerAmt = (html) => { const m = html.match(/ledger-amt"><span class="ledger-cur">RM<\/span>([\d,.-]+)/); return m ? m[1] : null; };
-const ledgerVal = (html, lbl) => { const m = html.match(new RegExp(`ledger-lbl">${lbl}</div><div class="ledger-val[^"]*">([^<]+)<`)); return m ? m[1].trim() : null; };
+// v1.11.0 (G-24/N-07): the big number is now Settlement Today and the contract balance
+// moved to a "Contract Balance" cell. ledgerAmt() keeps meaning "contract outstanding"
+// and ledgerVal(h, 'Settlement Today') keeps meaning the settlement figure, on both layouts.
+const bigAmt = (html) => { const m = html.match(/ledger-amt"><span class="ledger-cur">RM<\/span>([\d,.-]+)/); return m ? m[1] : null; };
+const cellVal = (html, lbl) => { const m = html.match(new RegExp(`ledger-lbl">${lbl}</div><div class="ledger-val[^"]*">([^<]+)<`)); return m ? m[1].trim() : null; };
+const isV111 = (html) => /ledger-lbl">Settlement Today/.test(html);
+const ledgerAmt = (html) => (isV111(html) ? cellVal(html, 'Contract Balance') : bigAmt(html));
+const ledgerVal = (html, lbl) => (lbl === 'Settlement Today' && isV111(html) ? bigAmt(html) : cellVal(html, lbl));
 const ledgerSmall = (html, lbl) => { const m = html.match(new RegExp(`ledger-lbl">${lbl}</div><div class="ledger-val[^"]*">[^<]+</div>\\s*<small[^>]*>([^<]+)<`)); return m ? m[1].trim() : null; };
 const money = (n) => Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const num = (s) => (s == null ? NaN : Number(String(s).replace(/,/g, '')));

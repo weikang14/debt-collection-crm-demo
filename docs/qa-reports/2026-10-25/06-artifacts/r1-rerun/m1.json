@@ -1,0 +1,240 @@
+[
+ {
+  "id": "AUTH-01",
+  "expected": "进入 Dashboard；显示 System Admin/admin；audit login",
+  "actual": "login 302→/; sidebar who=true; audit=User admin logged in",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-02",
+  "expected": "停留登录页，红色 Invalid username or password",
+  "actual": "HTTP 401; true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-03",
+  "expected": "提示与 AUTH-02 完全相同",
+  "actual": "status 401/401, body identical=true, 耗时 83ms",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-04",
+  "expected": "Invalid username or password",
+  "actual": "deactivate=null; login HTTP 401",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "AUTH-06",
+  "expected": "跳回 Dashboard",
+  "actual": "302→/",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-07",
+  "expected": "全部重定向 /login",
+  "actual": "/cases:302→/login /reports:302→/login /cases/2:302→/login",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-08",
+  "expected": "回登录页；audit logout；旧会话需重新登录",
+  "actual": "logout→/login; audit=true; 旧cookie访问 / → 302 /login",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-09",
+  "expected": "无需登录，列 5 个账号；登录页无链接",
+  "actual": "HTTP 200, 账号行 5, 登录页含链接=false",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-10",
+  "expected": "登录页 v1.8.0；/version 最新在上",
+  "actual": "登录页 v1.8.0=false; 版本顺序 1.11.0 > 1.10.0 > 1.9.0 > 1.8.0 > 1.7.0 > 1.6.0 > 1.5.1 > 1.5.0 > 1.4.0 > 1.3.0 > 1.2.0 > 1.1.0 > 1.0.0",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "AUTH-11",
+  "expected": "纯文本 ok",
+  "actual": "200 \"ok\" text/plain; charset=utf-8",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUTH-12",
+  "expected": "全部 403 Forbidden",
+  "actual": "/users:403 /settings:403 /demo-tools:403 /audit-log:403 /agents:403 /cases/new:403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-01",
+  "expected": "与第 3 章侧边栏对照一致",
+  "actual": "{\"admin\":\"Dashboard,Debtors,Cases,Tasks,Team,Agents,Users,Reports,Commissions,Admin,Settings,Demo Data,Audit Log,Search\",\"manager\":\"Dashboard,Debtors,Cases,Tasks,Team,Agents,Reports,Commissions,Search\",\"agent1\":\"Dashboard,Debtors,Cases,Tasks,Reports,Commissions,Search\",\"finance\":\"Dashboard,Debtors,Cases,Tasks,Reports,Commissions,Search\",\"auditor\":\"Dashboard,Debtors,Cases,Tasks,Team,Agents,Reports,",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-03",
+  "expected": "对应菜单项高亮",
+  "actual": "13 个页面均高亮",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-05",
+  "expected": "成功绿色、失败红色提示条",
+  "actual": "成功=green:Debtor created；失败=red:Name is required",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "NAV-06",
+  "expected": "标题格式“页面名 — Debt Collection CRM”",
+  "actual": "全部符合",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-01",
+  "expected": "Collected Today +100，payments +1",
+  "actual": "null; collected 0→100; count 0→1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-02",
+  "expected": "不计入 Collected Today",
+  "actual": "null; collected 100→100",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-03",
+  "expected": "active=非终态（含 Fully Paid）；legal=Legal 数",
+  "actual": "页面 active=12 legal=2；库 active=14（含 fully_paid 2）legal=2",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "DASH-04",
+  "expected": "due+1；broken+1；overdue=已过期 pending 数",
+  "actual": "null/null; due 0→1; broken 1→2; overdue 页面0/库0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-05",
+  "expected": "两者相等",
+  "actual": "dashboard 134652.75；reports Total 152,742.75",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "DASH-07",
+  "expected": "overdue+1；upcoming=14 天内（含逾期）关联未终结案件的待办",
+  "actual": "overdue 1→2; upcoming 2→3（库 3）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-08",
+  "expected": "四档；只计欠款>0 未终结；最大档满格",
+  "actual": "[{\"lbl\":\"0–30\",\"w\":0,\"v\":0},{\"lbl\":\"31–60\",\"w\":100,\"v\":88374.75},{\"lbl\":\"61–90\",\"w\":0,\"v\":0},{\"lbl\":\"90+\",\"w\":0,\"v\":0}] 期望 [0,88374.75,0,0]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-09",
+  "expected": "≤10 条；按到期排序；徽章 late红/Today金/in Nd灰；链接案件",
+  "actual": "[{\"id\":\"3\",\"cls\":\"is-red\",\"lbl\":\"1d late\"},{\"id\":\"15\",\"cls\":\"is-gold\",\"lbl\":\"Today\"},{\"id\":\"2\",\"cls\":\"is-neutral\",\"lbl\":\"in 1d\"},{\"id\":\"13\",\"cls\":\"is-neutral\",\"lbl\":\"in 10d\"}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-10",
+  "expected": "前四角色可见（≤5，按收款降序）；agent 不可见",
+  "actual": "{\"admin\":\"可见4行降序\",\"manager\":\"可见4行降序\",\"finance\":\"可见4行降序\",\"auditor\":\"可见4行降序\",\"agent1\":\"不可见\"}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-11",
+  "expected": "新记录在最上；≤12 条；可点进案件",
+  "actual": "条数 12; 首条=Call: answered (30s) — QA recent activity call CASE-2026-D013 · System Admin · 2",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DASH-12",
+  "expected": "所有数字/列表/动态只含 agent1 名下",
+  "actual": "页面 {\"collected\":100,\"payments\":1,\"active\":2,\"legal\":1,\"ptpDue\":0,\"ptpOverdue\":0,\"ptpBroken\":0,\"outstanding\":32790,\"opened\":0,\"closed\":0,\"overdueTasks\":1,\"upcoming\":1}；期望 {\"outstanding\":42294,\"active\":2,\"legal\":1,\"collected\":100,\"ptpBroken\":0,\"overdueTasks\":1}；动态案件 13,5,17,9（本人 5,9,13,17）",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "DEB-01",
+  "expected": "结果符合条件；按姓名排序",
+  "actual": "high 5 条; 'Lim' → Sarah Lim; IC → ; phone → Nadia Hassan; 排序=true",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "DEB-02",
+  "expected": "留空被浏览器拦截；只填空格服务端提示 Name is required",
+  "actual": "required 属性=true; 空格提交 → null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "DEB-03",
+  "expected": "回列表并提示 Debtor created；audit create debtor",
+  "actual": "/debtors; guarantor=QA 担保人; audit=Created debtor QA 债务人甲",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "DEB-05",
+  "expected": "列出该债务人案件（号/欠款/状态），可点进",
+  "actual": "14:CASE-2026-D014:16,108.75 | 2:CASE-2026-D002:3,363.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-06",
+  "expected": "列表只含本人案件债务人；越权 403",
+  "actual": "列表 1,5,9（期望 1,5,9）；/debtors/2 → 403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-07",
+  "expected": "可以查看；没有 + New Debtor 与 Edit",
+  "actual": "finance: list 200 new=false detail 200 edit=false; auditor: list 200 new=false detail 200 edit=false",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEB-08",
+  "expected": "提示 Debtor created，但列表里看不到（E-06 现状）",
+  "actual": "null; 列表可见=false",
+  "result": "FAIL",
+  "note": "行为与手册描述一致；E-06 体验问题另列发现"
+ },
+ {
+  "id": "DEB-09",
+  "expected": "原样显示为文本",
+  "actual": "列表转义=true; 详情转义=true",
+  "result": "PASS",
+  "note": ""
+ }
+]

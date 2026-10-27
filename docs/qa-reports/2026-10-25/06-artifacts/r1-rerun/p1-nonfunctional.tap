@@ -1,0 +1,94 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 218.307328
+  type: 'test'
+  ...
+# Subtest: PERF-01 页面响应时间（本地，演示数据量）
+ok 2 - PERF-01 页面响应时间（本地，演示数据量）
+  ---
+  duration_ms: 396.173367
+  type: 'test'
+  ...
+# Subtest: TZ-01 页面时间按 MYT 显示
+not ok 3 - TZ-01 页面时间按 MYT 显示
+  ---
+  duration_ms: 10.014738
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/p1-nonfunctional.qa.js:24:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/21 Found. Redirecting to /cases/21'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/p1-nonfunctional.qa.js:25:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# fatal: not a valid object name: c2355cd
+# tar: This does not look like a tar archive
+# tar: Exiting with failure status due to previous errors
+# Subtest: TZ-02 MYT 00:00–08:00 新开案件的“今日新开”统计（模拟，E-09 复核）
+not ok 4 - TZ-02 MYT 00:00–08:00 新开案件的“今日新开”统计（模拟，E-09 复核）
+  ---
+  duration_ms: 8.968348
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/p1-nonfunctional.qa.js:31:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/22 Found. Redirecting to /cases/22'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/p1-nonfunctional.qa.js:32:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: TZ-03 时区相关代码审阅
+ok 5 - TZ-03 时区相关代码审阅
+  ---
+  duration_ms: 0.972178
+  type: 'test'
+  ...
+# Subtest: DATA-01 旧版本数据库升级（c2355cd → 当前）
+not ok 6 - DATA-01 旧版本数据库升级（c2355cd → 当前）
+  ---
+  duration_ms: 9.746236
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/p1-nonfunctional.qa.js:51:1'
+  failureType: 'testCodeFailure'
+  error: |-
+    Command failed: git archive c2355cd src | tar -x -C "/tmp/qa-old-src"
+    fatal: not a valid object name: c2355cd
+    tar: This does not look like a tar archive
+    tar: Exiting with failure status due to previous errors
+    
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    genericNodeError (node:internal/errors:983:15)
+    wrappedFn (node:internal/errors:537:14)
+    checkExecSyncError (node:child_process:916:11)
+    execSync (node:child_process:988:15)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/p1-nonfunctional.qa.js:53:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: DATA-02 npm run backup
+ok 7 - DATA-02 npm run backup
+  ---
+  duration_ms: 0.539305
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 4
+# fail 3
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1549.662091

@@ -1,0 +1,226 @@
+[
+ {
+  "id": "B-1",
+  "expected": "login + menus",
+  "actual": "7 accounts log in, menus match",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-2",
+  "expected": "all 200, figures, no NaN/undefined/Error",
+  "actual": "admin:200 manager:200 agent1:200 agent2:200 agent3:200 finance:200 auditor:200",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-3",
+  "expected": "12 rows; 150 × 11, last 10,150",
+  "actual": "rows=12 first=150 last=10150",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-4",
+  "expected": "Partial Paid; contract 10,696.06; settlement shown",
+  "actual": "Payment RCPT-2026-0001 recorded; contract=10,696.06 settle=10,394.41 status=partial_paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-5",
+  "expected": "at most RM 10304.84 (= 10,000 + 2 months 1.5% to 2026-03-02); then fully paid; dialog max = settlement",
+  "actual": "11800 → Amount exceeds what is owed on 2026-03-02: at most RM 10304.84; 10304.84 → Payment RCPT-2026-0002 recorded, status fully_paid; dialog max=10394.41",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-6",
+  "expected": "Payment updated; Payment voided; balance back",
+  "actual": "Payment updated; Payment voided; 10646.06 → 10696.06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-7",
+  "expected": "one Pay button on the first unpaid row; amount = min(row, settlement)",
+  "actual": "row 0 2026-09-29 outstanding=42.75 prefill=42.75 settle=2932.65",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-8",
+  "expected": "PTP created / PTP payment recorded / plan created / plan cancelled",
+  "actual": "PTP created / PTP payment recorded / Installment plan created / Installment plan cancelled",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-9",
+  "expected": "Restructured; locked; Restructure undone; balance back to 10,696.06",
+  "actual": "Restructured; locked=true; Restructure undone; contract=10,696.06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-10",
+  "expected": "Call logged / Note added / Status updated; timeline newest first",
+  "actual": "Call logged / Note added / Status updated; status_change,note,call",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-11",
+  "expected": "Task created / Task completed",
+  "actual": "Task created / Task completed",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-12",
+  "expected": "200 + three attachments with rows",
+  "actual": "reports 200; \"cases-detailed.csv\" 23 lines; \"outstanding-by-status.csv\" 11 lines; \"agent-performance.csv\" 4 lines",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-13",
+  "expected": "Settlement recorded / Settlement voided",
+  "actual": "Settlement recorded / Settlement voided",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-14",
+  "expected": "200; print button; key figures",
+  "actual": "200; print=true; overdue line=\"Overdue RM 0.00\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-15",
+  "expected": "404/403, no data",
+  "actual": "404",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-16",
+  "expected": "no action buttons/status select; writes 403",
+  "actual": "buttons=true select=false posts=403,403,403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "B-17",
+  "expected": "every action of B-3…B-13 logged and visible on /audit-log",
+  "actual": "all 14 actions logged",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-CASE-04",
+  "expected": "Case created; CASE-2026-NNNN; timeline; audit",
+  "actual": "Case created; CASE-2026-0004; \"Case CASE-2026-0004 created\"; audit=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-CASE-08",
+  "expected": "edit agent/priority/remark → Saved; audit old→new",
+  "actual": "Saved; audit=\"Updated case CASE-2026-0004: agent_id: 1 → 2; priority: medium → high; remark: — → S-CASE-08 remark\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-03",
+  "expected": "contract 1,200.00",
+  "actual": "1,200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-07",
+  "expected": "today: settlement 10,000.00; yesterday: 10,000 + 4.84",
+  "actual": "today settle=10,000.00 (contract interest 1800); yesterday settle=10004.84 (want +4.84, 31-day month)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-09",
+  "expected": "created; Loan Start Date shows the opened date \"(unset, defaults to opened)\"",
+  "actual": "Case created; {\"loan_start_date\":null,\"opened_at\":\"2026-10-27 02:05:42\"}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-12",
+  "expected": "24 → error; 12 → saved + list; new 13.2% loan refused under 12; back to 18 → saved",
+  "actual": "24 → Max annual interest rate must be above 0 and at most 18% (the legal limit); 12 → Company settings saved; \"Open loans above the 12% p.a. cap: CASE-2026-D002 (18%), CASE-2026-D004 (18%), CASE-2026-D014 (18%), CASE-2026-D020 (18%), CASE-2026-0001 (18%), CASE-2026-0003 (18%), CASE-2026-0004 (17.14%), CASE-2026-0005 (17.14%), CASE-2026-0006 (18%), CASE-2026-0007 (18%)\"; 1.1%/月 → Interest rate exceeds the 12% p.a. limit (this loan: 13.2% p.a.); 18 → Company settings saved",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-14a",
+  "expected": "new 18% case under cap 12: agent change Saved; term change refused",
+  "actual": "Saved / Interest rate exceeds the 12% p.a. limit (this loan: 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-14b",
+  "expected": "demo case 2 under cap 12: agent change Saved",
+  "actual": "Interest rate exceeds the 12% p.a. limit (this loan: 18% p.a.) (stored interest_amount=228 on a monthly loan; the server treats it as 0 → \"terms changed\")",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "S-PAY-12",
+  "expected": "consecutive; an identical resubmit within 10 s returns the same receipt (G-21)",
+  "actual": "6 → 7; identical resubmit → 7, rows with S12-b=1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-SCH-06",
+  "expected": "statuses",
+  "actual": "after150=Paid,Overdue,Pending,Pending,Pending,Pending | after250=Paid,Paid,Partially Paid,Pending,Pending,Pending",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-TASK-11",
+  "expected": "open → agent 1; done stays 3; audit \"N open task(s) reassigned\"",
+  "actual": "Saved; [{\"title\":\"S11 open\",\"agent_id\":1},{\"title\":\"S11 done\",\"agent_id\":3}]; \"Updated case CASE-2026-D019: agent_id: 3 → 1; 1 open task(s) reassigned\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-DEB-01",
+  "expected": "debtor list + global search find Ravi by IC; IC month 00",
+  "actual": "IC=850020-00-5533; /debtors?q=850020 → Ravi Chandran; /search?q=850020-00 → cases 15,3",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-SET-06",
+  "expected": "all present",
+  "actual": "all 13 present; contract line=\"Outstanding (contract, to maturity) RM 16,108.75\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-E2E-04",
+  "expected": "reassign moves pending tasks; newbie sees only case 19; disable → logged out",
+  "actual": "Saved; tasks moved=true; newbie cases=19; scope ok=true; disabled→logout=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-AUTH-05",
+  "expected": "401 × 5; 6th 429 \"Too many attempts. Try again later.\"; other IP unaffected",
+  "actual": "fails=401,401,401,401,401 sixth=429; from 127.0.0.1=302",
+  "result": "PASS",
+  "note": ""
+ }
+]

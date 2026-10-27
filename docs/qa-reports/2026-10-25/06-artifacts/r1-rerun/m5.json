@@ -1,0 +1,79 @@
+[
+ {
+  "id": "E2E-02",
+  "expected": "各检查点通过",
+  "actual": "建计划:✓(333.33/333.33/333.34 ptp) | 履行第1期:✗(ptp) | 取消计划:✓(fulfilled,broken,broken negotiation) | 转 Legal:✗(legal 1→1; 还款后 partial_paid)",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "E2E-05",
+  "expected": "各检查点通过",
+  "actual": "核对:✓({\"col\":\"4,493.89\",\"rate\":\"5\",\"earned\":\"224.69\",\"settled\":\"100.00\",\"pending\":\"124.69\"}) | 全额结算:✓(0.00) | 作废+部分结算:✓(104.69) | agent1 只见自己:✓(Lim Wei Sheng) | CSV 与页面一致:✓(不一致 无；CSV 未取整值 无)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "E2E-06",
+  "expected": "全部拒绝（403/404）；无数据被改；搜索/报表/佣金看不到 agent2",
+  "actual": "GET /cases/2:404 GET /cases/2/statement:404 GET /cases/2/edit:403 GET /debtors/2:403 GET /users:403 GET /settings:403 GET /audit-log:403 GET /agents:403 GET /cases/14:404 fulfill:403 break:403 task complete:302/null; 数据未变=true; 泄露=false",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SEC-01",
+  "expected": "不报错，不返回额外数据",
+  "actual": "/search:200:0 /cases:200:0 /cases:200:0 /cases:200:0 /debtors:200:0 /debtors:200:14 /tasks:200:0 /audit-log:200:0 /agents:200:0 /commissions:200:0 /reports:200:0 | /debtors 不过滤时 14 条（risk 非法值被忽略） | agent1 search 结果 0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-04",
+  "expected": "bcrypt 哈希，无明文",
+  "actual": "admin:$2a$10$… manager:$2a$10$… agent1:$2a$10$…",
+  "result": "PASS",
+  "note": "代价因子 8（bcrypt.hashSync(pw, 8)），低于常见推荐 10–12"
+ },
+ {
+  "id": "SEC-05",
+  "expected": "启动失败并报错 SESSION_SECRET must be set in production",
+  "actual": "exit=1; stderr=Error: SESSION_SECRET must be set in production",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-06",
+  "expected": "确认当前无 CSRF 令牌（已知风险 E-05，上线前评估）",
+  "actual": "跨站 Origin 的 POST → null（ptp→ptp）; Set-Cookie: connect.sid=…; Path=/; Expires=Tue, 27 Oct 2026 03:49:42 GMT; HttpOnly（无 SameSite/Secure）",
+  "result": "FAIL",
+  "note": "按手册此用例为“确认已知风险”，结果判 PASS；风险本身列为发现"
+ },
+ {
+  "id": "SEC-07",
+  "expected": "同 AUTH-05",
+  "actual": "见 m1 AUTH-05（PASS）及 restart 验证",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SEC-08",
+  "expected": "正式环境停用演示账号、移除 /demo-accounts 与 Demo Data",
+  "actual": "未访问线上环境（范围限制）。代码层面：/demo-accounts 与 /demo-tools 无环境开关（src/app.js:30, :53），render.yaml 启动即 seed 演示账号；本地 /demo-accounts → 200",
+  "result": "BLOCKED",
+  "note": "不得访问线上 Render；属已知延后项（正式上线待办第 6 节）"
+ },
+ {
+  "id": "SMOKE-01",
+  "expected": "冒烟项通过",
+  "actual": "5 账号登录 true,true,true,true,true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SMOKE-02",
+  "expected": "冒烟项通过",
+  "actual": "dashboard 200",
+  "result": "PASS",
+  "note": ""
+ }
+]

@@ -1,0 +1,604 @@
+TAP version 13
+# Subtest: setup
+not ok 1 - setup
+  ---
+  duration_ms: 575.954733
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:20:1'
+  failureType: 'testCodeFailure'
+  error: 'debtor create {"status":302,"location":"/debtors","ok":null,"err":null,"text":"Found. Redirecting to /debtors","headers":{}}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: 'Debtor created'
+  actual: ~
+  operator: '=='
+  stack: |-
+    newDebtor (/home/user/debt-collection-crm-demo/tests/qa/_client.js:89:10)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:22:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: PTP-01 新建 PTP（agent1 本人案件）
+not ok 2 - PTP-01 新建 PTP（agent1 本人案件）
+  ---
+  duration_ms: 4.991667
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:28:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:29:8)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-02 金额上限
+not ok 3 - PTP-02 金额上限
+  ---
+  duration_ms: 12.130755
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:35:1'
+  failureType: 'testCodeFailure'
+  error: 'PTP-02: expected 浏览器 max；服务端 Amount exceeds outstanding; actual max 属性=false; null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:39:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-03 履行
+not ok 4 - PTP-03 履行
+  ---
+  duration_ms: 1.435641
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:41:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:42:13)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-05 重复履行
+not ok 5 - PTP-05 重复履行
+  ---
+  duration_ms: 0.313741
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:51:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:52:13)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-04 违约
+not ok 6 - PTP-04 违约
+  ---
+  duration_ms: 6.856424
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:57:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:58:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-06 新建分期计划
+not ok 7 - PTP-06 新建分期计划
+  ---
+  duration_ms: 4.765872
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:68:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:69:8)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-07 期数校验
+not ok 8 - PTP-07 期数校验
+  ---
+  duration_ms: 10.447947
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:76:1'
+  failureType: 'testCodeFailure'
+  error: 'PTP-07: expected 浏览器拦截；服务端 Installments must be 2–60; actual 1→null; 61→null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:80:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-08 总额过小
+not ok 9 - PTP-08 总额过小
+  ---
+  duration_ms: 3.784299
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:82:1'
+  failureType: 'testCodeFailure'
+  error: 'PTP-08: expected Total too small for the number of installments; actual null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:84:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-09 逐期履行
+not ok 10 - PTP-09 逐期履行
+  ---
+  duration_ms: 0.7184
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:86:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:87:13)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-10 取消计划
+not ok 11 - PTP-10 取消计划
+  ---
+  duration_ms: 10.226511
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:92:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    qa (/home/user/debt-collection-crm-demo/tests/qa/_client.js:25:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:96:16)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-11 权限与范围
+ok 12 - PTP-11 权限与范围
+  ---
+  duration_ms: 53.45232
+  type: 'test'
+  ...
+# Subtest: RS-01 按钮可见性
+not ok 13 - RS-01 按钮可见性
+  ---
+  duration_ms: 2.889686
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:115:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:116:7)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-02 弹窗信息
+not ok 14 - RS-02 弹窗信息
+  ---
+  duration_ms: 17.449242
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:126:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-02: expected 显示截至今天剩余本金/未付利息；默认今天；下限=起算日/最近还款日/上次重组次日最晚者；上限今天; actual 本金 null 利息 null（期望 1,111.35）; min=null max=null value=null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: ~
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:131:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-05 必填校验（含留空利率不当 0%）
+not ok 15 - RS-05 必填校验（含留空利率不当 0%）
+  ---
+  duration_ms: 17.077866
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:133:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:140:13)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-06 期限范围
+not ok 16 - RS-06 期限范围
+  ---
+  duration_ms: 9.743934
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:143:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-06: expected 0/121/1.5 均提示 Tenure must be 1–120 months; actual  |  | '
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:147:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-07 生效日越界
+not ok 17 - RS-07 生效日越界
+  ---
+  duration_ms: 8.634465
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:149:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-07: expected Effective date must be between 下限 and 今天; actual null | null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:154:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-08 重组成功
+not ok 18 - RS-08 重组成功
+  ---
+  duration_ms: 4.174738
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:157:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:159:9)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-09 新还款计划
+not ok 19 - RS-09 新还款计划
+  ---
+  duration_ms: 4.045963
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:165:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of null (reading '0')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:168:27)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-10 重组历史
+not ok 20 - RS-10 重组历史
+  ---
+  duration_ms: 3.262655
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:170:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-10: expected 卡片显示生效日/新条款/期限/操作人/截点本金/挂账欠息/原因；Superseded 未还期显示 Restructured; actual '
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:174:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-11 欠息不再生息
+not ok 21 - RS-11 欠息不再生息
+  ---
+  duration_ms: 3.568094
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:176:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-11: expected 挂账 139.50；Total 11,478.06；总利息 2,478.06; actual Total=null Interest=null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:178:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-12 旧还款锁定
+not ok 22 - RS-12 旧还款锁定
+  ---
+  duration_ms: 4.518333
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:180:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:181:49)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-13 新还款日期下限
+not ok 23 - RS-13 新还款日期下限
+  ---
+  duration_ms: 7.253662
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:187:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-13: expected 日期框 min=生效日；绕过提示 Payment date must be on or after the restructure date (日期); actual null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:190:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-14 案件条款锁定
+not ok 24 - RS-14 案件条款锁定
+  ---
+  duration_ms: 3.302065
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:192:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    caseRow (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:12:23)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:193:70)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-12 重组后的履行日期
+not ok 25 - PTP-12 重组后的履行日期
+  ---
+  duration_ms: 3.47326
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:200:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:202:13)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-16 撤销受限
+not ok 26 - RS-16 撤销受限
+  ---
+  duration_ms: 3.497417
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:209:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:211:14)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-15 撤销重组
+not ok 27 - RS-15 撤销重组
+  ---
+  duration_ms: 14.316723
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:218:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:222:13)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-17 多次重组
+not ok 28 - RS-17 多次重组
+  ---
+  duration_ms: 2.797685
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:226:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:227:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-03 没有可选日期（当天已重组）
+not ok 29 - RS-03 没有可选日期（当天已重组）
+  ---
+  duration_ms: 2.310126
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:241:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:242:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-18 Fixed 重组
+not ok 30 - RS-18 Fixed 重组
+  ---
+  duration_ms: 2.166839
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:247:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:248:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-19 权限
+not ok 31 - RS-19 权限
+  ---
+  duration_ms: 10.700371
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:253:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (/home/user/debt-collection-crm-demo/tests/qa/_client.js:24:45)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:260:82)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-20 不可重组
+not ok 32 - RS-20 不可重组
+  ---
+  duration_ms: 3.637062
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:262:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:265:58)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-21 已到期贷款重组
+not ok 33 - RS-21 已到期贷款重组
+  ---
+  duration_ms: 2.677196
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:270:1'
+  failureType: 'testCodeFailure'
+  error: 'case create failed 302 /cases/new Found. Redirecting to /cases/new'
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    newCase (/home/user/debt-collection-crm-demo/tests/qa/_client.js:95:17)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:271:14)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-22 演示案件 14
+not ok 34 - RS-22 演示案件 14
+  ---
+  duration_ms: 19.243286
+  type: 'test'
+  location: '/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:277:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-22: expected 挂账行、新计划、重组历史（10 天前、1.2%/月、18 个月、原因）; actual 首行 {"due":"2026-11-17","arrears":true,"exp":"239.95","paid":"0.00","out":"239.95","status":"Pending"}; 行数 19'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (/home/user/debt-collection-crm-demo/tests/qa/_client.js:71:10)
+    TestContext.<anonymous> (/home/user/debt-collection-crm-demo/tests/qa/m3-ptp-rs.qa.js:280:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 1
+# fail 33
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 1725.718876
