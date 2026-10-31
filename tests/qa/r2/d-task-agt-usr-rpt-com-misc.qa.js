@@ -109,7 +109,7 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
     const h = (await man.get('/agents')).text;
     const rows = [...h.matchAll(/<tr><td><a href="\/agents\/(\d+)">([^<]+)<\/a><\/td><td>[^<]*<\/td>\s*<td class="num">(\d+)<\/td><td class="num">([\d,.]+)<\/td>\s*<td class="num">([\d.]+)<\/td><td class="num">([\d,.]+)<\/td>[\s\S]*?<div class="fill ([^"]*)" style="width: (\d+)%"><\/div><\/div> (\d+)%/g)]
       .map(m => ({ id: +m[1], collected: num(m[4]), rate: +m[5], comm: num(m[6]), cls: m[7], pct: +m[9] }));
-    const dbColl = Object.fromEntries(qa('SELECT a.id, COALESCE((SELECT SUM(amount) FROM payments p WHERE p.agent_id=a.id),0) s FROM agents a').map(r => [r.id, r.s]));
+    const dbColl = Object.fromEntries(qa('SELECT a.id, COALESCE((SELECT SUM(amount) FROM payments p WHERE p.agent_id=a.id AND substr(p.payment_date, 1, 7) = ?),0) s FROM agents a', today().slice(0, 7)).map(r => [r.id, r.s]));
     const ok = rows.length > 0 && rows.every((r, i) => (i === 0 || rows[i - 1].collected >= r.collected) && Math.abs(r.collected - dbColl[r.id]) < 0.01 && Math.abs(r.comm - Math.round(r.collected * r.rate) / 100) < 0.011
       && (r.pct >= 100 ? r.cls === 'is-green' : r.pct < 50 ? r.cls === 'is-red' : r.cls === ''));
     check('AGT-01', 'by payments.agent_id; desc; commission; colours', ok, rows.map(r => `${r.id}:${r.collected}×${r.rate}%=${r.comm} ${r.pct}%${r.cls}`).join(' | '));
@@ -136,7 +136,7 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
   });
   await step('AGT-05', 'agent detail', async () => {
     const t = strip((await man.get('/agents/1')).text);
-    check('AGT-05', 'contact, department, target, collected, cases, rate, attainment + bar, cases list', /Contact 012-3456789/.test(t) && /Department Consumer/.test(t) && /Target 500,000\.00/.test(t) && /Collected [\d,.]+/.test(t) && /Case Count \d+/.test(t) && /Commission 5%/.test(t) && /Target Attainment: \d+%/.test(t) && /Assigned Cases/.test(t), t.slice(t.indexOf('Contact'), t.indexOf('Contact') + 200));
+    check('AGT-05', 'contact, department, target, collected, cases, rate, attainment + bar, cases list', /Contact 012-3456789/.test(t) && /Department Consumer/.test(t) && /Monthly Target 500,000\.00/.test(t) && /Collected \(\d{4}-\d{2}\) [\d,.]+/.test(t) && /Case Count \d+/.test(t) && /Commission 5%/.test(t) && /Target Attainment \(\d{4}-\d{2}\): \d+%/.test(t) && /Assigned Cases/.test(t), t.slice(t.indexOf('Contact'), t.indexOf('Contact') + 200));
   });
   await step('AGT-06', 'auditor read-only; agent1/finance 403', async () => {
     const l = (await aud.get('/agents')).text, d = (await aud.get('/agents/1')).text;

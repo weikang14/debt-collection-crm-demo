@@ -7,11 +7,11 @@
 </div>
 <div class="card kv">
   <div><span>Contact</span><span class="mono"><%= agent.contact||'—' %></span></div><div><span>Department</span><%= agent.department||'—' %></div>
-  <div><span>Target</span><%= h.money(agent.target_amount) %></div><div><span>Collected</span><%= h.money(agent.collected) %></div>
+  <div><span>Monthly Target</span><%= h.money(agent.target_amount) %></div><div><span>Collected (<%= month %>)</span><%= h.money(agent.collected) %></div>
   <div><span>Case Count</span><%= agent.case_count %></div><div><span>Commission</span><%= agent.commission_rate %>%</div>
   <div><span>Active</span><%= agent.active ? 'Yes' : 'No' %></div>
 </div>
-<p>Target Attainment: <%= attainment %>%</p>
+<p>Target Attainment (<%= month %>): <%= attainment %>%</p>
 <div class="bar"><div class="fill <%= barCls %>" style="width: <%= pct %>%"></div></div>
 <h2>Assigned Cases</h2>
 <% if (!cases.length) { %><%- include('../partials/empty', { msg: 'No cases assigned to this agent.' }) %><% } else { %>

@@ -36,6 +36,9 @@ router.get('/', requireLogin, (req, res) => {
   const performance = all(`SELECT a.name, a.target_amount, a.commission_rate, COALESCE(SUM(CASE WHEN date(p.payment_date) BETWEEN ? AND ? THEN p.amount ELSE 0 END),0) collected
     FROM agents a LEFT JOIN payments p ON p.agent_id=a.id
     GROUP BY a.id ORDER BY collected DESC`, [from, to]);
+  // The target is monthly: over a longer range it counts once for each calendar month the range touches.
+  const months = Math.max(1, (+to.slice(0, 4) - +from.slice(0, 4)) * 12 + (+to.slice(5, 7) - +from.slice(5, 7)) + 1) || 1;
+  for (const r of performance) r.target_amount *= months;
   // Each export leaves an audit record of who took what (G-25).
   const exported = (name, rows) => logAction(req, 'export', 'report', null, `Exported ${name} (${rows.length} rows)`);
   if (req.query.export === 'cases') {
@@ -58,6 +61,6 @@ router.get('/', requireLogin, (req, res) => {
   // K-04: what came in over the range, split into interest and principal (interest-first ledger).
   const collected = get(`SELECT COUNT(p.id) n, COALESCE(SUM(p.amount),0) total, COALESCE(SUM(p.interest_part),0) interest, COALESCE(SUM(p.principal_part),0) principal
     FROM payments p JOIN cases ON cases.id=p.case_id WHERE ${w.clause} AND date(p.payment_date) BETWEEN ? AND ?`, [...w.params, from, to]);
-  res.render('reports/index', { title: 'Reports', from, to, collection, outstanding, performance, collected });
+  res.render('reports/index', { title: 'Reports', from, to, collection, outstanding, performance, collected, months });
 });
 module.exports = router;

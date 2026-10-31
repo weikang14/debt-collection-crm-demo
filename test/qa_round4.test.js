@@ -232,6 +232,21 @@ test('F-35: personal data is removed only for debtors past the retention period,
   assert.match(call(debtorsRouter, 'get', '/:id/edit', { params: { id: '901' } }).redirect, /^\/debtors\/901\?err=/);
 });
 
+test('the target is monthly: the Agents pages count this month; Reports scale the target to the range', () => {
+  const agentsRouter = require('../src/routes/agents');
+  db.run("INSERT INTO agents (id,name,commission_rate,target_amount) VALUES (950,'Monthly',10,1000)");
+  const id = newCase({ interest_amount: '0', loan_start_date: monthsAgo(3) });
+  const lastMonth = dayjs(today).subtract(1, 'month').format('YYYY-MM') + '-15';
+  db.run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,agent_id) VALUES (?,'MT-1',?,300,950),(?,'MT-2',?,200,950)", [id, lastMonth, id, today]);
+  assert.strictEqual(call(agentsRouter, 'get', '/').locals.agents.find(a => a.id === 950).collected, 200);
+  const show = call(agentsRouter, 'get', '/:id', { params: { id: '950' } }).locals;
+  assert.deepStrictEqual([show.agent.collected, show.attainment, show.month], [200, 20, today.slice(0, 7)]);
+  const rep = call(reportsRouter, 'get', '/', { query: { from: lastMonth.slice(0, 8) + '01', to: today } }).locals;
+  assert.strictEqual(rep.months, 2);
+  assert.deepStrictEqual(['collected', 'target_amount'].map(k => rep.performance.find(r => r.name === 'Monthly')[k]), [500, 2000]);
+  assert.strictEqual(call(reportsRouter, 'get', '/', { query: {} }).locals.performance.find(r => r.name === 'Monthly').target_amount, 1000);
+});
+
 test('one debtor per IC/Passport; a returning debtor is recognised from the removal record', () => {
   // runs after the F-35 test: debtor 901 (IC 800101-01-0001) was removed
   const create = ic => call(debtorsRouter, 'post', '/', { body: { name: 'Returning', ic_passport: ic, risk_level: 'low' } }).redirect;

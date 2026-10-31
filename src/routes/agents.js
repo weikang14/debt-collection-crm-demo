@@ -31,9 +31,11 @@ function agentFields(b) {
   return { name, commission_rate, target_amount };
 }
 
+// The target is monthly (decided 2026-11-01), so Collected, Commission and Attainment here are this
+// month's, by payment date; earlier months are on the Commissions page. The first ? is the month (YYYY-MM).
 const STAT = `SELECT a.*,
   (SELECT COUNT(*) FROM cases WHERE agent_id=a.id) AS case_count,
-  (SELECT COALESCE(SUM(p.amount),0) FROM payments p WHERE p.agent_id=a.id) AS collected`; // credited to the collector (D-11)
+  (SELECT COALESCE(SUM(p.amount),0) FROM payments p WHERE p.agent_id=a.id AND substr(p.payment_date, 1, 7) = ?) AS collected`; // credited to the collector (D-11)
 
 router.get('/', requireLogin, canView, (req, res) => {
   const where = [];
@@ -42,9 +44,10 @@ router.get('/', requireLogin, canView, (req, res) => {
   if (req.query.status === 'active') where.push('a.active = 1');
   else if (req.query.status === 'inactive') where.push('a.active = 0');
   const clause = where.length ? 'WHERE ' + where.join(' AND ') : '';
-  const agents = all(`${STAT} FROM agents a ${clause} ORDER BY collected DESC`, params);
+  const month = todayMYT().slice(0, 7);
+  const agents = all(`${STAT} FROM agents a ${clause} ORDER BY collected DESC`, [month, ...params]);
   const departments = all("SELECT DISTINCT department FROM agents WHERE department IS NOT NULL AND department <> '' ORDER BY department").map(r => r.department);
-  res.render('agents/list', { title: 'Agents', agents, departments });
+  res.render('agents/list', { title: 'Agents', agents, departments, month });
 });
 router.get('/new', requireLogin, canEdit, (req, res) => res.render('agents/form', { title: 'New Agent', agent: {}, action: '/agents' }));
 router.post('/', requireLogin, canEdit, (req, res) => {
@@ -58,12 +61,13 @@ router.post('/', requireLogin, canEdit, (req, res) => {
   res.redirect('/agents?ok=Agent+created');
 });
 router.get('/:id', requireLogin, canView, (req, res) => {
-  const agent = get(`${STAT} FROM agents a WHERE a.id=?`, [req.params.id]);
+  const month = todayMYT().slice(0, 7);
+  const agent = get(`${STAT} FROM agents a WHERE a.id=?`, [month, req.params.id]);
   if (!agent) return res.status(404).render('error', { message: 'Agent not found' });
   const cases = all(`SELECT cases.*, debtors.name AS debtor_name FROM cases JOIN debtors ON debtors.id=cases.debtor_id WHERE agent_id=? ORDER BY opened_at DESC`, [req.params.id])
     .map(c => ({ ...c, settlement: settlementOn(c.id, todayMYT()) }));
   const attainment = agent.target_amount ? Math.round((agent.collected / agent.target_amount) * 100) : 0;
-  res.render('agents/show', { title: agent.name, agent, cases, attainment });
+  res.render('agents/show', { title: agent.name, agent, cases, attainment, month });
 });
 router.get('/:id/edit', requireLogin, canEdit, (req, res) => {
   const agent = get('SELECT * FROM agents WHERE id=?', [req.params.id]);

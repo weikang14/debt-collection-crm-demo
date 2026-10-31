@@ -15,7 +15,8 @@
   <button class="btn btn-gold" type="submit">Filter</button>
 </form>
 <% if (!agents.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>
-<table class="data"><thead><tr><th>Name</th><th>Department</th><th class="num">Case Count</th><th class="num">Collected</th><th class="num">Rate %</th><th class="num">Commission</th><th class="num">Target</th><th>Attainment</th></tr></thead>
+<p class="hint">Collected, commission and attainment are for this month (<%= month %>) against the monthly target; earlier months are on the Commissions page.</p>
+<table class="data"><thead><tr><th>Name</th><th>Department</th><th class="num">Case Count</th><th class="num">Collected</th><th class="num">Rate %</th><th class="num">Commission</th><th class="num">Monthly Target</th><th>Attainment</th></tr></thead>
 <tbody><% agents.forEach(a => {
   const pct = a.target_amount > 0 ? Math.min(100, Math.round(a.collected / a.target_amount * 100)) : 0;
   const cls = pct >= 100 ? 'is-green' : pct >= 50 ? '' : 'is-red';

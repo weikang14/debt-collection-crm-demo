@@ -157,7 +157,7 @@ async function main() {
     rec('COM', `${a.name}.com`, `Commissions ${month}：${a.name} Collected/Earned/Pending`, `Σ 本月 payments.agent_id；× ${a.commission_rate}%；− 已结算 ${set}`, `${coll}/${earned}/${r2(F.of(earned).sub(String(set)))}`, row ? `${row.collected}/${row.earned}/${row.pending}` : 'n/a');
     rec('COM', `${a.name}.rpt`, `Reports 本月业绩 = Commissions：${a.name}`, '同一口径', `${coll}/${earned}`, pr ? `${pr.collected}/${pr.commission}` : 'n/a');
     rec('COM', `${a.name}.csv`, `agent-performance.csv：${a.name}`, '同一口径（数值）', `${Number(coll)}/${Number(earned)}`, pc ? `${pc[1]}/${pc[3]}` : 'n/a');
-    rec('COM', `${a.name}.agents`, `Agents 页累计 Collected/Commission：${a.name}`, 'Σ 全部 payments.agent_id', `${byAgent(a.id)}/${commission(byAgent(a.id), a.commission_rate)}`, al ? `${al.collected}/${al.commission}` : 'n/a');
+    rec('COM', `${a.name}.agents`, `Agents 页本月 Collected/Commission：${a.name}`, '同一口径（月目标，11-01）', `${coll}/${earned}`, al ? `${al.collected}/${al.commission}` : 'n/a');
   }
 
   // ---------- demo data (B-03 / F-11) ----------
