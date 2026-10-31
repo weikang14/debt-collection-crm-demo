@@ -7,6 +7,7 @@ const { debtorFilter } = require('../utils/debtorFilter');
 const { MAX_NAME, refill } = require('../utils/forms');
 const { settlementOn } = require('../services/payments');
 const { todayMYT } = require('../utils/helpers');
+const { ANONYMIZED } = require('../services/retention');
 const router = express.Router();
 
 const { requirePerm, can } = require('../utils/permissions');
@@ -64,6 +65,7 @@ router.get('/:id/edit', requireLogin, canEdit, (req, res) => {
   if (!debtor) return res.status(404).render('error', { message: 'Debtor not found' });
   const ids = reachableDebtorIds(req.session.user);
   if (ids !== null && !ids.includes(debtor.id)) return res.status(403).render('error', { message: 'Forbidden' });
+  if (debtor.anonymized_at) return res.redirect(`/debtors/${debtor.id}?err=${encodeURIComponent(ANONYMIZED)}`);
   res.render('debtors/form', { title: 'Edit Debtor', debtor: refill(res, debtor), action: `/debtors/${debtor.id}` });
 });
 router.post('/:id', requireLogin, canEdit, (req, res) => {
@@ -75,7 +77,7 @@ router.post('/:id', requireLogin, canEdit, (req, res) => {
   if (formErr) return res.redirect(`/debtors/${req.params.id}/edit?err=${encodeURIComponent(formErr)}`);
   const old = get('SELECT * FROM debtors WHERE id=?', [req.params.id]);
   if (!old) return res.status(404).render('error', { message: 'Debtor not found' });
-  if (old.anonymized_at) return res.redirect(`/debtors/${old.id}?err=${encodeURIComponent('This debtor’s personal data was removed after the retention period')}`);
+  if (old.anonymized_at) return res.redirect(`/debtors/${old.id}?err=${encodeURIComponent(ANONYMIZED)}`);
   const sensitive = can(req, 'debtors.sensitive'); // otherwise the form had no salary / guarantor fields: keep them
   const next = { name, ic_passport: S(b.ic_passport), company: S(b.company), phone: S(b.phone), email: S(b.email), address: S(b.address),
     employer: S(b.employer), salary: sensitive ? Number(b.salary) || null : old.salary, risk_level: b.risk_level || 'medium',

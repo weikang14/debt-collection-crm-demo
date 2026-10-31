@@ -5,7 +5,7 @@ const { isISODate } = require('../utils/forms');
 const { requirePerm } = require('../utils/permissions');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { dateTimeFmt } = require('../utils/helpers');
-const { logAction } = require('../utils/audit');
+const { logAction, logAccess } = require('../utils/audit');
 const router = express.Router();
 
 router.get('/', requireLogin, requirePerm('audit.view'), (req, res) => {
@@ -15,6 +15,9 @@ router.get('/', requireLogin, requirePerm('audit.view'), (req, res) => {
   const where = []; const params = [];
   if (req.query.action) { where.push('action = ?'); params.push(req.query.action); }
   if (req.query.entity) { where.push('entity_type = ?'); params.push(req.query.entity); }
+  // Text search, blind to dashes and spaces so an IC matches however it is typed (F-35: finding a removed debtor).
+  const q = String(req.query.q || '').replace(/[-\s]/g, '');
+  if (q) { where.push("replace(replace(details, '-', ''), ' ', '') LIKE ?"); params.push(`%${q}%`); }
   // Date filters are Malaysia dates; created_at is stored in UTC.
   if (isISODate(req.query.from)) { where.push("date(created_at,'+8 hours') >= ?"); params.push(req.query.from); }
   if (isISODate(req.query.to)) { where.push("date(created_at,'+8 hours') <= ?"); params.push(req.query.to); }
@@ -27,6 +30,7 @@ router.get('/', requireLogin, requirePerm('audit.view'), (req, res) => {
     return sendCsv(res, file, toCsv(['Time', 'User', 'Action', 'Entity', 'Entity ID', 'Details', 'IP'], rows));
   }
   const logs = all(`SELECT * FROM ${table} ${clause} ORDER BY created_at DESC, id DESC LIMIT 200`, params);
+  if (q) logAccess(req, 'search', access ? 'access_log' : 'audit_log', null, `q=${req.query.q} (${logs.length} found)`);
   const actions = all(`SELECT DISTINCT action FROM ${table} ORDER BY action`);
   const entities = all(`SELECT DISTINCT entity_type FROM ${table} ORDER BY entity_type`);
   res.render('audit/index', { title: 'Audit Log', logs, actions, entities, access });

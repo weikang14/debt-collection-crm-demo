@@ -97,7 +97,8 @@ router.post('/anonymize', requireLogin, adminOnly, (req, res) => {
   const { years, list } = dueForRemoval();
   for (const d of list) {
     anonymizeDebtor(d.id);
-    logAction(req, 'anonymize', 'debtor', d.id, `Removed the personal data of debtor #${d.id} (${years}-year retention period; last activity ${d.last})`);
+    // The audit log keeps who the debtor was (name and IC, decided 2026-11-01), so it stays known they were on file.
+    logAction(req, 'anonymize', 'debtor', d.id, `Removed the personal data of debtor #${d.id} ${d.name}${d.ic ? ` (IC ${d.ic})` : ''} — ${years}-year retention period; last activity ${d.last}`);
   }
   res.redirect('/settings?ok=' + encodeURIComponent(list.length ? `Personal data removed for ${list.length} debtor(s)` : 'No debtor is past the retention period'));
 });

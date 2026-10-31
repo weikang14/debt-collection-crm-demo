@@ -10,7 +10,7 @@
     "seed": "node --no-warnings src/db/seed.js",
     "reset": "node -e \"require('fs').rmSync('data/crm.db',{force:true})\" && npm run seed",
     "backup": "node src/db/backup.js",
-    "test": "node --no-warnings --test"
+    "test": "node --no-warnings --require ./tests/tmp-db-cleanup.js --test"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

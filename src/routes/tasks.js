@@ -5,6 +5,7 @@ const { requirePerm } = require('../utils/permissions');
 const { caseWhere, isScoped } = require('../utils/scope');
 const { logAction } = require('../utils/audit');
 const { isISODate, MAX_NAME } = require('../utils/forms');
+const { caseAnonymized, ANONYMIZED } = require('../services/retention');
 const router = express.Router();
 
 // No field visits in the moneylender edition (D-05): 'visit' stays valid in the
@@ -64,6 +65,7 @@ router.post('/new', requireLogin, requirePerm('tasks.manage'), (req, res) => {
   if (b.case_id) {
     const caseRow = get(`SELECT id, agent_id, status FROM cases WHERE id=? AND ${w.clause}`, [b.case_id, ...w.params]);
     if (!caseRow) return res.redirect('/tasks?err=Invalid+case');
+    if (caseAnonymized(caseRow.id)) return res.redirect('/tasks?err=' + encodeURIComponent(ANONYMIZED));
     // N-08: a bankrupt / deceased case is worked through legal channels only.
     if (['bankruptcy', 'deceased'].includes(caseRow.status) && (b.type || 'follow_up') !== 'legal') {
       return res.redirect('/tasks?err=' + encodeURIComponent('Only legal tasks can be added to a bankrupt or deceased case'));
@@ -92,6 +94,8 @@ router.post('/:id', requireLogin, requirePerm('tasks.manage'), (req, res) => {
   const task = get('SELECT * FROM tasks WHERE id=?', [req.params.id]);
   if (!task) return res.redirect('/tasks?err=Not+found');
   if (u.role === 'agent' && task.agent_id !== u.agent_id) return res.redirect('/tasks?err=Forbidden');
+  // Completing a leftover task stays allowed (status only); its text can't be rewritten.
+  if (task.case_id && caseAnonymized(task.case_id)) return res.redirect('/tasks?err=' + encodeURIComponent(ANONYMIZED));
   const b = req.body;
   const formErr = taskFormError(b);
   if (formErr) return res.redirect(`/tasks?err=${encodeURIComponent(formErr)}`);

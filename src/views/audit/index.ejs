@@ -27,8 +27,9 @@
   </label>
   <label>From <input type="date" name="from" value="<%= query.from||'' %>"></label>
   <label>To <input type="date" name="to" value="<%= query.to||'' %>"></label>
+  <label>Search <input name="q" value="<%= query.q||'' %>" placeholder="Name, IC, case or receipt no"></label>
   <button class="btn btn-gold" type="submit">Apply</button>
-  <a class="btn" href="/audit-log?<%= new URLSearchParams({ ...(isAccess ? { log: 'access' } : {}), action: query.action||'', entity: query.entity||'', from: query.from||'', to: query.to||'', format: 'csv' }) %>">Export CSV</a>
+  <a class="btn" href="/audit-log?<%= new URLSearchParams({ ...(isAccess ? { log: 'access' } : {}), action: query.action||'', entity: query.entity||'', from: query.from||'', to: query.to||'', q: query.q||'', format: 'csv' }) %>">Export CSV</a>
 </form>
 <p class="hint">Showing the latest 200 matching entries. Narrow by date, or export CSV for the full list.</p>
 

@@ -28,7 +28,7 @@ function call(router, method, routePath, { params = {}, body = {}, query = {}, u
   assert.ok(layer, `${method} ${routePath} exists`);
   const out = {};
   const res = { status(c) { out.status = c; return this; }, redirect(u) { out.redirect = u; }, render(v, l) { out.view = v; out.locals = l; }, setHeader() {}, send(b) { out.body = b; } };
-  layer.route.stack[layer.route.stack.length - 1].handle({ params, body, query, session: { user }, ip: '127.0.0.1' }, res);
+  layer.route.stack[layer.route.stack.length - 1].handle({ method: method.toUpperCase(), path: routePath, params, body, query, session: { user }, ip: '127.0.0.1' }, res);
   return out;
 }
 const guard = (router, method, routePath, user) => {
@@ -59,7 +59,9 @@ test('1A / N-06: a rate-based loan is overdue by its unpaid interest on the ledg
   const a = arrearsOf(pre, [{ amount: 1000, payment_date: monthsAgo(6) }], []);
   const firstDue = require('../src/utils/installments').dueDates(monthsAgo(6), 2)[1];   // the first instalment date
   assert.strictEqual(a.dpd, dayjs(today).diff(dayjs(firstDue), 'day'));
-  assert.ok(a.overdue > 800 && a.overdue < 820, String(a.overdue)); // 9,000 × 1.5% × 6 months = 810
+  // 9,000 × 1.5% = 135 for each month already past due (5 or 6, depending on the day: a due date is not overdue yet)
+  const months = require('../src/utils/installments').dueDates(monthsAgo(6), 7).slice(1).filter(d => d < today).length;
+  assert.ok(Math.abs(a.overdue - 135 * months) < 10, `${a.overdue} vs ${months} months`);
   // Fixed loans keep the instalment schedule.
   const F = { ...A, interest_mode: 'fixed', interest_rate: 0, interest_amount: 1200, interest_from: null, loan_start_date: monthsAgo(3) };
   const passed = require('../src/utils/installments').dueDates(monthsAgo(3), 13).slice(1).filter(d => d < today).length;
@@ -137,13 +139,20 @@ test('6A / K-05: no settlement above what is pending; a void that over-settles a
 });
 
 test('7A / K-07: a production deploy without DEMO_MODE has no demo accounts page or demo tools', () => {
-  const run = env => JSON.parse(require('node:child_process').execFileSync(process.execPath, ['--no-warnings', '-e', `
-    const app = require('./src/app');
-    const s = app.listen(0, async () => {
-      const b = 'http://127.0.0.1:' + s.address().port;
-      const r = await Promise.all(['/demo-accounts', '/demo-tools'].map(p => fetch(b + p, { redirect: 'manual' }).then(x => x.status)));
-      console.log(JSON.stringify(r)); s.close();
-    });`], { cwd: path.join(__dirname, '..'), env: { ...process.env, ...env, CRM_DB_PATH: process.env.CRM_DB_PATH + '-' + Object.keys(env).join('') }, encoding: 'utf8' }).trim().split('\n').pop());
+  const run = env => {
+    const dbPath = process.env.CRM_DB_PATH + '-' + Object.keys(env).join('');
+    try {
+      return JSON.parse(require('node:child_process').execFileSync(process.execPath, ['--no-warnings', '-e', `
+        const app = require('./src/app');
+        const s = app.listen(0, async () => {
+          const b = 'http://127.0.0.1:' + s.address().port;
+          const r = await Promise.all(['/demo-accounts', '/demo-tools'].map(p => fetch(b + p, { redirect: 'manual' }).then(x => x.status)));
+          console.log(JSON.stringify(r)); s.close();
+        });`], { cwd: path.join(__dirname, '..'), env: { ...process.env, ...env, CRM_DB_PATH: dbPath }, encoding: 'utf8' }).trim().split('\n').pop());
+    } finally {
+      for (const f of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) require('node:fs').rmSync(f, { force: true });
+    }
+  };
   assert.deepStrictEqual(run({ NODE_ENV: 'production', SESSION_SECRET: 's', RENDER: '', DEMO_MODE: undefined }), [404, 404]); // the default off Render
   assert.deepStrictEqual(run({ NODE_ENV: 'production', SESSION_SECRET: 's', RENDER: '', DEMO_MODE: '1' }), [200, 302]);
   assert.deepStrictEqual(run({ NODE_ENV: 'production', SESSION_SECRET: 's', RENDER: 'true' }), [200, 302]); // the Render demo keeps them
@@ -213,9 +222,44 @@ test('F-35: personal data is removed only for debtors past the retention period,
   assert.deepStrictEqual({ ...db.get("SELECT receipt_no, amount, remark FROM payments WHERE case_id=901") }, { receipt_no: 'RET-R1', amount: 1000, remark: null });
   assert.strictEqual(db.get('SELECT remark FROM cases WHERE id=901').remark, null);
   assert.deepStrictEqual(db.all('SELECT name FROM debtors WHERE id IN (902,903) ORDER BY id').map(r => r.name), ['Recent Closed', 'Old Open']);
-  assert.match(db.get("SELECT details FROM audit_logs WHERE action='anonymize' AND entity_id=901").details, /7-year retention period/);
+  // The audit log keeps who it was (name and IC), found again by IC typed with or without dashes.
+  assert.match(db.get("SELECT details FROM audit_logs WHERE action='anonymize' AND entity_id=901").details,
+    /^Removed the personal data of debtor #901 Old Closed \(IC 800101-01-0001\) — 7-year retention period; last activity /);
+  const found = call(require('../src/routes/audit'), 'get', '/', { query: { q: '800101010001' } }).locals.logs;
+  assert.deepStrictEqual(found.map(l => [l.action, l.entity_id]), [['anonymize', 901]]);
   // A removed debtor is not edited back.
   assert.match(call(debtorsRouter, 'post', '/:id', { params: { id: '901' }, body: { name: 'X', risk_level: 'low' } }).redirect, /^\/debtors\/901\?err=/);
+  assert.match(call(debtorsRouter, 'get', '/:id/edit', { params: { id: '901' } }).redirect, /^\/debtors\/901\?err=/);
+});
+
+test('F-35: the cases of a removed debtor are read-only', () => {
+  // runs after the test above: debtor 901 / case 901 are anonymized
+  const ptpsRouter = require('../src/routes/ptps');
+  const tasksRouter = require('../src/routes/tasks');
+  const id = { id: '901' };
+  const view = call(casesRouter, 'get', '/:id', { params: id });
+  assert.strictEqual(view.view, 'cases/show');
+  assert.strictEqual(view.locals.readOnly, true);
+  assert.strictEqual(call(casesRouter, 'get', '/:id/statement', { params: id }).view, 'cases/statement');
+  const refused = out => assert.match(text(out, 'err'), /^Read-only: this debtor’s personal data was removed/);
+  refused(call(casesRouter, 'get', '/:id/edit', { params: id }));
+  refused(call(casesRouter, 'post', '/:id/notes', { params: id, body: { content: 'new info about him' } }));
+  refused(call(casesRouter, 'post', '/:id/calls', { params: id, body: { result: 'answered', notes: 'x' } }));
+  refused(call(casesRouter, 'post', '/:id/status', { params: id, body: { status: 'negotiation' } }));
+  refused(call(casesRouter, 'post', '/:id/ptps', { params: id, body: { amount: '1', due_date: today } }));
+  refused(pay(901, 1));
+  refused(call(casesRouter, 'post', '/:id', { params: id, body: { debtor_id: '1', principal_amount: '1000' } }));
+  refused(call(casesRouter, 'post', '/', { body: { debtor_id: '901', principal_amount: '1000' } }));
+  assert.ok(!call(casesRouter, 'get', '/new').locals.debtors.some(d => d.id === 901));
+  db.run("INSERT INTO ptps (id,case_id,amount,due_date) VALUES (901,901,100,?)", [today]);
+  refused(call(ptpsRouter, 'post', '/:id/break', { params: id }));
+  refused(call(tasksRouter, 'post', '/new', { body: { case_id: '901', title: 'call his wife' } }));
+  db.run("INSERT INTO tasks (id,case_id,agent_id,title) VALUES (901,901,1,'[removed after the retention period]')");
+  refused(call(tasksRouter, 'post', '/:id', { params: id, body: { title: 'call his wife' } }));
+  assert.match(call(tasksRouter, 'post', '/:id/complete', { params: id }).redirect, /ok=Task\+completed/);
+  assert.strictEqual(db.get('SELECT COUNT(*) n FROM timeline_events WHERE case_id=901').n, 2);
+  assert.strictEqual(db.get('SELECT COUNT(*) n FROM payments WHERE case_id=901').n, 1);
+  assert.strictEqual(db.get('SELECT debtor_id FROM cases WHERE id=901').debtor_id, 901);
 });
 
 test('F-35: the retention period is whole years from 6', () => {

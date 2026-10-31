@@ -12,6 +12,7 @@ const { caseStatusLabel, dateFmt, round2, todayMYT, money } = require('../utils/
 const { splitInstallments, dueDates, maturityDate } = require('../utils/installments');
 const { restructuresOf, afterLock, canRestructure, effectiveDateRange, balanceAtCut, createRestructure, undoRestructure,
   paymentDateError, lockedPaymentError, termsLocked, lockedTerms, scheduleView, arrearsOf, todayFigures } = require('../services/restructure');
+const { caseAnonymized, ANONYMIZED } = require('../services/retention');
 const crypto = require('node:crypto');
 const router = express.Router();
 
@@ -59,7 +60,9 @@ function promiseCapError(caseId, amount, dueDate) {
 // Server-side check of the New/Edit Case form (the browser's min/required are
 // bypassable). Returns an error message, or null when the form is acceptable.
 function caseFormError(b) {
-  if (!get('SELECT 1 FROM debtors WHERE id=?', [b.debtor_id])) return 'Debtor not found';
+  const debtor = get('SELECT anonymized_at FROM debtors WHERE id=?', [b.debtor_id]);
+  if (!debtor) return 'Debtor not found';
+  if (debtor.anonymized_at) return ANONYMIZED;
   if (!blank(b.agent_id) && !get('SELECT 1 FROM agents WHERE id=?', [b.agent_id])) return 'Agent not found';
   const principal = parseMoney(b.principal_amount);
   if (!(principal > 0) || principal > 1e12) return 'Invalid principal';
@@ -85,10 +88,15 @@ function loadCase(req, res) {
   recomputeOutstanding(req.params.id);
   const w = caseWhere(req.session.user);
   const c = get(`SELECT cases.*, clients.company_name AS client_name, debtors.name AS debtor_name,
-    debtors.phone AS debtor_phone, debtors.ic_passport, debtors.address AS debtor_address, debtors.guarantor_phone, agents.name AS agent_name
+    debtors.phone AS debtor_phone, debtors.ic_passport, debtors.address AS debtor_address, debtors.guarantor_phone, debtors.anonymized_at AS debtor_anonymized_at,
+    agents.name AS agent_name
     FROM cases JOIN clients ON clients.id=cases.client_id JOIN debtors ON debtors.id=cases.debtor_id
     LEFT JOIN agents ON agents.id=cases.agent_id WHERE cases.id=? AND ${w.clause}`, [req.params.id, ...w.params]);
   if (!c) { res.status(404).render('error', { message: 'Case not found or access denied' }); return null; }
+  // F-35: every write to a case goes through here (the edit form too) — refused once the debtor is anonymized.
+  if (c.debtor_anonymized_at && (!['GET', 'HEAD'].includes(req.method) || req.path.endsWith('/edit'))) {
+    res.redirect(`/cases/${c.id}?err=${encodeURIComponent(ANONYMIZED)}`); return null;
+  }
   return c;
 }
 
@@ -153,7 +161,7 @@ router.get('/', requireLogin, (req, res) => {
 
 router.get('/new', requireLogin, noAgentCreate, (req, res) => {
   res.render('cases/form', { title: 'New Case', c: refill(res, {}), action: '/cases',
-    debtors: all('SELECT id,name FROM debtors ORDER BY name'),
+    debtors: all('SELECT id,name FROM debtors WHERE anonymized_at IS NULL ORDER BY name'),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     statuses: CASE_STATUSES, priorities: PRIORITIES });
 });
@@ -188,7 +196,7 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
 router.get('/:id/edit', requireLogin, noAgentCreate, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   res.render('cases/form', { title: 'Edit Case', c: refill(res, c), action: `/cases/${c.id}`,
-    debtors: all('SELECT id,name FROM debtors ORDER BY name'),
+    debtors: all('SELECT id,name FROM debtors WHERE anonymized_at IS NULL ORDER BY name'),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     statuses: CASE_STATUSES, priorities: PRIORITIES, termsLocked: termsLocked(c.id) });
 });
@@ -221,6 +229,7 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   }
   const old = get('SELECT * FROM cases WHERE id=?', [req.params.id]);
   if (!old) return res.redirect('/cases?err=Case+not+found');
+  if (caseAnonymized(old.id)) return res.redirect(`/cases/${old.id}?err=${encodeURIComponent(ANONYMIZED)}`);
   const formErr = caseFormError(b);
   if (formErr) return res.redirect(`/cases/${old.id}/edit?err=${encodeURIComponent(formErr)}`);
   const principal = Number(b.principal_amount)||0;
@@ -288,7 +297,7 @@ router.get('/:id', requireLogin, (req, res) => {
     scheduleHistory, lastRestructure, lock, lockMin: afterLock(lock), restructureForm, canUndo,
     settlement: settlementOn(c.id, todayMYT()), arrears: arrearsOf(c, asc, restructures), frozen: FROZEN.includes(c.status),
     statuses: statusOptions, terminal: TERMINAL_STATUSES,
-    readOnly: role === 'client' || !['payments.record', 'payments.correct', 'ptps.manage', 'calls.log', 'notes.write', 'cases.status', 'cases.restructure'].some(p => can(req, p)) });
+    readOnly: !!c.debtor_anonymized_at || role === 'client' || !['payments.record', 'payments.correct', 'ptps.manage', 'calls.log', 'notes.write', 'cases.status', 'cases.restructure'].some(p => can(req, p)) });
 });
 
 const { applyPayment } = require('../services/payments');

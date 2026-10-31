@@ -13,10 +13,11 @@
       <% } %>
     <% } %>
     <a class="btn" href="/cases/<%= c.id %>/statement" target="_blank">Print statement</a>
-    <% if (may('cases.edit')) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
+    <% if (may('cases.edit') && !c.debtor_anonymized_at) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
     <button type="button" class="btn icon-btn" title="Records" aria-label="Records" onclick="dlg('dlg-records')">&#9776;</button>
   </div>
 </div>
+<% if (c.debtor_anonymized_at) { %><p class="hint">Read-only: the debtor’s personal data was removed on <%= h.dateFmt(c.debtor_anonymized_at) %> after the retention period (F-35).</p><% } %>
 
 <%
   const paid = payments.reduce((s, p) => s + p.amount, 0);

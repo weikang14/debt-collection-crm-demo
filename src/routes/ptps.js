@@ -7,6 +7,7 @@ const { requirePerm } = require('../utils/permissions');
 const { paymentWrites, overpayError } = require('../services/payments');
 const { validatePayment, methodError } = require('../utils/forms');
 const { paymentDateError } = require('../services/restructure');
+const { caseAnonymized, ANONYMIZED } = require('../services/retention');
 const router = express.Router();
 
 // Fulfilling a PTP means the promised money was actually paid, so we record a
@@ -75,6 +76,7 @@ function loadScopedCaseId(req, res) {
   const w = caseWhere(req.session.user);
   const c = get(`SELECT id FROM cases WHERE id=? AND ${w.clause}`, [ptp.case_id, ...w.params]);
   if (!c) { res.status(403).render('error', { message: 'Forbidden' }); return null; }
+  if (caseAnonymized(ptp.case_id)) { res.redirect(`/cases/${ptp.case_id}?err=${encodeURIComponent(ANONYMIZED)}`); return null; }
   return ptp.case_id;
 }
 
