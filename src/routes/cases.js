@@ -1,7 +1,7 @@
 const express = require('express');
 const { db, all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
-const { logAction } = require('../utils/audit');
+const { logAction, logAccess } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
 const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES, caseBalance, settlementOn, overpayError, rateCapError, snapshotPayment } = require('../services/payments');
@@ -13,13 +13,16 @@ const { restructuresOf, afterLock, canRestructure, effectiveDateRange, balanceAt
 const crypto = require('node:crypto');
 const router = express.Router();
 
-const { validatePayment, isISODate, parseMoney, methodError } = require('../utils/forms');
+const { validatePayment, isISODate, parseMoney, methodError, refill } = require('../utils/forms');
 
 const CASE_STATUSES = ['new','assigned','negotiation','ptp','partial_paid','fully_paid','legal','closed','cancelled','bankruptcy','deceased'];
 // What an agent may set by hand (D-12): no Fully Paid and no terminal status.
 const AGENT_STATUSES = ['new','assigned','negotiation','ptp','partial_paid'];
 const PRIORITIES = ['low','medium','high','urgent'];
 const CALL_RESULTS = ['answered','no_answer','busy','wrong_number','refused'];
+// F-33: the channel used and who was reached. Contact-hour and frequency limits wait on legal advice (D-17).
+const CALL_CHANNELS = ['phone', 'whatsapp', 'sms'];
+const CALL_CONTACTS = ['debtor', 'guarantor', 'employer', 'other'];
 const blank = v => v === undefined || v === null || String(v).trim() === '';
 
 // Bankrupt / deceased debtors (D-13): no new promises, calls or restructures;
@@ -61,6 +64,8 @@ function caseFormError(b) {
   if (!blank(b.interest_amount) && !(parseMoney(b.interest_amount) >= 0)) return 'Invalid interest amount';
   if (!blank(b.interest_rate) && !/^\d+(\.\d+)?$/.test(String(b.interest_rate).trim())) return 'Invalid interest rate';
   if (!blank(b.loan_start_date) && !isISODate(b.loan_start_date)) return 'Invalid loan start date';
+  if (!blank(b.agreement_date) && !isISODate(b.agreement_date)) return 'Invalid agreement date';
+  if (!blank(b.agreement_no) && String(b.agreement_no).trim().length > 60) return 'Agreement no. must be at most 60 characters';
   const tenure = Number(b.tenure);
   if (!blank(b.tenure) && !(Number.isInteger(tenure) && tenure >= 1 && tenure <= 120)) return 'Tenure must be 1–120 months';
   if (!blank(b.priority) && !PRIORITIES.includes(b.priority)) return 'Invalid priority';
@@ -78,7 +83,7 @@ function loadCase(req, res) {
   recomputeOutstanding(req.params.id);
   const w = caseWhere(req.session.user);
   const c = get(`SELECT cases.*, clients.company_name AS client_name, debtors.name AS debtor_name,
-    debtors.phone AS debtor_phone, debtors.ic_passport, agents.name AS agent_name
+    debtors.phone AS debtor_phone, debtors.ic_passport, debtors.address AS debtor_address, debtors.guarantor_phone, agents.name AS agent_name
     FROM cases JOIN clients ON clients.id=cases.client_id JOIN debtors ON debtors.id=cases.debtor_id
     LEFT JOIN agents ON agents.id=cases.agent_id WHERE cases.id=? AND ${w.clause}`, [req.params.id, ...w.params]);
   if (!c) { res.status(404).render('error', { message: 'Case not found or access denied' }); return null; }
@@ -145,7 +150,7 @@ router.get('/', requireLogin, (req, res) => {
 });
 
 router.get('/new', requireLogin, noAgentCreate, (req, res) => {
-  res.render('cases/form', { title: 'New Case', c: {}, action: '/cases',
+  res.render('cases/form', { title: 'New Case', c: refill(res, {}), action: '/cases',
     debtors: all('SELECT id,name FROM debtors ORDER BY name'),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     statuses: CASE_STATUSES, priorities: PRIORITIES });
@@ -166,9 +171,10 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
     interest_from: from, tenure, maturity_date: maturity });
   if (limitErr) return res.redirect(`/cases/new?err=${encodeURIComponent(limitErr)}`);
   const case_no = nextCaseNo();
-  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,interest_charged,outstanding_amount,priority,status,remark,interest_mode,interest_rate,interest_from,loan_start_date,tenure,tenure_unit,maturity_date)
-    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
-    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, mode, rate, from, loanStart, tenure, tenureUnit, maturity]);
+  const r = run(`INSERT INTO cases (case_no,client_id,debtor_id,agent_id,principal_amount,interest_amount,interest_charged,outstanding_amount,priority,status,remark,interest_mode,interest_rate,interest_from,loan_start_date,tenure,tenure_unit,maturity_date,agreement_no,agreement_date)
+    VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [case_no, internalClientId(), b.debtor_id, b.agent_id||null, principal, interest, interest, principal+interest, b.priority||'medium', b.status||'new', b.remark||null, mode, rate, from, loanStart, tenure, tenureUnit, maturity,
+      blank(b.agreement_no) ? null : String(b.agreement_no).trim(), blank(b.agreement_date) ? null : b.agreement_date]);
   // Accrual interest is derived; compute it now so lists and the dashboard
   // don't show the bare principal until someone opens the case.
   recomputeOutstanding(r.lastInsertRowid);
@@ -178,7 +184,7 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
 });
 router.get('/:id/edit', requireLogin, noAgentCreate, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
-  res.render('cases/form', { title: 'Edit Case', c, action: `/cases/${c.id}`,
+  res.render('cases/form', { title: 'Edit Case', c: refill(res, c), action: `/cases/${c.id}`,
     debtors: all('SELECT id,name FROM debtors ORDER BY name'),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     statuses: CASE_STATUSES, priorities: PRIORITIES, termsLocked: termsLocked(c.id) });
@@ -190,7 +196,8 @@ router.get('/:id/statement', requireLogin, (req, res) => {
   const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
   const company = get('SELECT * FROM settings WHERE id=1') || {};
   const restructures = restructuresOf(c.id);
-  res.render('cases/statement', { c, payments, paid, today, company, restructures,
+  logAccess(req, 'print', 'case', c.id, `Statement ${c.case_no}`);
+  res.render('cases/statement', { c, payments, paid, today, company, restructures, schedule: scheduleView(c, payments, restructures).current,
     settlement: settlementOn(c.id, today), arrears: arrearsOf(c, payments, restructures) });
 });
 // F-25: a printable receipt for one payment, for anyone who can see the case.
@@ -199,6 +206,7 @@ router.get('/:id/payments/:pid/receipt', requireLogin, (req, res) => {
   const p = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
   if (!p) return res.status(404).render('error', { message: 'Payment not found (it may have been voided)' });
   const amended = get("SELECT MAX(changed_at) at FROM payment_history WHERE payment_id=? AND change='edit'", [p.id]).at;
+  logAccess(req, 'print', 'payment', p.id, `Receipt ${p.receipt_no} (${c.case_no})`);
   res.render('cases/receipt', { c, p, amended, company: get('SELECT * FROM settings WHERE id=1') || {} });
 });
 router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
@@ -218,7 +226,8 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
     interest_rate: rate, interest_from: from, loan_start_date: loanStart, tenure, tenure_unit: tenureUnit, maturity_date: maturity });
   // Who owes the money is locked with the terms (F-24).
   const debtorId = termsLocked(old.id) ? old.debtor_id : Number(b.debtor_id);
-  const next = { debtor_id: debtorId, agent_id: b.agent_id ? Number(b.agent_id) : null, priority: b.priority || 'medium', remark: b.remark || null, ...t };
+  const next = { debtor_id: debtorId, agent_id: b.agent_id ? Number(b.agent_id) : null, priority: b.priority || 'medium', remark: b.remark || null,
+    agreement_no: blank(b.agreement_no) ? null : String(b.agreement_no).trim(), agreement_date: blank(b.agreement_date) ? null : b.agreement_date, ...t };
   // Limits apply to changed terms only, so an older case can still get a new
   // agent or remark; its terms are re-planned through a restructure.
   // interest_amount is only a term of a fixed loan; a rate-based loan may carry a
@@ -229,8 +238,8 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
     const limitErr = loanLimitError(t);
     if (limitErr) return res.redirect(`/cases/${old.id}/edit?err=${encodeURIComponent(limitErr)}`);
   }
-  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,interest_mode=?,interest_rate=?,interest_from=?,loan_start_date=?,tenure=?,tenure_unit=?,maturity_date=?,updated_at=datetime('now') WHERE id=?`,
-    [next.debtor_id,next.agent_id,t.principal_amount,t.interest_amount,next.priority,next.remark,t.interest_mode,t.interest_rate,t.interest_from,t.loan_start_date,t.tenure,t.tenure_unit,t.maturity_date,req.params.id]);
+  run(`UPDATE cases SET debtor_id=?,agent_id=?,principal_amount=?,interest_amount=?,priority=?,remark=?,interest_mode=?,interest_rate=?,interest_from=?,loan_start_date=?,tenure=?,tenure_unit=?,maturity_date=?,agreement_no=?,agreement_date=?,updated_at=datetime('now') WHERE id=?`,
+    [next.debtor_id,next.agent_id,t.principal_amount,t.interest_amount,next.priority,next.remark,t.interest_mode,t.interest_rate,t.interest_from,t.loan_start_date,t.tenure,t.tenure_unit,t.maturity_date,next.agreement_no,next.agreement_date,req.params.id]);
   const cid = Number(req.params.id);
   resyncCaseStatus(cid, req.session.user.full_name);
   // Reassignment (D-11): open tasks move to the new agent; done tasks and past
@@ -250,6 +259,7 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
 
 router.get('/:id', requireLogin, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
+  logAccess(req, 'view', 'case', c.id, c.case_no);
   const timeline = all('SELECT * FROM timeline_events WHERE case_id=? ORDER BY created_at DESC, id DESC', [c.id]);
   const payments = all('SELECT * FROM payments WHERE case_id=? ORDER BY payment_date DESC', [c.id]);
   const voided = all("SELECT * FROM payment_history WHERE case_id=? AND change='void' ORDER BY changed_at DESC, id DESC", [c.id]);
@@ -268,7 +278,7 @@ router.get('/:id', requireLogin, (req, res) => {
   const role = req.session.user.role;
   // The status menu an agent sees omits Fully Paid and terminal statuses (D-12).
   const statusOptions = role === 'agent' ? AGENT_STATUSES : CASE_STATUSES;
-  res.render('cases/show', { title: c.case_no, c, timeline, payments, voided, ptps, tasks, calls, schedule,
+  res.render('cases/show', { title: c.case_no, c, timeline, payments, voided, ptps, callChannels: CALL_CHANNELS, callContacts: CALL_CONTACTS, tasks, calls, schedule,
     scheduleHistory, lastRestructure, lock, lockMin: afterLock(lock), restructureForm, canUndo,
     settlement: settlementOn(c.id, todayMYT()), arrears: arrearsOf(c, asc, restructures), frozen: FROZEN.includes(c.status),
     statuses: statusOptions, terminal: TERMINAL_STATUSES,
@@ -463,10 +473,15 @@ router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), 
   const dur = blank(req.body.duration_seconds) ? 0 : Number(req.body.duration_seconds);
   if (!Number.isInteger(dur) || dur < 0) return res.redirect(`/cases/${c.id}?err=Invalid+duration`);
   if (req.body.result && !CALL_RESULTS.includes(req.body.result)) return res.redirect(`/cases/${c.id}?err=Invalid+call+result`);
-  run('INSERT INTO call_logs (case_id,agent_id,duration_seconds,result,notes) VALUES (?,?,?,?,?)',
-    [c.id, req.session.user.agent_id||c.agent_id||null, dur, req.body.result||'no_answer', req.body.notes||null]);
+  const channel = blank(req.body.channel) ? 'phone' : req.body.channel, contact = blank(req.body.contact) ? 'debtor' : req.body.contact;
+  if (!CALL_CHANNELS.includes(channel) || !CALL_CONTACTS.includes(contact)) return res.redirect(`/cases/${c.id}?err=Invalid+channel+or+contact`);
+  const phone = blank(req.body.phone) ? null : String(req.body.phone).trim().slice(0, 40);
+  // Credited to whoever made the contact: an agent's own id, none when a manager logs it (F-33).
+  run('INSERT INTO call_logs (case_id,agent_id,duration_seconds,result,notes,channel,contact,phone,created_by) VALUES (?,?,?,?,?,?,?,?,?)',
+    [c.id, req.session.user.agent_id || null, dur, req.body.result||'no_answer', req.body.notes||null, channel, contact, phone, by]);
+  const how = channel === 'phone' && contact === 'debtor' && !phone ? '' : ` · ${channel} to ${contact}${phone ? ' ' + phone : ''}`;
   run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
-    [c.id,'call',`Call: ${req.body.result||'no_answer'} (${dur}s)${req.body.notes?' — '+req.body.notes:''}`, by]);
+    [c.id,'call',`Call: ${req.body.result||'no_answer'} (${dur}s)${how}${req.body.notes?' — '+req.body.notes:''}`, by]);
   logAction(req,'call','case',c.id,`Logged call for ${c.case_no}`);
   res.redirect(`/cases/${c.id}?ok=Call+logged`);
 });
@@ -511,6 +526,8 @@ router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'),
   const ns = req.body.status;
   if (!CASE_STATUSES.includes(ns)) return res.redirect(`/cases/${c.id}?err=Invalid+status`);
   const fail = msg => res.redirect(`/cases/${c.id}?err=${encodeURIComponent(msg)}`);
+  // O-6: re-sending the current status changes nothing, so it leaves no timeline or audit entry.
+  if (ns === c.status) return res.redirect(`/cases/${c.id}?ok=Status+unchanged`);
   if (req.session.user.role === 'agent') {
     // D-12 / G-02: an agent neither sets nor lifts a terminal or paid-off status.
     if (ns !== c.status && !AGENT_STATUSES.includes(c.status)) return fail(`Only a manager can change a ${caseStatusLabel(c.status)} case`);

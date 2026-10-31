@@ -8,25 +8,27 @@ fs.mkdirSync(path.dirname(path.resolve(DB_PATH)), { recursive: true });
 
 const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON;');
+// WAL: readers in other processes (a backup, a reporting tool) never block on the
+// app's writes — sessions are written on every request. busy_timeout makes a
+// second writer (a seed run, the backup) wait instead of failing at once.
+db.exec('PRAGMA journal_mode = WAL; PRAGMA busy_timeout = 5000;');
 
-// Transaction wrapper: returns a function that executes fn within a transaction.
-// Re-entrant: inside an open one (e.g. the per-request transaction in app.js)
-// fn just joins it — node:sqlite has no nested transactions.
+// Transactions nest by joining: node:sqlite has no savepoint-free nesting, so
+// only the outermost begin/end talks to SQLite (the per-request transaction in
+// app.js wraps every handler's own db.transaction calls).
 let txDepth = 0;
+db.begin = function() { if (txDepth++ === 0) this.exec('BEGIN TRANSACTION'); };
+db.end = function(commit) {
+  if (--txDepth > 0) return;
+  if (!commit) return this.exec('ROLLBACK');
+  try { this.exec('COMMIT'); } catch (e) { this.exec('ROLLBACK'); throw e; }
+};
+// Transaction wrapper: returns a function that executes fn within a transaction.
 db.transaction = function(fn) {
   return () => {
-    if (txDepth) return fn();
-    txDepth++;
-    try {
-      this.exec('BEGIN TRANSACTION');
-      fn();
-      this.exec('COMMIT');
-    } catch (e) {
-      this.exec('ROLLBACK');
-      throw e;
-    } finally {
-      txDepth--;
-    }
+    this.begin();
+    try { fn(); } catch (e) { this.end(false); throw e; }
+    this.end(true);
   };
 };
 
@@ -112,6 +114,15 @@ function init() {
     db.prepare('ALTER TABLE payments ADD COLUMN agent_id INTEGER REFERENCES agents(id)').run();
     db.prepare('UPDATE payments SET agent_id = (SELECT agent_id FROM cases WHERE cases.id = payments.case_id)').run();
   } catch (e) { /* exists */ }
+  // Migration (F-33): how and with whom a contact was made, and who logged it.
+  try { db.prepare("ALTER TABLE call_logs ADD COLUMN channel TEXT NOT NULL DEFAULT 'phone'").run(); } catch (e) { /* exists */ }
+  try { db.prepare("ALTER TABLE call_logs ADD COLUMN contact TEXT NOT NULL DEFAULT 'debtor'").run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE call_logs ADD COLUMN phone TEXT').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE call_logs ADD COLUMN created_by TEXT').run(); } catch (e) { /* exists */ }
+  // Migration (F-48): loan agreement number and date on the case; the lender's KPKT licence number.
+  try { db.prepare('ALTER TABLE cases ADD COLUMN agreement_no TEXT').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE cases ADD COLUMN agreement_date TEXT').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE settings ADD COLUMN licence_no TEXT').run(); } catch (e) { /* exists */ }
   // Migration: legal rate cap setting (default 18% p.a.).
   try { db.prepare('ALTER TABLE settings ADD COLUMN max_annual_rate REAL NOT NULL DEFAULT 18').run(); } catch (e) { /* exists */ }
   // Migration: PTP status 'partially_kept'. Same one-time rebuild as the

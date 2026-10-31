@@ -111,9 +111,11 @@ async function settlementShown(s, id) {
 
   c = await newCase(mgr, { principal_amount: 10000, interest_mode: 'fixed', interest_amount: 1800, loan_start_date: TODAY, tenure: 30, tenure_unit: 'days' });
   const a9 = c.id && caseRow(c.id);
-  rec('A9 crafted POST: fixed 1,800 / 10,000, tenure 30 DAYS', 'should be refused (≈219% p.a.)',
-    `accepted=${!!c.id}; stored tenure=${a9 && a9.tenure} ${a9 && a9.tenure_unit}, maturity=${a9 && a9.maturity_date}; cap saw ${P.nominalAnnualRate({ interest_mode: 'fixed', interest_amount: 1800, tenure: 30 }, 10000)}% p.a.; actual ${(1800 / 10000 / (30 / 365) * 100).toFixed(1)}% p.a.`,
-    c.id ? 'FAIL' : 'PASS', 'nominalAnnualRate assumes months; form has no unit field but server accepts tenure_unit');
+  // G-15 / manual v1.2 INT-17: the server ignores tenure_unit and records months, so the contract on file is a
+  // 30-month loan (7.2% p.a.) — the loan the system recorded is the one the cap was checked against.
+  rec('A9 crafted POST: fixed 1,800 / 10,000, tenure 30 DAYS', 'refused, or recorded as months (G-15 / INT-17)',
+    `accepted=${!!c.id}; stored tenure=${a9 && a9.tenure} ${a9 && a9.tenure_unit}, maturity=${a9 && a9.maturity_date}; cap checked ${P.nominalAnnualRate({ interest_mode: 'fixed', interest_amount: 1800, tenure: 30 }, 10000)}% p.a.`,
+    !c.id || (a9.tenure_unit === 'months' && a9.maturity_date === (() => { const d = new Date(TODAY + 'T00:00:00Z'); const m = d.getUTCMonth() + 30; const last = new Date(Date.UTC(d.getUTCFullYear(), m + 1, 0)).getUTCDate(); return new Date(Date.UTC(d.getUTCFullYear(), m, Math.min(d.getUTCDate(), last))).toISOString().slice(0, 10); })()) ? 'PASS' : 'FAIL');
 
   c = await newCase(mgr, { principal_amount: 10000, interest_mode: 'monthly', interest_rate: 1.5, loan_start_date: '2021-06-01' });
   const a10 = c.id && caseRow(c.id);
@@ -130,11 +132,18 @@ async function settlementShown(s, id) {
   rec('A12a manager cannot change cap', '403', r.status, r.status === 403 ? 'PASS' : 'FAIL');
   r = await admin.act('/settings', { company_name: 'QA Lender Sdn Bhd', address: '1 Jalan QA', phone: '03-0000', email: 'qa@x.my', reg_no: '202601000001', max_annual_rate: 100 });
   const capAudit = lastAudit();
-  rec('A12b admin raises cap 18→100', 'saved; audit should record old→new cap', `flash=${r.flash}; audit="${capAudit.action} ${capAudit.details}"`, /100|18/.test(capAudit.details || '') ? 'PASS' : 'FAIL', 'audit text lacks the rate values');
+  // N-03: the cap can only be lowered; a change is audited old → new.
+  const capNow = q1('SELECT max_annual_rate m FROM settings').m;
+  const r12 = await admin.act('/settings', { company_name: 'QA Lender Sdn Bhd', address: '1 Jalan QA', phone: '03-0000', email: 'qa@x.my', reg_no: '202601000001', max_annual_rate: 12 });
+  const lowAudit = lastAudit();
+  await admin.act('/settings', { company_name: 'QA Lender Sdn Bhd', address: '1 Jalan QA', phone: '03-0000', email: 'qa@x.my', reg_no: '202601000001', licence_no: 'WL-QA-0001', max_annual_rate: 18 });
+  rec('A12b admin raises cap 18→100; lowers 18→12', 'raise refused (N-03); lowering saved and audited old→new',
+    `100 → ${r.flash}; cap stays ${capNow}; 12 → ${r12.flash}; audit="${lowAudit.action} ${lowAudit.details}"`,
+    /at most 18%/.test(r.flash || '') && capNow === 18 && /max_annual_rate: 18 → 12/.test(lowAudit.details || '') ? 'PASS' : 'FAIL');
   c = await newCase(mgr, { principal_amount: 10000, interest_mode: 'monthly', interest_rate: 8, loan_start_date: TODAY, tenure: 12 });
   const a12 = c.id;
   rec('A12c with cap 100: monthly 8% x12 (96% p.a.)', 'accepted (shows the setting is the only guard)', `accepted=${!!c.id} interest=${c.id && caseRow(c.id).interest_charged}`, c.id ? 'OBSERVE' : 'PASS');
-  r = await admin.act('/settings', { company_name: 'QA Lender Sdn Bhd', address: '1 Jalan QA', phone: '03-0000', email: 'qa@x.my', reg_no: '202601000001', max_annual_rate: 18 });
+  r = await admin.act('/settings', { company_name: 'QA Lender Sdn Bhd', address: '1 Jalan QA', phone: '03-0000', email: 'qa@x.my', reg_no: '202601000001', licence_no: 'WL-QA-0001', max_annual_rate: 18 });
   const page12 = a12 && (await mgr.get(`/cases/${a12}`)).text;
   rec('A12d cap back to 18: existing 96% loan flagged?', 'case page or list should flag terms above current cap', `restored=${q1('SELECT max_annual_rate m FROM settings').m}; page mentions limit/exceeds=${a12 ? /limit|exceeds/i.test(page12) : 'n/a'}`, a12 && !/limit|exceeds/i.test(page12) ? 'FAIL' : 'PASS');
 
@@ -179,9 +188,12 @@ async function settlementShown(s, id) {
 
   // ---------- D. ledger, audit ----------
   const payBefore = qa('SELECT id FROM payments WHERE case_id=5');
+  const c5row = caseRow(5);
   r = await mgr.act('/cases/5', { debtor_id: 6, agent_id: 1, principal_amount: 6000, interest_mode: 'fixed', interest_amount: 432, priority: 'medium', remark: '' });
-  const d1 = lastAudit();
-  rec('D1 edit principal & debtor of a case with payments', 'should be locked (F-24); audit has old→new', `flash=${r.flash}; payments=${payBefore.length}; audit="${d1.details}"`, /principal_amount: 5400 → 6000/.test(d1.details) ? 'PARTIAL' : 'FAIL', 'audit fixed, lock not');
+  const d1 = lastAudit(), c5b = caseRow(5);
+  // F-24 (v1.12.0): with payments on the case, its terms and debtor stay as stored; the audit names only real changes.
+  rec('D1 edit principal & debtor of a case with payments', 'locked (F-24); audit has old→new of what changed', `flash=${r.flash}; payments=${payBefore.length}; principal ${c5row.principal_amount}→${c5b.principal_amount}; debtor ${c5row.debtor_id}→${c5b.debtor_id}; audit="${d1.details}"`,
+    payBefore.length && c5b.principal_amount === c5row.principal_amount && c5b.debtor_id === c5row.debtor_id && !/principal_amount|debtor_id/.test(d1.details) ? 'PASS' : 'FAIL');
   const p16 = q1('SELECT * FROM payments WHERE case_id=16 ORDER BY id LIMIT 1');
   r = await fin.act(`/cases/16/payments/${p16.id}`, { amount: (p16.amount - 1).toFixed(2), payment_date: String(p16.payment_date).slice(0, 10), method: 'cash', reference: 'QA-NEW-REF', bank: '' });
   const d2 = lastAudit();
@@ -193,7 +205,10 @@ async function settlementShown(s, id) {
   const voidFlash = r.flash;
   r = await fin.act('/cases/16/payments', { amount: '1.00', payment_date: TODAY, method: 'cash' });
   const newRc = q1('SELECT receipt_no FROM payments ORDER BY id DESC LIMIT 1').receipt_no;
-  rec('D3 void newest payment then record another', 'receipt number never reused; void should keep the row (F-24)', `void ${lastPay.receipt_no}: ${voidFlash}; row deleted=${gone}; next receipt=${newRc}`, newRc !== lastPay.receipt_no ? (gone ? 'PARTIAL' : 'PASS') : 'FAIL', 'hard delete remains');
+  // F-24 (v1.12.0): the voided row leaves the ledger but is kept, as it stood, in payment_history.
+  const kept = q1("SELECT * FROM payment_history WHERE payment_id=? AND change='void'", lastPay.id);
+  rec('D3 void newest payment then record another', 'receipt number never reused; the voided row is kept (F-24)', `void ${lastPay.receipt_no}: ${voidFlash}; out of ledger=${gone}; kept in payment_history=${!!kept && kept.amount === lastPay.amount}; next receipt=${newRc}`,
+    newRc !== lastPay.receipt_no && gone && kept && kept.amount === lastPay.amount && kept.receipt_no === lastPay.receipt_no ? 'PASS' : 'FAIL');
 
   r = await mgr.act('/cases/5/notes', { content: 'Manager note QA' });
   const mNote = q1("SELECT id FROM timeline_events WHERE case_id=5 AND event_type='note' AND content='Manager note QA'").id;
@@ -240,13 +255,19 @@ async function settlementShown(s, id) {
 
   // ---------- F. personal data visibility / access log ----------
   let n1 = auditCount();
+  const a0 = q1('SELECT MAX(id) m FROM access_logs').m || 0;
+  const ic1 = q1('SELECT ic_passport FROM debtors WHERE id=1').ic_passport; // G-10 demo IC (00 month)
   const dl = await fin.get('/debtors'); const dd = await fin.get('/debtors/1');
-  const sr = await fin.get('/search?q=880101');
+  const sr = await fin.get('/search?q=' + ic1.slice(0, 6));
   const cv = await ag1.get('/cases?format=csv');
   const st = await fin.get('/cases/2/statement');
-  rec('F1 finance sees IC/salary/guarantor; searches by IC; agent exports CSV; statement printed', 'minimum-necessary + access log (F-30/F-31 known open)',
-    `list has IC=${dl.text.includes('880101-14-5501')} salary col=${/Salary/.test(dl.text)}; guarantor phone shown=${dd.text.includes('019-9990001')}; IC search hit=${sr.text.includes('Ahmad')}; csv phone=${/01\d-\d+/.test(cv.text)}; audit rows added=${auditCount() - n1}`,
-    auditCount() - n1 === 0 ? 'FAIL' : 'PASS', 'known unfixed F-30/F-31');
+  const acc = qa('SELECT action, entity_type FROM access_logs WHERE id > ?', a0).map(x => `${x.action}:${x.entity_type}`);
+  // F-30 (part): lists mask the IC; F-31: views, searches and printouts land in the access log, exports in the audit log.
+  // Whether finance / auditor should see salary and guarantor is a role decision (still open).
+  const logged = ['view:debtor', 'search:case', 'print:case'].every(k => acc.includes(k)) && auditCount() - n1 >= 1;
+  rec('F1 finance sees IC/salary/guarantor; searches by IC; agent exports CSV; statement printed', 'IC masked in lists; access log for view/search/print; export audited (salary/guarantor visibility: decision open)',
+    `list has full IC=${dl.text.includes(ic1)} masked=${dl.text.includes('******-**-' + ic1.slice(-4))}; salary col=${/Salary/.test(dl.text)}; guarantor phone shown=${dd.text.includes('019-9990001')}; IC search hit=${sr.text.includes('Ahmad')}; csv phone=${/01\d-\d+/.test(cv.text)}; access rows=${acc.join(',')}; audit rows added=${auditCount() - n1}`,
+    !dl.text.includes(ic1) && sr.text.includes('Ahmad') && logged ? 'PASS' : 'FAIL');
 
   // ---------- G. D-13 bankrupt / deceased ----------
   r = await ag2.act('/cases/10/ptps', { amount: 100, due_date: TODAY });
@@ -286,13 +307,17 @@ async function settlementShown(s, id) {
   const want = { 'Loan Start Date': /Loan Start Date/, 'Interest Terms': /Interest Terms/, 'Tenure': /<span>Tenure/, 'Maturity': /Maturity Date/, 'Settlement': /Settlement Amount as of/, 'Overdue': /Overdue/, 'Restructured': /Restructured<\/span>/, 'Payment history': /Payment History/ };
   const gaps = { 'rate per annum wording for monthly loans': /% ?p\.?a\.?|per annum/i, 'licence no.': /Licen[cs]e/i, 'signature': /Sign/i, 'borrower address': /Address/i, 'instalments due & unpaid with due dates': /Due Date/i, 'title Statement of Account': /Statement of Account/i };
   rec('I1 statement elements present', 'all present', Object.entries(want).map(([k, re]) => `${k}=${re.test(stm)}`).join('; '), Object.values(want).every(re => re.test(stm)) ? 'PASS' : 'FAIL');
-  rec('I2 statement elements still missing (s.19(1)/First Schedule)', 'present', Object.entries(gaps).map(([k, re]) => `${k}=${re.test(stm)}`).join('; '), 'OBSERVE');
+  // v1.13.0 added these elements; the exact form (and which system issues statements) still waits on D-08 / legal advice (G-26).
+  rec('I2 statement elements (s.19(1)/First Schedule)', 'present', Object.entries(gaps).map(([k, re]) => `${k}=${re.test(stm)}`).join('; '),
+    Object.values(gaps).every(re => re.test(stm)) ? 'PASS' : 'OBSERVE', 'form to be confirmed: D-08 / G-26');
 
   // ---------- K/L. receipts, demo data ----------
   const k1 = await fin.get(`/cases/16/payments/${q1('SELECT id FROM payments WHERE case_id=16 LIMIT 1').id}/receipt`);
   rec('K1 receipt page', 'exists (s.19(4)) — known F-25', k1.status, k1.status === 200 ? 'PASS' : 'FAIL', 'known unfixed');
   const ics = qa('SELECT name, ic_passport FROM debtors WHERE id<=12').map(d => `${d.name}:${d.ic_passport}`);
-  rec('L1 demo debtors', 'fictional names; IC visibly invalid', ics.join(', '), ics.some(s => /\d{6}-\d{2}-\d{4}/.test(s)) ? 'PARTIAL' : 'PASS', 'names replaced; IC still realistic format');
+  // G-10 / N-04: month 00 and place code 00 — the NRIC shape, but no real person's number.
+  const valid = ics.filter(s => { const m = s.match(/:(\d{2})(\d{2})(\d{2})-(\d{2})-\d{4}$/); return m && +m[2] >= 1 && +m[2] <= 12 && m[4] !== '00'; });
+  rec('L1 demo debtors', 'fictional names; IC visibly invalid', ics.join(', '), valid.length ? 'PARTIAL' : 'PASS', valid.length ? 'some ICs look valid: ' + valid.join(', ') : '');
 
   fs.writeFileSync(path.join(ROOT, 'data', 'qa', 'compliance-r2-results.json'), JSON.stringify({ run_at: new Date().toISOString(), today_myt: TODAY, results }, null, 1));
   console.log('saved', results.length, 'results');

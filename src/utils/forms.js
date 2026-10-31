@@ -28,6 +28,15 @@ function validatePayment(rawAmount, outstanding) {
   return { amount: n };
 }
 
+// K-11: what the user typed into a refused form, over the record it edits;
+// *_id fields back to numbers so the form's selects match them.
+function refill(res, record) {
+  const f = res.locals && res.locals.flash && res.locals.flash.form;
+  if (!f) return record;
+  const typed = Object.fromEntries(Object.entries(f).map(([k, v]) => [k, /_id$/.test(k) && /^\d+$/.test(v) ? Number(v) : v]));
+  return { ...record, ...typed };
+}
+
 const PAYMENT_METHODS = ['bank_transfer', 'cash', 'cheque', 'online'];
 // Blank means the default method; anything else must be one of the form's options.
 const methodError = m => (m && !PAYMENT_METHODS.includes(m) ? 'Invalid payment method' : null);
@@ -37,4 +46,4 @@ const MAX_NAME = 200;
 const MIN_PASSWORD = 8;
 const HASH_COST = 10;
 
-module.exports = { parseActive, isISODate, parseMoney, validatePayment, PAYMENT_METHODS, methodError, MAX_NAME, MIN_PASSWORD, HASH_COST };
+module.exports = { parseActive, isISODate, parseMoney, validatePayment, refill, PAYMENT_METHODS, methodError, MAX_NAME, MIN_PASSWORD, HASH_COST };

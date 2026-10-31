@@ -34,6 +34,10 @@ function flash(req, res, next) {
     const ok = u.searchParams.get('ok'), err = u.searchParams.get('err');
     if ((ok || err) && req.session && u.origin === 'http://local') {
       req.session.flash = { ok, err };
+      // K-11: a refused form comes back filled in (passwords are never kept).
+      if (err && req.method === 'POST' && req.body && typeof req.body === 'object') {
+        req.session.flash.form = Object.fromEntries(Object.entries(req.body).filter(([k, v]) => !/password/i.test(k) && typeof v === 'string'));
+      }
       u.searchParams.delete('ok'); u.searchParams.delete('err');
       url = u.pathname + u.search + u.hash;
     }

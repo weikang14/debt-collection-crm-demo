@@ -53,6 +53,7 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
     const phone = (b.phone || '').trim();
     const email = (b.email || '').trim();
     const reg_no = (b.reg_no || '').trim();
+    const licence_no = (b.licence_no || '').trim().slice(0, 60);
     const old = get('SELECT * FROM settings WHERE id=1') || {};
     const rate = parseMaxRate(b.max_annual_rate, old.max_annual_rate);
     if (rate.error) return res.redirect('/settings?err=' + encodeURIComponent(rate.error));
@@ -68,11 +69,11 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
       logo = (get('SELECT logo FROM settings WHERE id=1') || {}).logo || '';
     }
 
-    const changes = settingsChanges(old, { company_name, address, phone, email, reg_no, logo, max_annual_rate });
+    const changes = settingsChanges(old, { company_name, address, phone, email, reg_no, licence_no, logo, max_annual_rate });
     // The upload callback runs after the per-request transaction (app.js) closed.
     db.transaction(() => {
-      run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, logo=?, max_annual_rate=?, updated_at=datetime('now') WHERE id=1`,
-        [company_name, address, phone, email, reg_no, logo, max_annual_rate]);
+      run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, licence_no=?, logo=?, max_annual_rate=?, updated_at=datetime('now') WHERE id=1`,
+        [company_name, address, phone, email, reg_no, licence_no, logo, max_annual_rate]);
       logAction(req, 'update', 'settings', 1, `Updated company settings${changes.length ? ': ' + changes.join('; ') : ' (no changes)'}`);
     })();
     res.redirect('/settings?ok=' + encodeURIComponent('Company settings saved'));

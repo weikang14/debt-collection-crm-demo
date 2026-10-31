@@ -58,7 +58,7 @@ test('r2 E: smoke / E2E / SEC', { timeout: 400000 }, async () => {
     s.push(['S10', rs.ok === 'Restructured' && lk && un.ok === 'Restructure undone']);
     const cl = await a1.act(`/cases/${id}/calls`, { result: 'answered', duration_seconds: '5' });
     const nt = await a1.act(`/cases/${id}/notes`, { content: 'smoke note' });
-    const st = await a1.act(`/cases/${id}/status`, { status: 'negotiation' });
+    const st = await a1.act(`/cases/${id}/status`, { status: 'assigned' }); // a real change: the plan cancel already set negotiation (O-6)
     const tl = qa('SELECT event_type FROM timeline_events WHERE case_id=? ORDER BY created_at DESC, id DESC LIMIT 3', id).map(x => x.event_type).join();
     s.push(['S11', cl.ok === 'Call logged' && nt.ok === 'Note added' && st.ok === 'Status updated' && tl === 'status_change,note,call']);
     const tc = await a1.act('/tasks/new', { case_id: String(id), type: 'follow_up', title: 'smoke task', due_date: today() });
@@ -168,7 +168,9 @@ test('r2 E: smoke / E2E / SEC', { timeout: 400000 }, async () => {
     const pid = q1('SELECT id FROM payments WHERE case_id=? AND payment_date=?', id, today()).id;
     await fin.act(`/cases/${id}/payments/${pid}/void`);
     const u = await man.act(`/cases/${id}/restructures/${rid}/undo`);
-    const s5 = u.ok === 'Restructure undone' && ledgerAmt(u.html) === '10,696.06' && !has((await man.get(`/cases/${id}/edit`)).text, 'Loan terms are locked') && q1("SELECT COUNT(*) n FROM timeline_events WHERE case_id=? AND event_type='restructure'", id).n === 2;
+    // v1.12.0 (F-24): after the undo the terms stay locked — by the 1,000 payment, not the restructure.
+    const eh = (await man.get(`/cases/${id}/edit`)).text;
+    const s5 = u.ok === 'Restructure undone' && ledgerAmt(u.html) === '10,696.06' && !has(eh, 'locked after a restructure') && has(eh, 'locked once a payment is recorded') && q1("SELECT COUNT(*) n FROM timeline_events WHERE case_id=? AND event_type='restructure'", id).n === 2;
     check('E2E-03', '5 checkpoints', s1 && s2 && s3 && s4 && s5, [s1, s2, s3, s4, s5].map(x => (x ? 'Y' : 'N')).join('') + ` ${ledgerAmt(r.html)} / ${ledgerAmt(u.html)}`);
   });
 
@@ -179,11 +181,11 @@ test('r2 E: smoke / E2E / SEC', { timeout: 400000 }, async () => {
     const u = await admin.act('/users', { username: 'qa_newbie', full_name: 'QA 新人', password: 'Newbie123', role: 'agent', agent_id: String(ag) });
     await man.act('/tasks/new', { case_id: '19', type: 'follow_up', title: 'E2E-04 open', due_date: addDays(today(), 2) });
     const cs = q1('SELECT * FROM cases WHERE id=19');
-    await man.act('/cases/19', { debtor_id: String(cs.debtor_id), agent_id: String(ag), principal_amount: String(cs.principal_amount), interest_mode: cs.interest_mode, interest_amount: String(cs.interest_amount), priority: cs.priority });
+    await man.act('/cases/19', c.editForm(19, { agent_id: String(ag) })); // the full form (N-02)
     const s2 = qa("SELECT agent_id FROM tasks WHERE case_id=19 AND status='pending'").every(t => t.agent_id === ag);
     const nb = await c.as('qa_newbie', 'Newbie123');
     const cases = [...(await nb.get('/cases')).text.matchAll(/<a class="mono" href="\/cases\/(\d+)">/g)].map(m => +m[1]);
-    const debs = [...(await nb.get('/debtors')).text.matchAll(/href="\/debtors\/(\d+)"/g)].map(m => +m[1]);
+    const debs = [...new Set([...(await nb.get('/debtors')).text.matchAll(/href="\/debtors\/(\d+)"/g)].map(m => +m[1]))];
     const tasks = (await nb.get('/tasks')).text;
     const s3 = cases.join() === '19' && debs.join() === String(cs.debtor_id) && has(tasks, 'E2E-04 open') && (await nb.get('/cases/2')).status === 404;
     const uid = q1("SELECT id FROM users WHERE username='qa_newbie'").id;

@@ -1,0 +1,184 @@
+[
+ {
+  "id": "S-INT-03",
+  "expected": "INT-03（v1.2）：Total Outstanding = 1,150.00（v1.11.0 起标签为 Contract Balance）",
+  "actual": "Contract Balance 1,150.00；Settlement Today 1,150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-07",
+  "expected": "INT-07（v1.2）：Settlement Today = 本金 10,000.00，刷新不变",
+  "actual": "Settlement Today 10,000.00 / 刷新后 10,000.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-09",
+  "expected": "INT-09（v1.2）：Loan Start Date 注明“(unset, defaults to opened)”",
+  "actual": "Loan Start Date 2026-10-31 · interest accrues from this date (unset, defaults to opened) Next A",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-17",
+  "expected": "INT-17：保存后期限单位仍是 months",
+  "actual": "{\"tenure\":12,\"tenure_unit\":\"months\",\"maturity_date\":\"2027-10-31\"}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-CASE-04",
+  "expected": "CASE-04：提示“Case created”；CASE-年份-四位序号；时间线“Case … created”；审计 create case",
+  "actual": "Case created；CASE-2026-0005；审计=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-CASE-08",
+  "expected": "CASE-08：提示“Saved”，详情更新；审计 update case",
+  "actual": "Saved；{\"agent_id\":2,\"priority\":\"high\",\"remark\":\"S-CASE-08\"}；审计 \"Updated case CASE-2026-0005: agent_id: 1 → 2; priority: medium → high; remark: — → S-CASE-08\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-SET-09",
+  "expected": "SET-09（v1.2）：0 和 24 提示“…above 0 and at most 18% (the legal limit)”；12 可以保存",
+  "actual": "0 → Max annual interest rate must be above 0 and at most 18% (the legal limit)；24 → Max annual interest rate must be above 0 and at most 18% (the legal limit)；12 → Company settings saved",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-12",
+  "expected": "INT-12（v1.2）：24 被拒；12 保存，审计“max_annual_rate: 18 → 12”，设置页列出超限在办贷款；1.1%/月（13.2%）被拒",
+  "actual": "审计 \"Updated company settings: max_annual_rate: 18 → 12\"；红框 \"Open loans above the 12% p.a. cap: CASE-2026-D002 (18%), CASE-2026-D004 (18%), CASE-2026-D014 (18%), CASE-2026-D020 (18%), CASE-2026-0001 (15%), CASE-2026-0002 \"；1.1% → Interest rate exceeds the 12% p.a. limit (this loan: 13.2% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-14a",
+  "expected": "INT-14：表单新建的 18% 旧案件（上限 12 时）只改催收员 → Saved；改期限 → 被拒",
+  "actual": "只改催收员 → Saved；改期限 → Interest rate exceeds the 12% p.a. limit (this loan: 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-14b",
+  "expected": "INT-14：演示案件 2（18%，上限 12 时）只改催收员和备注 → 可以保存",
+  "actual": "→ Saved；存储 {\"interest_mode\":\"monthly\",\"interest_rate\":1.5,\"interest_amount\":0}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-INT-12-restore",
+  "expected": "改回 18 后 1.1%/月可以建案",
+  "actual": "18 → Company settings saved；1.1% → Case created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-PAY-12",
+  "expected": "PAY-12：连续记两笔（Reference 不同）→ 收据号递增 1",
+  "actual": "Payment RCPT-2026-0001 recorded / Payment RCPT-2026-0002 recorded",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-PAY-18",
+  "expected": "PAY-18：前两次只记一笔、一个收据号；Reference 不同的记为第二笔",
+  "actual": "Payment RCPT-2026-0003 recorded / Duplicate submission ignored: payment RCPT-2026-0003 was already recorded / Payment RCPT-2026-0004 recorded；入账 2 笔",
+  "result": "PASS",
+  "note": "第二次提交仍显示“Payment … recorded”（同一收据号），没有提示是重复提交"
+ },
+ {
+  "id": "S-SCH-06",
+  "expected": "SCH-06：Paid = 已还清；Overdue = 过期未还清；Partially Paid = 未到期已部分还；Pending = 未到期未还",
+  "actual": "还第一期 150 + 50 → Paid,Partially Paid,Pending；未还的案件 → Overdue,Pending",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-DEB-01",
+  "expected": "DEB-01：证件号片段搜索结果符合条件",
+  "actual": "Debtors 搜索 \"850020\" 含 Ravi Chandran=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-SRCH-01",
+  "expected": "SRCH-01：证件号搜索列出匹配的案件",
+  "actual": "全局搜索 \"850020\"；债务人 3 的案件 3,15 都在结果里=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-TASK-11",
+  "expected": "TASK-11：未完成任务转给新催收员；已完成的保留原归属；审计“N open task(s) reassigned”",
+  "actual": "Saved；任务 {\"S11 open\":1,\"S11 done\":3}（原催收员 3）；审计 \"Updated case CASE-2026-D019: agent_id: 3 → 1; 1 open task(s) reassigned\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-TASK-13",
+  "expected": "TASK-13：manager 把有未完成任务的案件改为未分派 → 任务仍在原催收员名下",
+  "actual": "Saved；任务 agent_id=2",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-E2E-04",
+  "expected": "E2E-04：建档建号 → 改派（任务随转）→ 只看到自己的案件 → 停用后不能登录 → 停用档案后下拉不出现",
+  "actual": "YYYYY 改派 Saved；cases=19 debtors=7",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-RS-18",
+  "expected": "RS-18：新计划 =（截点本金 + 500）按 12 期等额拆分，挂账行排在最前",
+  "actual": "Restructured；截点本金 10000，挂账 [500]；12 期合计 10500（应为 10500），每期 875；首行挂账=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-RS-27",
+  "expected": "RS-27：120 个月（新增利息 6,840）被拒，提示“Interest after the restructure plus carried arrears cannot exceed the remaining principal”；24 个月（1,368）可以",
+  "actual": "还款 Payment RCPT-2026-0008 recorded；120 → Interest after the restructure plus carried arrears cannot exceed the remaining principal；24 → Restructured",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-SET-06",
+  "expected": "SET-06：抬头、案件号、当天日期、本金、利息、已还、欠款、结清额、逾期金额与天数、起始日、期限、到期日；重组信息",
+  "actual": "案件 2 缺：无；Overdue ；案件 14 重组信息=true；案件 14 逾期 \"Overdue\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-PTP-16",
+  "expected": "PTP-16（v1.2）：新建都被拒；Fulfill 提示改用 Record Payment 并填原因",
+  "actual": "New PTP → Not allowed while the case is Bankruptcy；New Plan → Not allowed while the case is Bankruptcy；Fulfill → Record this payment with a reason instead (bankrupt / deceased case)（原 PTP 已被自动置为 broken）",
+  "result": "PASS",
+  "note": "转为 Bankruptcy 时 pending PTP 已自动变为 broken（G-19），fulfill 先判断“已结束”（src/routes/ptps.js:16），所以“改用 Record Payment”的提示到不了"
+ },
+ {
+  "id": "S-PAY-10",
+  "expected": "PAY-10：“Payment voided”；欠款恢复；时间线“Payment … voided”；审计 payment_void；原 Fully Paid 作废后回到 Negotiation",
+  "actual": "作废前 Fully Paid；Payment voided；作废后 Negotiation；结清额 10,300.00；时间线=true；审计=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-PTP-10",
+  "expected": "PTP-10：各期变 broken；时间线“Installment plan cancelled (N pending installment(s) broken)”；状态回到 Negotiation；审计 ptp_plan_cancel",
+  "actual": "建计划后 PTP；Installment plan cancelled；取消后 Negotiation；时间线 \"Installment plan cancelled (3 pending installment(s) broken)\"；审计=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "S-CASE-25",
+  "expected": "CASE-25：manager 把 Closed 案件改回 Negotiation → 结案时间被清除",
+  "actual": "案件 8：closed_at 2026-10-26 10:54:48 → null；Status updated",
+  "result": "PASS",
+  "note": ""
+ }
+]

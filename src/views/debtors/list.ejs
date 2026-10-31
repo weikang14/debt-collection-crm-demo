@@ -15,7 +15,7 @@
 <% if (!debtors.length) { %><%- include('../partials/empty', { msg: 'No debtors yet.' }) %><% } else { %>
 <table class="data"><thead><tr><th>Name</th><th>IC/Passport</th><th>Phone</th><th>Employer</th><th class="num">Salary</th><th>Risk</th></tr></thead>
 <tbody><% debtors.forEach(debtor => { %>
-<tr><td><a href="/debtors/<%= debtor.id %>"><%= debtor.name %></a></td><td class="mono"><%= debtor.ic_passport||'' %></td>
+<tr><td><a href="/debtors/<%= debtor.id %>"><%= debtor.name %></a></td><td class="mono"><%= h.maskId(debtor.ic_passport) %></td>
 <td class="mono"><%= debtor.phone||'' %></td><td><%= debtor.employer||'' %></td><td class="num"><%= debtor.salary!=null?debtor.salary:'' %></td>
 <td><span class="badge <%= debtor.risk_level==='high'?'is-red':debtor.risk_level==='low'?'is-green':'is-gold' %>"><%= debtor.risk_level %></span></td></tr>
 <% }) %></tbody></table><% } %>

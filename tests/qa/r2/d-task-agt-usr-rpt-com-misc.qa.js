@@ -98,8 +98,7 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
     await man.act('/tasks/new', { case_id: '19', type: 'follow_up', title: 'T11 done', due_date: addDays(today(), 2) });
     const done = q1("SELECT id FROM tasks WHERE title='T11 done'").id;
     await man.act(`/tasks/${done}/complete`);
-    const cs = q1('SELECT * FROM cases WHERE id=19');
-    const r = await man.act('/cases/19', { debtor_id: String(cs.debtor_id), agent_id: '1', principal_amount: String(cs.principal_amount), interest_mode: cs.interest_mode, interest_amount: String(cs.interest_amount), priority: cs.priority });
+    const r = await man.act('/cases/19', c.editForm(19, { agent_id: '1' })); // the full form (N-02)
     const t = qa("SELECT title, agent_id FROM tasks WHERE case_id=19 ORDER BY id");
     const log = q1("SELECT details FROM audit_logs WHERE action='update' AND entity_type='case' AND entity_id=19 ORDER BY id DESC");
     check('TASK-11', 'open → agent 1; done stays 3; "N open task(s) reassigned"', r.ok === 'Saved' && t.find(x => x.title === 'T11 open').agent_id === 1 && t.find(x => x.title === 'T11 done').agent_id === 3 && /\d+ open task\(s\) reassigned/.test(log.details), `${JSON.stringify(t)}; "${log.details}"`);
@@ -239,9 +238,11 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
   });
   await step('RPT-02', 'Outstanding by Status totals, independent of range', async () => {
     const t1 = strip((await admin.get('/reports')).text), t2 = strip((await admin.get('/reports?from=2020-01-01&to=2020-01-31')).text);
-    const tot = (t) => (t.match(/Total (\d+) ([\d,.]+)/) || []).slice(1).join('/');
+    // v1.12.0 (G-24): Cases | Settlement Today | Contract Balance; settlement total = cases.csv, contract total = DB.
+    const tot = (t) => (t.match(/Total (\d+) ([\d,.]+) ([\d,.]+)/) || []).slice(1).join('/');
     const db = q1('SELECT COUNT(*) n, SUM(outstanding_amount) s FROM cases');
-    check('RPT-02', 'grouped + total = DB; same for any range', tot(t1) === `${db.n}/${c.money(db.s)}` && tot(t1) === tot(t2), `${tot(t1)} vs db ${db.n}/${c.money(db.s)}; other range ${tot(t2)}`);
+    const settle = c.sumOf(await c.caseFigures(admin));
+    check('RPT-02', 'grouped + totals (settlement = cases.csv, contract = DB); same for any range', tot(t1) === `${db.n}/${c.money(settle)}/${c.money(db.s)}` && tot(t1) === tot(t2), `${tot(t1)} vs ${db.n}/${c.money(settle)}/${c.money(db.s)}; other range ${tot(t2)}`);
   });
   await step('RPT-03', 'performance by date range & collector', async () => {
     const from = today().slice(0, 8) + '01';
@@ -269,7 +270,8 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
   await step('RPT-05', 'three CSVs with headers', async () => {
     const a = await admin.get('/reports?export=cases'), b = await admin.get('/reports?export=outstanding'), p = await admin.get('/reports?export=performance');
     const hd = (r) => r.text.replace(/^﻿/, '').split('\r\n')[0];
-    check('RPT-05', 'filenames + headers', /cases-detailed\.csv/.test(a.headers.get('content-disposition')) && hd(a) === 'Case No,Debtor,Agent,Principal,Interest,Paid,Outstanding,Status,Opened' && /outstanding-by-status\.csv/.test(b.headers.get('content-disposition')) && hd(b) === 'Status,Cases,Outstanding'
+    // v1.12.0 (G-23 / G-24): settlement today, overdue and DPD columns; contract figure is "Contract Balance".
+    check('RPT-05', 'filenames + headers', /cases-detailed\.csv/.test(a.headers.get('content-disposition')) && hd(a) === 'Case No,Debtor,Agent,Principal,Interest,Paid,Settlement Today,Overdue,DPD,Contract Balance,Status,Opened' && /outstanding-by-status\.csv/.test(b.headers.get('content-disposition')) && hd(b) === 'Status,Cases,Settlement Today,Contract Balance'
       && /agent-performance\.csv/.test(p.headers.get('content-disposition')) && hd(p) === 'Agent,Collected,Rate %,Commission,Target', `${hd(a)} | ${hd(b)} | ${hd(p)}`);
   });
   await step('RPT-06', 'BOM + no float tails', async () => {
@@ -338,7 +340,8 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
   // ---------------- SRCH ----------------
   const srch = async (s, q) => [...(await s.get('/search?q=' + encodeURIComponent(q))).text.matchAll(/href="\/cases\/(\d+)"/g)].map(m => +m[1]);
   await step('SRCH-01', 'case no / name / IC / phone', async () => {
-    const a = await srch(admin, 'D014'), b = await srch(admin, 'Ravi Chandran'), d = await srch(admin, '850320-08'), e = await srch(admin, '016-3334445');
+    const ic = q1('SELECT ic_passport FROM debtors WHERE id=3').ic_passport.slice(0, 9); // G-10: demo ICs use the 00 month
+    const a = await srch(admin, 'D014'), b = await srch(admin, 'Ravi Chandran'), d = await srch(admin, ic), e = await srch(admin, '016-3334445');
     check('SRCH-01', 'matches', a.join() === '14' && b.length === 2 && d.join() === b.join() && e.join() === b.join(), `case=${a} name=${b} ic=${d} phone=${e}`);
   });
   await step('SRCH-02', 'agent1 cannot find agent2 debtor', async () => {
@@ -389,7 +392,7 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
     const p2 = q1("SELECT id FROM ptps WHERE case_id=2 AND status='pending'"); await man.act(`/ptps/${p2.id}/break`);
     await man.act('/cases/2/ptp-plans', { total_amount: '30', num_installments: '3', first_due_date: today() });
     const plan = q1('SELECT plan_id FROM ptps WHERE case_id=2 AND plan_id IS NOT NULL').plan_id; await man.act(`/cases/2/ptp-plans/${plan}/cancel`);
-    await man.act('/cases/2/calls', { result: 'busy' }); await man.act('/cases/2/status', { status: 'negotiation' });
+    await man.act('/cases/2/calls', { result: 'busy' }); await man.act('/cases/2/status', { status: 'assigned' }); // a real change (O-6: re-sending the same status records nothing)
     await man.act('/cases/2/notes', { content: 'aud note' }); const n = q1("SELECT id FROM timeline_events WHERE content='aud note'").id;
     await man.act(`/cases/2/notes/${n}`, { content: 'aud note 2' }); await man.act(`/cases/2/notes/${n}/delete`);
     await man.act('/cases/2/restructures', { effective_date: today(), interest_mode: 'monthly', interest_rate: '1.0', tenure: '12', reason: 'aud' });
@@ -443,20 +446,24 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
   await step('SET-06', 'statement contents', async () => {
     await upload(png, 'l.png', 'image/png');
     const st = strip((await admin.get('/cases/14/statement')).text);
-    const want = ['QA Kredit Sdn Bhd', '1 Jalan QA, KL', 'Tel: 03-1234', 'qa@kredit.my', 'Reg No: KPKT-QA-1', 'CASE-2026-D014', today(), 'Debtor', 'Phone', 'IC/Passport', 'Principal RM', 'Interest RM', 'Paid RM', 'Outstanding (contract, to maturity) RM', `Settlement Amount as of ${today()} RM`, 'Overdue RM', 'days past due', 'Loan Start Date', 'Interest Terms', 'Tenure 12 months', 'Maturity Date', 'Restructured From', 'Payment History'];
+    const want = ['QA Kredit Sdn Bhd', '1 Jalan QA, KL', 'Tel: 03-1234', 'qa@kredit.my', 'Reg No: KPKT-QA-1', 'CASE-2026-D014', today(), 'Debtor', 'Phone', 'IC/Passport', 'Principal RM', 'Interest RM', 'Paid RM', 'Contract Balance (incl. interest not yet due) RM', `Settlement Amount as of ${today()} RM`, 'Overdue RM', 'up to date', 'Loan Start Date', 'Interest Terms', 'Tenure 12 months', 'Maturity Date', 'Restructured From', 'Payment History'];
+    // v1.12.0 (O-4): labels as on the case page; case 14 is up to date since N-01, so "days past due" is checked on overdue case 2.
     const miss = want.filter(w => !st.includes(w));
-    check('SET-06', 'all elements present', miss.length === 0, miss.length ? 'missing: ' + miss.join(' | ') : 'all ' + want.length + ' present');
+    if (!strip((await admin.get('/cases/2/statement')).text).includes('days past due')) miss.push('case 2: days past due');
+    check('SET-06', 'all elements present', miss.length === 0, miss.length ? 'missing: ' + miss.join(' | ') : 'all ' + (want.length + 1) + ' present');
   });
   await step('SET-07', 'print hides buttons (CSS)', async () => {
     const h = (await admin.get('/cases/14/statement')).text;
     check('SET-07', '@media print hides .stmt-actions', /@media print \{ \.stmt-actions \{ display: none; \}/.test(h) && has(h, 'window.print()'), 'css rule present', '打印预览/PDF 见 ui.qa.py');
   });
-  await step('SET-09', 'max rate 0 / 150 refused; 20 ok', async () => {
+  // v1.2 SET-09 (N-03): above 0 and at most the legal 18%; lower values save.
+  await step('SET-09', 'max rate 0 / 24 refused; 12 ok', async () => {
     const e1 = (await admin.act('/settings', { company_name: 'QA Kredit Sdn Bhd', max_annual_rate: '0' })).err;
-    const e2 = (await admin.act('/settings', { company_name: 'QA Kredit Sdn Bhd', max_annual_rate: '150' })).err;
-    const ok = (await admin.act('/settings', { company_name: 'QA Kredit Sdn Bhd', max_annual_rate: '20' })).ok;
+    const e2 = (await admin.act('/settings', { company_name: 'QA Kredit Sdn Bhd', max_annual_rate: '24' })).err;
+    const ok = (await admin.act('/settings', { company_name: 'QA Kredit Sdn Bhd', max_annual_rate: '12' })).ok;
     await admin.act('/settings', { company_name: 'QA Kredit Sdn Bhd', max_annual_rate: '18' });
-    check('SET-09', '"Max annual interest rate must be between 0 and 100"; 20 saved', e1 === 'Max annual interest rate must be between 0 and 100' && e2 === e1 && ok === 'Company settings saved', `${e1} | ${e2} | ${ok}`);
+    const msg = 'Max annual interest rate must be above 0 and at most 18% (the legal limit)';
+    check('SET-09', `"${msg}"; 12 saved`, e1 === msg && e2 === msg && ok === 'Company settings saved', `${e1} | ${e2} | ${ok}`);
   });
   await step('SET-08', 'blank company → "Debt Collection CRM"', async () => {
     await admin.act('/settings', { company_name: '', max_annual_rate: '18' });

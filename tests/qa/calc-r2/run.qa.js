@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const E = require('./expected.qa.js');
 const C = require('./client.qa.js');
-const { F, ledger, settlementOn, schedule, arrears, addMonths, addDays, days, splitEqual, planDates, nominalRate, commission, sum2, r2 } = E;
+const { F, ledger, settlementOn, schedule, arrears, capOverdue, addMonths, addDays, days, splitEqual, planDates, nominalRate, commission, sum2, r2 } = E;
 
 const T = C.todayMYT();
 const results = [];
@@ -21,6 +21,10 @@ function cmp(g, id, scenario, formula, expected, actual, note = '') {
 function chk(g, id, scenario, expectedDesc, cond, actual, note = '') {
   results.push({ g, id, scenario, formula: '', expected: expectedDesc, actual: String(actual).slice(0, 300), result: cond ? 'PASS' : 'FAIL', note });
   return cond;
+}
+// A business expectation that waits on an outside decision: recorded, not failed.
+function pending(g, id, scenario, expectedDesc, actual, decision) {
+  results.push({ g, id, scenario, formula: '', expected: expectedDesc, actual: String(actual).slice(0, 300), result: 'PENDING', note: '待决定：' + decision });
 }
 const loanOf = t => ({ principal: t.principal_amount, mode: t.interest_mode || 'fixed', rate: Number(t.interest_rate || 0), lump: Number(t.interest_amount || 0),
   start: t.loan_start_date, maturity: t.tenure ? addMonths(t.loan_start_date, Number(t.tenure)) : null });
@@ -39,7 +43,7 @@ function expectCase(t, pays = [], rs = [], today = T) {
   } else if (t.tenure && t.loan_start_date) {
     rows = schedule({ principal: t.principal_amount, mode: loan.mode, rate: loan.rate, lump: loan.lump, start: t.loan_start_date, tenure: Number(t.tenure) }, pays, { today, settled });
   }
-  const ar = arrears(rows, today);
+  const ar = capOverdue(arrears(rows, today), sett); // G-12 cap
   const total = F.of(t.principal_amount).add(L.interest);
   const recovered = total.isPos() ? Number(F.of(L.paid).mul(100).div(total).add(new F(1n, 2n)).floor2().r2().split('.')[0]) : 0;
   return { ...L, settlement: sett, rows, dpd: ar.dpd, overdue: ar.overdue, maturity: rsx.length ? rsx[rsx.length - 1].maturity : loan.maturity, cuts: L.cuts, recovered };
@@ -102,7 +106,9 @@ async function main() {
     let v = await view(a0); let x = expectCase(terms[a0]);
     cmp(g, 'A0.interest', '示例A 无还款：合同利息', '10000 × 1.5% × 12 个月', x.interest, v.interest);
     cmpCase(g, 'A0', '示例A 无还款', x, v, ['outstanding', 'settlement', 'dpd', 'overdue', 'maturity', 'schedule']);
-    cmp(g, 'A0.settle.formula', '示例A 今日结清额的算式', `10000 + 10000×1.5%×(9 + 24/31)`, '11466.13', v.settlement);
+    // Written out by hand for today: whole months since 01-01 plus today's share of this month (D-01).
+    const [ty, tm, td] = T.split('-').map(Number), dim = new Date(Date.UTC(ty, tm, 0)).getUTCDate(), k = (ty - 2026) * 12 + (tm - 1);
+    cmp(g, 'A0.settle.formula', '示例A 今日结清额的算式', `10000 + 10000×1.5%×(${k} + ${td - 1}/${dim})`, r2(F.of(10000).add(F.of(150).mul(new F(BigInt(k * dim + td - 1), BigInt(dim))))), v.settlement);
     const st = await C.statementView(s, a0);
     cmp(g, 'A0.stmt', '示例A 对账单 = 案件页（合同欠款/结清额/逾期/DPD）', '同一案件同一天', [v.outstanding, v.settlement, v.overdue, v.dpd].join('/'), [st.outstanding, st.settlement, st.overdue, st.dpd].join('/'));
     chk(g, 'A0.paymax', '示例A Record Payment 弹窗 max = 今日结清额', x.settlement, v.payMaxLabel === x.settlement && v.payMaxAttr === String(Number(x.settlement)), `label ${v.payMaxLabel} attr ${v.payMaxAttr}`);
@@ -143,11 +149,11 @@ async function main() {
     await payOk(e1, T, '150');
     v = await view(e1); x = expectCase(terms[e1], pays[e1]);
     cmpCase(g, 'E1', '示例E 再还 150', x, v, ['dpd', 'overdue', 'schedule']);
-    // INT-07: start today, no tenure
-    const z = await newC('起始=今天 无期限', { principal_amount: 10000, interest_mode: 'monthly', interest_rate: 1.5, loan_start_date: T });
+    // INT-07 (v1.2, N-02): start today with a 12-month term — nothing accrued yet, nothing due yet.
+    const z = await newC('起始=今天 12 个月', { principal_amount: 10000, interest_mode: 'monthly', interest_rate: 1.5, loan_start_date: T, tenure: 12 });
     v = await view(z);
-    cmp(g, 'INT07', 'INT-07 起始=今天、无期限：利息', '同一天 0 天', '0.00', v.interest);
-    cmp(g, 'INT07.dpd', 'INT-07 无计划：DPD/Overdue 不显示', 'null', 'null', String(v.dpd));
+    cmp(g, 'INT07', 'INT-07 起始=今天：今日结清额 = 本金', '同一天 0 天', '10000.00', v.settlement);
+    cmp(g, 'INT07.dpd', 'INT-07 第一期未到：DPD 0 / up to date', '0', '0', String(v.dpd));
     // short loan 1 month
     const sh = await newC('1个月短期贷 10-01', { principal_amount: 10000, interest_mode: 'monthly', interest_rate: 1.5, loan_start_date: '2026-10-01', tenure: 1 });
     v = await view(sh); x = expectCase(terms[sh]);
@@ -377,7 +383,8 @@ async function main() {
     cmp(g, 'CAP', '重组为 2%/月（RS-24）', '拒收（上限优先）', 'Interest rate exceeds the 18% p.a. limit (this loan: 24% p.a.)', r.err);
     // fixed restructure 18.00 vs 18.01 vs 18.004 (cut principal 10,000 + carried)
     const fxr = async (lump, label) => {
-      const id = await newC(`Fixed 重组 ${label}`, { ...A, loan_start_date: '2026-09-25' });
+      // N-09: only a fixed loan may be restructured to a fixed amount; base 1,800 / 12 months = 18% p.a.
+      const id = await newC(`Fixed 重组 ${label}`, { principal_amount: 10000, interest_mode: 'fixed', interest_amount: 1800, loan_start_date: '2026-09-25', tenure: 12 });
       const cut = expectCase(terms[id]); const P = settlementOn(loanOf(terms[id]), [], T); void P; void cut;
       const rr = await s.post(`/cases/${id}/restructures`, { effective_date: T, interest_mode: 'fixed', interest_amount: String(lump), tenure: '12', reason: 'x' });
       return rr;
@@ -388,12 +395,17 @@ async function main() {
       const nom = nominalRate({ mode: 'fixed', lump, tenure: 12 }, 10000);
       chk(g, `FIXCAP.${lump}`, `重组为 Fixed 利息 ${lump}、12 期（截点本金 10,000）名义年化 ${nom.r2()}…%`, expAccept ? '接受' : '拒收（> 18%）', expAccept ? r.ok === 'Restructured' : !!r.err, r.ok || r.err);
     }
+    const rb = await newC('计息贷款重组为 Fixed', { ...A, loan_start_date: '2026-09-25' });
+    r = await s.post(`/cases/${rb}/restructures`, { effective_date: T, interest_mode: 'fixed', interest_amount: '1800', tenure: '12', reason: 'x' });
+    cmp(g, 'FIX.N09', '计息贷款重组为 Fixed（N-09，待律师）', '拒收', 'A rate-based loan cannot be restructured to a fixed amount (pending legal review)', r.err || r.ok);
     // interest ≤ principal on restructure: 750 (5 months) + 10000×1.25%×n
     for (const [n, expAccept] of [[74, true], [75, false]]) {
       const id = await newC(`重组总利息边界 ${n}期`, { ...A });
       r = await s.post(`/cases/${id}/restructures`, { effective_date: '2026-06-01', interest_mode: 'monthly', interest_rate: '1.25', tenure: String(n), reason: 'x' });
       const tot = ledger(loanOf(terms[id]), [], { restructures: [{ effective: '2026-06-01', mode: 'monthly', rate: 1.25, maturity: addMonths('2026-06-01', n) }] }).interest;
-      chk(g, `TOTINT.${n}`, `06-01 重组为 1.25%/月 × ${n} 个月：总利息 ${tot}（本金 10,000）`, expAccept ? '接受（= 本金）' : '拒收（> 本金）', expAccept ? r.ok === 'Restructured' : r.err === 'Total interest cannot exceed the principal', r.ok || r.err);
+      // Over the line both caps refuse; the N-11 check (new interest + arrears ≤ remaining principal) runs first.
+      chk(g, `TOTINT.${n}`, `06-01 重组为 1.25%/月 × ${n} 个月：总利息 ${tot}（本金 10,000）`, expAccept ? '接受（= 本金）' : '拒收（> 本金）', expAccept ? r.ok === 'Restructured'
+        : ['Total interest cannot exceed the principal', 'Interest after the restructure plus carried arrears cannot exceed the remaining principal'].includes(r.err), r.ok || r.err);
     }
     // matured loan restructured today (RS-21)
     const mt = await newC('已到期贷款重组', { ...A, loan_start_date: '2025-01-01', tenure: 3 });
@@ -426,7 +438,8 @@ async function main() {
       ['fixed 1800.40/12', { ...P, interest_mode: 'fixed', interest_amount: '1800.40' }, false],
       ['fixed 1800.01/12', { ...P, interest_mode: 'fixed', interest_amount: '1800.01' }, false],
       ['fixed 9000 无期限', { principal_amount: 10000, interest_mode: 'fixed', interest_amount: '9000' }, false],
-      ['fixed 1500 期限30 tenure_unit=days（篡改请求）', { principal_amount: 10000, interest_mode: 'fixed', interest_amount: '1500', loan_start_date: '2026-10-01', tenure: '30', tenure_unit: 'days' }, false],
+      // G-15: the unit is always months — 30 months is 6% p.a., so the tampered request is accepted as months.
+      ['fixed 1500 期限30 tenure_unit=days（篡改请求）', { principal_amount: 10000, interest_mode: 'fixed', interest_amount: '1500', loan_start_date: '2026-10-01', tenure: '30', tenure_unit: 'days' }, true],
       ['monthly 1.25 × 80 期（总利息 = 本金）', { principal_amount: 10000, interest_mode: 'monthly', interest_rate: '1.25', loan_start_date: '2026-09-01', tenure: '80' }, true],
       ['monthly 1.25 × 81 期（101.25%）', { principal_amount: 10000, interest_mode: 'monthly', interest_rate: '1.25', loan_start_date: '2026-09-01', tenure: '81' }, false],
       ['monthly 1.5 × 120 期（INT-13）', { principal_amount: 10000, interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: '2026-09-01', tenure: '120' }, false],
@@ -437,13 +450,13 @@ async function main() {
     ];
     for (const [label, t, expAccept] of cases) {
       const r = await C.newCase(s, debtor, t);
-      const nom = nominalRate({ mode: t.interest_mode, rate: t.interest_rate, lump: t.interest_amount, tenure: t.tenure_unit === 'days' ? null : t.tenure }, 10000);
-      const life = t.tenure && t.tenure_unit !== 'days' ? ledger(loanOf({ ...t, principal_amount: 10000 }), []).interest : null;
+      const nom = nominalRate({ mode: t.interest_mode, rate: t.interest_rate, lump: t.interest_amount, tenure: t.tenure }, 10000);
+      const life = t.tenure ? ledger(loanOf({ ...t, principal_amount: 10000 }), []).interest : null;
       chk(g, label, `建案 ${label}；名义年化 ${nom ? nom.r2() : '—'}%；合同总利息 ${life ?? '无期限/无法计算'}`, expAccept ? '接受' : '拒收', expAccept ? !!r.id : !r.id, r.id ? `接受（案件 ${r.id}）` : r.err);
       if (r.id) created.push({ id: r.id, label: 'CAP ' + label });
       if (r.id && t.tenure_unit === 'days') {
         const row = C.q1('SELECT tenure, tenure_unit, maturity_date FROM cases WHERE id=?', r.id);
-        results.push({ g, id: label + '.stored', scenario: '同上：存储的期限与到期日', formula: '', expected: '30 days → 实际年化 1500/10000 ÷ (30/365) = 182.5%', actual: JSON.stringify(row), result: 'INFO', note: '' });
+        chk(g, label + '.stored', '同上：存储的期限单位（G-15）', '30 months，到期日 = 起始日 + 30 个月', row.tenure === 30 && row.tenure_unit === 'months' && row.maturity_date === addMonths('2026-10-01', 30), JSON.stringify(row));
       }
     }
   }
@@ -540,14 +553,16 @@ async function main() {
     v = await view(pre2); x = expectCase(terms[pre2], pays[pre2]);
     cmpCase(g, 'PRE2', `起始日（${addMonths(T, -6)}）还 1,000 冲本金、之后未付利息`, x, v, ['outstanding', 'settlement', 'dpd', 'overdue']);
     const accruedUnpaid = ledger(loanOf(terms[pre2]), pays[pre2], { asOf: addDays(T, -1), today: T }).interestUnpaid;
-    chk(g, 'PRE2.biz', '业务预期：账本上已产生且未付的利息 > 0 时，不应显示 up to date', `账本未付利息 ${accruedUnpaid}（截至昨天）→ DPD > 0`, v.dpd > 0, `${v.dpdText}; Overdue ${v.overdue}`);
+    if (v.dpd > 0) chk(g, 'PRE2.biz', '业务预期：账本上已产生且未付的利息 > 0 时，不应显示 up to date', `账本未付利息 ${accruedUnpaid}（截至昨天）→ DPD > 0`, true, `${v.dpdText}; Overdue ${v.overdue}`);
+    else pending(g, 'PRE2.biz', '业务预期：账本上已产生且未付的利息 > 0 时，不应显示 up to date', `账本未付利息 ${accruedUnpaid}（截至昨天）→ DPD > 0`, `${v.dpdText}; Overdue ${v.overdue}`, 'N-06（DPD 按账本还是按计划）');
   }
 
   // ===================== COM: commission attribution (D-11) =====================
   {
     const g = 'COM';
     const aA = await C.newAgent(s, 'QA R2 Agent A', 5), aB = await C.newAgent(s, 'QA R2 Agent B', 7.5);
-    const id = await newC('改派佣金', { principal_amount: 5000, interest_mode: 'fixed', interest_amount: 0, agent_id: aA });
+    // Started a month ago, so yesterday's backdated payment is after the loan start (N-14).
+    const id = await newC('改派佣金', { principal_amount: 5000, interest_mode: 'fixed', interest_amount: 0, loan_start_date: addDays(T, -30), agent_id: aA });
     await payOk(id, T, '933.63');
     await s.post('/tasks/new', { case_id: String(id), title: 'QA 待办', type: 'follow_up', due_date: addDays(T, 3) });
     await s.post('/tasks/new', { case_id: String(id), title: 'QA 已完成', type: 'follow_up', due_date: T });
@@ -565,12 +580,13 @@ async function main() {
     cmp(g, 'A.earned', 'A 本月 Earned', '933.63 × 5%', commission('933.63', 5), rowA && rowA.earned);
     const bBack = backdated.slice(0, 7) === month;
     cmp(g, 'B.collected', 'B 本月 Collected（改派后录入 1,234.57 + 补录昨天 100）', bBack ? '1334.57（系统按录入时的案件催收员）' : '1234.57', bBack ? '1334.57' : '1234.57', rowB && rowB.collected,
-      '昨天（改派前）的 100 归 B：D-11 “收款时”指录入时还是收款日，待确认');
+      'N-12 A：归录入时的催收员 B（写入使用手册）；G-31 待客户确认是否改为按收款日');
     cmp(g, 'B.earned', 'B 本月 Earned', '1334.57 × 7.5%', commission(bBack ? '1334.57' : '1234.57', 7.5), rowB && rowB.earned);
     const pay100 = C.q1('SELECT agent_id FROM payments WHERE case_id=? AND payment_date=?', id, backdated);
-    // v1.11.0 (N-14): the loan starts today (no start date → opened), so yesterday's payment is refused.
-    if (!pay100) chk(g, 'BACKDATE', `补录 ${backdated}（改派前那天）的 100 归属`, '业务预期：A（当天负责的催收员）', false, 'v1.11.0 拒收：还款日期早于贷款起始日（N-14），无法验证归属', 'RULE-CHANGE');
-    else chk(g, 'BACKDATE', `补录 ${backdated}（改派前那天）的 100 归属`, '业务预期：A（当天负责的催收员）', pay100.agent_id === aA, pay100.agent_id === aA ? 'A' : pay100.agent_id === aB ? 'B' : String(pay100.agent_id), '待确认 Q');
+    // N-12 decided "A: the agent when it was entered" — so B; G-31 (by payment date → A) waits on the client.
+    const who = !pay100 ? '未入账' : pay100.agent_id === aA ? 'A' : pay100.agent_id === aB ? 'B' : String(pay100.agent_id);
+    chk(g, 'BACKDATE', `补录 ${backdated}（改派前那天）的 100 归属`, 'N-12 A：录入时的催收员 B', who === 'B', who);
+    pending(g, 'BACKDATE.G31', '同上：若客户要求按收款日归属（G-31）', 'A（收款日负责的催收员）', who, 'N-12 / G-31，问客户');
     const tasks = C.qa('SELECT title, agent_id, status FROM tasks WHERE case_id=? ORDER BY id', id);
     chk(g, 'TASKS', '改派后任务：待办随案件转 B，已完成留 A', 'QA 待办→B；QA 已完成→A', tasks.find(t => t.title === 'QA 待办').agent_id === aB && tasks.find(t => t.title === 'QA 已完成').agent_id === aA, JSON.stringify(tasks));
     const rep = await C.reports(s);

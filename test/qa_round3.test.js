@@ -191,7 +191,7 @@ test('F-24: an edited or voided payment keeps its earlier row; terms and debtor 
   call(casesRouter, 'post', '/:id', { params: { id: String(id) }, body: { ...editBody(before), principal_amount: '20000', debtor_id: '2', agent_id: '2' } });
   const after = caseRow(id);
   assert.deepStrictEqual([after.principal_amount, after.debtor_id, after.agent_id], [before.principal_amount, before.debtor_id, 2]);
-  assert.strictEqual(call(casesRouter, 'get', '/:id/edit', { params: { id: String(id) } }).locals.termsLocked, true);
+  assert.strictEqual(call(casesRouter, 'get', '/:id/edit', { params: { id: String(id) } }).locals.termsLocked, 'payment');
 });
 
 test('F-25: each live payment has a printable receipt; a voided one does not', () => {
@@ -203,4 +203,35 @@ test('F-25: each live payment has a printable receipt; a voided one does not', (
   assert.strictEqual(out.locals.p.receipt_no, p.receipt_no);
   call(casesRouter, 'post', '/:id/payments/:pid/void', { params: { id: String(id), pid: String(p.id) }, body: {} });
   assert.strictEqual(call(casesRouter, 'get', '/:id/payments/:pid/receipt', { params: { id: String(id), pid: String(p.id) } }).status, 404);
+});
+
+// ── v1.13.0 ──────────────────────────────────────────────────────
+
+test('O-6: re-sending the current status changes nothing and records nothing', () => {
+  const id = monthly();
+  const n = () => db.get("SELECT COUNT(*) n FROM timeline_events WHERE case_id=? AND event_type='status_change'", [id]).n;
+  const before = n(), cur = caseRow(id).status;
+  assert.match(text(call(casesRouter, 'post', '/:id/status', { params: { id: String(id) }, body: { status: cur } }), 'ok'), /Status unchanged/);
+  assert.strictEqual(n(), before);
+});
+
+test('F-48: agreement no. and date are saved and audited; the date must be a real date', () => {
+  const id = newCase({ interest_amount: '100', tenure: '12', loan_start_date: monthsAgo(1), agreement_no: 'AGR-1', agreement_date: monthsAgo(1) });
+  assert.deepStrictEqual([caseRow(id).agreement_no, caseRow(id).agreement_date], ['AGR-1', monthsAgo(1)]);
+  call(casesRouter, 'post', '/:id', { params: { id: String(id) }, body: { ...editBody(caseRow(id)), agreement_no: 'AGR-2' } });
+  assert.match(lastAudit('update').details, /agreement_no: AGR-1 → AGR-2/);
+  assert.match(text(call(casesRouter, 'post', '/', { body: { debtor_id: '1', principal_amount: '100', agreement_date: '2026-02-30' } }), 'err'), /Invalid agreement date/);
+});
+
+test('F-30: lists show only the last 4 characters of an IC', () => {
+  const { maskId } = require('../src/utils/helpers');
+  assert.strictEqual(maskId('880001-00-5501'), '******-**-5501');
+  assert.strictEqual(maskId('A1234567'), '****4567');
+  assert.strictEqual(maskId(null), '');
+});
+
+test('a fixed loan may be restructured from its start date, like the payments it can carry', () => {
+  const { effectiveDateRange } = require('../src/services/restructure');
+  const id = newCase({ interest_amount: '1500', tenure: '12', loan_start_date: monthsAgo(3) });
+  assert.strictEqual(effectiveDateRange(caseRow(id), [], []).min, monthsAgo(3));
 });

@@ -124,5 +124,42 @@ async function newCase(s, fields) {
 const today = () => new Date(Date.now() + 8 * 3600000).toISOString().slice(0, 10);
 const addDays = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 
+// v1.12.0 (G-23 / G-24): the session's cases.csv — one row per case in scope with
+// Settlement Today, Overdue, DPD and Contract Balance. Totals on the dashboard and
+// in Reports are sums of Settlement Today; calc-r2 checks the per-case amounts.
+function csvRows(text) {
+  const rows = []; let row = [], cell = '', q = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (q) { if (ch === '"' && text[i + 1] === '"') { cell += '"'; i++; } else if (ch === '"') q = false; else cell += ch; }
+    else if (ch === '"') q = true;
+    else if (ch === ',') { row.push(cell); cell = ''; }
+    else if (ch === '\n') { row.push(cell.replace(/\r$/, '')); rows.push(row); row = []; cell = ''; }
+    else cell += ch;
+  }
+  if (cell || row.length) { row.push(cell); rows.push(row); }
+  return rows;
+}
+async function caseFigures(sess) {
+  const [head, ...rows] = csvRows((await sess.get('/cases?format=csv')).text.replace(/^\uFEFF/, ''));
+  const k = n => head.indexOf(n);
+  return rows.filter(r => r.length > 1).map(r => ({ case_no: r[k('Case No')], status: r[k('Status')],
+    settlement: Number(r[k('Settlement Today')]), contract: Number(r[k('Contract Balance')]),
+    overdue: r[k('Overdue')] === '' ? null : Number(r[k('Overdue')]), dpd: r[k('DPD')] === '' ? null : Number(r[k('DPD')]) }));
+}
+const sumOf = (rows, key = 'settlement') => Math.round(rows.reduce((s, r) => s + r[key], 0) * 100) / 100;
+
+// The Edit Case form as a browser submits it: every field, current values unless overridden
+// (N-02: a partial form without the tenure is refused).
+const editForm = (id, o = {}) => {
+  const cs = q1('SELECT * FROM cases WHERE id=?', id);
+  return { debtor_id: String(cs.debtor_id), agent_id: cs.agent_id ? String(cs.agent_id) : '', principal_amount: String(cs.principal_amount),
+    loan_start_date: cs.loan_start_date || '', tenure: cs.tenure ? String(cs.tenure) : '', interest_mode: cs.interest_mode,
+    interest_amount: cs.interest_amount == null ? '' : String(cs.interest_amount), interest_rate: cs.interest_rate == null ? '' : String(cs.interest_rate),
+    priority: cs.priority, remark: cs.remark || '', ...o };
+};
+// The version the code under test ships (AUTH-10 compares the footer with it).
+const appVersion = () => require(path.join(ROOT, 'src', 'version.js')).VERSION;
+
 module.exports = { ROOT, DB_PATH, BASE, Session, as, PW, db, q1, qa, rec, check, saveResults, get results() { return results; },
-  alertOf, has, strip, ledgerAmt, ledgerVal, ledgerSmall, money, num, scheduleRows, newDebtor, newCase, today, addDays };
+  alertOf, has, strip, ledgerAmt, ledgerVal, ledgerSmall, money, num, scheduleRows, newDebtor, newCase, today, addDays, csvRows, caseFigures, sumOf, editForm, appVersion };

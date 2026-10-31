@@ -34,7 +34,8 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
   await step('CASE-02', 'CSV honours filter; columns', async () => {
     const r = await admin.get('/cases?format=csv&status=legal');
     const lines = r.text.replace(/^﻿/, '').split('\r\n');
-    check('CASE-02', 'cases.csv, filtered, 9 columns', /cases\.csv/.test(r.headers.get('content-disposition')) && lines[0] === 'Case No,Debtor,Debtor Phone,Agent,Outstanding,Paid,Priority,Status,Opened' && lines.length - 1 === 2 && lines.slice(1).every(l => /,Legal,/.test(l)),
+    // v1.12.0 (G-23): Settlement Today, Overdue, DPD added; the contract figure is "Contract Balance".
+    check('CASE-02', 'cases.csv, filtered, 12 columns', /cases\.csv/.test(r.headers.get('content-disposition')) && lines[0] === 'Case No,Debtor,Debtor Phone,Agent,Settlement Today,Overdue,DPD,Contract Balance,Paid,Priority,Status,Opened' && lines.length - 1 === 2 && lines.slice(1).every(l => /,Legal,/.test(l)),
       `${r.headers.get('content-disposition')}; header=${lines[0]}; rows=${lines.length - 1}`);
   });
   await step('CASE-03', 'missing debtor/principal (server)', async () => {
@@ -44,7 +45,8 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
   });
   let cid4;
   await step('CASE-04', 'Case created; CASE-YYYY-0001 (+1); timeline; audit', async () => {
-    const r = await admin.act('/cases', { debtor_id: String(debB), agent_id: '1', principal_amount: '1000', interest_mode: 'fixed', interest_amount: '200', priority: 'medium', status: 'new' });
+    // N-02: an interest-bearing loan needs a tenure; 200 over 14 months = 17.14% p.a. (12 months would be 20%).
+    const r = await admin.act('/cases', { debtor_id: String(debB), agent_id: '1', principal_amount: '1000', interest_mode: 'fixed', interest_amount: '200', loan_start_date: today(), tenure: '14', priority: 'medium', status: 'new' });
     cid4 = Number(r.location.split('/').pop());
     const r2 = await admin.act('/cases', { debtor_id: String(debB), agent_id: '1', principal_amount: '1000', interest_mode: 'fixed', interest_amount: '0' });
     const c1 = q1('SELECT case_no FROM cases WHERE id=?', cid4).case_no, c2 = q1('SELECT case_no FROM cases WHERE id=?', Number(r2.location.split('/').pop())).case_no;
@@ -65,7 +67,7 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
     check('CASE-07', '2026-02-28; none when tenure missing', v === '2026-02-28' && v2 === null, `with=${v} without=${v2}`);
   });
   await step('CASE-08', 'edit agent/priority/remark → Saved; audit old→new', async () => {
-    const r = await admin.act(`/cases/${cid4}`, { debtor_id: String(debB), agent_id: '2', principal_amount: '1000', interest_mode: 'fixed', interest_amount: '200', priority: 'high', remark: 'CASE-08 remark' });
+    const r = await admin.act(`/cases/${cid4}`, c.editForm(cid4, { agent_id: '2', priority: 'high', remark: 'CASE-08 remark' })); // the full form (N-02)
     const row = q1('SELECT agent_id, priority, remark FROM cases WHERE id=?', cid4);
     const log = q1("SELECT details FROM audit_logs WHERE action='update' AND entity_type='case' AND entity_id=? ORDER BY id DESC", cid4);
     check('CASE-08', 'Saved + detail + audit with old→new', r.ok === 'Saved' && row.agent_id === 2 && row.priority === 'high' && has(r.html, 'CASE-08 remark') && /agent_id: 1 → 2/.test(log.details), `${r.ok}; ${JSON.stringify(row)}; audit="${log.details}"`);
@@ -84,7 +86,9 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
     await admin.act(`/cases/${cM}/payments`, { payment_date: '2026-03-02', amount: '1000', method: 'cash' });
     const h = await show(admin, cM);
     const t = strip(h);
-    check('CASE-10', 'all ledger items present', /Total Outstanding \(contract, to maturity\)/.test(t) && ledgerVal(h, 'Settlement Today') && ledgerVal(h, 'Overdue') && /days past due|up to date/.test(ledgerSmall(h, 'Overdue') || '')
+    // v1.2 CASE-10 (G-24): the lead figure is Settlement Today; Contract Balance (incl. interest not yet due) beside it; overdue ≤ settlement.
+    check('CASE-10', 'all ledger items present', /Settlement Today/.test(t) && ledgerVal(h, 'Settlement Today') && ledgerVal(h, 'Contract Balance') && /incl\. interest not yet due/.test(t)
+      && ledgerVal(h, 'Overdue') && num(ledgerVal(h, 'Overdue')) <= num(ledgerVal(h, 'Settlement Today')) && /days past due|up to date/.test(ledgerSmall(h, 'Overdue') || '')
       && /\d+% recovered/.test(t) && ledgerVal(h, 'Principal') === '10,000.00' && ledgerVal(h, 'Interest') && ledgerVal(h, 'Paid') === '1,000.00' && ledgerVal(h, 'Maturity Date') === '2027-01-01' && /opened \d+ days? ago/.test(t),
     `outstanding=${ledgerAmt(h)} settle=${ledgerVal(h, 'Settlement Today')} overdue=${ledgerVal(h, 'Overdue')} (${ledgerSmall(h, 'Overdue')}) ${(t.match(/\d+% recovered/) || [])[0]} I=${ledgerVal(h, 'Interest')} mat=${ledgerVal(h, 'Maturity Date')}`);
   });
@@ -119,7 +123,8 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
   await step('CASE-15', 'Records sections in order', async () => {
     const h = await show(admin, 14);
     const order = ['<h2>Repayment Schedule', '<h2>Restructure History', '<h2>Payments', '<h2>Promise to Pay', '<h2>Calls', '<h2>Tasks'].map(s => h.indexOf(s));
-    const noSched = await show(admin, 1);
+    // v1.2: a schedule only "with terms" — every demo loan now has a 12-month term (N-02), so use a principal-only case.
+    const noSched = await show(admin, await c.newCase(admin, { debtor_id: String(debB), principal_amount: '500', interest_mode: 'fixed', interest_amount: '0' }));
     check('CASE-15', 'Schedule, Restructure History, Payments, PTP, Calls, Tasks; schedule only with terms', order.every((v, i) => v > 0 && (i === 0 || v > order[i - 1])) && !has(noSched, '<h2>Repayment Schedule') && !has(noSched, '<h2>Restructure History') && has(h, 'id="dlg-records"'),
       `positions=${order.join(',')}`);
   });
@@ -203,9 +208,11 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
   });
 
   // ---------------- INT ----------------
-  await step('INT-03', 'Fixed 1000+200 → 1,200.00', async () => {
-    const id = await c.newCase(admin, { debtor_id: String(debB), principal_amount: '1000', interest_mode: 'fixed', interest_amount: '200' });
-    check('INT-03', 'Total Outstanding 1,200.00', ledgerAmt(await show(admin, id)) === '1,200.00', ledgerAmt(await show(admin, id)));
+  // v1.2 INT-03: Fixed 1,000 + 150 over 12 months (15% p.a.); fixed interest is due up front, so both figures are 1,150.00.
+  await step('INT-03', 'Fixed 1000+150 / 12 months → 1,150.00', async () => {
+    const id = await c.newCase(admin, { debtor_id: String(debB), principal_amount: '1000', interest_mode: 'fixed', interest_amount: '150', loan_start_date: addDays(today(), -10), tenure: '12' });
+    const h = await show(admin, id);
+    check('INT-03', 'Contract Balance and Settlement Today 1,150.00', ledgerVal(h, 'Contract Balance') === '1,150.00' && ledgerVal(h, 'Settlement Today') === '1,150.00', `${ledgerVal(h, 'Contract Balance')} / ${ledgerVal(h, 'Settlement Today')}`);
   });
   let cA;
   await step('INT-04', 'Monthly 10000 1.5% 12m → 1,800 / 11,800.00', async () => {
@@ -228,15 +235,16 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
     rec('EX-A-0615', '示例 A：2026-06-15 结清额 9,784.19', p.err, p.err === 'Amount exceeds what is owed on 2026-06-15: at most RM 9784.19' ? 'PASS' : 'FAIL');
   });
   await step('INT-07', 'start today, no tenure → 0.00; (proxy for next day) start yesterday → 1/31 month share', async () => {
-    const id = await c.newCase(admin, { debtor_id: String(debA), principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: today() });
+    const id = await c.newCase(admin, { debtor_id: String(debA), principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: today(), tenure: '12' });
     const h1 = await show(admin, id), h2 = await show(admin, id);
     const y = addDays(today(), -1);
-    const id2 = await c.newCase(admin, { debtor_id: String(debA), principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: y });
+    const id2 = await c.newCase(admin, { debtor_id: String(debA), principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: y, tenure: '12' });
     const daysInPeriod = (new Date(Date.UTC(+y.slice(0, 4), +y.slice(5, 7), +y.slice(8, 10))) - new Date(y + 'T00:00:00Z')) / 864e5;
-    const exp = c.money(Math.round(10000 * 0.015 / daysInPeriod * 100) / 100);
+    // v1.2 INT-07: with a term, Interest shows the whole contract's interest; interest so far shows in Settlement Today.
+    const exp = c.money(10000 + Math.round(10000 * 0.015 / daysInPeriod * 100) / 100);
     const h3 = await show(admin, id2);
-    check('INT-07', 'today 0.00 stable; one day later = 150/days-in-period', ledgerVal(h1, 'Interest') === '0.00' && ledgerVal(h2, 'Interest') === '0.00' && ledgerVal(h3, 'Interest') === exp,
-      `today I=${ledgerVal(h1, 'Interest')}/${ledgerVal(h2, 'Interest')}; yesterday-start I=${ledgerVal(h3, 'Interest')} (expect ${exp}, ${daysInPeriod}-day period)`, '“次日”用“起始日=昨天”代替（不能等一天）');
+    check('INT-07', 'Settlement Today: start today 10,000.00 stable; one day later + 150/days-in-period', ledgerVal(h1, 'Settlement Today') === '10,000.00' && ledgerVal(h2, 'Settlement Today') === '10,000.00' && ledgerVal(h3, 'Settlement Today') === exp,
+      `today ${ledgerVal(h1, 'Settlement Today')}/${ledgerVal(h2, 'Settlement Today')}; yesterday-start ${ledgerVal(h3, 'Settlement Today')} (expect ${exp}, ${daysInPeriod}-day period)`, '“次日”用“起始日=昨天”代替（不能等一天）');
   });
   await step('INT-08', 'matured loan stops accruing', async () => {
     const id = await c.newCase(admin, { debtor_id: String(debA), principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: '2025-01-01', tenure: '6' });
@@ -244,7 +252,7 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
     check('INT-08', 'interest capped at maturity (900.00); settlement today 10,900.00', ledgerVal(h, 'Interest') === '900.00' && ledgerVal(h, 'Settlement Today') === '10,900.00', `I=${ledgerVal(h, 'Interest')} settle=${ledgerVal(h, 'Settlement Today')}`, '“隔几天再看”用已到期 1 年多的案件代替');
   });
   await step('INT-09', 'no start date → defaults to opened', async () => {
-    const id = await c.newCase(admin, { debtor_id: String(debA), principal_amount: '1000', interest_mode: 'monthly', interest_rate: '1' });
+    const id = await c.newCase(admin, { debtor_id: String(debA), principal_amount: '1000', interest_mode: 'monthly', interest_rate: '1', tenure: '12' });
     const t = strip(await show(admin, id));
     check('INT-09', '"(unset, defaults to opened)"', /Loan Start Date \d{4}-\d{2}-\d{2} · interest accrues from this date \(unset, defaults to opened\)/.test(t), (t.match(/Loan Start Date[^N]+/) || [])[0]);
   });
@@ -261,22 +269,32 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
     check('INT-11', 'all three refused with limit message', e1 === 'Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.)' && e2 === 'Interest rate exceeds the 18% p.a. limit (this loan: 18.5% p.a.)' && e3 === 'Interest rate exceeds the 18% p.a. limit (this loan: 20% p.a.)', `${e1} | ${e2} | ${e3}`);
   });
   let oldCase;
-  await step('INT-12', 'cap configurable', async () => {
+  // v1.2 INT-12 (N-03): the cap can only be lowered — 24 refused; 12 saved (audited, over-cap loans listed); 1.1%/month then refused.
+  // The 18% case made first is INT-14's "older case above the cap".
+  await step('INT-12', 'cap only lowered', async () => {
+    oldCase = await c.newCase(admin, { debtor_id: String(debA), agent_id: '1', ...M({ loan_start_date: today() }) });
     const s24 = await admin.act('/settings', { company_name: '', max_annual_rate: '24' });
-    const r1 = await admin.post('/cases', { debtor_id: String(debA), priority: 'medium', status: 'new', ...M({ interest_rate: '1.6' }) });
-    oldCase = Number((r1.location.match(/^\/cases\/(\d+)$/) || [])[1]) || null;
-    const s18 = await admin.act('/settings', { company_name: '', max_annual_rate: '18' });
-    const e = (await admin.act('/cases', { debtor_id: String(debA), ...M({ interest_rate: '1.6' }) })).err;
-    check('INT-12', '24 → allowed; back to 18 → refused', s24.ok === 'Company settings saved' && !!oldCase && s18.ok === 'Company settings saved' && /exceeds the 18% p\.a\. limit/.test(e || ''), `24:${s24.ok} case=${oldCase}; 18:${s18.ok}; ${e}`);
+    const s12 = await admin.act('/settings', { company_name: '', max_annual_rate: '12' });
+    const aud = q1("SELECT details FROM audit_logs WHERE entity_type='settings' ORDER BY id DESC").details;
+    const box = /Open loans above the 12% p\.a\. cap/.test(strip((await admin.get('/settings')).text));
+    const e = (await admin.act('/cases', { debtor_id: String(debA), ...M({ interest_rate: '1.1', loan_start_date: today() }) })).err;
+    await admin.act('/settings', { company_name: '', max_annual_rate: '18' }); // back before INT-13
+    check('INT-12', '24 refused; 12 saved + audited + over-cap list; 1.1%/month refused at 12', /at most 18% \(the legal limit\)/.test(s24.err || '') && s12.ok === 'Company settings saved' && /max_annual_rate: 18 → 12/.test(aud) && box && /exceeds the 12% p\.a\. limit/.test(e || ''),
+      `24:${s24.err || s24.ok}; 12:${s12.ok}; audit "${aud}"; list=${box}; 1.1% → ${e}`);
   });
   await step('INT-13', 'interest ≤ principal', async () => {
     const e = (await admin.act('/cases', { debtor_id: String(debA), ...M({ tenure: '120' }) })).err;
     check('INT-13', '"Total interest cannot exceed the principal"', e === 'Total interest cannot exceed the principal', e);
   });
-  await step('INT-14', 'over-cap legacy case: edit agent only saves; term change refused', async () => {
-    const r = await admin.act(`/cases/${oldCase}`, { debtor_id: String(debA), agent_id: '2', ...M({ interest_rate: '1.6' }) });
-    const r2 = await admin.act(`/cases/${oldCase}`, { debtor_id: String(debA), agent_id: '2', ...M({ interest_rate: '1.6', tenure: '11' }) });
-    check('INT-14', 'Saved; changing terms → cap error', r.ok === 'Saved' && /exceeds the 18% p\.a\. limit/.test(r2.err || ''), `${r.ok} / ${r2.err}`);
+  // v1.2 INT-14 (cap 12 from INT-12): an older 18% case — and demo case 2 (D-1) — save with only the agent changed; a term change is held to the cap.
+  await step('INT-14', 'over-cap older case: edit agent only saves; term change refused', async () => {
+    await admin.act('/settings', { company_name: '', max_annual_rate: '12' });
+    try {
+      const r = await admin.act(`/cases/${oldCase}`, c.editForm(oldCase, { agent_id: '2' }));
+      const r2 = await admin.act(`/cases/${oldCase}`, c.editForm(oldCase, { tenure: '11' }));
+      const r3 = await admin.act('/cases/2', c.editForm(2, { agent_id: '1', remark: 'INT-14' }));
+      check('INT-14', 'Saved (also demo case 2); changing terms → cap error', r.ok === 'Saved' && r3.ok === 'Saved' && /exceeds the 12% p\.a\. limit/.test(r2.err || ''), `${r.ok || r.err} / ${r2.err || r2.ok} / case 2 ${r3.ok || r3.err}`);
+    } finally { await admin.act('/settings', { company_name: '', max_annual_rate: '18' }); }
   });
 
   // ---------------- PAY ----------------
@@ -372,13 +390,14 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
     check('PAY-11', 'no Actions column; 403', !/<th>Actions<\/th><\/tr><\/thead>\s*<tbody><tr><td class="mono">RCPT/.test(h) && !has(h, 'openEditPayment(this)') && e.status === 403 && v.status === 403 && !!q1('SELECT 1 x FROM payments WHERE id=?', pay.id), `edit=${e.status} void=${v.status}`);
   });
   await step('PAY-12/13', 'receipts +1; voided newest never reused', async () => {
-    const r1 = await admin.act('/cases/16/payments', { payment_date: today(), amount: '1', method: 'cash' });
-    const r2 = await admin.act('/cases/16/payments', { payment_date: today(), amount: '1', method: 'cash' });
+    // G-21: same amount, date and reference within 10 s is one payment — two real payments carry different references.
+    const r1 = await admin.act('/cases/16/payments', { payment_date: today(), amount: '1', method: 'cash', reference: 'PAY-12 a' });
+    const r2 = await admin.act('/cases/16/payments', { payment_date: today(), amount: '1', method: 'cash', reference: 'PAY-12 b' });
     const n1 = r1.ok.match(/RCPT-2026-(\d{4})/)[1], n2 = r2.ok.match(/RCPT-2026-(\d{4})/)[1];
     check('PAY-12', 'consecutive +1', Number(n2) === Number(n1) + 1, `${n1}→${n2}`);
     const last = q1('SELECT id FROM payments WHERE receipt_no=?', `RCPT-2026-${n2}`);
     await admin.act(`/cases/16/payments/${last.id}/void`);
-    const r3 = await admin.act('/cases/16/payments', { payment_date: today(), amount: '1', method: 'cash' });
+    const r3 = await admin.act('/cases/16/payments', { payment_date: today(), amount: '1', method: 'cash', reference: 'PAY-13' });
     const n3 = r3.ok.match(/RCPT-2026-(\d{4})/)[1];
     check('PAY-13', 'voided number not reused', Number(n3) === Number(n2) + 1, `void ${n2} → next ${n3}`);
   });
@@ -435,12 +454,14 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
       rows.slice(0, 3).map(r => `${r.expected}/${r.paid}/${r.outstanding}/${r.status}`).join(' ') + ` last=${rows[11].expected}`);
   });
   await step('SCH-06', 'statuses Paid / Overdue / Partially Paid / Pending', async () => {
-    const start = addDays(today(), -60).slice(0, 8) + '01';
+    // The 1st of the month two months back, so instalment 2 is past due on any day (60 days back from the 31st is only the 1st of last month).
+    const ym = new Date(Date.UTC(+today().slice(0, 4), +today().slice(5, 7) - 3, 1)).toISOString().slice(0, 7);
+    const start = ym + '-01';
     const id = await c.newCase(admin, { debtor_id: String(debB), principal_amount: '600', interest_mode: 'fixed', interest_amount: '0', loan_start_date: start, tenure: '6' });
     await admin.act(`/cases/${id}/payments`, { payment_date: today(), amount: '150', method: 'cash' });
     const r1 = scheduleRows(await show(admin, id));
-    await admin.act(`/cases/${id}/payments`, { payment_date: today(), amount: '50', method: 'cash' });
-    await admin.act(`/cases/${id}/payments`, { payment_date: today(), amount: '50', method: 'cash' });
+    await admin.act(`/cases/${id}/payments`, { payment_date: today(), amount: '50', method: 'cash', reference: 'SCH-06 a' }); // distinct references (G-21)
+    await admin.act(`/cases/${id}/payments`, { payment_date: today(), amount: '50', method: 'cash', reference: 'SCH-06 b' });
     const r2 = scheduleRows(await show(admin, id));
     const dueIdx = r2.findIndex(r => r.due >= today());
     check('SCH-06', 'Paid / Overdue (past, unpaid) / Partially Paid (future, part) / Pending', r1[0].status === 'Paid' && r1[1].status === 'Overdue' && r2[dueIdx].status === 'Partially Paid' && r2[dueIdx + 1].status === 'Pending',

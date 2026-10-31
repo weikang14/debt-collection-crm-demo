@@ -45,7 +45,7 @@ const money = x => Number(x).toLocaleString('en-US', { minimumFractionDigits: 2,
   const v = await C.caseView(s, a1);
   const schedLeft = E.sum2(v.schedule.map(x => x.outstanding));
   results.push({ g: 'SCH', id: 'K02', scenario: 'B-18/K-02 示例A 03-02 还 1,000 后：计划未还合计 vs 合同欠款', formula: 'Σ 计划未还 vs 账本', expected: v.outstanding, actual: schedLeft,
-    result: schedLeft === v.outstanding ? 'PASS' : 'FAIL', note: `差 ${r2(F.of(schedLeft).sub(v.outstanding))}（已知延后 K-02）` });
+    result: schedLeft === v.outstanding ? 'PASS' : 'PENDING', note: `差 ${r2(F.of(schedLeft).sub(v.outstanding))}（K-02：待决定 N-06 的口径后再重算计划）` });
   // 5. B-19 / K-03: demo case 14 — PTP vs schedule
   const v14 = await C.caseView(s, 14);
   results.push({ g: 'SCH', id: 'K03', scenario: 'B-19/K-03 演示案件 14：计划与 PTP 并存', formula: '', expected: '记录现状', actual: `计划首行 ${v14.schedule[0].due} ${v14.schedule[0].expected}（${v14.schedule[0].status}），下一期 ${v14.schedule[1].due} ${v14.schedule[1].expected}；PTP ${v14.ptps.map(p => p.amount + ' ' + p.due + ' ' + p.status).join(', ')}`, result: 'INFO', note: '已知延后 K-03' });

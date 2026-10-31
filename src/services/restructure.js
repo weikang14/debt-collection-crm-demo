@@ -36,7 +36,8 @@ function canRestructure(c) {
 function effectiveDateRange(c, payments, restructures) {
   const prev = restructures[restructures.length - 1];
   const candidates = [
-    String(c.interest_from || c.opened_at || '').slice(0, 10),
+    // The loan's own start: interest_from (accrual), else loan_start_date, else the opening day.
+    String(c.interest_from || c.loan_start_date || c.opened_at || '').slice(0, 10),
     ...payments.map(p => String(p.payment_date).slice(0, 10)), // demo rows carry a time of day
     prev ? dayjs(prev.effective_date).add(1, 'day').format('YYYY-MM-DD') : '',
   ];
@@ -176,7 +177,8 @@ function lockedPaymentError(caseId, payment) {
 // loan terms and the debtor are history: Edit Case keeps the stored values
 // whatever the form sent. Terms are re-planned through a restructure (or the
 // payments voided first). Keys are cases column names.
-const termsLocked = caseId => !!lockDate(caseId) || !!get('SELECT 1 FROM payments WHERE case_id = ?', [caseId]);
+// Why the terms are locked ('restructure' | 'payment'), or null.
+const termsLocked = caseId => (lockDate(caseId) ? 'restructure' : get('SELECT 1 FROM payments WHERE case_id = ?', [caseId]) ? 'payment' : null);
 function lockedTerms(caseId, terms) {
   if (!termsLocked(caseId)) return terms;
   return get(`SELECT principal_amount, interest_amount, interest_mode, interest_rate, interest_from,

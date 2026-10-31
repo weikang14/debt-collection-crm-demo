@@ -2,7 +2,8 @@
 <% const locked = typeof termsLocked !== 'undefined' && termsLocked; %>
 <div class="page-head"><h1><%= title %></h1></div>
 <form class="card form" method="post" action="<%= action %>">
-  <% if (locked) { %><p style="margin:0;color:var(--muted);">Loan terms and the debtor are locked once a payment is recorded or the loan is restructured — re-plan the terms with a restructure on the case page, or void the payments first.</p><% } %>
+  <% if (locked === 'restructure') { %><p style="margin:0;color:var(--muted);">Loan terms are locked after a restructure — re-plan them with a new restructure on the case page. The debtor is locked too.</p>
+  <% } else if (locked) { %><p style="margin:0;color:var(--muted);">Loan terms are locked once a payment is recorded — re-plan them with a restructure on the case page, or void the payments first. The debtor is locked too.</p><% } %>
   <label>Debtor <select name="debtor_id" required>
     <% if (!locked) { %><option value="">— Select debtor —</option><% } %>
     <% debtors.filter(d => !locked || d.id === c.debtor_id).forEach(d => { %><option value="<%= d.id %>" <%= c.debtor_id===d.id?'selected':'' %>><%= d.name %></option><% }) %>
@@ -71,6 +72,8 @@
     <% statuses.forEach(s => { %><option value="<%= s %>" <%= (c.status||'new')===s?'selected':'' %>><%= h.caseStatusLabel(s) %></option><% }) %>
   </select></label>
   <% } %>
+  <label>Agreement No <input name="agreement_no" value="<%= c.agreement_no||'' %>" maxlength="60"></label>
+  <label>Agreement Date <input type="date" name="agreement_date" value="<%= c.agreement_date||'' %>"></label>
   <label>Remark <textarea name="remark"><%= c.remark||'' %></textarea></label>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="<%= c.id ? '/cases/'+c.id : '/cases' %>">Back</a></div>
 </form>

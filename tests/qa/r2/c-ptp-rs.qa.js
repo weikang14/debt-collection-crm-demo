@@ -212,7 +212,8 @@ test('r2 C: PTP / RS', { timeout: 300000 }, async () => {
     const h = await show(admin, B);
     const rows = scheduleRows(h);
     const head = has(h, 'Repayment Schedule<small style="color:var(--muted)">') || /Repayment Schedule <small[^>]*>· since restructure on 2026-04-01/.test(h);
-    check('RS-09', 'heading "since restructure on"; row 1 = 2026-04-01 arrears 135.07; then monthly', head && rows[0].due === '2026-04-01' && rows[0].arrears && rows[0].expected === 135.07 && rows[1].due === '2026-05-01' && rows.length === 19,
+    // v1.2 RS-09 (N-01): the carried arrears fall due with the first new instalment (2026-05-01), not on the effective date.
+    check('RS-09', 'heading "since restructure on"; row 1 = arrears 135.07 due with instalment 1 (2026-05-01); then monthly', head && rows[0].due === '2026-05-01' && rows[0].arrears && rows[0].expected === 135.07 && rows[1].due === '2026-05-01' && rows.length === 19,
       `head=${head}; first=${JSON.stringify(rows[0])}; n=${rows.length}`);
     check('RS-11', 'interest 2,449.75; outstanding 11,449.75; 111.66 per month; arrears fixed', ledgerVal(h, 'Interest') === '2,449.75' && ledgerAmt(h) === '11,449.75' && rows[1].expected === 111.66 && rows[18].expected === round2(111.66 + 9304.84)
       && q1('SELECT arrears_at_cut a FROM case_restructures WHERE case_id=?', B).a === 135.07, `I=${ledgerVal(h, 'Interest')} O=${ledgerAmt(h)} row2=${rows[1].expected} last=${rows[18].expected}`);
@@ -265,7 +266,8 @@ test('r2 C: PTP / RS', { timeout: 300000 }, async () => {
     const tl = q1("SELECT content FROM timeline_events WHERE case_id=? AND event_type='restructure' ORDER BY id DESC", B);
     const ed = (await admin.get(`/cases/${B}/edit`)).text;
     const log = q1("SELECT 1 x FROM audit_logs WHERE action='restructure_undo' AND entity_id=?", B);
-    check('RS-15', 'Restructure undone; back to 10,696.06; timeline; audit; unlocked', r.ok === 'Restructure undone' && ledgerAmt(r.html) === '10,696.06' && tl.content === 'Restructure undone: from 2026-04-01' && !!log && !has(ed, 'Loan terms are locked') && confirm, `${r.ok}; O=${ledgerAmt(r.html)}; "${tl.content}"`);
+    // v1.12.0 (F-24): the case still has payments, so after the undo its terms stay locked — by the payments, no longer by a restructure.
+    check('RS-15', 'Restructure undone; back to 10,696.06; timeline; audit; restructure lock lifted (payment lock remains)', r.ok === 'Restructure undone' && ledgerAmt(r.html) === '10,696.06' && tl.content === 'Restructure undone: from 2026-04-01' && !!log && !has(ed, 'locked after a restructure') && has(ed, 'locked once a payment is recorded') && confirm, `${r.ok}; O=${ledgerAmt(r.html)}; "${tl.content}"`);
   });
   await step('RS-17', 'multiple restructures', async () => {
     const id = await c.newCase(admin, { debtor_id: String(deb), ...M() });
@@ -281,8 +283,12 @@ test('r2 C: PTP / RS', { timeout: 300000 }, async () => {
     check('RS-17', 'min = prev+1; newest on top; only latest has Undo; older → "Only the latest restructure can be undone"', /^Effective date must be between 2026-03-02 and /.test(eSame || '') && r2.ok === 'Restructured' && newestFirst && undoForms.join() === String(second) && e === 'Only the latest restructure can be undone',
       `${eSame}; ${r2.ok}; undo=${undoForms}; ${e}`);
   });
+  // v1.2 RS-18 / RS-26 (N-09): a rate-based loan can't go to a fixed amount (pending legal review); a fixed loan can.
   await step('RS-18', 'Fixed 500 / 12 → (cut + 500)/12, arrears first', async () => {
-    const id = await c.newCase(admin, { debtor_id: String(deb), ...M() });
+    const mid = await c.newCase(admin, { debtor_id: String(deb), ...M() });
+    const refused = await man.act(`/cases/${mid}/restructures`, { effective_date: '2026-03-02', interest_mode: 'fixed', interest_amount: '500', tenure: '12', reason: 'fixed' });
+    check('RS-26', 'monthly → fixed refused', refused.err === 'A rate-based loan cannot be restructured to a fixed amount (pending legal review)', refused.err || refused.ok);
+    const id = await c.newCase(admin, { debtor_id: String(deb), principal_amount: '10000', interest_mode: 'fixed', interest_amount: '1500', loan_start_date: '2026-01-01', tenure: '12' });
     const r = await man.act(`/cases/${id}/restructures`, { effective_date: '2026-03-02', interest_mode: 'fixed', interest_amount: '500', tenure: '12', reason: 'fixed' });
     const rs = q1('SELECT * FROM case_restructures WHERE case_id=?', id);
     const rows = scheduleRows(r.html);

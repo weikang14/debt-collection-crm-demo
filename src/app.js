@@ -3,6 +3,7 @@ const express = require('express');
 const session = require('express-session');
 const engine = require('ejs-mate');
 const { init, db } = require('./db');
+const { SqliteStore } = require('./db/sessionStore');
 const { sameOrigin, securityHeaders, flash, errorHandler, notFound } = require('./middleware/security');
 const { refreshStaleAccruals } = require('./services/payments');
 
@@ -27,11 +28,14 @@ if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
 }
 app.use(session({
   secret: process.env.SESSION_SECRET || 'debt-collection-crm-demo-secret',
+  store: new SqliteStore(),
   resave: false,
   saveUninitialized: false,
   // Idle timeout: each response pushes expiry 2h out; 2h without a request logs out.
   rolling: true,
-  cookie: { maxAge: 2 * 60 * 60 * 1000 },
+  // K-06: SameSite=Lax; Secure whenever the request came over HTTPS (on Render via
+  // the trusted proxy), so the cookie never travels in clear text there.
+  cookie: { maxAge: 2 * 60 * 60 * 1000, sameSite: 'lax', secure: 'auto' },
 }));
 app.use(sameOrigin);
 
@@ -59,14 +63,28 @@ const demoBanner = !!process.env.RENDER;
 app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; res.locals.demoBanner = demoBanner; next(); });
 // G-25: each POST runs in one transaction, so its writes and their audit rows
 // commit together; a handler error — an audit row that can't be written
-// included — ends as a 500 and rolls all of it back. The settings logo upload
+// included — ends as a 500 and rolls all of it back. The transaction ends just
+// before the response leaves (res.end), so nobody sees "done" before the commit,
+// and a failed commit still turns into an error page. The settings logo upload
 // finishes asynchronously and opens its own transaction.
 app.use((req, res, next) => {
   if (req.method !== 'POST') return next();
-  const ROLLBACK = new Error('rollback');
-  try {
-    db.transaction(() => { next(); if (res.statusCode >= 500) throw ROLLBACK; })();
-  } catch (e) { if (e !== ROLLBACK) throw e; }
+  db.begin();
+  let open = true;
+  const end = res.end;
+  res.end = function (...args) {
+    if (open) {
+      open = false;
+      try { db.end(res.statusCode < 500); } catch (e) {
+        console.error('commit failed:', e.message);
+        res.statusCode = 500;
+        return end.call(this, 'Something went wrong. Please try again.');
+      }
+    }
+    return end.apply(this, args);
+  };
+  next();
+  if (open && !res.writableEnded) { open = false; db.end(true); } // async handler: nothing written yet, don't hold the lock
 });
 app.use(require('./routes/auth'));
 app.use('/', require('./routes/dashboard'));
@@ -88,5 +106,9 @@ app.use('/settings', require('./routes/settings'));
 app.use(notFound);
 app.use(errorHandler);
 
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`CRM demo running: http://localhost:${PORT}`));
+// Listens when run directly (npm start); HTTP tests load it and pick their own port (K-12).
+if (require.main === module) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => console.log(`CRM demo running: http://localhost:${PORT}`));
+}
+module.exports = app;

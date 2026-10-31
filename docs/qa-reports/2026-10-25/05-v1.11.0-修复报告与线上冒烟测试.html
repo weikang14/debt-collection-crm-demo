@@ -86,7 +86,7 @@ table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table
     <tr><td>代码基线</td><td>master · 1c2c4be（已推送）</td></tr>
     <tr><td>线上环境</td><td>https://debt-collection-crm-demo.onrender.com</td></tr>
     <tr><td>依据</td><td>docs/qa-reports/2026-10-25/04-final-assessment.md；QA 测试手册 v1.2</td></tr>
-    <tr><td>修订</td><td>2026-10-31：第 5 节按 v1.12.0 更新；冒烟清单 A-2、A-8、A-15 措辞修正；填写第 9 节的执行结果</td></tr>
+    <tr><td>修订</td><td>2026-10-31：第 5 节按 v1.12.0 / v1.13.0 更新；冒烟清单 A-2、A-8、A-15 措辞修正；填写第 9 节的执行结果</td></tr>
   </table>
   <div class="cover-foot">第一部分：修复报告（第 1–5 节）　·　第二部分：线上冒烟测试（第 6–9 节）</div>
 </section>
@@ -99,7 +99,7 @@ table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table
   <li>14 项决策 N-01…N-14 全部按建议执行（2026-10-25 确认）。其中需要律师或客户答复的部分仍未定，见第 3 节和第 5 节。</li>
   <li><code>npm test</code>：35 个测试文件、248 个测试全部通过。已合并到 master 并推送，Render 线上已是 v1.11.0。</li>
   <li><b>线上冒烟测试已于 2026-10-31 执行</b>（第二部分，结果见 <code>06-v1.11.0-冒烟测试结果.md</code>）：A 部分 15/15 通过；B 部分 14 项通过，B-6、B-9、B-13 部分通过（作废 / 撤销步骤在代码里是删除，线上没有执行，本地验证通过）。</li>
-  <li>冒烟发现的 D-1、D-2，以及第 5 节里不需要外部答复的事项，已在 <b>v1.12.0</b> 完成（第 5.1 节）。演示前还要在 Render 重启一次，清掉测试数据。</li>
+  <li>冒烟发现的 D-1、D-2，以及第 5 节里不需要外部答复的事项，已在 <b>v1.12.0 / v1.13.0</b> 完成（第 5.1 节）。演示前还要在 Render 重启一次，清掉测试数据。</li>
 </ul>
 
 <h2 style="margin-top:18px">2　修复清单</h2>
@@ -183,40 +183,52 @@ table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table
 
 <section class="chapter">
 <h2>5　尚未完成（正式上线前处理）</h2>
-<p style="font-size:8.6pt;color:#6b7280">2026-10-31 更新：不需要律师或客户答复的事项已在 v1.12.0 完成（5.1），其余仍待外部决定（5.2）。<code>npm test</code> 36 个文件、261 个测试全部通过（UTC 与马来西亚时区各跑一次）。</p>
-<h3>5.1 已在 v1.12.0 完成</h3>
-<table class="grid issues"><thead><tr><th>编号</th><th>问题</th><th>处理（v1.12.0）</th></tr></thead><tbody>
-<tr><td>D-1</td><td>调低利率上限后，计息案件只改催收员也被拒（冒烟发现，违反 INT-14）</td><td>计息贷款比较条款时不看 <code>interest_amount</code>；演示种子不再给计息贷款存固定利息</td></tr>
-<tr><td>D-2</td><td>破产案件 Fulfill 提示“PTP already resolved”（与 PTP-16 不符）</td><td>先判断破产 / 已故，提示改用 Record Payment 并填原因</td></tr>
-<tr><td>G-23</td><td>案件列表和 CSV 没有 DPD、逾期金额、今日结清额</td><td>案件列表、cases.csv、cases-detailed.csv 增加这三列；列表可按 DPD 排序</td></tr>
-<tr><td>G-24</td><td>仪表盘、报表、CSV 的合计含未到期利息</td><td>合计改为今日结清额，合同余额并列显示；账龄、跟进表、债务人页、催收员页同样</td></tr>
-<tr><td>G-25</td><td>审计缺口</td><td>债务人、用户、催收员修改记录改前改后值；每次提交的业务改动与审计同一事务，审计写不进去则整笔回滚；导出留审计记录；审计表拒绝改写（触发器）</td></tr>
-<tr><td>G-27</td><td>补录较早日期的还款时，拒收提示的上限偏低</td><td>按分二分查找，提示的金额正好能收</td></tr>
-<tr><td>G-28</td><td>佣金结算、重组利率和金额解析过宽；取消不存在的计划也提示成功</td><td>与还款、建案相同的严格解析（<code>0x10</code>、<code>1e0</code>、三位小数被拒）；不存在的计划报错</td></tr>
-<tr><td>G-29</td><td>非 UTC 主机上的时区解析差一天</td><td>SQLite 时间串一律按 UTC 解析；演示种子的日期与主机时区无关</td></tr>
-<tr><td>K-01</td><td>半分舍入的浮点误差（如 1,030.225 舍成 .22）</td><td>先按 15 位有效数字去掉浮点尾差，再四舍五入到分</td></tr>
-<tr><td>F-24</td><td>改账不留痕、作废是硬删除、有还款的案件可改条款</td><td>修改或作废前的原记录永久保留（<code>payment_history</code>，只增不改），作废可填原因、案件页列出已作废还款；有还款或重组后，贷款条款和债务人锁定</td></tr>
-<tr><td>F-25</td><td>不出具收据</td><td>每笔还款有可打印的收据页，修改过的注明修改时间（版式与法定要素随 D-08 / G-26 再定）</td></tr>
-<tr><td>O-1 / O-5 / O-8</td><td>冒烟观察：上限报错把 18.0048% 显示成 18%；重复提交没有提示；侧栏悬停盖住按钮</td><td>报错显示精确年化；提示“Duplicate submission ignored”；侧栏停留约 0.3 秒才展开</td></tr>
+<p style="font-size:8.6pt;color:#6b7280">2026-10-31 更新：不需要律师、客户或你决定的事项已在 v1.12.0 / v1.13.0 完成（5.1），其余等待决定（5.2）。<code>npm test</code> 37 个文件、272 个测试全部通过；QA 脚本全部重跑：r2 七组 + UI 30/30、手册 v1.2 补测 26/26、本地冒烟 36/36、业务验算 322 项与对账 165/165、合规 40 项通过，未通过的只剩等待决定的项（结果在 <code>06-artifacts/run-2026-10-31-v113/</code>）。</p>
+<h3>5.1 已完成（v1.12.0 / v1.13.0）</h3>
+<table class="grid issues"><thead><tr><th>编号</th><th>问题</th><th>处理</th></tr></thead><tbody>
+<tr><td>D-1</td><td>调低利率上限后，计息案件只改催收员也被拒（冒烟发现，违反 INT-14）</td><td>v1.12：计息贷款比较条款时不看 <code>interest_amount</code>；演示种子不再给计息贷款存固定利息</td></tr>
+<tr><td>D-2</td><td>破产案件 Fulfill 提示“PTP already resolved”（与 PTP-16 不符）</td><td>v1.12：先判断破产 / 已故，提示改用 Record Payment 并填原因</td></tr>
+<tr><td>G-23</td><td>案件列表和 CSV 没有 DPD、逾期金额、今日结清额</td><td>v1.12：案件列表、cases.csv、cases-detailed.csv 增加这三列；列表可按 DPD 排序</td></tr>
+<tr><td>G-24</td><td>仪表盘、报表、CSV 的合计含未到期利息</td><td>v1.12：合计改为今日结清额，合同余额并列显示；账龄、跟进表、债务人页、催收员页同样</td></tr>
+<tr><td>G-25</td><td>审计缺口</td><td>v1.12：债务人、用户、催收员修改记录改前改后值；每次提交的业务改动与审计同一事务，审计写不进去则整笔回滚；导出留审计记录；审计表拒绝改写。v1.13：事务在响应发出前提交，不会先回“成功”再提交</td></tr>
+<tr><td>G-26（部分）</td><td>对账单法定要素</td><td>v1.13：标题 Statement of Account、借款人地址、月息同时写年化、逐期到期明细、牌照号、签署栏；去掉内部状态。正式版式仍待 D-08 / 律师</td></tr>
+<tr><td>G-27 / G-28 / G-29</td><td>拒收提示上限偏低；数字解析过宽；非 UTC 主机日期差一天</td><td>v1.12：按分二分查找；与还款、建案相同的严格解析；时间串一律按 UTC 解析</td></tr>
+<tr><td>K-01</td><td>半分舍入的浮点误差（如 1,030.225 舍成 .22）</td><td>v1.12：先按 15 位有效数字去掉浮点尾差，再四舍五入到分</td></tr>
+<tr><td>F-24</td><td>改账不留痕、作废是硬删除、有还款的案件可改条款</td><td>v1.12：修改或作废前的原记录永久保留（<code>payment_history</code>，只增不改），作废可填原因、案件页列出已作废还款；有还款或重组后，贷款条款和债务人锁定（提示写明原因）</td></tr>
+<tr><td>F-25</td><td>不出具收据</td><td>v1.12：每笔还款有可打印的收据页；v1.13 加上牌照号和协议编号</td></tr>
+<tr><td>F-30（部分）</td><td>个人资料可见范围</td><td>v1.13：列表和搜索结果里的身份证号只显示后 4 位，完整号码在详情页（会记访问日志）</td></tr>
+<tr><td>F-31</td><td>查看、搜索、打印个人资料不留记录</td><td>v1.13：访问日志（查看案件 / 债务人、搜索、打印对账单 / 收据），审计页可切换查看、筛选、导出；导出记入审计</td></tr>
+<tr><td>F-33（部分）</td><td>通话记录缺联系对象、号码、渠道；主管记的通话算到催收员名下</td><td>v1.13：记录渠道、联系对象、号码和登记人；按实际登记的人归属</td></tr>
+<tr><td>F-48（部分）</td><td>缺协议元数据和牌照号</td><td>v1.13：案件可填协议编号、签约日；公司设置可填放贷牌照号</td></tr>
+<tr><td>K-06</td><td>Cookie 没有 Secure / SameSite；会话 MemoryStore</td><td>v1.13：SameSite=Lax，经 HTTPS 时 Secure；会话存进数据库，重启不再全员登出</td></tr>
+<tr><td>K-08</td><td>备份写死 <code>data/crm.db</code></td><td>v1.13：按 <code>CRM_DB_PATH</code> 备份，用一致的快照方式，运行中也可以备份；数据库改为 WAL 模式</td></tr>
+<tr><td>K-11 / K-12</td><td>校验失败后表单清空；没有 HTTP 级测试</td><td>v1.13：案件、债务人表单被拒后回填；新增 HTTP 级测试（登录 Cookie、跨站拦截、事务回滚、访问日志、表单回填、备份、收据）</td></tr>
+<tr><td>O-1 / O-4 / O-5 / O-6 / O-8</td><td>冒烟观察</td><td>上限报错和红框显示精确年化；对账单标签与案件页一致；重复提交提示“已忽略”；重复提交相同状态不再写记录；侧栏停留约 0.3 秒才展开</td></tr>
+<tr><td>—</td><td>QA 回归中新发现</td><td>v1.13：Fixed 贷款重组生效日最早可以是贷款起始日（原来只能从开案日起，与还款日期规则不一致）</td></tr>
 </tbody></table>
-<h3>5.2 仍待外部决定</h3>
-<table class="grid issues"><thead><tr><th>编号</th><th>内容</th><th>前提</th></tr></thead><tbody>
+<h3>5.2 等待决定</h3>
+<table class="grid issues"><thead><tr><th>编号</th><th>内容</th><th>需要谁决定</th></tr></thead><tbody>
 <tr><td>G-13</td><td>区分有担保 / 无担保贷款（有担保上限 12%）</td><td>先问客户有没有有担保贷款，再由律师界定</td></tr>
-<tr><td>G-16</td><td>Fixed 模式改用实际利率（IRR）年化和判断“不加息”</td><td>N-09，律师</td></tr>
-<tr><td>G-17</td><td>Fixed 贷款提前结清的利息回扣</td><td>N-10，律师</td></tr>
-<tr><td>G-18</td><td>重组的延期限制</td><td>N-11，问客户的审批惯例</td></tr>
-<tr><td>G-26</td><td>对账单的法定要素（逐期明细、签署栏、牌照号、借款人地址）；收据的正式版式</td><td>D-08，由哪个系统出具</td></tr>
+<tr><td>G-16 / G-17</td><td>Fixed 模式的实际利率（IRR）年化与“不加息”判断；提前结清的利息回扣</td><td>N-09、N-10，律师</td></tr>
+<tr><td>G-18</td><td>重组的延期限制</td><td>N-11，客户的审批惯例</td></tr>
+<tr><td>G-26 余项</td><td>对账单、收据的正式版式和法定措辞</td><td>D-08（由哪个系统出具）、律师</td></tr>
 <tr><td>G-30</td><td>闰年和短期贷款的年化边界</td><td>D-17，律师</td></tr>
-<tr><td>G-31</td><td>改派后补录的还款，佣金归属</td><td>N-12，问客户</td></tr>
-<tr><td>N-06</td><td>计息贷款 DPD 的完整口径（按账本还是按计划）</td><td>在 A、B 之间选</td></tr>
-<tr><td>G-25 余项</td><td>审计与业务同库，管理员能直接改库；需要外部存证（定期导出到只读存储或哈希锚定）</td><td>与 F-36（托管地）一起定</td></tr>
-<tr><td>O-10</td><td>Partial Paid 案件作废唯一一笔还款后，状态仍是 Partial Paid</td><td>问业务：是否回到 Negotiation</td></tr>
+<tr><td>G-31</td><td>改派后补录的还款按收款日还是录入时归属（现按录入时，N-12 A）</td><td>客户</td></tr>
+<tr><td>N-06 / K-02</td><td>计息贷款 DPD 按账本还是按计划；提前还本后计划重算</td><td>你在 A、B 之间选</td></tr>
+<tr><td>O-10</td><td>Partial Paid 案件作废唯一一笔还款后是否回到 Negotiation</td><td>业务</td></tr>
+<tr><td>F-30 余项</td><td>finance、auditor 是否还能看薪资和担保人（手册现写 auditor“只读一切”）</td><td>你 / 客户（权限矩阵）</td></tr>
+<tr><td>F-33 余项</td><td>联系时段与频率限制</td><td>D-17，律师</td></tr>
+<tr><td>F-35 / F-36</td><td>留存期限、删除与匿名化、当事人资料导出；托管地与跨境传输（也决定 G-25 的外部存证）</td><td>客户、律师</td></tr>
+<tr><td>F-43 / F-49 / F-50 / F-51</td><td>减免与和解；外部催收机构注册；诉讼时效；泄露登记与 DPO</td><td>D-14、D-16、律师、组织</td></tr>
+<tr><td>K-03 / K-04 / K-05</td><td>还款计划与 PTP 分期联动；还款本金 / 利息拆分落库；佣金快照与超额结算拦截</td><td>你（产品与财务口径）</td></tr>
+<tr><td>K-07 / K-09 / K-10</td><td>正式环境关闭演示账号和演示数据工具；登录锁定策略（锁账号会被恶意锁死）；线上持久化存储（Render 付费磁盘）</td><td>你（部署与安全策略）</td></tr>
+<tr><td>K-13 / D-17</td><td>PDPA 与催收行为的组织评估；律师书面确认清单</td><td>律师、组织</td></tr>
 </tbody></table>
-<p>另外仍未处理的：</p>
+<p>另外：</p>
 <ul>
-  <li>上一轮已知未修：F-30、F-31、F-33、F-35、F-36、F-43、F-48…F-51；D-17 的 11 项律师书面确认；已知延后 K-02…K-13；正式上线前停用或改掉公开演示账号。</li>
-  <li>第二轮三个角色的 QA 脚本已于 2026-10-31 按 v1.11.0 重跑（06 报告第 5 节）。r2 脚本按 v1.10.0 写，约 20 项因规则变更判失败，已按手册 v1.2 逐条判定；31 日日期溢出的脚本问题已修。</li>
-  <li>QA 测试手册 v1.2 中随 v1.12.0 改变预期的用例：CASE-02、RPT-02、RPT-05（新增列）、DASH-05（合计改为今日结清额）、PAY-09、PAY-10（原记录保留、作废原因、Voided 表）、CASE-08（有还款后条款锁定）、AUD-04（导出留记录）、PTP-16（现在符合手册），下次改版手册时一起更新。</li>
+  <li>r2、calc-r2、compliance-r2 三组脚本和冒烟脚本已按手册 v1.2 / v1.12–1.13 规则更新；等待决定的项在 calc-r2 里记为 PENDING，不算失败。第一轮脚本（<code>tests/qa/*.qa.js</code>、<code>calc/</code>、<code>compliance/</code>）按 v1.8 写，已由第二轮取代，建议归档。</li>
+  <li>QA 测试手册 v1.2 中随 v1.12 / v1.13 改变预期的用例：CASE-02、RPT-02、RPT-05（新增列）、DASH-05（合计改为今日结清额）、PAY-09、PAY-10（原记录保留、作废原因）、CASE-08 与 RS-15（有还款后条款锁定）、AUD-02 / AUD-04（导出留记录、访问日志）、DEB-01 / SRCH-01（证件号脱敏）、CASE-14（通话字段）、SET-06（对账单标题和要素）、PTP-16（现在符合手册），下次改版手册时一起更新。</li>
+  <li>v1.12 / v1.13 只提交在分支 <code>claude/v1-11-0-smoke-tests-ies3bs</code>，还没有合并到 master，所以线上仍是 v1.11.0。</li>
 </ul>
 </section>
 

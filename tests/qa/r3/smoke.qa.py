@@ -34,6 +34,8 @@ def add_months(d, n):
     last = [31, 29 if (y % 4 == 0 and (y % 100 or y % 400 == 0)) else 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31][m - 1]
     return datetime.date(y, m, min(d.day, last))
 money = lambda x: f'{x:,.2f}'
+# The version under test: src/version.js locally; QA_EXPECT_VERSION when the site runs another build (e.g. 1.11.0 online).
+VER = os.environ.get('QA_EXPECT_VERSION') or re.search(r"VERSION = '([\d.]+)'", (Path(__file__).resolve().parents[3] / 'src' / 'version.js').read_text(encoding='utf-8'))[1]
 num = lambda s: None if s is None else float(str(s).replace(',', '').replace('RM', '').strip() or 'nan')
 
 results = []
@@ -75,7 +77,8 @@ def section(html, h2):
     j = html.find('</section>', i)
     return html[i:j if j > 0 else None]
 def payment_rows(html):
-    return re.findall(r'<tr><td class="mono">(RCPT-[\d-]+)</td><td>([^<]*)</td>\s*<td class="num">([^<]*)</td><td>([^<]*)</td><td>([^<]*)</td>', section(html, 'Payments'))
+    # v1.12.0 (F-25): the receipt number links to its printable receipt.
+    return re.findall(r'<tr><td class="mono">(?:<a [^>]*>)?(RCPT-[\d-]+)(?:</a>)?</td><td>([^<]*)</td>\s*<td class="num">([^<]*)</td><td>([^<]*)</td><td>([^<]*)</td>', section(html, 'Payments'))
 def ptp_rows(html):
     return [(a.strip(), num(b), c, d) for a, b, c, d in re.findall(r'<tr><td>([^<]*)</td>\s*<td class="num">([^<]*)</td><td>([^<]*)</td>\s*<td><span class="badge [^"]*">([^<]*)</span>', section(html, 'Promise to Pay'))]
 def timeline(html):
@@ -113,22 +116,22 @@ with sync_playwright() as pw:
     def case_ids(user):
         return sorted(set(int(x) for x in re.findall(r'<a class="mono" href="/cases/(\d+)">', get(user, '/cases')[1])))
 
-    # ---------------- 版本门槛（线上测试前必须是 v1.11.0） ----------------
+    # ---------------- 版本门槛（站点版本必须是被测版本 VER） ----------------
     anon = pw.request.new_context(); _r = anon.get(BASE + '/login'); st, lg = _r.status, _r.text()
     ver = (re.search(r'v(\d+\.\d+\.\d+) · <a href="/version">', lg) or [None, None])[1]
-    rec('VERSION', '登录页版本号 v1.11.0（线上测试的前提）', ver == '1.11.0', f'HTTP {st}; 登录页 v{ver}; {BASE}; 浏览器 {BROWSER}')
-    if ver != '1.11.0':
+    rec('VERSION', f'登录页版本号 v{VER}（线上测试的前提）', ver == VER, f'HTTP {st}; 登录页 v{ver}; {BASE}; 浏览器 {BROWSER}')
+    if ver != VER:
         json.dump(results, open(OUT / 'smoke.json', 'w', encoding='utf-8'), ensure_ascii=False, indent=1); sys.exit('version gate failed')
 
     # ================= A 部分 =================
     def a1():
         p = browser.new_context().new_page(); p.goto(BASE + '/login'); html = p.content()
-        login_ok = 'v1.11.0' in html and 'Demo environment — use made-up data only.' in html
+        login_ok = f'v{VER}' in html and 'Demo environment — use made-up data only.' in html
         p.screenshot(path=str(SHOTS / 'A-1-login.png'))
         pages = ['/', '/cases', '/cases/2', '/debtors', '/tasks', '/reports', '/commissions', '/settings', '/audit-log']
         miss = [u for u in pages if 'Demo environment — use made-up data only.' not in get('admin', u)[1]]
-        rec('A-1', '登录页显示 v1.11.0 和红色提示；登录后每个页面顶部也有这条提示', login_ok and not miss and 'class="alert is-red">Demo environment' in lg,
-            f'登录页 v1.11.0 + 提示={login_ok}（红色 alert is-red）；登录后 {len(pages)} 页缺提示: {miss or "无"}')
+        rec('A-1', f'登录页显示 v{VER} 和红色提示；登录后每个页面顶部也有这条提示', login_ok and not miss and 'class="alert is-red">Demo environment' in lg,
+            f'登录页 v{VER} + 提示={login_ok}（红色 alert is-red）；登录后 {len(pages)} 页缺提示: {miss or "无"}')
     run('A-1', '版本 + 演示提示', a1)
 
     def a2():
@@ -546,10 +549,11 @@ with sync_playwright() as pw:
         cid = B['cid']
         c = post('manager', f'/cases/{cid}/calls', {'result': 'answered', 'duration_seconds': '45', 'notes': 'B-10 call'})
         n = post('manager', f'/cases/{cid}/notes', {'content': 'B-10 note'})
-        s = post('manager', f'/cases/{cid}/status', {'status': 'negotiation'})
+        # A real change: B-8's plan cancel already set Negotiation, and re-sending it records nothing (O-6).
+        s = post('manager', f'/cases/{cid}/status', {'status': 'assigned'})
         tl = timeline(show('manager', cid))
         top = [t for t, _ in tl[:3]]
-        ok = c['ok'] and n['ok'] and s['ok'] and top == ['status_change', 'note', 'call'] and 'B-10 note' in tl[1][1] and 'negotiation' in tl[0][1]
+        ok = c['ok'] and n['ok'] and s['ok'] == 'Status updated' and top == ['status_change', 'note', 'call'] and 'B-10 note' in tl[1][1] and 'assigned' in tl[0][1]
         rec('B-10', '记一次通话、加一条备注、修改状态，时间线正确（最新在上）', bool(ok), f'通话 {c["ok"] or c["err"]}；备注 {n["ok"] or n["err"]}；状态 {s["ok"] or s["err"]}；时间线前 3 条 {[(t, x[:60]) for t, x in tl[:3]]}')
     run('B-10', '通话、备注、状态', b10)
 

@@ -119,29 +119,29 @@ async function statementView(s, id) {
   const sett = h.match(/<div><span>Settlement Amount as of ([\d-]+)<\/span>RM ([\d,.]+)<\/div>/);
   const od = h.match(/<div><span>Overdue<\/span>RM ([\d,.]+)([^<]*)<\/div>/);
   return { principal: fx(num(g('Principal'))), interest: fx(num(g('Interest'))), paid: fx(num(g('Paid'))),
-    outstanding: fx(num(g('Outstanding \\(contract, to maturity\\)'))), settlementDate: sett && sett[1], settlement: sett ? fx(num(sett[2])) : null,
+    outstanding: fx(num(g('Contract Balance \\(incl\\. interest not yet due\\)'))), settlementDate: sett && sett[1], settlement: sett ? fx(num(sett[2])) : null,
     overdue: od ? fx(num(od[1])) : null, dpd: od ? (/(\d+) days? past due/.test(od[2]) ? Number(od[2].match(/(\d+) days?/)[1]) : 0) : null, html: h };
 }
 async function dashboard(s) {
   const h = (await s.get('/')).text;
   const lines = [...h.matchAll(/<div class="al"><span>([^<]+)<\/span><span class="tr">[\s\S]*?<span class="v">RM ([\d,.-]+)<\/span>/g)].map(m => [m[1], fx(num(m[2]))]);
-  const tot = h.match(/Total Outstanding<\/div><div class="v2">RM ([\d,.-]+)<\/div>\s*<div class="sub2">[^·]*· RM ([\d,.-]+) in legal/);
+  const tot = h.match(/Total Outstanding(?: <small>[^<]*<\/small>)?<\/div><div class="v2">RM ([\d,.-]+)<\/div>\s*<div class="sub2">[^·]*· RM ([\d,.-]+) in legal[^<]*?contract balance RM ([\d,.-]+)/);
   const coll = h.match(/Collected Today<\/div>\s*<div class="v2">RM ([\d,.-]+)<\/div>\s*<div class="sub2">(\d+) payment/);
   const cases = h.match(/<div class="v2">(\d+) <small>active<\/small> · (\d+) <small>legal<\/small>/);
   const ptp = h.match(/<div class="v2">(\d+) <small>due<\/small> · (\d+) <small>overdue<\/small> · (\d+) <small>broken<\/small>/);
   const act = h.match(/<div class="v2">(\d+) <small>opened<\/small> · (\d+) <small>closed<\/small>/);
   const board = [...h.matchAll(/<div class="row"><span>([^<]+)<\/span><span class="num">RM ([\d,.-]+)<\/span><\/div>/g)].map(m => [ent(m[1]), fx(num(m[2]))]);
-  return { total: tot && fx(num(tot[1])), special: tot && fx(num(tot[2])), collectedToday: coll && fx(num(coll[1])), paymentsToday: coll && +coll[2],
+  return { total: tot && fx(num(tot[1])), special: tot && fx(num(tot[2])), contract: tot && fx(num(tot[3])), collectedToday: coll && fx(num(coll[1])), paymentsToday: coll && +coll[2],
     active: cases && +cases[1], legal: cases && +cases[2], ptpDue: ptp && +ptp[1], ptpOverdue: ptp && +ptp[2], ptpBroken: ptp && +ptp[3],
     opened: act && +act[1], closed: act && +act[2],
     dpd: Object.fromEntries(lines.slice(0, 6)), age: Object.fromEntries(lines.slice(6).map(([k, v]) => [k.replace(/d$/, ''), v])), board, html: h };
 }
 async function reports(s, qs = '') {
   const h = (await s.get('/reports' + qs)).text;
-  const byStatus = [...h.matchAll(/<tr><td><span class="badge [^"]*">([^<]+)<\/span><\/td>\s*<td class="num">(\d+)<\/td><td class="num">([\d,.-]+)<\/td>/g)].map(m => ({ status: m[1], cnt: +m[2], total: fx(num(m[3])) }));
-  const foot = h.match(/<tfoot><tr><td>Total<\/td><td class="num">(\d+)<\/td><td class="num">([\d,.-]+)<\/td>/);
+  const byStatus = [...h.matchAll(/<tr><td><span class="badge [^"]*">([^<]+)<\/span><\/td>\s*<td class="num">(\d+)<\/td><td class="num">([\d,.-]+)<\/td><td class="num">([\d,.-]+)<\/td>/g)].map(m => ({ status: m[1], cnt: +m[2], total: fx(num(m[3])), contract: fx(num(m[4])) }));
+  const foot = h.match(/<tfoot><tr><td>Total<\/td><td class="num">(\d+)<\/td><td class="num">([\d,.-]+)<\/td><td class="num">([\d,.-]+)<\/td>/);
   const perf = [...h.matchAll(/<tr><td>([^<]+)<\/td><td class="num">([\d,.-]+)<\/td>\s*<td class="num">([\d.]+)<\/td><td class="num">([\d,.-]+)<\/td>/g)].map(m => ({ name: ent(m[1]), collected: fx(num(m[2])), rate: +m[3], commission: fx(num(m[4])) }));
-  return { byStatus, footCnt: foot && +foot[1], footTotal: foot && fx(num(foot[2])), perf, html: h };
+  return { byStatus, footCnt: foot && +foot[1], footTotal: foot && fx(num(foot[2])), footContract: foot && fx(num(foot[3])), perf, html: h };
 }
 async function commissions(s, month) {
   const h = (await s.get('/commissions' + (month ? '?month=' + month : ''))).text;

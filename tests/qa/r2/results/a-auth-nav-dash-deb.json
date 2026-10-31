@@ -57,10 +57,10 @@
  },
  {
   "id": "AUTH-10",
-  "expected": "footer shows current version (manual text says v1.8.0 — stale); /version newest first",
-  "actual": "footer v1.10.0; /version first=1.10.0 (1.10.0,1.10.0,1.9.0)",
+  "expected": "footer shows current version; /version newest first",
+  "actual": "footer v1.13.0; /version first=1.13.0 (1.13.0,1.13.0,1.12.0); src/version.js 1.13.0",
   "result": "PASS",
-  "note": "手册写 v1.8.0，应为 v1.10.0（手册文字过时）"
+  "note": ""
  },
  {
   "id": "AUTH-11",
@@ -134,15 +134,15 @@
  },
  {
   "id": "DASH-05",
-  "expected": "matches Reports minus closed/cancelled",
-  "actual": "dash 134652.75 vs db 134652.75; special 46278 vs 46278.00; report Closed=8586 Cancelled=9504",
+  "expected": "matches Reports minus closed/cancelled (settlement today); contract balance = DB",
+  "actual": "dash 130260.13 vs report 130260.13; special 46278 vs 46278.00; contract 134652.75 vs db 134652.75",
   "result": "PASS",
   "note": ""
  },
  {
   "id": "DASH-06",
   "expected": "opened +1, manual Closed +1, auto Fully Paid +1",
-  "actual": "opened 0→1; closed 0→1→2; Status updated; Payment RCPT-2026-0003 recorded; c12=fully_paid/2026-10-25 05:14:08",
+  "actual": "opened 0→1; closed 0→1→2; Status updated; Payment RCPT-2026-0003 recorded; c12=fully_paid/2026-10-31 10:54:08",
   "result": "PASS",
   "note": ""
  },
@@ -156,7 +156,7 @@
  {
   "id": "DASH-08",
   "expected": "both sections sum to open balance; largest bar 100%",
-  "actual": "dpd=0/28557.75/0/0/0/45575 age=500/73632.75/0/0 open=74132.75 widths=0,63,0,0,0,100|1,100,0,0",
+  "actual": "dpd=24221.47/45018.66/0/0/0/500 age=500/69240.13/0/0 open=69740.13 widths=54,100,0,0,0,1|1,100,0,0",
   "result": "PASS",
   "note": ""
  },
@@ -177,7 +177,7 @@
  {
   "id": "DASH-11",
   "expected": "call on top, ≤12 items, case link",
-  "actual": "items=12 first=\" Call: answered (30s) — DASH-11 call CASE-2026-D013 · System Admin · 2026-10-25 13:14 \"",
+  "actual": "items=12 first=\" Call: answered (30s) — DASH-11 call CASE-2026-D013 · System Admin · 2026-10-31 18:54 \"",
   "result": "PASS",
   "note": ""
  },
@@ -218,7 +218,7 @@
  },
  {
   "id": "DEB-05",
-  "expected": "cases with no/outstanding/status, clickable",
+  "expected": "cases with no/settlement today/status, clickable",
   "actual": "page=1,13 db=1,13",
   "result": "PASS",
   "note": ""

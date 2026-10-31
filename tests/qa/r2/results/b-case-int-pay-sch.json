@@ -8,8 +8,8 @@
  },
  {
   "id": "CASE-02",
-  "expected": "cases.csv, filtered, 9 columns",
-  "actual": "attachment; filename=\"cases.csv\"; header=Case No,Debtor,Debtor Phone,Agent,Outstanding,Paid,Priority,Status,Opened; rows=2",
+  "expected": "cases.csv, filtered, 12 columns",
+  "actual": "attachment; filename=\"cases.csv\"; header=Case No,Debtor,Debtor Phone,Agent,Settlement Today,Overdue,DPD,Contract Balance,Paid,Priority,Status,Opened; rows=2",
   "result": "PASS",
   "note": ""
  },
@@ -58,7 +58,7 @@
  {
   "id": "CASE-10",
   "expected": "all ledger items present",
-  "actual": "outstanding=10,696.06 settle=10,385.40 overdue=350.00 (85 days past due) 9% recovered I=1,696.06 mat=2027-01-01",
+  "actual": "outstanding=10,696.06 settle=10,412.41 overdue=350.00 (91 days past due) 9% recovered I=1,696.06 mat=2027-01-01",
   "result": "PASS",
   "note": ""
  },
@@ -72,7 +72,7 @@
  {
   "id": "CASE-12",
   "expected": "closed_at set (fully_paid covered by PAY-03/CASE-22)",
-  "actual": "[{\"id\":15,\"closed_at\":\"2026-10-25 05:14:12\"},{\"id\":19,\"closed_at\":\"2026-10-25 05:14:12\"}]",
+  "actual": "[{\"id\":15,\"closed_at\":\"2026-10-31 10:54:11\"},{\"id\":19,\"closed_at\":\"2026-10-31 10:54:11\"}]",
   "result": "PASS",
   "note": ""
  },
@@ -93,7 +93,7 @@
  {
   "id": "CASE-15",
   "expected": "Schedule, Restructure History, Payments, PTP, Calls, Tasks; schedule only with terms",
-  "actual": "positions=10512,14808,18102,18238,19039,19167",
+  "actual": "positions=10861,15153,18425,18561,19342,19465",
   "result": "PASS",
   "note": ""
  },
@@ -107,7 +107,7 @@
  {
   "id": "CASE-17",
   "expected": "shows earliest (date · title)",
-  "actual": "Next Action 2026-10-27 · sooner task ",
+  "actual": "Next Action 2026-11-02 · sooner task ",
   "result": "PASS",
   "note": ""
  },
@@ -162,8 +162,8 @@
  },
  {
   "id": "INT-03",
-  "expected": "Total Outstanding 1,200.00",
-  "actual": "1,200.00",
+  "expected": "Contract Balance and Settlement Today 1,150.00",
+  "actual": "1,150.00 / 1,150.00",
   "result": "PASS",
   "note": ""
  },
@@ -197,8 +197,8 @@
  },
  {
   "id": "INT-07",
-  "expected": "today 0.00 stable; one day later = 150/days-in-period",
-  "actual": "today I=0.00/0.00; yesterday-start I=4.84 (expect 4.84, 31-day period)",
+  "expected": "Settlement Today: start today 10,000.00 stable; one day later + 150/days-in-period",
+  "actual": "today 10,000.00/10,000.00; yesterday-start 10,004.84 (expect 10,004.84, 31-day period)",
   "result": "PASS",
   "note": "“次日”用“起始日=昨天”代替（不能等一天）"
  },
@@ -212,7 +212,7 @@
  {
   "id": "INT-09",
   "expected": "\"(unset, defaults to opened)\"",
-  "actual": "Loan Start Date 2026-10-25 · interest accrues from this date (unset, defaults to opened) ",
+  "actual": "Loan Start Date 2026-10-31 · interest accrues from this date (unset, defaults to opened) ",
   "result": "PASS",
   "note": ""
  },
@@ -232,8 +232,8 @@
  },
  {
   "id": "INT-12",
-  "expected": "24 → allowed; back to 18 → refused",
-  "actual": "24:Company settings saved case=35; 18:Company settings saved; Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.)",
+  "expected": "24 refused; 12 saved + audited + over-cap list; 1.1%/month refused at 12",
+  "actual": "24:Max annual interest rate must be above 0 and at most 18% (the legal limit); 12:Company settings saved; audit \"Updated company settings: max_annual_rate: 18 → 12\"; list=true; 1.1% → Interest rate exceeds the 12% p.a. limit (this loan: 13.2% p.a.)",
   "result": "PASS",
   "note": ""
  },
@@ -246,8 +246,8 @@
  },
  {
   "id": "INT-14",
-  "expected": "Saved; changing terms → cap error",
-  "actual": "Saved / Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.)",
+  "expected": "Saved (also demo case 2); changing terms → cap error",
+  "actual": "Saved / Interest rate exceeds the 12% p.a. limit (this loan: 18% p.a.) / case 2 Saved",
   "result": "PASS",
   "note": ""
  },
@@ -268,14 +268,14 @@
  {
   "id": "PAY-03",
   "expected": "Fully Paid + closed_at + event; 0.00; all Paid",
-  "actual": "max=3,214.02 attr=3214.02; Payment RCPT-2026-0007 recorded; {\"status\":\"fully_paid\",\"closed_at\":\"2026-10-25 05:14:13\",\"o\":0}; ev=\"Status changed negotiation → fully_paid\"; schedule=Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid",
+  "actual": "max=3,214.02 attr=3214.02; Payment RCPT-2026-0007 recorded; {\"status\":\"fully_paid\",\"closed_at\":\"2026-10-31 10:54:12\",\"o\":0}; ev=\"Status changed negotiation → fully_paid\"; schedule=Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid",
   "result": "PASS",
   "note": ""
  },
  {
   "id": "PAY-04",
-  "expected": "\"Amount exceeds what is owed on 2026-10-25: at most RM <settlement>\"",
-  "actual": "settle=11,466.13 max attr=11466.13; Amount exceeds what is owed on 2026-10-25: at most RM 11466.13",
+  "expected": "\"Amount exceeds what is owed on 2026-10-31: at most RM <settlement>\"",
+  "actual": "settle=11,495.16 max attr=11495.16; Amount exceeds what is owed on 2026-10-31: at most RM 11495.16",
   "result": "PASS",
   "note": ""
  },
@@ -310,7 +310,7 @@
  {
   "id": "PAY-09",
   "expected": "cap+0.01 refused; Payment updated; timeline a→b; audit old→new; cap accepted",
-  "actual": "over=\"Amount exceeds what is owed on 2026-10-25: at most RM 5733.06\"; Payment updated; \"Payment RCPT-2026-0014 edited: RM 200.00 → RM 250.00\"; audit=\"Edited payment RCPT-2026-0014: amount 200.00 → 250.00; method cash → cheque; reference R9 → R9b\"; atCap=Payment updated",
+  "actual": "over=\"Amount exceeds what is owed on 2026-10-31: at most RM 5747.58\"; Payment updated; \"Payment RCPT-2026-0014 edited: RM 200.00 → RM 250.00\"; audit=\"Edited payment RCPT-2026-0014: amount 200.00 → 250.00; method cash → cheque; reference R9 → R9b\"; atCap=Payment updated",
   "result": "PASS",
   "note": ""
  },
@@ -415,7 +415,7 @@
  {
   "id": "SCH-07",
   "expected": "one Pay button on first unpaid row; amount = min(row, settlement)",
-  "actual": "payRows=1 first=1 prefill=35.5 settle=2882.65",
+  "actual": "payRows=1 first=1 prefill=35.5 settle=2882.74",
   "result": "PASS",
   "note": ""
  },

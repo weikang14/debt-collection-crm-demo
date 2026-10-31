@@ -1,0 +1,1662 @@
+[
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D001",
+  "scenario": "案件 1（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "2160.00/160.00/0.00/2160.00/30/180.00",
+  "actual": "2160.00/160.00/0.00/2160.00/30/180.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D002",
+  "scenario": "案件 2（monthly，Assigned）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "3363.00/513.00/0.00/2932.74/29/42.75",
+  "actual": "3363.00/513.00/0.00/2932.74/29/42.75",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D003",
+  "scenario": "案件 3（fixed，Negotiation）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "3996.00/296.00/0.00/3996.00/28/333.00",
+  "actual": "3996.00/296.00/0.00/3996.00/28/333.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D004",
+  "scenario": "案件 4（daily，PTP）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "5369.00/819.00/0.00/4677.90/27/67.32",
+  "actual": "5369.00/819.00/0.00/4677.90/27/67.32",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D005",
+  "scenario": "案件 5（fixed，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "2916.00/432.00/2916.00/2916.00/0/0.00",
+  "actual": "2916.00/432.00/2916.00/2916.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D006",
+  "scenario": "案件 6（fixed，Fully Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "0.00/500.00/6750.00/0.00/0/0.00",
+  "actual": "0.00/500.00/6750.00/0.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D007",
+  "scenario": "案件 7（fixed，Legal）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "7668.00/568.00/0.00/7668.00/24/639.00",
+  "actual": "7668.00/568.00/0.00/7668.00/24/639.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D008",
+  "scenario": "案件 8（fixed，Closed）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "8586.00/636.00/0.00/8586.00/23/715.50",
+  "actual": "8586.00/636.00/0.00/8586.00/23/715.50",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D009",
+  "scenario": "案件 9（fixed，Cancelled）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "9504.00/704.00/0.00/9504.00/22/792.00",
+  "actual": "9504.00/704.00/0.00/9504.00/22/792.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D010",
+  "scenario": "案件 10（fixed，Bankruptcy）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10422.00/772.00/0.00/10422.00/21/868.50",
+  "actual": "10422.00/772.00/0.00/10422.00/21/868.50",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D011",
+  "scenario": "案件 11（fixed，Deceased）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11340.00/840.00/0.00/11340.00/20/945.00",
+  "actual": "11340.00/840.00/0.00/11340.00/20/945.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D012",
+  "scenario": "案件 12（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "12258.00/908.00/0.00/12258.00/19/1021.50",
+  "actual": "12258.00/908.00/0.00/12258.00/19/1021.50",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D013",
+  "scenario": "案件 13（fixed，Assigned）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "13176.00/976.00/0.00/13176.00/18/1098.00",
+  "actual": "13176.00/976.00/0.00/13176.00/18/1098.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D014",
+  "scenario": "案件 14（monthly，已重组，Negotiation）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "16108.75/3058.75/0.00/13340.47/0/0.00",
+  "actual": "16108.75/3058.75/0.00/13340.47/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D015",
+  "scenario": "案件 15（fixed，PTP）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "15012.00/1112.00/0.00/15012.00/16/1251.00",
+  "actual": "15012.00/1112.00/0.00/15012.00/16/1251.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D016",
+  "scenario": "案件 16（fixed，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "7965.00/1180.00/7965.00/7965.00/0/0.00",
+  "actual": "7965.00/1180.00/7965.00/7965.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D017",
+  "scenario": "案件 17（fixed，Legal）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "16848.00/1248.00/0.00/16848.00/14/1404.00",
+  "actual": "16848.00/1248.00/0.00/16848.00/14/1404.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D018",
+  "scenario": "案件 18（fixed，Fully Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "0.00/1316.00/17766.00/0.00/0/0.00",
+  "actual": "0.00/1316.00/17766.00/0.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D019",
+  "scenario": "案件 19（fixed，Assigned）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "2484.00/184.00/0.00/2484.00/12/207.00",
+  "actual": "2484.00/184.00/0.00/2484.00/12/207.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-D020",
+  "scenario": "案件 20（monthly，Negotiation）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "3717.00/567.00/0.00/3214.02/11/47.25",
+  "actual": "3717.00/567.00/0.00/3214.02/11/47.25",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0001",
+  "scenario": "案件 21（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/11495.16/272/1350.00",
+  "actual": "11800.00/1800.00/0.00/11495.16/272/1350.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0002",
+  "scenario": "案件 22（monthly，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10696.06/1696.06/1000.00/10412.41/91/350.00",
+  "actual": "10696.06/1696.06/1000.00/10412.41/91/350.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0003",
+  "scenario": "案件 23（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10450.00/450.00/0.00/10450.00/272/10450.00",
+  "actual": "10450.00/450.00/0.00/10450.00/272/10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0004",
+  "scenario": "案件 24（daily，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "43070.00/6570.00/0.00/41954.00/272/4914.00",
+  "actual": "43070.00/6570.00/0.00/41954.00/272/4914.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0005",
+  "scenario": "案件 25（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1000.00/0.00/0.00/1000.00/245/1000.00",
+  "actual": "1000.00/0.00/0.00/1000.00/245/1000.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0006",
+  "scenario": "案件 26（fixed，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "9200.00/1200.00/2000.00/9200.00/213/6399.97",
+  "actual": "9200.00/1200.00/2000.00/9200.00/213/6399.97",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0007",
+  "scenario": "案件 27（fixed，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1050.00/0.00/150.00/1050.00/244/750.00",
+  "actual": "1050.00/0.00/150.00/1050.00/244/750.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0008",
+  "scenario": "案件 28（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/10000.00/0/0.00",
+  "actual": "11800.00/1800.00/0.00/10000.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0009",
+  "scenario": "案件 29（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10150.00/150.00/0.00/10145.16/0/0.00",
+  "actual": "10150.00/150.00/0.00/10145.16/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0010",
+  "scenario": "案件 30（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10450.00/450.00/0.00/10450.00/975/10450.00",
+  "actual": "10450.00/450.00/0.00/10450.00/975/10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0011",
+  "scenario": "案件 31（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10450.00/450.00/0.00/10450.00/245/10450.00",
+  "actual": "10450.00/450.00/0.00/10450.00/245/10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0012",
+  "scenario": "案件 32（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10450.00/450.00/0.00/10450.00/245/10450.00",
+  "actual": "10450.00/450.00/0.00/10450.00/245/10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0013",
+  "scenario": "案件 33（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/11800.00/946/11800.00",
+  "actual": "11800.00/1800.00/0.00/11800.00/946/11800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0014",
+  "scenario": "案件 34（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/11800.00/1034/11800.00",
+  "actual": "11800.00/1800.00/0.00/11800.00/1034/11800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0015",
+  "scenario": "案件 35（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10150.00/150.00/0.00/10150.00/975/10150.00",
+  "actual": "10150.00/150.00/0.00/10150.00/975/10150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0016",
+  "scenario": "案件 36（daily，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "43088.00/6588.00/0.00/43088.00/1003/43088.00",
+  "actual": "43088.00/6588.00/0.00/43088.00/1003/43088.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0017",
+  "scenario": "案件 37（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/10000.00/0/0.00",
+  "actual": "11800.00/1800.00/0.00/10000.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0018",
+  "scenario": "案件 38（daily，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "43088.00/6588.00/0.00/36500.00/0/0.00",
+  "actual": "43088.00/6588.00/0.00/36500.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0019",
+  "scenario": "案件 39（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1030.23/15.23/0.00/1030.23/1/1030.23",
+  "actual": "1030.23/15.23/0.00/1030.23/1/1030.23",
+  "result": "PASS",
+  "note": "K-01 浮点舍入（已知延后）"
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0020",
+  "scenario": "案件 40（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1095.19/16.19/0.00/1095.19/1/1095.19",
+  "actual": "1095.19/16.19/0.00/1095.19/1/1095.19",
+  "result": "PASS",
+  "note": "K-01 浮点舍入（已知延后）"
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0021",
+  "scenario": "案件 41（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1016.02/15.02/0.00/1016.02/1/1016.02",
+  "actual": "1016.02/15.02/0.00/1016.02/1/1016.02",
+  "result": "PASS",
+  "note": "K-01 浮点舍入（已知延后）"
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0022",
+  "scenario": "案件 42（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "3046.02/45.02/0.00/3046.02/1/3046.02",
+  "actual": "3046.02/45.02/0.00/3046.02/1/3046.02",
+  "result": "PASS",
+  "note": "K-01 浮点舍入（已知延后）"
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0023",
+  "scenario": "案件 43（monthly，Fully Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "0.00/15.23/1030.23/0.00/0/0.00",
+  "actual": "0.00/15.23/1030.23/0.00/0/0.00",
+  "result": "PASS",
+  "note": "K-01 浮点舍入（已知延后）"
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0024",
+  "scenario": "案件 44（monthly，Fully Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "0.00/15.23/1030.23/0.00/0/0.00",
+  "actual": "0.00/15.23/1030.23/0.00/0/0.00",
+  "result": "PASS",
+  "note": "K-01 浮点舍入（已知延后）"
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0025",
+  "scenario": "案件 45（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1000.00/0.00/0.00/1000.00//",
+  "actual": "1000.00/0.00/0.00/1000.00//",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0026",
+  "scenario": "案件 46（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/11495.16/272/1350.00",
+  "actual": "11800.00/1800.00/0.00/11495.16/272/1350.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0027",
+  "scenario": "案件 47（monthly，Fully Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "0.00/731.03/10731.03/0.00/0/0.00",
+  "actual": "0.00/731.03/10731.03/0.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0028",
+  "scenario": "案件 48（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/10745.16/122/600.00",
+  "actual": "11800.00/1800.00/0.00/10745.16/122/600.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0029",
+  "scenario": "案件 49（monthly，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11600.00/1800.00/200.00/11295.16/244/1150.00",
+  "actual": "11600.00/1800.00/200.00/11295.16/244/1150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0030",
+  "scenario": "案件 50（monthly，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10169.02/1669.02/1500.00/9892.24/0/0.00",
+  "actual": "10169.02/1669.02/1500.00/9892.24/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0031",
+  "scenario": "案件 51（monthly，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "9950.00/450.00/500.00/9950.00/578/9950.00",
+  "actual": "9950.00/450.00/500.00/9950.00/578/9950.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0032",
+  "scenario": "案件 52（monthly，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11495.16/1800.00/304.84/11190.32/213/1045.16",
+  "actual": "11495.16/1800.00/304.84/11190.32/213/1045.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0033",
+  "scenario": "案件 53（monthly，Fully Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "0.00/304.84/10304.84/0.00/0/0.00",
+  "actual": "0.00/304.84/10304.84/0.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0034",
+  "scenario": "案件 54（monthly，Fully Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "0.00/304.84/10304.84/0.00/0/0.00",
+  "actual": "0.00/304.84/10304.84/0.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0035",
+  "scenario": "案件 55（monthly，Fully Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "0.00/0.00/10000.00/0.00/0/0.00",
+  "actual": "0.00/0.00/10000.00/0.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0036",
+  "scenario": "案件 56（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11200.00/1200.00/0.00/11200.00/30/933.33",
+  "actual": "11200.00/1200.00/0.00/11200.00/30/933.33",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0037",
+  "scenario": "案件 57（monthly，已重组，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10898.09/2398.09/1500.00/9699.78/91/305.03",
+  "actual": "10898.09/2398.09/1500.00/9699.78/91/305.03",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0038",
+  "scenario": "案件 58（monthly，已重组，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "6785.00/1785.00/5000.00/6178.47/122/345.00",
+  "actual": "6785.00/1785.00/5000.00/6178.47/122/345.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0039",
+  "scenario": "案件 59（monthly，已重组，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "9329.14/1329.14/2000.00/8154.84/0/0.00",
+  "actual": "9329.14/1329.14/2000.00/8154.84/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0040",
+  "scenario": "案件 60（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11440.00/1440.00/0.00/10596.13/122/480.00",
+  "actual": "11440.00/1440.00/0.00/10596.13/122/480.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0041",
+  "scenario": "案件 61（fixed，已重组，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "13600.00/3600.00/0.00/13600.00/0/0.00",
+  "actual": "13600.00/3600.00/0.00/13600.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0042",
+  "scenario": "案件 62（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/11800.00/6/983.33",
+  "actual": "11800.00/1800.00/0.00/11800.00/6/983.33",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0043",
+  "scenario": "案件 63（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/11800.00/6/983.33",
+  "actual": "11800.00/1800.00/0.00/11800.00/6/983.33",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0044",
+  "scenario": "案件 64（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/10179.03/6/150.00",
+  "actual": "11800.00/1800.00/0.00/10179.03/6/150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0045",
+  "scenario": "案件 65（monthly，已重组，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "20000.00/10000.00/0.00/11370.97/122/1250.00",
+  "actual": "20000.00/10000.00/0.00/11370.97/122/1250.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0046",
+  "scenario": "案件 66（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/11495.16/272/1350.00",
+  "actual": "11800.00/1800.00/0.00/11495.16/272/1350.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0047",
+  "scenario": "案件 67（monthly，已重组，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11650.00/1650.00/0.00/10450.00/0/0.00",
+  "actual": "11650.00/1650.00/0.00/10450.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0048",
+  "scenario": "案件 68（monthly，已重组，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "13145.00/3145.00/0.00/11499.84/1/1495.00",
+  "actual": "13145.00/3145.00/0.00/11499.84/1/1495.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0049",
+  "scenario": "案件 69（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/10295.16/30/150.00",
+  "actual": "11800.00/1800.00/0.00/10295.16/30/150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0050",
+  "scenario": "案件 70（daily，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/10295.89/30/147.95",
+  "actual": "11800.00/1800.00/0.00/10295.89/30/147.95",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0051",
+  "scenario": "案件 71（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/11800.00/30/983.33",
+  "actual": "11800.00/1800.00/0.00/11800.00/30/983.33",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0052",
+  "scenario": "案件 72（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11500.00/1500.00/0.00/11500.00/0/0.00",
+  "actual": "11500.00/1500.00/0.00/11500.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0053",
+  "scenario": "案件 73（monthly，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "20000.00/10000.00/0.00/10245.97/30/125.00",
+  "actual": "20000.00/10000.00/0.00/10245.97/30/125.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0054",
+  "scenario": "案件 74（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "20000.00/10000.00/0.00/20000.00/30/166.66",
+  "actual": "20000.00/10000.00/0.00/20000.00/30/166.66",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0055",
+  "scenario": "案件 75（fixed，PTP）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10000.00/0.00/0.00/10000.00//",
+  "actual": "10000.00/0.00/0.00/10000.00//",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0056",
+  "scenario": "案件 76（monthly，PTP）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/10000.00/0/0.00",
+  "actual": "11800.00/1800.00/0.00/10000.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0057",
+  "scenario": "案件 77（fixed，PTP）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "5000.00/0.00/0.00/5000.00//",
+  "actual": "5000.00/0.00/0.00/5000.00//",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0058",
+  "scenario": "案件 78（monthly，PTP）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11800.00/1800.00/0.00/10000.00/0/0.00",
+  "actual": "11800.00/1800.00/0.00/10000.00/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0059",
+  "scenario": "案件 79（fixed，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "400.00/0.00/600.00/400.00//",
+  "actual": "400.00/0.00/600.00/400.00//",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0060",
+  "scenario": "案件 80（fixed，PTP）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "950.00/0.00/50.00/950.00//",
+  "actual": "950.00/0.00/50.00/950.00//",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0061",
+  "scenario": "案件 81（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1200.00/0.00/0.00/1200.00/1/100.00",
+  "actual": "1200.00/0.00/0.00/1200.00/1/100.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0062",
+  "scenario": "案件 82（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1200.00/0.00/0.00/1200.00/1/100.00",
+  "actual": "1200.00/0.00/0.00/1200.00/1/100.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0063",
+  "scenario": "案件 83（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1200.00/0.00/0.00/1200.00/30/100.00",
+  "actual": "1200.00/0.00/0.00/1200.00/30/100.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0064",
+  "scenario": "案件 84（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1200.00/0.00/0.00/1200.00/31/200.00",
+  "actual": "1200.00/0.00/0.00/1200.00/31/200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0065",
+  "scenario": "案件 85（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1200.00/0.00/0.00/1200.00/60/200.00",
+  "actual": "1200.00/0.00/0.00/1200.00/60/200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0066",
+  "scenario": "案件 86（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1200.00/0.00/0.00/1200.00/61/200.00",
+  "actual": "1200.00/0.00/0.00/1200.00/61/200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0067",
+  "scenario": "案件 87（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1200.00/0.00/0.00/1200.00/90/300.00",
+  "actual": "1200.00/0.00/0.00/1200.00/90/300.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0068",
+  "scenario": "案件 88（fixed，New）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "1200.00/0.00/0.00/1200.00/91/300.00",
+  "actual": "1200.00/0.00/0.00/1200.00/91/300.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0069",
+  "scenario": "案件 89（monthly，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "5903.29/903.29/5000.00/5903.29/30/5903.29",
+  "actual": "5903.29/903.29/5000.00/5903.29/30/5903.29",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0070",
+  "scenario": "案件 90（monthly，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "10620.00/1620.00/1000.00/9814.35/0/0.00",
+  "actual": "10620.00/1620.00/1000.00/9814.35/0/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0071",
+  "scenario": "案件 91（fixed，Partial Paid）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "3764.43/0.00/1235.57/3764.43//",
+  "actual": "3764.43/0.00/1235.57/3764.43//",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CASE-2026-0072",
+  "scenario": "案件 92（monthly，已重组，PTP）合同欠款/利息/已还/今日结清额/DPD/逾期",
+  "formula": "独立账本（输入条款 + 还款 + 重组条款）",
+  "expected": "11449.75/2449.75/1000.00/10217.91/183/805.03",
+  "actual": "11449.75/2449.75/1000.00/10217.91/183/805.03",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "ALL",
+  "scenario": "全部 92 个案件：页面 = 独立计算",
+  "formula": "",
+  "expected": "0 个不一致（K-01 浮点行除外）",
+  "actual": "不一致 0 个：",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "STMT",
+  "scenario": "全部 92 个案件：对账单 = 案件页（6 个数）",
+  "formula": "",
+  "expected": "0 个不一致",
+  "actual": "全部一致",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CASE",
+  "id": "CUT",
+  "scenario": "全部重组记录：存储的截点本金/挂账 = 独立计算（D-04）",
+  "formula": "",
+  "expected": "0 个不一致",
+  "actual": "全部一致",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "total",
+  "scenario": "Total Outstanding · settlement today（不含 Closed/Cancelled，D-09，G-24）",
+  "formula": "Σ 独立今日结清额",
+  "expected": "750371.58",
+  "actual": "750371.58",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "contract",
+  "scenario": "同卡片的 contract balance",
+  "formula": "Σ 独立合同欠款",
+  "expected": "804531.15",
+  "actual": "804531.15",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "special",
+  "scenario": "其中 Legal/Bankruptcy/Deceased",
+  "formula": "Σ 三种状态的今日结清额",
+  "expected": "46278.00",
+  "actual": "46278.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "dpd.Current",
+  "scenario": "Aging（DPD）“Current”",
+  "formula": "Σ 非终态且欠款>0 的案件，按独立 DPD 分档",
+  "expected": "174278.06",
+  "actual": "174278.06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "dpd.1–30",
+  "scenario": "Aging（DPD）“1–30”",
+  "formula": "Σ 非终态且欠款>0 的案件，按独立 DPD 分档",
+  "expected": "194717.30",
+  "actual": "194717.30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "dpd.31–60",
+  "scenario": "Aging（DPD）“31–60”",
+  "formula": "Σ 非终态且欠款>0 的案件，按独立 DPD 分档",
+  "expected": "2400.00",
+  "actual": "2400.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "dpd.61–90",
+  "scenario": "Aging（DPD）“61–90”",
+  "formula": "Σ 非终态且欠款>0 的案件，按独立 DPD 分档",
+  "expected": "2400.00",
+  "actual": "2400.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "dpd.90+",
+  "scenario": "Aging（DPD）“90+”",
+  "formula": "Σ 非终态且欠款>0 的案件，按独立 DPD 分档",
+  "expected": "309183.79",
+  "actual": "309183.79",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "dpd.No schedule",
+  "scenario": "Aging（DPD）“No schedule”",
+  "formula": "Σ 非终态且欠款>0 的案件，按独立 DPD 分档",
+  "expected": "21114.43",
+  "actual": "21114.43",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "age.0–30",
+  "scenario": "Case Age “0–30”",
+  "formula": "Σ 同上，按开案天数",
+  "expected": "619961.45",
+  "actual": "619961.45",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "age.31–60",
+  "scenario": "Case Age “31–60”",
+  "formula": "Σ 同上，按开案天数",
+  "expected": "84132.13",
+  "actual": "84132.13",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "age.61–90",
+  "scenario": "Case Age “61–90”",
+  "formula": "Σ 同上，按开案天数",
+  "expected": "0.00",
+  "actual": "0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "age.90+",
+  "scenario": "Case Age “90+”",
+  "formula": "Σ 同上，按开案天数",
+  "expected": "0.00",
+  "actual": "0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "agingTie",
+  "scenario": "Aging 合计 + Legal/Bankruptcy/Deceased = Total Outstanding",
+  "formula": "口径勾稽",
+  "expected": "750371.58",
+  "actual": "750371.58",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "active",
+  "scenario": "active 案件数（不含终态、不含 Fully Paid）",
+  "formula": "count",
+  "expected": "78",
+  "actual": "78",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "legal",
+  "scenario": "legal 案件数",
+  "formula": "count",
+  "expected": "2",
+  "actual": "2",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "opened",
+  "scenario": "今日新开",
+  "formula": "count(开案 MYT 日期 = 今天)",
+  "expected": "72",
+  "actual": "72",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "closed",
+  "scenario": "今日结案（含自动 Fully Paid，D-09）",
+  "formula": "今天开案且独立账本已还清（精确余额 ≤ 0.005）的案件数",
+  "expected": "6",
+  "actual": "6",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "collected",
+  "scenario": "Collected Today / 笔数",
+  "formula": "Σ 今天日期的还款",
+  "expected": "18096.03/12",
+  "actual": "18096.03/12",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "ptp",
+  "scenario": "PTP due / overdue / broken",
+  "formula": "pending 今天到期 / pending 已过期 / broken（partially_kept 不计入）",
+  "expected": "1/0/1",
+  "actual": "1/0/1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "board",
+  "scenario": "Agent Leaderboard 前 5（累计，按 payments.agent_id）",
+  "formula": "Σ 每位催收员名下还款",
+  "expected": "Nurul Ain:24516.00, Tan Mei Ling:7965.00, Lim Wei Sheng:2916.00, QA R2 Agent B:1235.57, Rajesh Kumar:0.00",
+  "actual": "Nurul Ain:24516.00, Tan Mei Ling:7965.00, Lim Wei Sheng:2916.00, QA R2 Agent B:1235.57, Rajesh Kumar:0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.new",
+  "scenario": "Outstanding by Status：New",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "48/481306.25/521286.46",
+  "actual": "48/481306.25/521286.46",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.assigned",
+  "scenario": "Outstanding by Status：Assigned",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "3/18592.74/19023.00",
+  "actual": "3/18592.74/19023.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.negotiation",
+  "scenario": "Outstanding by Status：Negotiation",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "3/20550.49/23821.75",
+  "actual": "3/20550.49/23821.75",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.ptp",
+  "scenario": "Outstanding by Status：PTP",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "8/65857.81/71380.75",
+  "actual": "8/65857.81/71380.75",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.partial_paid",
+  "scenario": "Outstanding by Status：Partial Paid",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "16/117786.29/122741.19",
+  "actual": "16/117786.29/122741.19",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.fully_paid",
+  "scenario": "Outstanding by Status：Fully Paid",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "8/0.00/0.00",
+  "actual": "8/0.00/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.legal",
+  "scenario": "Outstanding by Status：Legal",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "2/24516.00/24516.00",
+  "actual": "2/24516.00/24516.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.closed",
+  "scenario": "Outstanding by Status：Closed",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "1/8586.00/8586.00",
+  "actual": "1/8586.00/8586.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.cancelled",
+  "scenario": "Outstanding by Status：Cancelled",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "1/9504.00/9504.00",
+  "actual": "1/9504.00/9504.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.bankruptcy",
+  "scenario": "Outstanding by Status：Bankruptcy",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "1/10422.00/10422.00",
+  "actual": "1/10422.00/10422.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "status.deceased",
+  "scenario": "Outstanding by Status：Deceased",
+  "formula": "count / Σ 独立今日结清额 / Σ 独立合同欠款",
+  "expected": "1/11340.00/11340.00",
+  "actual": "1/11340.00/11340.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "foot",
+  "scenario": "Outstanding by Status 合计",
+  "formula": "Σ 全部案件：count / 今日结清额 / 合同欠款",
+  "expected": "92/768461.58/822621.15",
+  "actual": "92/768461.58/822621.15",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RPT",
+  "id": "dashTie",
+  "scenario": "DASH-05：Reports 合计 − Closed − Cancelled = 仪表盘 Total Outstanding",
+  "formula": "勾稽",
+  "expected": "750371.58",
+  "actual": "750371.58",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "obs",
+  "scenario": "outstanding-by-status.csv = Reports 表",
+  "formula": "逐行",
+  "expected": "New:48:481306.25:521286.46,Partial Paid:16:117786.29:122741.19,PTP:8:65857.81:71380.75,Legal:2:24516:24516,Negotiation:3:20550.49:23821.75,Assigned:3:18592.74:19023,Deceased:1:11340:11340,Bankruptcy:1:10422:10422,Cancelled:1:9504:9504,Closed:1:8586:8586,Fully Paid:8:0:0",
+  "actual": "New:48:481306.25:521286.46,Partial Paid:16:117786.29:122741.19,PTP:8:65857.81:71380.75,Legal:2:24516:24516,Negotiation:3:20550.49:23821.75,Assigned:3:18592.74:19023,Deceased:1:11340:11340,Bankruptcy:1:10422:10422,Cancelled:1:9504:9504,Closed:1:8586:8586,Fully Paid:8:0:0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "cases.settle",
+  "scenario": "cases.csv Σ Settlement Today",
+  "formula": "Σ 独立今日结清额（全部案件）",
+  "expected": "768461.58",
+  "actual": "768461.58",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "cases.out",
+  "scenario": "cases.csv Σ Contract Balance",
+  "formula": "Σ 独立合同欠款（全部案件）",
+  "expected": "822621.15",
+  "actual": "822621.15",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "cases.paid",
+  "scenario": "cases.csv Σ Paid",
+  "formula": "Σ 全部已入账还款",
+  "expected": "101838.58",
+  "actual": "101838.58",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "cases.rows",
+  "scenario": "cases.csv 逐行 Settlement Today / Overdue / DPD = 独立计算（92 行，G-23）",
+  "formula": "",
+  "expected": "0 行不一致",
+  "actual": "全部一致",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "det.settle",
+  "scenario": "cases-detailed.csv Σ Settlement Today",
+  "formula": "同上",
+  "expected": "768461.58",
+  "actual": "768461.58",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "det.out",
+  "scenario": "cases-detailed.csv Σ Contract Balance",
+  "formula": "Σ 独立合同欠款",
+  "expected": "822621.15",
+  "actual": "822621.15",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "det.ident",
+  "scenario": "cases-detailed.csv 逐行 Principal + Interest − Paid = Contract Balance（92 行）",
+  "formula": "",
+  "expected": "0 行不平",
+  "actual": "0 行不平：",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CSV",
+  "id": "det.2dp",
+  "scenario": "cases-detailed.csv 金额最多 2 位小数（RPT-06）",
+  "formula": "",
+  "expected": "0 个单元格超过 2 位小数",
+  "actual": "全部 ≤ 2 位",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Lim Wei Sheng.com",
+  "scenario": "Commissions 2026-10：Lim Wei Sheng Collected/Earned/Pending",
+  "formula": "Σ 本月 payments.agent_id；× 5%；− 已结算 100",
+  "expected": "2916.00/145.80/45.80",
+  "actual": "2916.00/145.80/45.80",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Lim Wei Sheng.rpt",
+  "scenario": "Reports 本月业绩 = Commissions：Lim Wei Sheng",
+  "formula": "同一口径",
+  "expected": "2916.00/145.80",
+  "actual": "2916.00/145.80",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Lim Wei Sheng.csv",
+  "scenario": "agent-performance.csv：Lim Wei Sheng",
+  "formula": "同一口径（数值）",
+  "expected": "2916/145.8",
+  "actual": "2916/145.8",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Lim Wei Sheng.agents",
+  "scenario": "Agents 页累计 Collected/Commission：Lim Wei Sheng",
+  "formula": "Σ 全部 payments.agent_id",
+  "expected": "2916.00/145.80",
+  "actual": "2916.00/145.80",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Nurul Ain.com",
+  "scenario": "Commissions 2026-10：Nurul Ain Collected/Earned/Pending",
+  "formula": "Σ 本月 payments.agent_id；× 5%；− 已结算 500",
+  "expected": "24516.00/1225.80/725.80",
+  "actual": "24516.00/1225.80/725.80",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Nurul Ain.rpt",
+  "scenario": "Reports 本月业绩 = Commissions：Nurul Ain",
+  "formula": "同一口径",
+  "expected": "24516.00/1225.80",
+  "actual": "24516.00/1225.80",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Nurul Ain.csv",
+  "scenario": "agent-performance.csv：Nurul Ain",
+  "formula": "同一口径（数值）",
+  "expected": "24516/1225.8",
+  "actual": "24516/1225.8",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Nurul Ain.agents",
+  "scenario": "Agents 页累计 Collected/Commission：Nurul Ain",
+  "formula": "Σ 全部 payments.agent_id",
+  "expected": "24516.00/1225.80",
+  "actual": "24516.00/1225.80",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Rajesh Kumar.com",
+  "scenario": "Commissions 2026-10：Rajesh Kumar Collected/Earned/Pending",
+  "formula": "Σ 本月 payments.agent_id；× 6%；− 已结算 0",
+  "expected": "0.00/0.00/0.00",
+  "actual": "0.00/0.00/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Rajesh Kumar.rpt",
+  "scenario": "Reports 本月业绩 = Commissions：Rajesh Kumar",
+  "formula": "同一口径",
+  "expected": "0.00/0.00",
+  "actual": "0.00/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Rajesh Kumar.csv",
+  "scenario": "agent-performance.csv：Rajesh Kumar",
+  "formula": "同一口径（数值）",
+  "expected": "0/0",
+  "actual": "0/0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Rajesh Kumar.agents",
+  "scenario": "Agents 页累计 Collected/Commission：Rajesh Kumar",
+  "formula": "Σ 全部 payments.agent_id",
+  "expected": "0.00/0.00",
+  "actual": "0.00/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Tan Mei Ling.com",
+  "scenario": "Commissions 2026-10：Tan Mei Ling Collected/Earned/Pending",
+  "formula": "Σ 本月 payments.agent_id；× 4%；− 已结算 0",
+  "expected": "7965.00/318.60/318.60",
+  "actual": "7965.00/318.60/318.60",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Tan Mei Ling.rpt",
+  "scenario": "Reports 本月业绩 = Commissions：Tan Mei Ling",
+  "formula": "同一口径",
+  "expected": "7965.00/318.60",
+  "actual": "7965.00/318.60",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Tan Mei Ling.csv",
+  "scenario": "agent-performance.csv：Tan Mei Ling",
+  "formula": "同一口径（数值）",
+  "expected": "7965/318.6",
+  "actual": "7965/318.6",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "Tan Mei Ling.agents",
+  "scenario": "Agents 页累计 Collected/Commission：Tan Mei Ling",
+  "formula": "Σ 全部 payments.agent_id",
+  "expected": "7965.00/318.60",
+  "actual": "7965.00/318.60",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "QA R2 Agent A.com",
+  "scenario": "Commissions 2026-10：QA R2 Agent A Collected/Earned/Pending",
+  "formula": "Σ 本月 payments.agent_id；× 5%；− 已结算 50",
+  "expected": "0.00/0.00/-50.00",
+  "actual": "0.00/0.00/-50.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "QA R2 Agent A.rpt",
+  "scenario": "Reports 本月业绩 = Commissions：QA R2 Agent A",
+  "formula": "同一口径",
+  "expected": "0.00/0.00",
+  "actual": "0.00/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "QA R2 Agent A.csv",
+  "scenario": "agent-performance.csv：QA R2 Agent A",
+  "formula": "同一口径（数值）",
+  "expected": "0/0",
+  "actual": "0/0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "QA R2 Agent A.agents",
+  "scenario": "Agents 页累计 Collected/Commission：QA R2 Agent A",
+  "formula": "Σ 全部 payments.agent_id",
+  "expected": "0.00/0.00",
+  "actual": "0.00/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "QA R2 Agent B.com",
+  "scenario": "Commissions 2026-10：QA R2 Agent B Collected/Earned/Pending",
+  "formula": "Σ 本月 payments.agent_id；× 7.5%；− 已结算 0",
+  "expected": "1235.57/92.67/92.67",
+  "actual": "1235.57/92.67/92.67",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "QA R2 Agent B.rpt",
+  "scenario": "Reports 本月业绩 = Commissions：QA R2 Agent B",
+  "formula": "同一口径",
+  "expected": "1235.57/92.67",
+  "actual": "1235.57/92.67",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "QA R2 Agent B.csv",
+  "scenario": "agent-performance.csv：QA R2 Agent B",
+  "formula": "同一口径（数值）",
+  "expected": "1235.57/92.67",
+  "actual": "1235.57/92.67",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "QA R2 Agent B.agents",
+  "scenario": "Agents 页累计 Collected/Commission：QA R2 Agent B",
+  "formula": "Σ 全部 payments.agent_id",
+  "expected": "1235.57/92.67",
+  "actual": "1235.57/92.67",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DEMO",
+  "id": "case5",
+  "scenario": "演示案件 5：fulfilled PTP 金额 = 实收",
+  "formula": "B-03",
+  "expected": "2916/fulfilled",
+  "actual": "2916/fulfilled",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DEMO",
+  "id": "case5.tl",
+  "scenario": "演示案件 5 时间线 PTP 日期不带时分秒",
+  "formula": "",
+  "expected": "“PTP RM … due YYYY-MM-DD”",
+  "actual": "PTP RM 2916 due 2026-10-21",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DEMO",
+  "id": "case14",
+  "scenario": "演示案件 14（10 天前重组，未还款）：重组后即显示逾期",
+  "formula": "",
+  "expected": "记录现状",
+  "actual": "DPD 0（up to date）；Overdue 0.00；首行 2026-11-21|arrears|239.95|Pending",
+  "result": "INFO",
+  "note": ""
+ },
+ {
+  "g": "DASH",
+  "id": "agent1",
+  "scenario": "agent1 的仪表盘 Total Outstanding（只含名下案件，今日结清额）",
+  "formula": "Σ agent_id=1 且非 Closed/Cancelled",
+  "expected": "32940.00",
+  "actual": "32940.00",
+  "result": "PASS",
+  "note": ""
+ }
+]

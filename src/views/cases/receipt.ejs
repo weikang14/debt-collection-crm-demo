@@ -24,11 +24,12 @@
       <% if (company.address) { %><div><%= company.address %></div><% } %>
       <% if (company.phone) { %><div>Tel: <%= company.phone %></div><% } %>
       <% if (company.reg_no) { %><div>Reg No: <%= company.reg_no %></div><% } %>
+      <% if (company.licence_no) { %><div>Moneylending Licence No: <%= company.licence_no %></div><% } %>
       <div style="margin-top:4px"><b>Payment Receipt</b></div>
     </div>
     <div style="text-align:right"><div class="mono"><%= p.receipt_no %></div><div><%= h.dateFmt(p.payment_date) %></div></div>
   </div>
-  <div>Received from <b><%= c.debtor_name %></b><% if (c.ic_passport) { %> (<span class="mono"><%= c.ic_passport %></span>)<% } %> for case <span class="mono"><%= c.case_no %></span>:</div>
+  <div>Received from <b><%= c.debtor_name %></b><% if (c.ic_passport) { %> (<span class="mono"><%= c.ic_passport %></span>)<% } %> for case <span class="mono"><%= c.case_no %></span><% if (c.agreement_no) { %> (agreement <span class="mono"><%= c.agreement_no %></span>)<% } %>:</div>
   <div class="rc-amount">RM <%= h.money(p.amount) %></div>
   <div class="rc-grid">
     <div><span>Payment Date</span><%= h.dateFmt(p.payment_date) %></div>

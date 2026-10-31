@@ -24,7 +24,8 @@
       <% if (company.phone) { %><div>Tel: <%= company.phone %></div><% } %>
       <% if (company.email) { %><div><%= company.email %></div><% } %>
       <% if (company.reg_no) { %><div>Reg No: <%= company.reg_no %></div><% } %>
-      <div style="margin-top:4px">Case Statement</div>
+      <% if (company.licence_no) { %><div>Moneylending Licence No: <%= company.licence_no %></div><% } %>
+      <div style="margin-top:4px"><b>Statement of Account</b></div>
     </div>
     <div style="text-align:right"><div class="mono"><%= c.case_no %></div><div><%= today %></div></div>
   </div>
@@ -32,26 +33,35 @@
     <div><span>Debtor</span><%= c.debtor_name %></div>
     <div><span>Phone</span><%= c.debtor_phone || '—' %></div>
     <div><span>IC/Passport</span><%= c.ic_passport || '—' %></div>
-    <div><span>Status</span><%= h.caseStatusLabel(c.status) %></div>
+    <div><span>Address</span><%= c.debtor_address || '—' %></div>
     <div><span>Principal</span>RM <%= h.money(c.principal_amount) %></div>
     <div><span>Interest</span>RM <%= h.money(c.interest_charged) %></div>
     <div><span>Paid</span>RM <%= h.money(paid) %></div>
-    <div><span>Outstanding (contract, to maturity)</span>RM <%= h.money(c.outstanding_amount) %></div>
+    <div><span>Contract Balance (incl. interest not yet due)</span>RM <%= h.money(c.outstanding_amount) %></div>
     <div><span>Settlement Amount as of <%= today %></span>RM <%= h.money(settlement) %></div>
-    <% if (arrears.dpd !== null) { %><div><span>Overdue</span>RM <%= h.money(arrears.overdue) %><%= arrears.dpd > 0 ? ' · ' + arrears.dpd + (arrears.dpd === 1 ? ' day' : ' days') + ' past due' : '' %></div><% } %>
+    <% if (arrears.dpd !== null) { %><div><span>Overdue</span>RM <%= h.money(arrears.overdue) %><%= arrears.dpd > 0 ? ' · ' + arrears.dpd + (arrears.dpd === 1 ? ' day' : ' days') + ' past due' : ' · up to date' %></div><% } %>
     <% const rs = restructures[restructures.length - 1]; const maturity = rs ? rs.maturity_date : c.maturity_date; %>
+    <% if (c.agreement_no || c.agreement_date) { %><div><span>Agreement</span><%= c.agreement_no || '—' %><%= c.agreement_date ? ' · signed ' + c.agreement_date : '' %></div><% } %>
     <div><span>Loan Start Date</span><%= c.loan_start_date ? h.dateFmt(c.loan_start_date) : '—' %></div>
-    <div><span>Interest Terms</span><%= h.interestTerms(c.interest_mode, c.interest_rate, c.interest_amount) %></div>
+    <div><span>Interest Terms</span><%= h.interestTerms(c.interest_mode, c.interest_rate, c.interest_amount) %><%= c.interest_mode === 'monthly' ? ' (' + Number((c.interest_rate * 12).toFixed(4)) + '% p.a.)' : '' %></div>
     <div><span>Tenure</span><%= c.tenure ? c.tenure + ' ' + (c.tenure_unit || 'months') : '—' %></div>
     <div><span>Maturity Date</span><%= maturity ? h.dateFmt(maturity) : '—' %></div>
     <% if (rs) { %>
     <div style="grid-column: 1 / -1"><span>Restructured</span>From <%= h.dateFmt(rs.effective_date) %>: <%= h.interestTerms(rs.interest_mode, rs.interest_rate, rs.interest_amount) %>, <%= rs.tenure %> months · arrears carried RM <%= h.money(rs.arrears_at_cut) %></div>
     <% } %>
   </div>
+  <% if (typeof schedule !== 'undefined' && schedule.length) { %>
+  <h2>Instalments</h2>
+  <%- include('../partials/scheduleTable', { rows: schedule, pay: null }) %>
+  <% } %>
   <h2>Payment History</h2>
   <% if (!payments.length) { %><p>No payments recorded.</p><% } else { %>
   <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th></tr></thead>
   <tbody><% payments.forEach(p => { %><tr><td class="mono"><%= p.receipt_no %></td><td><%= h.dateFmt(p.payment_date) %></td>
   <td class="num">RM <%= h.money(p.amount) %></td><td><%= p.method %></td></tr><% }) %></tbody></table>
   <% } %>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:48px">
+    <div style="border-top:1px solid var(--ink);padding-top:6px">Authorised signature, for <%= company.company_name || 'the lender' %></div>
+    <div style="border-top:1px solid var(--ink);padding-top:6px">Name / designation · Date</div>
+  </div>
 </body></html>

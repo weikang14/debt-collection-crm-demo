@@ -87,6 +87,7 @@
       <div><span>Agent</span><%= c.agent_name||'—' %></div>
       <div><span>Priority</span><span class="badge <%= c.priority==='urgent'||c.priority==='high'?'is-red':c.priority==='low'?'is-neutral':'is-gold' %>"><%= c.priority %></span></div>
       <div><span>Opened</span><%= h.dateFmt(c.opened_at) %></div>
+      <% if (c.agreement_no || c.agreement_date) { %><div><span>Agreement</span><%= c.agreement_no || '—' %><%= c.agreement_date ? ' · signed ' + c.agreement_date : '' %></div><% } %>
       <% if (c.interest_mode === 'monthly' || c.interest_mode === 'daily') { %>
       <div><span>Loan Start Date</span><%= h.dateFmt(c.loan_start_date || c.opened_at) %>
         <small style="color:var(--muted)">· interest accrues from this date<% if (!c.loan_start_date) { %> (unset, defaults to opened)<% } %></small></div>
@@ -223,9 +224,10 @@
     <section class="rec-section">
     <h2>Calls</h2>
     <% if (!calls.length) { %><%- include('../partials/empty', { msg: 'No calls logged.' }) %><% } else { %>
-    <table class="data"><thead><tr><th>Time</th><th>Duration</th><th>Result</th><th>Notes</th></tr></thead>
-    <tbody><% calls.forEach(call => { %><tr><td><%= h.dateTimeFmt(call.call_time) %></td><td><%= call.duration_seconds %>s</td>
-    <td><span class="badge <%= call.result==='answered'?'is-green':'is-neutral' %>"><%= call.result %></span></td><td><%= call.notes||'' %></td></tr><% }) %></tbody></table>
+    <table class="data"><thead><tr><th>Time</th><th>Channel</th><th>Contact</th><th>Duration</th><th>Result</th><th>Notes</th><th>By</th></tr></thead>
+    <tbody><% calls.forEach(call => { %><tr><td><%= h.dateTimeFmt(call.call_time) %></td><td><%= call.channel || 'phone' %></td>
+    <td><%= call.contact || 'debtor' %><% if (call.phone) { %> <span class="mono"><%= call.phone %></span><% } %></td><td><%= call.duration_seconds %>s</td>
+    <td><span class="badge <%= call.result==='answered'?'is-green':'is-neutral' %>"><%= call.result %></span></td><td><%= call.notes||'' %></td><td><%= call.created_by || '—' %></td></tr><% }) %></tbody></table>
     <% } %>
     </section>
 
@@ -300,6 +302,10 @@
 </form></dialog>
 <dialog id="dlg-call" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/calls">
   <h3>Log Call</h3>
+  <label>Channel <select name="channel"><% (typeof callChannels !== 'undefined' ? callChannels : ['phone']).forEach(x => { %><option><%= x %></option><% }) %></select></label>
+  <label>Contact <select name="contact" data-debtor="<%= c.debtor_phone || '' %>" data-guarantor="<%= c.guarantor_phone || '' %>"
+    onchange="this.form.phone.value = this.dataset[this.value] || ''"><% (typeof callContacts !== 'undefined' ? callContacts : ['debtor']).forEach(x => { %><option><%= x %></option><% }) %></select></label>
+  <label>Number <input name="phone" value="<%= c.debtor_phone || '' %>" maxlength="40"></label>
   <label>Result <select name="result"><option>answered</option><option>no_answer</option><option>busy</option><option>wrong_number</option><option>refused</option></select></label>
   <label>Duration (s) <input type="number" name="duration_seconds" min="0" value="0"></label>
   <label>Notes <input name="notes"></label>

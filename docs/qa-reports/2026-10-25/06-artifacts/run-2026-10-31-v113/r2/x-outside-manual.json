@@ -1,0 +1,240 @@
+[
+ {
+  "id": "X-RBAC",
+  "expected": "40 routes × 6 roles: denied ⇔ not allowed; no data changed",
+  "actual": "238 requests; mismatches=none; data unchanged=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-STATUS",
+  "expected": "agent cannot leave Legal/Cancelled/Bankruptcy (D-12/D-13 intent)",
+  "actual": "Only a manager can change a Legal case / Only a manager can change a Cancelled case / Only a manager can change a Bankruptcy case; then PTP=Not allowed while the case is Bankruptcy, call=Not allowed while the case is Bankruptcy; now 9:cancelled 10:bankruptcy 17:legal",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CAP-1",
+  "expected": "18.00 allowed; 18.01 refused (monthly, annual, fixed)",
+  "actual": "{\"monthly 1.5 (18.00)\":\"OK\",\"annual 18.00\":\"OK\",\"annual 18.01\":\"Interest rate exceeds the 18% p.a. limit (this loan: 18.01% p.a.)\",\"monthly 1.501 (18.012)\":\"Interest rate exceeds the 18% p.a. limit (this loan: 18.012% p.a.)\",\"monthly 1.5004 (18.0048)\":\"Interest rate exceeds the 18% p.a. limit (this loan: 18.0048% p.a.)\",\"annual 18.004\":\"Interest rate exceeds the 18% p.a. limit (this loan: 18.004% p.a.)\",\"fixed 1800/10000/12m (18.00)\":\"OK\",\"fixed 1801/10000/12m (18.01)\":\"Interest rate exceeds the 18% p.a. limit (this loan: 18.01% p.a.)\",\"fixed 5000/10000 no tenure (≈?)\":\"Tenure is required for ",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CAP-2",
+  "expected": "rates above 18% but < 18.005% should be refused",
+  "actual": "monthly 1.5004 → Interest rate exceeds the 18% p.a. limit (this loan: 18.0048% p.a.); annual 18.004 → Interest rate exceeds the 18% p.a. limit (this loan: 18.004% p.a.)",
+  "result": "PASS",
+  "note": "nominalAnnualRate() rounds to 2 dp before the compare (payments.js:157-166)"
+ },
+ {
+  "id": "X-CAP-3",
+  "expected": "Fixed loan without tenure must still be capped",
+  "actual": "fixed 5000 no tenure → Tenure is required for a loan that charges interest",
+  "result": "PASS",
+  "note": "nominalAnnualRate returns null without tenure → rateCapError skips (payments.js:159)"
+ },
+ {
+  "id": "X-CAP-4",
+  "expected": "fixed short tenure annualised (1080% p.a.) refused",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 1080% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CAP-5",
+  "expected": "interest = principal allowed, > principal refused",
+  "actual": "OK / Total interest cannot exceed the principal",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CAP-6",
+  "expected": "no-tenure accrual loan refused (N-02)",
+  "actual": "start 2021-01-01 → Tenure is required for a loan that charges interest; start 2021-06-01 → Tenure is required for a loan that charges interest; last case interest=10000",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-CAP-7",
+  "expected": "cap 18.5 refused; decimal cap 17.5 honoured",
+  "actual": "18.5 → Max annual interest rate must be above 0 and at most 18% (the legal limit); 17.5 → Company settings saved; annual 17.6 → Interest rate exceeds the 17.5% p.a. limit (this loan: 17.6% p.a.); 17.5 → OK",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-HALF",
+  "expected": "pay the displayed max (monthly 1001 × 0.5% × 1 month = 5.005) → Fully Paid; max+0.01 refused",
+  "actual": "{\"label\":\"monthly 1001 × 0.5% × 1 month = 5.005\",\"shown\":\"1,006.17\",\"maxAttr\":\"1006.17\",\"over\":\"Amount exceeds what is owed on 2026-10-31: at most RM 1006.17\",\"pay\":\"Payment RCPT-2026-0001 recorded\",\"status\":\"fully_paid\",\"left\":0,\"ok\":true}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-HALF",
+  "expected": "pay the displayed max (annual 365 × 0.5% / 365 × 1 day = 0.005) → Fully Paid; max+0.01 refused",
+  "actual": "{\"label\":\"annual 365 × 0.5% / 365 × 1 day = 0.005\",\"shown\":\"365.01\",\"maxAttr\":\"365.01\",\"over\":\"Amount exceeds what is owed on 2026-10-31: at most RM 365.01\",\"pay\":\"Payment RCPT-2026-0002 recorded\",\"status\":\"fully_paid\",\"left\":0,\"ok\":true}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-HALF",
+  "expected": "pay the displayed max (annual 1000.50 × 18% × 1 day = 0.49340) → Fully Paid; max+0.01 refused",
+  "actual": "{\"label\":\"annual 1000.50 × 18% × 1 day = 0.49340\",\"shown\":\"1,000.99\",\"maxAttr\":\"1000.99\",\"over\":\"Amount exceeds what is owed on 2026-10-31: at most RM 1000.99\",\"pay\":\"Payment RCPT-2026-0003 recorded\",\"status\":\"fully_paid\",\"left\":0,\"ok\":true}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-DUP-1",
+  "expected": "resubmitted identical PTP → one row (banner still \"PTP created\")",
+  "actual": "rows=1; second banner=PTP created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-DUP-2",
+  "expected": "5 concurrent identical PTPs → 1 row",
+  "actual": "rows=1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-DUP-3",
+  "expected": "two concurrent 60% PTPs → only one accepted (cap)",
+  "actual": "rows=1; statuses=302,302",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-DUP-4",
+  "expected": "3 concurrent identical plans → 1 plan",
+  "actual": "plans=1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-DUP-5",
+  "expected": "4 concurrent fulfils → 1 payment",
+  "actual": "payments=1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-DUP-6",
+  "expected": "two concurrent 600 payments on a 1,000 balance → one refused",
+  "actual": "paid=600",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-DUP-7",
+  "expected": "(info) resubmitted payment form → recorded twice (no idempotency key)",
+  "actual": "rows=1",
+  "result": "PASS",
+  "note": "浏览器后退重提或双击“Add Payment”会记两笔；PTP 有 10 秒去重，还款没有"
+ },
+ {
+  "id": "X-VAL-CASE",
+  "expected": "case form rejects malformed terms",
+  "actual": "{\"principal abc\":\"Invalid principal\",\"principal -1\":\"Invalid principal\",\"principal 1e309\":\"Invalid principal\",\"principal 0x10\":\"Invalid principal\",\"principal 1.234\":\"Invalid principal\",\"rate -1\":\"Invalid interest rate\",\"rate abc\":\"Invalid interest rate\",\"rate 1e1\":\"Invalid interest rate\",\"tenure 0\":\"Tenure must be 1–120 months\",\"tenure 121\":\"Tenure must be 1–120 months\",\"tenure 1.5\":\"Tenure must be 1–120 months\",\"start 2026-02-30\":\"Invalid loan start date\",\"priority bogus\":\"Invalid priority\",\"status bogus\":\"Invalid status\",\"agent 999\":\"Agent not found\",\"debtor 999\":\"Debtor not found\",\"fixed in",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-VAL-PAY",
+  "expected": "payment rejects malformed input",
+  "actual": "{\"amount 1.005\":\"Invalid amount\",\"amount 0x10\":\"Invalid amount\",\"amount 1e2\":\"Invalid amount\",\"amount 0.001\":\"Invalid amount\",\"method bitcoin\":\"Invalid payment method\",\"date 2026/10/01\":\"Invalid payment date\",\"date missing\":\"Invalid payment date\"}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-VAL-MISC",
+  "expected": "other forms reject malformed input",
+  "actual": "{\"ptp due abc\":\"Invalid due date\",\"ptp due missing\":\"Invalid due date\",\"ptp amount 1e2\":\"Invalid amount\",\"plan first 2026-11-31\":\"Invalid first due date\",\"call -1\":\"Invalid duration\",\"call 1.5\":\"Invalid duration\",\"call result bogus\":\"Invalid call result\",\"note 5001\":\"Note must be 1–5000 characters\",\"task title 201\":\"Title must be at most 200 characters\",\"task due abc\":\"Invalid due date\",\"task type visit\":\"Invalid task type\",\"debtor name 201\":\"Name must be at most 200 characters\",\"debtor salary -1\":\"Invalid salary\",\"debtor risk bogus\":\"Invalid risk level\",\"agent rate 101\":\"Commission rate must ",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-VAL-LOOSE",
+  "expected": "(info) loose numeric parsing outside payments",
+  "actual": "{\"agent rate 0 kept as 0\":0,\"settle amount 0x10\":null,\"restructure rate \\\"1e0\\\"\":null}",
+  "result": "PASS",
+  "note": "commissions.js:139 Number(); restructure.js:63-64 Number() — accept 0x10 / 1e0, unlike parseMoney"
+ },
+ {
+  "id": "X-ERR",
+  "expected": "404/400/413 friendly pages, no stack traces",
+  "actual": "unknown=404 caseAbc=404 case999=404 debAbc=404 agentAbc=404 ptp999=404 payNaN=Payment not found big=413 badEnc=200 (malformed %-encoding kept as text: note=\"%E0%A4%A\") stack=false",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-HDR",
+  "expected": "security headers, no X-Powered-By",
+  "actual": "x-content-type-options=nosniff x-frame-options=DENY referrer-policy=same-origin x-powered-by=null",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-COOKIE",
+  "expected": "session cookie flags: HttpOnly, SameSite=Lax (Secure only over HTTPS — K-06)",
+  "actual": "connect.sid=…; Path=/; Expires=Sat, 31 Oct 2026 12:54:26 GMT; HttpOnly; SameSite=Lax",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-REASSIGN-1",
+  "expected": "unassigning a case keeps its open tasks with the previous agent (N-13)",
+  "actual": "Saved; task agent=1; still on agent1 list=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-FROZEN-1",
+  "expected": "pending PTP on a case marked deceased is closed (broken), leaves \"due\", no Fulfill",
+  "actual": "dash due 1→0; Fulfill button=false; PTP status=broken",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-FROZEN-2",
+  "expected": "(info) follow_up task can still be created on a deceased case",
+  "actual": "Only legal tasks can be added to a bankrupt or deceased case",
+  "result": "PASS",
+  "note": "D-13 只禁通话/PTP/重组；任务未限制，仅记录"
+ },
+ {
+  "id": "X-PARTIAL-1",
+  "expected": "plan header should not count a RM 1 of RM 100 partial as \"kept\"",
+  "actual": "header=0/3; ptp=partially_kept",
+  "result": "PASS",
+  "note": "show.ejs:179 counts partially_kept as kept"
+ },
+ {
+  "id": "X-PARTIAL-2",
+  "expected": "(info) dashboard PTP card after a partial: due −1, broken unchanged, no \"partial\" metric",
+  "actual": "due 1→0; broken 2→2",
+  "result": "PASS",
+  "note": "部分履行在仪表盘上没有单独指标，只体现为 due 减少"
+ },
+ {
+  "id": "X-PTPMAX",
+  "expected": "New PTP dialog states the settlement cap, and that amount is accepted",
+  "actual": "dialog \"today RM 3,448.55\"; submit → PTP created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "X-RS-ARREARS",
+  "expected": "a case restructured yesterday should not be \"past due\" on day 1",
+  "actual": "this case: Overdue 0.00 (up to date); demo case 14: 0.00 (up to date)",
+  "result": "PASS",
+  "note": "挂账行到期日 = 生效日（schedule.js:252），生效日次日起即计入 DPD 与 Aging 1–30"
+ },
+ {
+  "id": "X-DEMO-FK",
+  "expected": "Delete demo data succeeds (or keeps the demo agent) after a trial payment credited to it",
+  "actual": "other pins on agent 1=0; POST → 302 /demo-tools; banner={\"type\":\"ok\",\"text\":\"Demo data deleted - your trial data is kept\"}; demo cases left=0; agent 1 exists=true",
+  "result": "PASS",
+  "note": "seed.js:194-198 keeps a demo agent for cases/tasks/settlements/calls but not for payments.agent_id (D-11, v1.10.0)"
+ }
+]

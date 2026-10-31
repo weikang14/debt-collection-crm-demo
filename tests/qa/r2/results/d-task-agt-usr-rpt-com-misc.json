@@ -107,7 +107,7 @@
  {
   "id": "AGT-05",
   "expected": "contact, department, target, collected, cases, rate, attainment + bar, cases list",
-  "actual": "Contact 012-3456789 Department Consumer Target 500,000.00 Collected 2,916.00 Case Count 5 Commission 5% Active Yes Target Attainment: 1% Assigned Cases Case No Debtor Outstanding Status CASE-2026-D019",
+  "actual": "Contact 012-3456789 Department Consumer Target 500,000.00 Collected 2,916.00 Case Count 5 Commission 5% Active Yes Target Attainment: 1% Assigned Cases Case No Debtor Settlement Today Status CASE-2026",
   "result": "PASS",
   "note": ""
  },
@@ -205,21 +205,21 @@
  {
   "id": "USR-13",
   "expected": "create, update, \"Reset password for qa_fin2\", (de)activated",
-  "actual": "create:Created user qa_fin2 (finance) | login:User qa_fin2 logged in | update:Updated user qa_fin2 (agent) | update:Updated user qa_fin2 (finance) | update:Reset password for qa_fin2 | login:User qa_fin2 logged in | update:Deactivated user qa_fin2 | update:Activated user qa_fin2 | login:User qa_fin2 logged in | update:Deactivated user qa_fin2 | update:Activated user qa_fin2 | login:User qa_fin2 logged in | update:Updated user qa_fin2 (auditor)",
+  "actual": "create:Created user qa_fin2 (finance) | login:User qa_fin2 logged in | update:Updated user qa_fin2 (agent): full_name: QA Finance 2 → QA Finance Two; role: finance → agent; agent_id: — → 5 | update:Updated user qa_fin2 (finance): role: agent → finance; agent_id: 5 → — | update:Reset password for qa_fin2 | login:User qa_fin2 logged in | update:Deactivated user qa_fin2 | update:Activated user qa_fin2 | login:User qa_fin2 logged in | update:Deactivated user qa_fin2 | update:Activated user qa_fin2 | login:User qa_fin2 logged in | update:Updated user qa_fin2 (auditor): role: finance → auditor",
   "result": "PASS",
   "note": ""
  },
  {
   "id": "RPT-01",
   "expected": "from/to defaults",
-  "actual": "name=\"from\" value=\"2026-10-01\" name=\"to\" value=\"2026-10-25\"",
+  "actual": "name=\"from\" value=\"2026-10-01\" name=\"to\" value=\"2026-10-31\"",
   "result": "PASS",
   "note": ""
  },
  {
   "id": "RPT-02",
-  "expected": "grouped + total = DB; same for any range",
-  "actual": "20/152,892.75 vs db 20/152,892.75; other range 20/152,892.75",
+  "expected": "grouped + totals (settlement = cases.csv, contract = DB); same for any range",
+  "actual": "20/148,500.13/152,892.75 vs 20/148,500.13/152,892.75; other range 20/148,500.13/152,892.75",
   "result": "PASS",
   "note": ""
  },
@@ -247,7 +247,7 @@
  {
   "id": "RPT-05",
   "expected": "filenames + headers",
-  "actual": "Case No,Debtor,Agent,Principal,Interest,Paid,Outstanding,Status,Opened | Status,Cases,Outstanding | Agent,Collected,Rate %,Commission,Target",
+  "actual": "Case No,Debtor,Agent,Principal,Interest,Paid,Settlement Today,Overdue,DPD,Contract Balance,Status,Opened | Status,Cases,Settlement Today,Contract Balance | Agent,Collected,Rate %,Commission,Target",
   "result": "PASS",
   "note": ""
  },
@@ -359,7 +359,7 @@
  {
   "id": "AUD-02",
   "expected": "≤200; Time, User, Action, Entity, Details, IP",
-  "actual": "rows=85 total=85 hdr=Time,User,Action,Entity,Details,IP",
+  "actual": "rows=96 total=96 hdr=Time,User,Action,Entity,Details,IP",
   "result": "PASS",
   "note": ""
  },
@@ -422,7 +422,7 @@
  {
   "id": "SET-06",
   "expected": "all elements present",
-  "actual": "all 23 present",
+  "actual": "all 24 present",
   "result": "PASS",
   "note": ""
  },
@@ -435,8 +435,8 @@
  },
  {
   "id": "SET-09",
-  "expected": "\"Max annual interest rate must be between 0 and 100\"; 20 saved",
-  "actual": "Max annual interest rate must be between 0 and 100 | Max annual interest rate must be between 0 and 100 | Company settings saved",
+  "expected": "\"Max annual interest rate must be above 0 and at most 18% (the legal limit)\"; 12 saved",
+  "actual": "Max annual interest rate must be above 0 and at most 18% (the legal limit) | Max annual interest rate must be above 0 and at most 18% (the legal limit) | Company settings saved",
   "result": "PASS",
   "note": ""
  },

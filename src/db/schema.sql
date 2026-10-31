@@ -180,6 +180,23 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   details TEXT, ip_address TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- Login sessions (K-06; src/db/sessionStore.js). expires is epoch milliseconds.
+CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, sess TEXT NOT NULL, expires INTEGER NOT NULL);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires);
+
+-- F-31: who looked at personal data — case and debtor pages, searches, printed
+-- statements and receipts. Same columns as audit_logs; kept apart because of its volume.
+-- ponytail: kept forever until the retention period is decided (F-35).
+CREATE TABLE IF NOT EXISTS access_logs (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  username TEXT, action TEXT NOT NULL, entity_type TEXT NOT NULL, entity_id INTEGER,
+  details TEXT, ip_address TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_access_logs_created ON access_logs(created_at);
+CREATE TRIGGER IF NOT EXISTS access_logs_append_only BEFORE UPDATE ON access_logs
+BEGIN SELECT RAISE(ABORT, 'access_logs is append-only'); END;
+
 -- An audit row is never rewritten (G-25). Deleting stays possible for the demo
 -- reset only; there is no delete path in the app.
 CREATE TRIGGER IF NOT EXISTS audit_logs_append_only BEFORE UPDATE ON audit_logs

@@ -1,10 +1,10 @@
 const express = require('express');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
-const { logAction, changeList } = require('../utils/audit');
+const { logAction, logAccess, changeList } = require('../utils/audit');
 const { reachableDebtorIds, caseWhere } = require('../utils/scope');
 const { debtorFilter } = require('../utils/debtorFilter');
-const { MAX_NAME } = require('../utils/forms');
+const { MAX_NAME, refill } = require('../utils/forms');
 const { settlementOn } = require('../services/payments');
 const { todayMYT } = require('../utils/helpers');
 const router = express.Router();
@@ -32,9 +32,10 @@ router.get('/', requireLogin, canView, (req, res) => {
   const ids = reachableDebtorIds(req.session.user); // null = unrestricted
   const f = debtorFilter(ids, req.query);
   const debtors = all(`SELECT * FROM debtors WHERE ${f.where} ORDER BY name`, f.params);
+  if (req.query.q) logAccess(req, 'search', 'debtor', null, `q=${req.query.q} (${debtors.length} found)`);
   res.render('debtors/list', { title: 'Debtors', debtors });
 });
-router.get('/new', requireLogin, canCreate, (req, res) => res.render('debtors/form', { title: 'New Debtor', debtor: {}, action: '/debtors' }));
+router.get('/new', requireLogin, canCreate, (req, res) => res.render('debtors/form', { title: 'New Debtor', debtor: refill(res, {}), action: '/debtors' }));
 router.post('/', requireLogin, canCreate, (req, res) => {
   const b = req.body;
   const name = S(b.name);
@@ -52,6 +53,7 @@ router.get('/:id', requireLogin, canView, (req, res) => {
   const ids = reachableDebtorIds(req.session.user);
   if (ids !== null && !ids.includes(debtor.id)) return res.status(403).render('error', { message: 'Forbidden' });
   const w = caseWhere(req.session.user);
+  logAccess(req, 'view', 'debtor', debtor.id, debtor.name);
   const cases = all(`SELECT * FROM cases WHERE debtor_id=? AND ${w.clause} ORDER BY opened_at DESC`, [req.params.id, ...w.params])
     .map(c => ({ ...c, settlement: settlementOn(c.id, todayMYT()) }));
   res.render('debtors/show', { title: debtor.name, debtor, cases });
@@ -61,7 +63,7 @@ router.get('/:id/edit', requireLogin, canEdit, (req, res) => {
   if (!debtor) return res.status(404).render('error', { message: 'Debtor not found' });
   const ids = reachableDebtorIds(req.session.user);
   if (ids !== null && !ids.includes(debtor.id)) return res.status(403).render('error', { message: 'Forbidden' });
-  res.render('debtors/form', { title: 'Edit Debtor', debtor, action: `/debtors/${debtor.id}` });
+  res.render('debtors/form', { title: 'Edit Debtor', debtor: refill(res, debtor), action: `/debtors/${debtor.id}` });
 });
 router.post('/:id', requireLogin, canEdit, (req, res) => {
   const ids = reachableDebtorIds(req.session.user);

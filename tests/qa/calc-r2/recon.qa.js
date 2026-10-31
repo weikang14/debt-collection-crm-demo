@@ -40,7 +40,9 @@ function expected(c, pays, rss) {
     rows = schedule({ principal: c.principal_amount, mode: c.interest_mode, rate: c.interest_rate || 0, lump: c.interest_amount || 0, start: c.loan_start_date, tenure: c.tenure, origin: start }, P, { today: T, settled });
   }
   const ar = arrears(rows, T);
-  return { exact: L.outstandingExact, paidAny: P.length > 0, outstanding: L.outstanding, interest: L.interest, paid: L.paid, settlement: settlementOn(loan, P, T, { restructures: R }), dpd: ar.dpd, overdue: ar.overdue, cuts: L.cuts };
+  const settlement = settlementOn(loan, P, T, { restructures: R });
+  const capped = E.capOverdue(ar, settlement); // G-12
+  return { exact: L.outstandingExact, paidAny: P.length > 0, outstanding: L.outstanding, interest: L.interest, paid: L.paid, settlement, dpd: capped.dpd, overdue: capped.overdue, cuts: L.cuts };
 }
 
 async function main() {
@@ -53,7 +55,7 @@ async function main() {
   for (const c of cases) {
     const pays = C.qa('SELECT amount, payment_date, agent_id FROM payments WHERE case_id=? ORDER BY payment_date, id', c.id);
     const rss = C.qa('SELECT * FROM case_restructures WHERE case_id=? ORDER BY effective_date, id', c.id);
-    const x = exp[c.id] = { ...expected(c, pays, rss), status: c.status, opened: mytDate(c.opened_at), agent: c.agent_id };
+    const x = exp[c.id] = { ...expected(c, pays, rss), status: c.status, opened: mytDate(c.opened_at), agent: c.agent_id, case_no: c.case_no };
     const v = await C.caseView(s, c.id);
     const e1 = [x.outstanding, x.interest, x.paid, x.settlement, x.dpd, x.overdue].join('/');
     const a1 = [v.outstanding, v.interest, v.paid, v.settlement, v.dpd, v.overdue].join('/');
@@ -73,13 +75,14 @@ async function main() {
   // ---------- dashboard ----------
   const all = Object.values(exp);
   const sumIf = f => all.filter(f).reduce((a, x) => a.add(x.outstanding), ZERO).r2();
+  const setIf = f => all.filter(f).reduce((a, x) => a.add(x.settlement), ZERO).r2(); // v1.12.0 (G-24 / N-07)
   const d = await C.dashboard(s);
-  rec('DASH', 'total', 'Total Outstanding（不含 Closed/Cancelled，D-09）', 'Σ 独立合同欠款', sumIf(x => !['closed', 'cancelled'].includes(x.status)), d.total);
+  rec('DASH', 'total', 'Total Outstanding · settlement today（不含 Closed/Cancelled，D-09，G-24）', 'Σ 独立今日结清额', setIf(x => !['closed', 'cancelled'].includes(x.status)), d.total);
+  rec('DASH', 'contract', '同卡片的 contract balance', 'Σ 独立合同欠款', sumIf(x => !['closed', 'cancelled'].includes(x.status)), d.contract);
   const kd = f => Object.entries(exp).filter(([id, x]) => known.has(Number(id)) && f(x)).reduce((a, [, x]) => a.add(F.of(x.outstanding).sub(x.page)), ZERO);
-  rec('DASH', 'total.adj', 'Total Outstanding（扣除 K-01 浮点行的逐案差异后）', 'Σ 独立值 − Σ(K-01 行 独立值 − 页面值)', F.of(sumIf(x => !['closed', 'cancelled'].includes(x.status))).sub(kd(x => !['closed', 'cancelled'].includes(x.status))).r2(), d.total, '验证差额全部来自 K-01 行');
-  rec('DASH', 'special', '其中 Legal/Bankruptcy/Deceased', 'Σ 三种状态', sumIf(x => ['legal', 'bankruptcy', 'deceased'].includes(x.status)), d.special);
+  rec('DASH', 'special', '其中 Legal/Bankruptcy/Deceased', 'Σ 三种状态的今日结清额', setIf(x => ['legal', 'bankruptcy', 'deceased'].includes(x.status)), d.special);
   const open = all.filter(x => !TERMINAL.includes(x.status) && F.of(x.outstanding).isPos());
-  const bucket = (lbl, fn) => open.filter(fn).reduce((a, x) => a.add(x.outstanding), ZERO).r2();
+  const bucket = (lbl, fn) => open.filter(fn).reduce((a, x) => a.add(x.settlement), ZERO).r2(); // settlement amounts (G-24)
   for (const lbl of ['Current', '1–30', '31–60', '61–90', '90+', 'No schedule']) rec('DASH', `dpd.${lbl}`, `Aging（DPD）“${lbl}”`, 'Σ 非终态且欠款>0 的案件，按独立 DPD 分档', bucket(lbl, x => E.dpdBucket(x.dpd) === lbl), d.dpd[lbl]);
   for (const lbl of ['0–30', '31–60', '61–90', '90+']) rec('DASH', `age.${lbl}`, `Case Age “${lbl}”`, 'Σ 同上，按开案天数', bucket(lbl, x => E.ageBucket(days(x.opened, T)) === lbl), d.age[lbl]);
   rec('DASH', 'agingTie', 'Aging 合计 + Legal/Bankruptcy/Deceased = Total Outstanding', '口径勾稽', d.total, r2(Object.values(d.dpd).reduce((a, v) => a.add(v), ZERO).add(d.special)));
@@ -103,23 +106,29 @@ async function main() {
   const statuses = [...new Set(all.map(x => x.status))];
   for (const st of statuses) {
     const row = rp.byStatus.find(r => r.status === LABEL[st]);
-    rec('RPT', `status.${st}`, `Outstanding by Status：${LABEL[st]}`, 'count / Σ 独立合同欠款', `${all.filter(x => x.status === st).length}/${sumIf(x => x.status === st)}`, row ? `${row.cnt}/${row.total}` : 'n/a');
+    rec('RPT', `status.${st}`, `Outstanding by Status：${LABEL[st]}`, 'count / Σ 独立今日结清额 / Σ 独立合同欠款', `${all.filter(x => x.status === st).length}/${setIf(x => x.status === st)}/${sumIf(x => x.status === st)}`, row ? `${row.cnt}/${row.total}/${row.contract}` : 'n/a');
   }
-  rec('RPT', 'foot.adj', 'Reports 合计（扣除 K-01 行差异后）', '同上', F.of(sumIf(() => true)).sub(kd(() => true)).r2(), rp.footTotal, '验证差额全部来自 K-01 行');
-  rec('RPT', 'foot', 'Outstanding by Status 合计', 'Σ 全部案件', `${all.length}/${sumIf(() => true)}`, `${rp.footCnt}/${rp.footTotal}`);
+  rec('RPT', 'foot', 'Outstanding by Status 合计', 'Σ 全部案件：count / 今日结清额 / 合同欠款', `${all.length}/${setIf(() => true)}/${sumIf(() => true)}`, `${rp.footCnt}/${rp.footTotal}/${rp.footContract}`);
   const closedCancelled = rp.byStatus.filter(r => ['Closed', 'Cancelled'].includes(r.status)).reduce((a, r) => a.add(r.total), ZERO);
   rec('RPT', 'dashTie', 'DASH-05：Reports 合计 − Closed − Cancelled = 仪表盘 Total Outstanding', '勾稽', d.total, r2(F.of(rp.footTotal).sub(closedCancelled)));
   const obs = await C.csv(s, '/reports?export=outstanding');
-  rec('CSV', 'obs', 'outstanding-by-status.csv = Reports 表', '逐行', rp.byStatus.map(r => `${r.status}:${r.cnt}:${Number(r.total)}`).join(','), obs.rows.map(r => `${r[0]}:${r[1]}:${r[2]}`).join(','));
+  rec('CSV', 'obs', 'outstanding-by-status.csv = Reports 表', '逐行', rp.byStatus.map(r => `${r.status}:${r.cnt}:${Number(r.total)}:${Number(r.contract)}`).join(','), obs.rows.map(r => `${r[0]}:${r[1]}:${r[2]}:${r[3]}`).join(','));
+  // cases.csv (G-23): Case No, Debtor, Debtor Phone, Agent, Settlement Today, Overdue, DPD, Contract Balance, Paid, Priority, Status, Opened
   const cc = await C.csv(s, '/cases?format=csv');
-  rec('CSV', 'cases.out', 'cases.csv Σ Outstanding', 'Σ 独立合同欠款（全部案件）', sumIf(() => true), E.sum2(cc.rows.map(r => r[4])));
-  rec('CSV', 'cases.paid', 'cases.csv Σ Paid', 'Σ 全部已入账还款', E.sum2(paysAll.map(p => String(p.amount))), E.sum2(cc.rows.map(r => r[5])));
+  rec('CSV', 'cases.settle', 'cases.csv Σ Settlement Today', 'Σ 独立今日结清额（全部案件）', setIf(() => true), E.sum2(cc.rows.map(r => r[4])));
+  rec('CSV', 'cases.out', 'cases.csv Σ Contract Balance', 'Σ 独立合同欠款（全部案件）', sumIf(() => true), E.sum2(cc.rows.map(r => r[7])));
+  rec('CSV', 'cases.paid', 'cases.csv Σ Paid', 'Σ 全部已入账还款', E.sum2(paysAll.map(p => String(p.amount))), E.sum2(cc.rows.map(r => r[8])));
+  const byNo = Object.fromEntries(all.map(x => [x.case_no, x]));
+  const rowBad = cc.rows.filter(r => { const x = byNo[r[0]]; return !x || r2(F.of(r[4])) !== x.settlement || (r[5] === '' ? null : r2(F.of(r[5]))) !== x.overdue || (r[6] === '' ? null : Number(r[6])) !== x.dpd; });
+  chk('CSV', 'cases.rows', `cases.csv 逐行 Settlement Today / Overdue / DPD = 独立计算（${cc.rows.length} 行，G-23）`, '0 行不一致', rowBad.length === 0, rowBad.slice(0, 5).map(r => `${r[0]} ${r[4]}/${r[5]}/${r[6]} vs ${byNo[r[0]] ? [byNo[r[0]].settlement, byNo[r[0]].overdue, byNo[r[0]].dpd].join('/') : '?'}`).join('; ') || '全部一致');
+  // cases-detailed.csv: Case No, Debtor, Agent, Principal, Interest, Paid, Settlement Today, Overdue, DPD, Contract Balance, Status, Opened
   const det = await C.csv(s, '/reports?export=cases');
-  rec('CSV', 'det.out', 'cases-detailed.csv Σ Outstanding', '同上', sumIf(() => true), E.sum2(det.rows.map(r => r[6])));
-  const bad = det.rows.filter(r => r2(F.of(r[3]).add(r[4]).sub(r[5])) !== r2(F.of(r[6])));
-  chk('CSV', 'det.ident', `cases-detailed.csv 逐行 Principal + Interest − Paid = Outstanding（${det.rows.length} 行）`, '0 行不平（K-01 浮点行除外）', bad.every(r => state.created.some(x => known.has(x.id) && C.q1('SELECT case_no FROM cases WHERE id=?', x.id).case_no === r[0])),
-    `${bad.length} 行不平：${bad.map(r => `${r[0]} ${r[3]}+${r[4]}−${r[5]}≠${r[6]}`).join('; ')}`);
-  const fmtBad = det.rows.filter(r => [3, 4, 5, 6].some(i => /\.\d{3,}/.test(r[i])));
+  rec('CSV', 'det.settle', 'cases-detailed.csv Σ Settlement Today', '同上', setIf(() => true), E.sum2(det.rows.map(r => r[6])));
+  rec('CSV', 'det.out', 'cases-detailed.csv Σ Contract Balance', 'Σ 独立合同欠款', sumIf(() => true), E.sum2(det.rows.map(r => r[9])));
+  const bad = det.rows.filter(r => r2(F.of(r[3]).add(r[4]).sub(r[5])) !== r2(F.of(r[9])));
+  chk('CSV', 'det.ident', `cases-detailed.csv 逐行 Principal + Interest − Paid = Contract Balance（${det.rows.length} 行）`, '0 行不平', bad.length === 0,
+    `${bad.length} 行不平：${bad.map(r => `${r[0]} ${r[3]}+${r[4]}−${r[5]}≠${r[9]}`).join('; ')}`);
+  const fmtBad = det.rows.filter(r => [3, 4, 5, 6, 7, 9].some(i => /\.\d{3,}/.test(r[i])));
   chk('CSV', 'det.2dp', 'cases-detailed.csv 金额最多 2 位小数（RPT-06）', '0 个单元格超过 2 位小数', fmtBad.length === 0, fmtBad.map(r => r[0]).join(',') || '全部 ≤ 2 位');
 
   // ---------- commissions / reports perf / agents (this month) ----------
@@ -153,7 +162,7 @@ async function main() {
   const s1 = await C.login('agent1', 'agent123');
   const d1 = await C.dashboard(s1);
   const mine = all.filter((x, i) => x.agent === 1);
-  rec('DASH', 'agent1', 'agent1 的仪表盘 Total Outstanding（只含名下案件）', 'Σ agent_id=1 且非 Closed/Cancelled', mine.filter(x => !['closed', 'cancelled'].includes(x.status)).reduce((a, x) => a.add(x.outstanding), ZERO).r2(), d1.total);
+  rec('DASH', 'agent1', 'agent1 的仪表盘 Total Outstanding（只含名下案件，今日结清额）', 'Σ agent_id=1 且非 Closed/Cancelled', mine.filter(x => !['closed', 'cancelled'].includes(x.status)).reduce((a, x) => a.add(x.settlement), ZERO).r2(), d1.total);
 }
 
 function report() {

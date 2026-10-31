@@ -1,0 +1,100 @@
+[
+ {
+  "id": "F-06",
+  "expected": "seed tasks have no visit; form/filter lists omit visit",
+  "actual": "follow_up:Call debtor re: overdue | follow_up:Call debtor about the broken promise | legal:Prepare LOD | reminder:Send WhatsApp reminder",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-09",
+  "expected": "list shows the accrued amount straight after create (= case page Settlement Today); contract 11,800 cached",
+  "actual": "list=11,495.16 page=11,495.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-10",
+  "expected": "no 500; agents 3/4 kept; demo cases gone",
+  "actual": "Demo data deleted - your trial data is kept; demo cases left=0",
+  "result": "PASS",
+  "note": "另见 X-DEMO-FK：由 payments.agent_id 引用时仍 500"
+ },
+ {
+  "id": "F-11",
+  "expected": "no negative Pending; case 5 PTP = payment; no time in timeline dates; payments in this month",
+  "actual": "Lim Wei Sheng=45.80 Nurul Ain=725.80 Rajesh Kumar=0.00 Tan Mei Ling=318.60; case5 PTP 2916/2026-10-21 vs pay 2916/2026-10-21",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-13",
+  "expected": "names fictional; ICs not valid NRICs",
+  "actual": "famous=0; IC that could be real: 0/12 e.g. Ahmad bin Ismail(880001-00-5501)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-14",
+  "expected": "all 200",
+  "actual": "cases=3,7 status=200,200",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-20",
+  "expected": "amount/method/future/format all validated (X-VAL-PAY); lower bound = loan start (建议)",
+  "actual": "payment dated 2020-01-01 on a loan starting 2026-06-01 → Payment date cannot be before the loan start date (2026-06-01)",
+  "result": "PASS",
+  "note": "早于起息日的还款仍被接受（上一轮 F-20 建议“下限 = 起息日或重组日”）"
+ },
+ {
+  "id": "F-32",
+  "expected": "filters + CSV",
+  "actual": "case rows today=1; csv=attachment; filename=\"audit-log.csv\"",
+  "result": "PASS",
+  "note": "审计写入失败仍只打日志、不阻断（audit.js:12），同库无防篡改——属上一轮 F-32 的剩余部分"
+ },
+ {
+  "id": "F-46",
+  "expected": "text cell prefixed with ' ; numbers untouched",
+  "actual": "CASE-2026-0002,\"'=HYPERLINK(\"\"http://evil\"\",\"\"x\"\")\",,5,0,0,5,,,5,New,2026-10-31",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-52",
+  "expected": "similar latency (same bcrypt cost)",
+  "actual": "known=101,102ms unknown=100,105ms",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-54",
+  "expected": "no .alert from query string",
+  "actual": "no banner",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-29",
+  "expected": "cookie expires ≈120 min; bcrypt 10 (SEC-04); 8-char min (USR-08/12)",
+  "actual": "expires in 120 min",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-37",
+  "expected": "fully_paid + closed_at + \"Status changed new → fully_paid\"",
+  "actual": "{\"status\":\"fully_paid\",\"closed_at\":\"2026-10-31 10:54:30\"} Status changed new → fully_paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "F-15",
+  "expected": "dashboard feed = ORDER BY created_at DESC, id DESC",
+  "actual": "Status changed new → fully_paid | Payment RCPT-2026-0001: RM 12258.00 via cash | Case CASE-2026-0002 created",
+  "result": "PASS",
+  "note": ""
+ }
+]

@@ -9,8 +9,8 @@
  {
   "id": "NAV-04",
   "expected": "topbar + ☰; opens/closes; no horizontal scroll",
-  "actual": "toggle=True open=True closeByBackdrop=True noHScroll={'/': False, '/cases': True, '/cases/14': True, '/tasks': True, '/reports': True, '/commissions': True}",
-  "result": "FAIL",
+  "actual": "toggle=True open=True closeByBackdrop=True noHScroll={'/': True, '/cases': True, '/cases/14': True, '/tasks': True, '/reports': True, '/commissions': True}",
+  "result": "PASS",
   "note": ""
  },
  {
@@ -72,8 +72,8 @@
  {
   "id": "INT-02",
   "expected": "! toggles the formula for the current mode (and the formula must match D-01 whole-month rule)",
-  "actual": "toggle shown=True hidden=True; monthly text: 'Monthly rate (interest-first)\\ndaily rate = monthly% ÷ 100 ÷ 30\\ninterest = Σ(remaining principal × daily rate × days)\\ndays counted in whole days from Loan Start Date (same day = 0)\\neach payment clears interest first, then principal → paying principal shrinks later interest'",
-  "result": "FAIL",
+  "actual": "toggle shown=True hidden=True; monthly text: 'Monthly rate (interest-first)\\ninterest = remaining principal × monthly% for each full month from the Loan Start Date (28- and 31-day months alike)\\na part month is pro-rated by the actual days in that month\\neach payment clears interest first, then principal → paying principal shrinks later interest'",
+  "result": "PASS",
   "note": "公式文字仍为“daily rate = monthly% ÷ 100 ÷ 30”，与 v1.10.0 整月计息不符（src/views/cases/form.ejs:54）"
  },
  {
@@ -93,7 +93,7 @@
  {
   "id": "PAY-16",
   "expected": "date picker max = today; tomorrow invalid",
-  "actual": "max=2026-10-25 tomorrowInvalid=True",
+  "actual": "max=2026-10-31 tomorrowInvalid=True",
   "result": "PASS",
   "note": ""
  },
@@ -121,7 +121,7 @@
  {
   "id": "RS-13",
   "expected": "payment date min = effective date + 1 (case 14)",
-  "actual": "2026-10-16",
+  "actual": "2026-10-22",
   "result": "PASS",
   "note": ""
  },
@@ -191,7 +191,7 @@
  {
   "id": "SET-07",
   "expected": "print media hides buttons; A4 PDF produced",
-  "actual": "buttonsHidden=True pdfBytes=42277",
+  "actual": "buttonsHidden=True pdfBytes=78626",
   "result": "PASS",
   "note": "PDF 存于 tests/qa/r2/results/ui/"
  },
@@ -205,8 +205,8 @@
  {
   "id": "X-STATUS-UI",
   "expected": "agent on a Legal case: dropdown offers working statuses (selecting one lifts Legal)",
-  "actual": "['(disabled) legal', 'new', 'assigned', 'negotiation', 'ptp', 'partial_paid']",
-  "result": "FAIL",
+  "actual": "[]",
+  "result": "PASS",
   "note": "与 X-STATUS 同一问题：页面上一选即生效"
  }
 ]

@@ -2,7 +2,7 @@
  {
   "id": "PTP-01",
   "expected": "banner/status/timeline/audit",
-  "actual": "PTP created; \"PTP RM 500.00 due 2026-10-28\"",
+  "actual": "PTP created; \"PTP RM 500.00 due 2026-11-03\"",
   "result": "PASS",
   "note": ""
  },
@@ -44,7 +44,7 @@
  {
   "id": "PTP-06",
   "expected": "split, dates, header, status",
-  "actual": "Installment plan created; 333.33,333.33,333.34; 2026-10-25,2026-11-25,2026-12-25; \"Installment Plan · RM 1,000.00 · 0/3 kept\"",
+  "actual": "Installment plan created; 333.33,333.33,333.34; 2026-10-31,2026-11-30,2026-12-31; \"Installment Plan · RM 1,000.00 · 0/3 kept\"",
   "result": "PASS",
   "note": ""
  },
@@ -93,7 +93,7 @@
  {
   "id": "PTP-14",
   "expected": "\"Promised total RM 1,200.00 exceeds the settlement amount on <d2> (RM y)\"",
-  "actual": "PTP created; Promised total RM 1,200.00 exceeds the settlement amount on 2026-11-14 (RM 1,156.50)",
+  "actual": "PTP created; Promised total RM 1,200.00 exceeds the settlement amount on 2026-11-20 (RM 1,159.50)",
   "result": "PASS",
   "note": ""
  },
@@ -113,8 +113,8 @@
  },
  {
   "id": "PTP-12",
-  "expected": "\"Payment date must be after the restructure date (2026-10-20)\"; min=eff+1",
-  "actual": "Restructured; Payment date must be after the restructure date (2026-10-20); min attr=true",
+  "expected": "\"Payment date must be after the restructure date (2026-10-26)\"; min=eff+1",
+  "actual": "Restructured; Payment date must be after the restructure date (2026-10-26); min attr=true",
   "result": "PASS",
   "note": ""
  },
@@ -128,14 +128,14 @@
  {
   "id": "RS-02",
   "expected": "principal 9,304.84; min=max(start,last payment,prev+1)=2026-03-02; max=value=today",
-  "actual": "9,304.84,1,080.56; range=2026-03-02,2026-10-25,2026-10-25",
+  "actual": "9,304.84,1,107.58; range=2026-03-02,2026-10-31,2026-10-31",
   "result": "PASS",
   "note": ""
  },
  {
   "id": "RS-03",
   "expected": "red \"No valid effective date today — it must be on or after …\"",
-  "actual": "No valid effective date today — it must be on or after 2026-10-26.",
+  "actual": "No valid effective date today — it must be on or after 2026-11-01.",
   "result": "PASS",
   "note": ""
  },
@@ -155,8 +155,8 @@
  },
  {
   "id": "RS-07",
-  "expected": "\"Effective date must be between 2026-08-27 and 2026-10-25\"",
-  "actual": "Effective date must be between 2026-08-27 and 2026-10-25 | Effective date must be between 2026-08-27 and 2026-10-25",
+  "expected": "\"Effective date must be between 2026-09-02 and 2026-10-31\"",
+  "actual": "Effective date must be between 2026-09-02 and 2026-10-31 | Effective date must be between 2026-09-02 and 2026-10-31",
   "result": "PASS",
   "note": ""
  },
@@ -169,8 +169,8 @@
  },
  {
   "id": "RS-09",
-  "expected": "heading \"since restructure on\"; row 1 = 2026-04-01 arrears 135.07; then monthly",
-  "actual": "head=true; first={\"due\":\"2026-04-01\",\"arrears\":true,\"expected\":135.07,\"paid\":0,\"outstanding\":135.07,\"status\":\"Overdue\",\"action\":\"<button type=\\\"button\\\" class=\\\"btn btn-sm btn-gold\\\" onclick=\\\"payInstallment(135.07)\\\">Pay</button>\"}; n=19",
+  "expected": "heading \"since restructure on\"; row 1 = arrears 135.07 due with instalment 1 (2026-05-01); then monthly",
+  "actual": "head=true; first={\"due\":\"2026-05-01\",\"arrears\":true,\"expected\":135.07,\"paid\":0,\"outstanding\":135.07,\"status\":\"Overdue\",\"action\":\"<button type=\\\"button\\\" class=\\\"btn btn-sm btn-gold\\\" onclick=\\\"payInstallment(135.07)\\\">Pay</button>\"}; n=19",
   "result": "PASS",
   "note": ""
  },
@@ -218,7 +218,7 @@
  },
  {
   "id": "RS-15",
-  "expected": "Restructure undone; back to 10,696.06; timeline; audit; unlocked",
+  "expected": "Restructure undone; back to 10,696.06; timeline; audit; restructure lock lifted (payment lock remains)",
   "actual": "Restructure undone; O=10,696.06; \"Restructure undone: from 2026-04-01\"",
   "result": "PASS",
   "note": ""
@@ -226,14 +226,21 @@
  {
   "id": "RS-17",
   "expected": "min = prev+1; newest on top; only latest has Undo; older → \"Only the latest restructure can be undone\"",
-  "actual": "Effective date must be between 2026-03-02 and 2026-10-25; Restructured; undo=6; Only the latest restructure can be undone",
+  "actual": "Effective date must be between 2026-03-02 and 2026-10-31; Restructured; undo=6; Only the latest restructure can be undone",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RS-26",
+  "expected": "monthly → fixed refused",
+  "actual": "A rate-based loan cannot be restructured to a fixed amount (pending legal review)",
   "result": "PASS",
   "note": ""
  },
  {
   "id": "RS-18",
   "expected": "arrears row then 12 equal rows summing to cut+500",
-  "actual": "Restructured; cut=10000 arrears=304.84; rows=304.84,875,875…875",
+  "actual": "Restructured; cut=10000 arrears=1500; rows=1500,875,875…875",
   "result": "PASS",
   "note": ""
  },
@@ -261,7 +268,7 @@
  {
   "id": "RS-22",
   "expected": "arrears row, new plan, history 10 days ago 1.2%/month 18 months, reason",
-  "actual": "first=2026-10-15/239.95;  Restructure History 2026-10-15 · 1.2%/month · 18 months · by Collection Manager Principal at cut RM 13,050.00 · Arrears",
+  "actual": "first=2026-11-21/239.95;  Restructure History 2026-10-21 · 1.2%/month · 18 months · by Collection Manager Principal at cut RM 13,050.00 · Arrears",
   "result": "PASS",
   "note": ""
  },
@@ -281,8 +288,8 @@
  },
  {
   "id": "RS-25",
-  "expected": "cut principal = 10000 − (1000 − 300) ; arrears 0; Undo still offered",
-  "actual": "unpaid before=300; dialog=9,300.00,0.00; cut=9300/0; undo=true; opened=2026-10-25 05:14:19",
+  "expected": "cut principal = 10000 − (1000 − 329.03) ; arrears 0; Undo still offered",
+  "actual": "unpaid before=329.03; dialog=9,329.03,0.00; cut=9329.03/0; undo=true; opened=2026-10-31 10:54:17",
   "result": "PASS",
   "note": ""
  }

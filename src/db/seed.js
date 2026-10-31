@@ -50,7 +50,7 @@ const PRIOS = ['low','medium','high','urgent'];
 
 function clearAllTables() {
   init();
-  for (const t of ['audit_logs','call_logs','commission_settlements','tasks','ptps','payment_history','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users','number_sequences']) {
+  for (const t of ['audit_logs','access_logs','call_logs','commission_settlements','tasks','ptps','payment_history','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users','number_sequences']) {
     db.exec(`DELETE FROM ${t}`);
     db.exec(`DELETE FROM sqlite_sequence WHERE name='${t}'`);
   }

@@ -118,7 +118,8 @@ function schedule({ principal, mode, rate, lump = 0, start, tenure, origin }, pa
     exp = dues.map((d, i) => { let e = F.of(interest(seg, principal, prev, d).r2()); prev = d; if (i === tenure - 1) e = e.add(principal); return e.r2(); });
   } else exp = splitEqual(F.of(principal).add(lump), tenure);
   const rows = dues.map((d, i) => ({ due: d, expected: exp[i], kind: 'regular' }));
-  if (arrears && F.of(arrears).isPos()) rows.unshift({ due: start, expected: F.of(arrears).r2(), kind: 'arrears' });
+  // N-01 (v1.11.0): carried arrears fall due with the first new instalment, not on the effective date.
+  if (arrears && F.of(arrears).isPos()) rows.unshift({ due: dues[0], expected: F.of(arrears).r2(), kind: 'arrears' });
   let pool = payments.reduce((s, p) => s.add(p.amount), ZERO);
   return rows.map(row => {
     const e = F.of(row.expected); const paid = e.min(pool.max(ZERO)); pool = pool.sub(paid);
@@ -133,6 +134,12 @@ function arrears(rows, today) {
   const due = rows.filter(r => r.due < today && F.of(r.outstanding).isPos());
   if (!due.length) return { dpd: 0, overdue: '0.00' };
   return { dpd: days(due[0].due, today), overdue: due.reduce((s, r) => s.add(r.outstanding), ZERO).r2() };
+}
+// G-12 / N-06 (interim rule, v1.11.0): overdue never exceeds today's settlement amount; nothing overdue → DPD 0.
+function capOverdue(ar, settlement) {
+  if (ar.overdue === null) return ar;
+  const o = F.of(ar.overdue).min(F.of(settlement));
+  return o.isPos() ? { dpd: ar.dpd, overdue: o.r2() } : { dpd: 0, overdue: '0.00' };
 }
 const dpdBucket = d => (d === null ? 'No schedule' : d <= 0 ? 'Current' : d <= 30 ? '1–30' : d <= 60 ? '31–60' : d <= 90 ? '61–90' : '90+');
 const ageBucket = a => (a <= 30 ? '0–30' : a <= 60 ? '31–60' : a <= 90 ? '61–90' : '90+');
@@ -150,7 +157,7 @@ const commission = (collected, rate) => F.of(collected).mul(rate).div(100n).r2()
 const sum2 = xs => xs.reduce((s, x) => s.add(x), ZERO).r2();
 
 module.exports = { F, ZERO, r2, isLeap, addMonths, addDays, days, minD, monthsElapsed, interest, ledger, settlementOn,
-  splitEqual, schedule, arrears, dpdBucket, ageBucket, planDates, nominalRate, commission, sum2 };
+  splitEqual, schedule, arrears, capOverdue, dpdBucket, ageBucket, planDates, nominalRate, commission, sum2 };
 
 // ---------- self-check against the manual's worked examples (ch.5, v1.1) ----------
 if (require.main === module) {

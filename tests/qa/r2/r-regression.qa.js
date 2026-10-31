@@ -20,7 +20,9 @@ test('r2 R: regression of fixed F-items', { timeout: 300000 }, async () => {
     const id = await c.newCase(admin, { debtor_id: String(d), principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: '2026-01-01', tenure: '12' });
     const list = (await admin.get('/cases?q=QA+F09')).text;
     const amt = (list.match(/<td class="num">([\d,.]+)<\/td>/) || [])[1];
-    check('F-09', 'list shows 11,800.00 straight after create', amt === '11,800.00' && q1('SELECT outstanding_amount o FROM cases WHERE id=?', id).o === 11800, `list=${amt}`);
+    // v1.12.0 (G-23): the list shows Settlement Today; the contract balance (11,800) is cached on the case.
+    const page = c.ledgerVal((await admin.get(`/cases/${id}`)).text, 'Settlement Today');
+    check('F-09', 'list shows the accrued amount straight after create (= case page Settlement Today); contract 11,800 cached', amt === page && q1('SELECT outstanding_amount o FROM cases WHERE id=?', id).o === 11800, `list=${amt} page=${page}`);
   });
   await step('F-10', 'Delete demo keeps a demo agent referenced by trial settlement/task', async () => {
     await fin.act('/commissions/settle', { agent_id: '3', period: today().slice(0, 7), amount: '1', note: 'trial' });
@@ -41,8 +43,9 @@ test('r2 R: regression of fixed F-items', { timeout: 300000 }, async () => {
   await step('F-13', 'no real public figures; IC numbers', async () => {
     const names = qa('SELECT name, ic_passport FROM debtors').map(d => `${d.name}(${d.ic_passport})`);
     const famous = names.filter(n => /Wong Kar Wai|Lee Chong Wei/.test(n));
-    const realLooking = names.filter(n => /\(\d{6}-\d{2}-\d{4}\)/.test(n)).length;
-    rec('F-13', 'names fictional (IC: 建议改用明显无效号段)', `famous=${famous.length}; IC in valid NRIC format: ${realLooking}/${names.length} e.g. ${names[0]}`, famous.length === 0 ? (realLooking ? 'PARTIAL' : 'PASS') : 'FAIL');
+    // G-10 / N-04: demo ICs use month 00 and place code 00 — the NRIC shape, but no real person's number.
+    const realLooking = names.filter(n => { const m = n.match(/\((\d{2})(\d{2})(\d{2})-(\d{2})-\d{4}\)/); return m && +m[2] >= 1 && +m[2] <= 12 && m[4] !== '00'; }).length;
+    rec('F-13', 'names fictional; ICs not valid NRICs', `famous=${famous.length}; IC that could be real: ${realLooking}/${names.length} e.g. ${names[0]}`, famous.length === 0 && !realLooking ? 'PASS' : 'FAIL');
   });
   await step('F-14', 'agent opens the case of each own demo task', async () => {
     const a3 = await c.as('agent3');

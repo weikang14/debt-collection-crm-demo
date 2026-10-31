@@ -112,7 +112,7 @@ test('r2 X: outside the manual', { timeout: 400000 }, async () => {
       'monthly 1.25 × 80m (=100%)': await t(M({ interest_rate: '1.25', tenure: '80' })), 'monthly 1.5 × 67m (100.5%)': await t(M({ tenure: '67' })),
     };
     rec('X-CAP-1', '18.00 allowed; 18.01 refused (monthly, annual, fixed)', JSON.stringify(out),
-      out['monthly 1.5 (18.00)'] === 'OK' && out['annual 18.00'] === 'OK' && out['fixed 1800/10000/12m (18.00)'] === 'OK' && /18\.01% p\.a\./.test(out['annual 18.01']) && /18\.01% p\.a\./.test(out['monthly 1.501 (18.012)']) && /18\.01% p\.a\./.test(out['fixed 1801/10000/12m (18.01)']) ? 'PASS' : 'FAIL');
+      out['monthly 1.5 (18.00)'] === 'OK' && out['annual 18.00'] === 'OK' && out['fixed 1800/10000/12m (18.00)'] === 'OK' && /18\.01% p\.a\./.test(out['annual 18.01']) && /18\.012% p\.a\./.test(out['monthly 1.501 (18.012)']) && /18\.01% p\.a\./.test(out['fixed 1801/10000/12m (18.01)']) /* v1.12.0 (O-1): up to 4 decimals */ ? 'PASS' : 'FAIL');
     rec('X-CAP-2', 'rates above 18% but < 18.005% should be refused', `monthly 1.5004 → ${out['monthly 1.5004 (18.0048)']}; annual 18.004 → ${out['annual 18.004']}`,
       out['monthly 1.5004 (18.0048)'] !== 'OK' && out['annual 18.004'] !== 'OK' ? 'PASS' : 'FAIL', 'nominalAnnualRate() rounds to 2 dp before the compare (payments.js:157-166)');
     rec('X-CAP-3', 'Fixed loan without tenure must still be capped', `fixed 5000 no tenure → ${out['fixed 5000/10000 no tenure (≈?)']}`, out['fixed 5000/10000 no tenure (≈?)'] !== 'OK' ? 'PASS' : 'FAIL', 'nominalAnnualRate returns null without tenure → rateCapError skips (payments.js:159)');
@@ -123,12 +123,16 @@ test('r2 X: outside the manual', { timeout: 400000 }, async () => {
     const r = await t(M({ loan_start_date: '2021-06-01', tenure: '' }));
     const id = q1("SELECT MAX(id) m FROM cases").m;
     const intNow = num(ledgerVal(await show(admin, id), 'Interest'));
-    rec('X-CAP-6', '(design) no-tenure accrual loan: total interest bounded by principal over its life', `start 2021-01-01 → ${r0}; start 2021-06-01 → created=${r}; interest today=${intNow} on 10,000 (start 2021-06-01, no maturity) — keeps accruing 150/month with no stop`, 'FAIL', 'loanLimitError checks interest only up to "now" when there is no maturity (cases.js:32-37); nothing stops it passing the principal later');
+    // G-01 / N-02: an interest-bearing loan without a tenure is refused, so accrual always stops at maturity.
+    rec('X-CAP-6', 'no-tenure accrual loan refused (N-02)', `start 2021-01-01 → ${r0}; start 2021-06-01 → ${r}; last case interest=${intNow}`, r0 === 'Tenure is required for a loan that charges interest' && r === r0 ? 'PASS' : 'FAIL');
     // settings 18.01 accepted as cap
+    // N-03: the cap may only be lowered — 18.5 is refused, a decimal below 18 is honoured.
     const s = await admin.act('/settings', { company_name: '', max_annual_rate: '18.5' });
-    const cap = await t(M({ interest_mode: 'daily', interest_rate: '18.5' }));
+    const s2 = await admin.act('/settings', { company_name: '', max_annual_rate: '17.5' });
+    const cap = await t(M({ interest_mode: 'daily', interest_rate: '17.6' })), under = await t(M({ interest_mode: 'daily', interest_rate: '17.5' }));
     await admin.act('/settings', { company_name: '', max_annual_rate: '18' });
-    rec('X-CAP-7', 'decimal cap 18.5 honoured', `${s.ok}; annual 18.5 → ${cap}`, s.ok === 'Company settings saved' && cap === 'OK' ? 'PASS' : 'FAIL');
+    rec('X-CAP-7', 'cap 18.5 refused; decimal cap 17.5 honoured', `18.5 → ${s.err || s.ok}; 17.5 → ${s2.ok}; annual 17.6 → ${cap}; 17.5 → ${under}`,
+      /at most 18%/.test(s.err || '') && s2.ok === 'Company settings saved' && /exceeds the 17\.5% p\.a\. limit/.test(cap) && under === 'OK' ? 'PASS' : 'FAIL');
   });
 
   // ---------------- X-HALF: settlement 0.005 edge ----------------
@@ -248,17 +252,17 @@ test('r2 X: outside the manual', { timeout: 400000 }, async () => {
     rec('X-HDR', 'security headers, no X-Powered-By', ['x-content-type-options', 'x-frame-options', 'referrer-policy', 'x-powered-by'].map(h => `${h}=${sec.headers.get(h)}`).join(' '),
       sec.headers.get('x-content-type-options') === 'nosniff' && sec.headers.get('x-frame-options') === 'DENY' && !sec.headers.get('x-powered-by') ? 'PASS' : 'FAIL');
     const sc = (await new c.Session().req('POST', '/login', { username: 'admin', password: 'admin123' })).headers.getSetCookie().join(';');
-    rec('X-COOKIE', '(info) session cookie flags', sc.replace(/connect\.sid=[^;]+/, 'connect.sid=…'), /HttpOnly/i.test(sc) ? 'PASS' : 'FAIL', 'Secure/SameSite 未设置属 K-06（已知延后）');
+    rec('X-COOKIE', 'session cookie flags: HttpOnly, SameSite=Lax (Secure only over HTTPS — K-06)', sc.replace(/connect\.sid=[^;]+/, 'connect.sid=…'), /HttpOnly/i.test(sc) && /SameSite=Lax/i.test(sc) ? 'PASS' : 'FAIL');
   });
 
   // ---------------- X-REASSIGN edges ----------------
   await step('X-REASSIGN', 'unassign / reassign with tasks, PTPs, commission', async () => {
     await man.act('/tasks/new', { case_id: '13', type: 'follow_up', title: 'XR open', due_date: addDays(today(), 3) });
-    const cs = q1('SELECT * FROM cases WHERE id=13');
-    const r = await man.act('/cases/13', { debtor_id: String(cs.debtor_id), agent_id: '', principal_amount: String(cs.principal_amount), interest_mode: cs.interest_mode, interest_amount: String(cs.interest_amount), priority: cs.priority });
+    const r = await man.act('/cases/13', c.editForm(13, { agent_id: '' })); // the full form (N-02)
     const t = q1("SELECT agent_id FROM tasks WHERE title='XR open'");
     const a1Tasks = has((await a1.get('/tasks')).text, 'XR open');
-    rec('X-REASSIGN-1', '(info) unassigning a case orphans its open tasks (agent_id NULL)', `${r.ok}; task agent=${t.agent_id}; still on agent1 list=${a1Tasks}`, r.ok === 'Saved' ? 'PASS' : 'FAIL', '任务归属变为空，管理员列表 Agent 显示“—”；是否应保留原催收员待业务确认');
+    // N-13 / v1.2 TASK-13: unassigning keeps open tasks with the previous agent.
+    rec('X-REASSIGN-1', 'unassigning a case keeps its open tasks with the previous agent (N-13)', `${r.ok || r.err}; task agent=${t.agent_id}; still on agent1 list=${a1Tasks}`, r.ok === 'Saved' && t.agent_id === 1 && a1Tasks ? 'PASS' : 'FAIL');
   });
 
   // ---------------- X-FROZEN: bankrupt / deceased edges ----------------
@@ -270,8 +274,10 @@ test('r2 X: outside the manual', { timeout: 400000 }, async () => {
     await admin.act(`/cases/${id}/status`, { status: 'deceased' });
     const d1 = strip((await admin.get('/')).text).match(/PTP (\d+) due/)[1];
     const h = await show(admin, id);
-    rec('X-FROZEN-1', '(info) pending PTP on a deceased case keeps counting as "due" and shows Fulfill (server refuses)', `dash due ${d0}→${d1}; Fulfill button=${has(h, 'onclick="openFulfill(')}; PTP status=${q1('SELECT status FROM ptps WHERE case_id=?', id).status}`,
-      d1 === d0 && !has(h, 'onclick="openFulfill(') ? 'PASS' : 'FAIL', '改为破产/已故时未处理在途 PTP');
+    // G-19 / N-08: freezing closes pending promises — dashboard "due" drops, no Fulfill, PTP broken.
+    const st = q1('SELECT status FROM ptps WHERE case_id=?', id).status;
+    rec('X-FROZEN-1', 'pending PTP on a case marked deceased is closed (broken), leaves "due", no Fulfill', `dash due ${d0}→${d1}; Fulfill button=${has(h, 'onclick="openFulfill(')}; PTP status=${st}`,
+      Number(d1) === Number(d0) - 1 && !has(h, 'onclick="openFulfill(') && st === 'broken' ? 'PASS' : 'FAIL');
     const task = await admin.act('/tasks/new', { case_id: String(id), type: 'follow_up', title: 'call the estate', due_date: today() });
     rec('X-FROZEN-2', '(info) follow_up task can still be created on a deceased case', task.ok || task.err, 'PASS', 'D-13 只禁通话/PTP/重组；任务未限制，仅记录');
   });
@@ -291,9 +297,13 @@ test('r2 X: outside the manual', { timeout: 400000 }, async () => {
     rec('X-PARTIAL-2', '(info) dashboard PTP card after a partial: due −1, broken unchanged, no "partial" metric', `due ${g(d0, /PTP (\d+) due/)}→${g(d1, /PTP (\d+) due/)}; broken ${g(d0, /(\d+) broken/)}→${g(d1, /(\d+) broken/)}`, 'PASS', '部分履行在仪表盘上没有单独指标，只体现为 due 减少');
     // PTP dialog max vs settlement cap
     const h = await show(a1, id);
-    const dlgMax = (h.match(/New PTP<\/h3>\s*<label>Amount \(RM\) <small[^>]*>· max ([\d,.]+)/) || [])[1];
-    const tryMax = await a1.act(`/cases/${id}/ptps`, { amount: String(num(dlgMax)), due_date: addDays(today(), 1) });
-    rec('X-PTPMAX', 'New PTP dialog "max" should be accepted', `dialog max=${dlgMax}; submit → ${tryMax.ok || tryMax.err}`, tryMax.ok ? 'PASS' : 'FAIL', 'show.ejs:265 shows contract outstanding, server caps at settlement (D-10)');
+    // G-07: the dialog states the server's cap — the settlement amount on the due date (today's shown); on a case with
+    // no other open promise, that amount is accepted for tomorrow (this case has the plan above, so use a fresh one).
+    const fresh = await c.newCase(admin, { debtor_id: String(deb), agent_id: '1', ...M({ principal_amount: '3000' }) });
+    const hf = await show(a1, fresh);
+    const dlgMax = (hf.match(/New PTP<\/h3>\s*<label>Amount \(RM\) <small[^>]*>[^<]*today RM ([\d,.]+)\)/) || [])[1];
+    const tryMax = await a1.act(`/cases/${fresh}/ptps`, { amount: String(num(dlgMax)), due_date: addDays(today(), 1) });
+    rec('X-PTPMAX', 'New PTP dialog states the settlement cap, and that amount is accepted', `dialog "today RM ${dlgMax}"; submit → ${tryMax.ok || tryMax.err}`, dlgMax && tryMax.ok ? 'PASS' : 'FAIL');
   });
 
   // ---------------- X-RS-ARREARS: restructure arrears immediately overdue ----------------

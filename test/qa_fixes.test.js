@@ -102,6 +102,9 @@ test('F-07 / F-58: statement shows the loan terms and a standard page title', as
   });
   assert.match(html, /<title>Statement QA-1 — Debt Collection CRM<\/title>/);
   for (const s of ['Loan Start Date', '2026-01-01', '1.5%/month', '2027-10-01', 'Restructured', '1.2%/month', '139.50']) assert.ok(html.includes(s), s);
+  // v1.13.0 (G-26, the parts that need no decision): title, p.a. wording, address, signature; no internal status.
+  for (const s of ['Statement of Account', '1.5%/month (18% p.a.)', 'Address', 'Authorised signature']) assert.ok(html.includes(s), s);
+  assert.ok(!html.includes('<span>Status</span>'));
 });
 
 test('F-09: a new accrual case shows its interest without opening the case page', () => {

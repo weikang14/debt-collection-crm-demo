@@ -14,7 +14,8 @@ function kpi(html) {
     collected: n(/Collected Today RM ([\d,.]+)/), payments: n(/([\d]+) payments? today/),
     active: n(/Cases (\d+) active/), legal: n(/active · (\d+) legal/),
     due: n(/PTP (\d+) due/), overdue: n(/due · (\d+) overdue/), broken: n(/overdue · (\d+) broken/),
-    outstanding: n(/Total Outstanding RM ([\d,.]+)/), special: n(/RM ([\d,.]+) in legal/),
+    // v1.12.0: "Total Outstanding · settlement today", contract balance beside it (G-24).
+    outstanding: n(/Total Outstanding (?:· settlement today )?RM ([\d,.]+)/), special: n(/RM ([\d,.]+) in legal/), contract: n(/contract balance RM ([\d,.]+)/),
     opened: n(/(\d+) opened/), closed: n(/opened · (\d+) closed/), overdueTasks: n(/closed · (\d+) overdue/), upcoming: n(/overdue · (\d+) upcoming/),
     dpd: ['Current', '1–30', '31–60', '61–90', '90\\+', 'No schedule'].map(l => n(new RegExp('(?:^|\\s)' + l + ' RM ([\\d,.]+)'))),
     age: ['0–30d', '31–60d', '61–90d', '90\\+d'].map(l => n(new RegExp(l + ' RM ([\\d,.]+)'))),
@@ -83,9 +84,10 @@ test('r2 A: AUTH / NAV / DASH / DEB', { timeout: 300000 }, async () => {
     const v = (login.text.match(/v(\d+\.\d+\.\d+) · <a href="\/version">/) || [])[1];
     const ver = await new c.Session().get('/version');
     const list = [...ver.text.matchAll(/<strong>v(\d+\.\d+\.\d+)<\/strong>/g)].map(m => m[1]);
-    // Manual says "v1.8.0" — stale text; the shipped build is v1.10.0 (00-scope).
-    check('AUTH-10', 'footer shows current version (manual text says v1.8.0 — stale); /version newest first', v === '1.10.0' && list[0] === '1.10.0',
-      `footer v${v}; /version first=${list[0]} (${list.slice(0, 3).join(',')})`, '手册写 v1.8.0，应为 v1.10.0（手册文字过时）');
+    // Manual v1.2: footer = the newest /version entry = the version the code ships.
+    const want = c.appVersion();
+    check('AUTH-10', 'footer shows current version; /version newest first', v === want && list[0] === want,
+      `footer v${v}; /version first=${list[0]} (${list.slice(0, 3).join(',')}); src/version.js ${want}`);
   });
   await step('AUTH-11', '/health text ok', async () => {
     const r = await new c.Session().get('/health');
@@ -182,17 +184,17 @@ test('r2 A: AUTH / NAV / DASH / DEB', { timeout: 300000 }, async () => {
     check('DASH-04', 'due +1, broken +1, overdue = past-due pending', r1.ok === 'PTP created' && r2.ok === 'PTP broken' && a.due === b.due + 1 && a.broken === b.broken + 1 && a.overdue === od,
       `${r1.ok}/${r2.ok}; due ${b.due}→${a.due}; broken ${b.broken}→${a.broken}; overdue ${a.overdue} (db ${od})`);
   });
+  // v1.12.0 (G-24 / N-07): totals are today's settlement amounts; the contract balance is shown beside them.
   await step('DASH-05', 'Total Outstanding = Reports − Closed − Cancelled; special = Legal+Bankruptcy+Deceased', async () => {
     const d = await D();
     const rep = strip((await admin.get('/reports')).text);
-    const rowOf = (lbl) => { const m = rep.match(new RegExp(lbl + ' (\\d+) ([\\d,.]+)')); return m ? Number(m[2].replace(/,/g, '')) : 0; };
-    const sumStatuses = qa('SELECT status, SUM(outstanding_amount) s FROM cases GROUP BY status');
-    const total = sumStatuses.reduce((s, r) => s + r.s, 0);
-    const exp = total - (sumStatuses.find(r => r.status === 'closed')?.s || 0) - (sumStatuses.find(r => r.status === 'cancelled')?.s || 0);
-    const sp = sumStatuses.filter(r => ['legal', 'bankruptcy', 'deceased'].includes(r.status)).reduce((s, r) => s + r.s, 0);
-    const repClosed = rowOf('Closed'), repCancelled = rowOf('Cancelled');
-    check('DASH-05', 'matches Reports minus closed/cancelled', Math.abs(d.outstanding - exp) < 0.01 && Math.abs(d.special - sp) < 0.01,
-      `dash ${d.outstanding} vs db ${exp.toFixed(2)}; special ${d.special} vs ${sp.toFixed(2)}; report Closed=${repClosed} Cancelled=${repCancelled}`);
+    const rowOf = (lbl) => { const m = rep.match(new RegExp(lbl + ' (\\d+) ([\\d,.]+) ([\\d,.]+)')); return m ? Number(m[2].replace(/,/g, '')) : 0; };
+    const repTotal = Number(((rep.match(/Total (\d+) ([\d,.]+) ([\d,.]+)/) || [])[2] || 'NaN').replace(/,/g, ''));
+    const exp = repTotal - rowOf('Closed') - rowOf('Cancelled');
+    const sp = rowOf('Legal') + rowOf('Bankruptcy') + rowOf('Deceased');
+    const dbContract = q1("SELECT COALESCE(SUM(outstanding_amount),0) s FROM cases WHERE status NOT IN ('closed','cancelled')").s;
+    check('DASH-05', 'matches Reports minus closed/cancelled (settlement today); contract balance = DB', Math.abs(d.outstanding - exp) < 0.01 && Math.abs(d.special - sp) < 0.01 && Math.abs(d.contract - dbContract) < 0.01,
+      `dash ${d.outstanding} vs report ${exp.toFixed(2)}; special ${d.special} vs ${sp.toFixed(2)}; contract ${d.contract} vs db ${dbContract.toFixed(2)}`);
   });
   await step('DASH-06', 'opened +1, closed +1 (manual + auto payoff)', async () => {
     const b = await D();
@@ -220,7 +222,8 @@ test('r2 A: AUTH / NAV / DASH / DEB', { timeout: 300000 }, async () => {
   await step('DASH-08', 'Aging (DPD) + Case Age: open balances only, max bar full', async () => {
     const html = (await admin.get('/')).text;
     const d = kpi(html);
-    const open = q1(`SELECT COALESCE(SUM(outstanding_amount),0) s FROM cases WHERE outstanding_amount > 0 AND status NOT IN ('legal','closed','cancelled','bankruptcy','deceased')`).s;
+    // v1.12.0 (G-24): the buckets hold settlement amounts of the cases still being worked.
+    const open = c.sumOf((await c.caseFigures(admin)).filter(r => r.contract > 0 && !['Legal', 'Closed', 'Cancelled', 'Bankruptcy', 'Deceased'].includes(r.status)));
     const sumD = d.dpd.reduce((a, b) => a + b, 0), sumA = d.age.reduce((a, b) => a + b, 0);
     const widths = [...html.matchAll(/class="tr"><i style="width:(\d+)%/g)].map(m => Number(m[1]));
     const dpdW = widths.slice(0, 6), ageW = widths.slice(6, 10);
@@ -258,7 +261,7 @@ test('r2 A: AUTH / NAV / DASH / DEB', { timeout: 300000 }, async () => {
     const html = (await a1.get('/')).text;
     const d = kpi(html);
     const W = 'agent_id = 1';
-    const out = q1(`SELECT COALESCE(SUM(outstanding_amount),0) s FROM cases WHERE ${W} AND status NOT IN ('closed','cancelled')`).s;
+    const out = c.sumOf((await c.caseFigures(a1)).filter(r => !['Closed', 'Cancelled'].includes(r.status))); // v1.12.0: settlement today (G-24)
     const active = q1(`SELECT COUNT(*) n FROM cases WHERE ${W} AND status NOT IN ('legal','closed','cancelled','bankruptcy','deceased','fully_paid')`).n;
     const coll = q1(`SELECT COALESCE(SUM(p.amount),0) s FROM payments p JOIN cases c ON c.id=p.case_id WHERE c.agent_id=1 AND date(p.payment_date)=?`, today()).s;
     const recentCases = [...html.slice(html.indexOf('<ul class="feed">')).matchAll(/href="\/cases\/(\d+)"/g)].map(m => Number(m[1]));
@@ -275,7 +278,7 @@ test('r2 A: AUTH / NAV / DASH / DEB', { timeout: 300000 }, async () => {
     const high = names((await admin.get('/debtors?risk=high')).text);
     const highDb = qa("SELECT name FROM debtors WHERE risk_level='high' ORDER BY name").map(r => r.name);
     const byName = names((await admin.get('/debtors?q=' + encodeURIComponent('Ravi'))).text);
-    const byIc = names((await admin.get('/debtors?q=850320')).text);
+    const byIc = names((await admin.get('/debtors?q=' + q1('SELECT ic_passport FROM debtors WHERE id=3').ic_passport.slice(0, 6))).text); // G-10: demo ICs use the 00 month
     const byPhone = names((await admin.get('/debtors?q=016-3334')).text);
     const all = names((await admin.get('/debtors')).text);
     const sortedOk = all.join('|') === qa('SELECT name FROM debtors ORDER BY name').map(r => r.name).join('|');
@@ -303,7 +306,7 @@ test('r2 A: AUTH / NAV / DASH / DEB', { timeout: 300000 }, async () => {
     const html = (await admin.get('/debtors/1')).text;
     const ids = [...html.matchAll(/href="\/cases\/(\d+)" class="mono">/g)].map(m => Number(m[1])).sort((a, b) => a - b);
     const db = qa('SELECT id FROM cases WHERE debtor_id=1 ORDER BY id').map(r => r.id);
-    check('DEB-05', 'cases with no/outstanding/status, clickable', ids.join() === db.join() && /Outstanding/.test(html), `page=${ids} db=${db}`);
+    check('DEB-05', 'cases with no/settlement today/status, clickable', ids.join() === db.join() && /Settlement Today/.test(html), `page=${ids} db=${db}`); // v1.12.0: amount column is Settlement Today (N-07)
   });
   await step('DEB-06', 'agent1 sees only own debtors; foreign → 403', async () => {
     const a1 = await c.as('agent1');
