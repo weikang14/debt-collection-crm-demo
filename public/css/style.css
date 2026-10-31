@@ -322,6 +322,11 @@ body.app {
   color: var(--red);
   border-color: #edc7c4;
 }
+.alert.is-gold {
+  background: #f8f0e0;
+  color: #7a5718;
+  border-color: #e6d1a8;
+}
 
 /* ---------- Card ---------- */
 

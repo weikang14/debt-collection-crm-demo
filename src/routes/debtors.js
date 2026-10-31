@@ -7,7 +7,7 @@ const { debtorFilter } = require('../utils/debtorFilter');
 const { MAX_NAME, refill } = require('../utils/forms');
 const { settlementOn } = require('../services/payments');
 const { todayMYT } = require('../utils/helpers');
-const { ANONYMIZED } = require('../services/retention');
+const { ANONYMIZED, icKey, icKeySql, removedBefore } = require('../services/retention');
 const router = express.Router();
 
 const { requirePerm, can } = require('../utils/permissions');
@@ -29,6 +29,15 @@ function debtorFormError(b) {
   if (b.risk_level && !RISKS.includes(b.risk_level)) return 'Invalid risk level';
   return null;
 }
+// One debtor per IC/Passport, checked when it is entered or changed (so older duplicates can still be edited).
+function icError(ic, old = null) {
+  const k = icKey(ic);
+  if (!k || (old && icKey(old.ic_passport) === k)) return null;
+  const dup = get(`SELECT id FROM debtors WHERE anonymized_at IS NULL AND ${icKeySql('ic_passport')} = ?`, [k]);
+  return dup ? `This IC/Passport is already on file for debtor #${dup.id}` : null;
+}
+// A returning debtor: the IC belonged to someone whose personal data was removed (F-35).
+const returningNote = ic => { const r = removedBefore(ic)[0]; return r ? `this IC/Passport belonged to debtor #${r.id}, whose personal data was removed on ${r.removed}` : null; };
 
 router.get('/', requireLogin, canView, (req, res) => {
   const ids = reachableDebtorIds(req.session.user); // null = unrestricted
@@ -41,13 +50,14 @@ router.get('/new', requireLogin, canCreate, (req, res) => res.render('debtors/fo
 router.post('/', requireLogin, canCreate, (req, res) => {
   const b = req.body;
   const name = S(b.name);
-  const formErr = debtorFormError(b);
+  const formErr = debtorFormError(b) || icError(b.ic_passport);
   if (formErr) return res.redirect(`/debtors/new?err=${encodeURIComponent(formErr)}`);
   const r = run(`INSERT INTO debtors (name,ic_passport,company,phone,email,address,employer,salary,risk_level,guarantor_name,guarantor_phone,remark)
                  VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
     [name,S(b.ic_passport),S(b.company),S(b.phone),S(b.email),S(b.address),S(b.employer),Number(b.salary)||null,b.risk_level||'medium',S(b.guarantor_name),S(b.guarantor_phone),S(b.remark)]);
   logAction(req,'create','debtor',r.lastInsertRowid,`Created debtor ${name}`);
-  res.redirect('/debtors?ok=Debtor+created');
+  const note = returningNote(b.ic_passport);
+  res.redirect(`/debtors?ok=${encodeURIComponent(note ? `Debtor created — note: ${note}` : 'Debtor created')}`);
 });
 router.get('/:id', requireLogin, canView, (req, res) => {
   const debtor = get('SELECT * FROM debtors WHERE id=?', [req.params.id]);
@@ -58,7 +68,7 @@ router.get('/:id', requireLogin, canView, (req, res) => {
   logAccess(req, 'view', 'debtor', debtor.id, debtor.name);
   const cases = all(`SELECT * FROM cases WHERE debtor_id=? AND ${w.clause} ORDER BY opened_at DESC`, [req.params.id, ...w.params])
     .map(c => ({ ...c, settlement: settlementOn(c.id, todayMYT()) }));
-  res.render('debtors/show', { title: debtor.name, debtor, cases });
+  res.render('debtors/show', { title: debtor.name, debtor, cases, previous: removedBefore(debtor.ic_passport) });
 });
 router.get('/:id/edit', requireLogin, canEdit, (req, res) => {
   const debtor = get('SELECT * FROM debtors WHERE id=?', [req.params.id]);
@@ -78,6 +88,8 @@ router.post('/:id', requireLogin, canEdit, (req, res) => {
   const old = get('SELECT * FROM debtors WHERE id=?', [req.params.id]);
   if (!old) return res.status(404).render('error', { message: 'Debtor not found' });
   if (old.anonymized_at) return res.redirect(`/debtors/${old.id}?err=${encodeURIComponent(ANONYMIZED)}`);
+  const icErr = icError(b.ic_passport, old);
+  if (icErr) return res.redirect(`/debtors/${old.id}/edit?err=${encodeURIComponent(icErr)}`);
   const sensitive = can(req, 'debtors.sensitive'); // otherwise the form had no salary / guarantor fields: keep them
   const next = { name, ic_passport: S(b.ic_passport), company: S(b.company), phone: S(b.phone), email: S(b.email), address: S(b.address),
     employer: S(b.employer), salary: sensitive ? Number(b.salary) || null : old.salary, risk_level: b.risk_level || 'medium',

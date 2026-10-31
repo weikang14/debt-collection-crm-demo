@@ -232,6 +232,22 @@ test('F-35: personal data is removed only for debtors past the retention period,
   assert.match(call(debtorsRouter, 'get', '/:id/edit', { params: { id: '901' } }).redirect, /^\/debtors\/901\?err=/);
 });
 
+test('one debtor per IC/Passport; a returning debtor is recognised from the removal record', () => {
+  // runs after the F-35 test: debtor 901 (IC 800101-01-0001) was removed
+  const create = ic => call(debtorsRouter, 'post', '/', { body: { name: 'Returning', ic_passport: ic, risk_level: 'low' } }).redirect;
+  assert.match(text({ redirect: create('800101010001') }, 'ok'), /^Debtor created — note: this IC\/Passport belonged to debtor #901, whose personal data was removed on \d{4}-\d{2}-\d{2}$/);
+  const id = db.get("SELECT id FROM debtors WHERE name='Returning'").id;
+  assert.strictEqual(text({ redirect: create('800101-01-0001') }, 'err'), `This IC/Passport is already on file for debtor #${id}`);
+  assert.strictEqual(text({ redirect: create(' 800101 01 0001 ') }, 'err'), `This IC/Passport is already on file for debtor #${id}`);
+  assert.strictEqual(db.get("SELECT COUNT(*) n FROM debtors WHERE name='Returning'").n, 1);
+  // its page says who it was before; editing it without changing the IC is fine, moving another debtor onto it is not
+  assert.deepStrictEqual(call(debtorsRouter, 'get', '/:id', { params: { id: String(id) } }).locals.previous.map(p => p.id), [901]);
+  const edit = (did, ic) => call(debtorsRouter, 'post', '/:id', { params: { id: String(did) }, body: { name: 'Returning', ic_passport: ic, risk_level: 'low' } }).redirect;
+  assert.match(edit(id, '800101-01-0001'), /ok=Saved/);
+  assert.match(text({ redirect: edit(1, '8001010 10001') }, 'err'), new RegExp(`already on file for debtor #${id}$`));
+  assert.strictEqual(create('A1234567').includes('ok=Debtor%20created'), true);
+});
+
 test('F-35: the cases of a removed debtor are read-only', () => {
   // runs after the test above: debtor 901 / case 901 are anonymized
   const ptpsRouter = require('../src/routes/ptps');

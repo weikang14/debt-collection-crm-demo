@@ -14,6 +14,14 @@ const ANONYMIZED = 'Read-only: this debtor’s personal data was removed after t
 const caseAnonymized = caseId => !!get(`SELECT 1 FROM cases c JOIN debtors d ON d.id = c.debtor_id
   WHERE c.id = ? AND d.anonymized_at IS NOT NULL`, [caseId]);
 
+// An IC/Passport compared without dashes, spaces or case: 800101-14-5678 = 800101145678.
+const icKey = v => String(v || '').replace(/[-\s]/g, '').toUpperCase();
+const icKeySql = col => `upper(replace(replace(${col}, '-', ''), ' ', ''))`;
+// The removal entries in the audit log are the archive of who was on file: a returning
+// debtor is recognised by IC. Newest first: [{ id, removed }].
+const removedBefore = ic => (icKey(ic) ? all(`SELECT entity_id id, date(created_at, '+8 hours') removed FROM audit_logs
+  WHERE action = 'anonymize' AND instr(${icKeySql('details')}, ?) > 0 ORDER BY id DESC`, [`(IC${icKey(ic)})`]) : []);
+
 const retentionYears = () => Number((get('SELECT retention_years FROM settings WHERE id=1') || {}).retention_years) || 7;
 
 // Debtors with every case finished and nothing on file since the cutoff date.
@@ -44,4 +52,4 @@ function anonymizeDebtor(id) {
   run(`UPDATE payments SET remark = NULL WHERE case_id IN (${ofDebtor})`, [id]);
 }
 
-module.exports = { retentionYears, dueForRemoval, anonymizeDebtor, caseAnonymized, ANONYMIZED };
+module.exports = { retentionYears, dueForRemoval, anonymizeDebtor, caseAnonymized, ANONYMIZED, icKey, icKeySql, removedBefore };
