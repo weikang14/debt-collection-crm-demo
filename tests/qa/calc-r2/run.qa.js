@@ -604,7 +604,8 @@ async function main() {
     cmp(g, 'CSV.B', 'agent-performance.csv B：Collected,Commission', `${rowB.collected} / ${rowB.earned}`, `${Number(rowB.collected)},${Number(rowB.earned)}`, cB && `${cB[1]},${cB[3]}`);
     const ag = await C.agentsList(s);
     const lA = ag.find(x => x.name === 'QA R2 Agent A'), lB = ag.find(x => x.name === 'QA R2 Agent B');
-    cmp(g, 'AGT.A', 'Agents 页 A：案件数/Collected/Commission', `0 件（已改派）/${aColl}/${earnA}`, `0/${aColl}/${earnA}`, lA && `${lA.cases}/${lA.collected}/${lA.commission}`);
+    // The Agents page counts all of A's collections, not this month's: 933.63 + 100 on any day (on the 1st, the 100 is last month's).
+    cmp(g, 'AGT.A', 'Agents 页 A：案件数/累计 Collected/Commission', `0 件（已改派）/1033.63/${commission('1033.63', 5)}`, `0/1033.63/${commission('1033.63', 5)}`, lA && `${lA.cases}/${lA.collected}/${lA.commission}`);
     cmp(g, 'AGT.B', 'Agents 页 B：案件数/Collected', `1/${rowB.collected}`, `1/${rowB.collected}`, lB && `${lB.cases}/${lB.collected}`);
     // K-05 A (v1.14.0): settling more than the pending commission is refused; within it, recorded.
     const overTry = await s.post('/commissions/settle', { agent_id: String(aA), amount: F.of(earnA).add('1').r2(), period: month });

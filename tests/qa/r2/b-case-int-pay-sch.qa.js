@@ -239,7 +239,10 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
     const h1 = await show(admin, id), h2 = await show(admin, id);
     const y = addDays(today(), -1);
     const id2 = await c.newCase(admin, { debtor_id: String(debA), principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: y, tenure: '12' });
-    const daysInPeriod = (new Date(Date.UTC(+y.slice(0, 4), +y.slice(5, 7), +y.slice(8, 10))) - new Date(y + 'T00:00:00Z')) / 864e5;
+    // the period runs to the same day next month, clamped to its last day (10-31 → 11-30 is 30 days)
+    const [Y, M, D] = y.split('-').map(Number);
+    const next = new Date(Date.UTC(Y, M, Math.min(D, new Date(Date.UTC(Y, M + 1, 0)).getUTCDate())));
+    const daysInPeriod = (next - new Date(y + 'T00:00:00Z')) / 864e5;
     // v1.2 INT-07: with a term, Interest shows the whole contract's interest; interest so far shows in Settlement Today.
     const exp = c.money(10000 + Math.round(10000 * 0.015 / daysInPeriod * 100) / 100);
     const h3 = await show(admin, id2);
@@ -455,9 +458,11 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
       rows.slice(0, 3).map(r => `${r.expected}/${r.paid}/${r.outstanding}/${r.status}`).join(' ') + ` last=${rows[11].expected}`);
   });
   await step('SCH-06', 'statuses Paid / Overdue / Partially Paid / Pending', async () => {
-    // The 1st of the month two months back, so instalment 2 is past due on any day (60 days back from the 31st is only the 1st of last month).
-    const ym = new Date(Date.UTC(+today().slice(0, 4), +today().slice(5, 7) - 3, 1)).toISOString().slice(0, 7);
-    const start = ym + '-01';
+    // Two months and a day back, so on any day instalment 2 is past due and instalment 3 is not yet due
+    // (the 1st of the month two months back fails on the 1st, when instalment 2 falls due today).
+    const [Y, M, D] = today().split('-').map(Number);
+    const back2 = new Date(Date.UTC(Y, M - 3, Math.min(D, new Date(Date.UTC(Y, M - 2, 0)).getUTCDate())));
+    const start = new Date(back2 - 864e5).toISOString().slice(0, 10);
     const id = await c.newCase(admin, { debtor_id: String(debB), principal_amount: '600', interest_mode: 'fixed', interest_amount: '0', loan_start_date: start, tenure: '6' });
     await admin.act(`/cases/${id}/payments`, { payment_date: today(), amount: '150', method: 'cash' });
     const r1 = scheduleRows(await show(admin, id));
