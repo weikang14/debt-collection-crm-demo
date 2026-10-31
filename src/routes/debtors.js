@@ -1,10 +1,12 @@
 const express = require('express');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
-const { logAction } = require('../utils/audit');
+const { logAction, changeList } = require('../utils/audit');
 const { reachableDebtorIds, caseWhere } = require('../utils/scope');
 const { debtorFilter } = require('../utils/debtorFilter');
 const { MAX_NAME } = require('../utils/forms');
+const { settlementOn } = require('../services/payments');
+const { todayMYT } = require('../utils/helpers');
 const router = express.Router();
 
 const canView = requireRole('admin','manager','agent','finance','auditor');
@@ -50,7 +52,8 @@ router.get('/:id', requireLogin, canView, (req, res) => {
   const ids = reachableDebtorIds(req.session.user);
   if (ids !== null && !ids.includes(debtor.id)) return res.status(403).render('error', { message: 'Forbidden' });
   const w = caseWhere(req.session.user);
-  const cases = all(`SELECT * FROM cases WHERE debtor_id=? AND ${w.clause} ORDER BY opened_at DESC`, [req.params.id, ...w.params]);
+  const cases = all(`SELECT * FROM cases WHERE debtor_id=? AND ${w.clause} ORDER BY opened_at DESC`, [req.params.id, ...w.params])
+    .map(c => ({ ...c, settlement: settlementOn(c.id, todayMYT()) }));
   res.render('debtors/show', { title: debtor.name, debtor, cases });
 });
 router.get('/:id/edit', requireLogin, canEdit, (req, res) => {
@@ -67,9 +70,15 @@ router.post('/:id', requireLogin, canEdit, (req, res) => {
   const name = S(b.name);
   const formErr = debtorFormError(b);
   if (formErr) return res.redirect(`/debtors/${req.params.id}/edit?err=${encodeURIComponent(formErr)}`);
+  const old = get('SELECT * FROM debtors WHERE id=?', [req.params.id]);
+  if (!old) return res.status(404).render('error', { message: 'Debtor not found' });
+  const next = { name, ic_passport: S(b.ic_passport), company: S(b.company), phone: S(b.phone), email: S(b.email), address: S(b.address),
+    employer: S(b.employer), salary: Number(b.salary) || null, risk_level: b.risk_level || 'medium',
+    guarantor_name: S(b.guarantor_name), guarantor_phone: S(b.guarantor_phone), remark: S(b.remark) };
   run(`UPDATE debtors SET name=?,ic_passport=?,company=?,phone=?,email=?,address=?,employer=?,salary=?,risk_level=?,guarantor_name=?,guarantor_phone=?,remark=? WHERE id=?`,
-    [name,S(b.ic_passport),S(b.company),S(b.phone),S(b.email),S(b.address),S(b.employer),Number(b.salary)||null,b.risk_level||'medium',S(b.guarantor_name),S(b.guarantor_phone),S(b.remark),req.params.id]);
-  logAction(req,'update','debtor',Number(req.params.id),`Updated debtor ${name}`);
+    [...Object.values(next), req.params.id]);
+  const changes = changeList(old, next);
+  logAction(req,'update','debtor',Number(req.params.id),`Updated debtor ${name}${changes.length ? ': ' + changes.join('; ') : ' (no field changes)'}`);
   res.redirect(`/debtors/${req.params.id}?ok=Saved`);
 });
 module.exports = router;

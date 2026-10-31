@@ -1,0 +1,485 @@
+[
+ {
+  "id": "TASK-02",
+  "expected": "agent = case agent (2) even if 3 posted; types follow_up/legal/reminder; visit → Invalid task type",
+  "actual": "Task created; agent=2; types=follow_up,legal,reminder; visit=Invalid task type",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-03",
+  "expected": "admin → chosen 3; agent1 → own 1",
+  "actual": "admin task agent=3; agent1 task agent=1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-04",
+  "expected": "input required; server \"Title is required\"",
+  "actual": "Title is required",
+  "result": "PASS",
+  "note": "浏览器拦截见 ui.qa.py"
+ },
+ {
+  "id": "TASK-05",
+  "expected": "Task updated; values saved",
+  "actual": "Task updated; TASK-05 edited/legal",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-06",
+  "expected": "Task completed; done; no Complete button",
+  "actual": "Task completed; done",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-01",
+  "expected": "status/type/overdue/windows",
+  "actual": "pending=9 done=2 legal=3 overdue=Call debtor about the broken promise today=Send WhatsApp reminder,T01 today 7d=7 14d=8 30d=9",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-07",
+  "expected": "only own; \"Forbidden\" both; unchanged",
+  "actual": "rows=2; Forbidden/Forbidden",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-08",
+  "expected": "\"Invalid case\"",
+  "actual": "Invalid case",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-09",
+  "expected": "read-only",
+  "actual": "[{\"u\":\"finance\",\"newBtn\":false,\"dash\":true,\"post\":403,\"comp\":403},{\"u\":\"auditor\",\"newBtn\":false,\"dash\":true,\"post\":403,\"comp\":403}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-10",
+  "expected": "Upcoming Follow-ups shows \"in 3d TASK-10 three\"",
+  "actual": "in 3d TASK-10 three",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-11",
+  "expected": "reassign moves open tasks only; audit",
+  "actual": "ERROR: TypeError: Cannot read properties of undefined (reading 'details')\n    at C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\r2\\d-task-agt-usr-rpt-com-misc.qa.js:105:292\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async step (C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\r2\\_run.js:14:9)\n    at async TestContext.<anonymous>",
+  "result": "BLOCKED",
+  "note": "script error"
+ },
+ {
+  "id": "AGT-01",
+  "expected": "by payments.agent_id; desc; commission; colours",
+  "actual": "2:24516×5%=1225.8 5%is-red | 4:7965×4%=318.6 3%is-red | 1:2916×5%=145.8 1%is-red | 3:0×6%=0 0%is-red",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-02",
+  "expected": "filters",
+  "actual": "Consumer=1,2 active=1,2,3,4 inactive=",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-03",
+  "expected": "Name is required; Agent created; rate 5; active",
+  "actual": "Name is required; Agent created; rate=5 active=1; form default rate shown=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-04",
+  "expected": "Active No; not in case/edit/user dropdowns",
+  "actual": "Saved; activeNo=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-05",
+  "expected": "contact, department, target, collected, cases, rate, attainment + bar, cases list",
+  "actual": "Contact 012-3456789 Department Consumer Target 500,000.00 Collected 2,916.00 Case Count 4 Commission 5% Active Yes Target Attainment: 1% Assigned Cases Case No Debtor Outstanding Status CASE-2026-D017",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-06",
+  "expected": "auditor sees, no New/Edit; others 403",
+  "actual": "403,403,403,403,403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-01",
+  "expected": "\"User qa_fin2 created\"; login ok",
+  "actual": "User qa_fin2 created; login 302",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-02",
+  "expected": "\"Username, full name, password and role are required\"",
+  "actual": "Username, full name, password and role are required | Username, full name, password and role are required | Username, full name, password and role are required | Username, full name, password and role are required",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-03",
+  "expected": "admin, manager, agent, finance, auditor; client refused",
+  "actual": "admin,manager,agent,finance,auditor; client → Username, full name, password and role are required",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-04",
+  "expected": "Linked Agent field; \"Agent accounts must be linked to an agent\"",
+  "actual": "Agent accounts must be linked to an agent",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-05",
+  "expected": "\"Could not create user (username may already exist)\"",
+  "actual": "Could not create user (username may already exist)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-06",
+  "expected": "User updated",
+  "actual": "User updated; agent/5",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-07",
+  "expected": "two messages; toggle also refused",
+  "actual": "You cannot change your own admin role | You cannot deactivate your own account | toggle: You cannot deactivate your own account",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-08",
+  "expected": "min 8 (minlength attr + server); \"Password updated for qa_fin2\"; new works",
+  "actual": "Password must be at least 8 characters; Password updated for qa_fin2; login=302; minlength=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-09",
+  "expected": "disabled + after actives + login refused",
+  "actual": "User updated; order ok=true; login=401",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-10",
+  "expected": "next GET → /login; POST blocked",
+  "actual": "200 → 302 /login; post=302 /login",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-11",
+  "expected": "finance 403 → auditor 200; auditor cannot pay",
+  "actual": "/agents 403→200; pay=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-12",
+  "expected": "\"Password must be at least 8 characters\"",
+  "actual": "Password must be at least 8 characters",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-13",
+  "expected": "create, update, \"Reset password for qa_fin2\", (de)activated",
+  "actual": "create:Created user qa_fin2 (finance) | login:User qa_fin2 logged in | update:Updated user qa_fin2 (agent) | update:Updated user qa_fin2 (finance) | update:Reset password for qa_fin2 | login:User qa_fin2 logged in | update:Deactivated user qa_fin2 | update:Activated user qa_fin2 | login:User qa_fin2 logged in | update:Deactivated user qa_fin2 | update:Activated user qa_fin2 | login:User qa_fin2 logged in | update:Updated user qa_fin2 (auditor)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-01",
+  "expected": "from/to defaults",
+  "actual": "name=\"from\" value=\"2026-10-01\" name=\"to\" value=\"2026-10-31\"",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-02",
+  "expected": "grouped + total = DB; same for any range",
+  "actual": "20/152,892.75 vs db 20/152,892.75; other range 20/152,892.75",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-03",
+  "expected": "collected in range by payments.agent_id; commission = × rate; other range 0",
+  "actual": "[{\"n\":\"Lim Wei Sheng\",\"page\":2916,\"db\":2916,\"comm\":145.8,\"ok\":true},{\"n\":\"Nurul Ain\",\"page\":24516,\"db\":24516,\"comm\":1225.8,\"ok\":true},{\"n\":\"Rajesh Kumar\",\"page\":0,\"db\":0,\"comm\":0,\"ok\":true},{\"n\":\"Tan Mei Ling\",\"page\":7965,\"db\":7965,\"comm\":318.6,\"ok\":true},{\"n\":\"QA 新人\",\"page\":0,\"db\":0,\"comm\":0,\"ok\":true},{\"n\":\"QA Inactive Agent\",\"page\":0,\"db\":0,\"comm\":0,\"ok\":true}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-04",
+  "expected": "scoped totals; no Agent Performance; export → page (200 html)",
+  "actual": "tot=4,42,444.00 db=4/42444; export 200 text/html; charset=utf-8",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-04b",
+  "expected": "(手册外) agent cases export scoped",
+  "actual": "rows=4 own=4",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-05",
+  "expected": "filenames + headers",
+  "actual": "Case No,Debtor,Agent,Principal,Interest,Paid,Outstanding,Status,Opened | Status,Cases,Outstanding | Agent,Collected,Rate %,Commission,Target",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-06",
+  "expected": "UTF-8 BOM; ≤2 decimals",
+  "actual": "bom=true; long decimals=none",
+  "result": "PASS",
+  "note": "Excel 实际打开未执行（无 Excel），只校验文件内容"
+ },
+ {
+  "id": "COM-01",
+  "expected": "month=2026-10; Lim collected = db; other month 0",
+  "actual": "{\"collected\":2916,\"rate\":5,\"earned\":145.8,\"settled\":100,\"pending\":45.8} db=2916",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-02",
+  "expected": "formula per row",
+  "actual": "[{\"collected\":2916,\"rate\":5,\"earned\":145.8,\"settled\":100,\"pending\":45.8},{\"collected\":24516,\"rate\":5,\"earned\":1225.8,\"settled\":500,\"pending\":725.8},{\"collected\":0,\"rate\":6,\"earned\":0,\"settled\":0,\"pending\":0},{\"collected\":7965,\"rate\":4,\"earned\":318.6,\"settled\":0,\"pending\":318.6}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-03",
+  "expected": "Settlement recorded; Pending 0; history row; audit",
+  "actual": "pending attr=45.8; Settlement recorded; {\"collected\":2916,\"rate\":5,\"earned\":145.8,\"settled\":145.8,\"pending\":0}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-04",
+  "expected": "\"Invalid amount\"",
+  "actual": "Invalid amount | Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-05",
+  "expected": "Settlement voided; Pending restored; audit",
+  "actual": "Settlement voided; {\"collected\":2916,\"rate\":5,\"earned\":145.8,\"settled\":100,\"pending\":45.8}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-06",
+  "expected": "only Lim; no buttons; POST 403",
+  "actual": "names=Lim Wei Sheng; settle POST=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-07",
+  "expected": "no Settle/Void; POST 403",
+  "actual": "post=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-08",
+  "expected": "Rajesh +200, Tan unchanged after reassignment",
+  "actual": "Rajesh 0→200; Tan 7965→7965",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SRCH-01",
+  "expected": "matches",
+  "actual": "case=14 name=15,3 ic= phone=15,3",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SRCH-02",
+  "expected": "no result",
+  "actual": "results=",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SRCH-03",
+  "expected": "200, no results",
+  "actual": "200",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SRCH-04",
+  "expected": "max 50",
+  "actual": "shown=50",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SRCH-05",
+  "expected": "no error, no raw script",
+  "actual": "':200:false \":200:false %:200:false _:200:false <script>alert(1)</script>:200:false",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-01",
+  "expected": "200,200,403,403,403,403",
+  "actual": "200,200,403,403,403,403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-02",
+  "expected": "≤200; Time, User, Action, Entity, Details, IP",
+  "actual": "rows=83 total=83 hdr=Time,User,Action,Entity,Details,IP",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-03",
+  "expected": "only payment rows",
+  "actual": "rows=1; 2",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-04",
+  "expected": "every appendix-C action recorded",
+  "actual": "all 25 actions present (demo_delete/demo_reload: DEMO-01/02)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-05",
+  "expected": "no POST forms; POST routes 404",
+  "actual": "post forms=0; POST=404,404",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-01",
+  "expected": "\"Company settings saved\"; audit update settings",
+  "actual": "Company settings saved",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-02",
+  "expected": "saved; settings preview; statement img",
+  "actual": "Company settings saved",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-03",
+  "expected": "\"Logo must be PNG, JPEG, SVG or WebP\"",
+  "actual": "Logo must be PNG, JPEG, SVG or WebP | Logo must be PNG, JPEG, SVG or WebP",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-04",
+  "expected": "error banner (File too large)",
+  "actual": "File too large",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-05",
+  "expected": "logo cleared",
+  "actual": "Company settings saved",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-06",
+  "expected": "all elements present",
+  "actual": "missing: days past due",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SET-07",
+  "expected": "@media print hides .stmt-actions",
+  "actual": "css rule present",
+  "result": "PASS",
+  "note": "打印预览/PDF 见 ui.qa.py"
+ },
+ {
+  "id": "SET-09",
+  "expected": "\"Max annual interest rate must be between 0 and 100\"; 20 saved",
+  "actual": "Max annual interest rate must be above 0 and at most 18% (the legal limit) | Max annual interest rate must be above 0 and at most 18% (the legal limit) | null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SET-08",
+  "expected": "heading falls back",
+  "actual": "<h1>Debt Collection CRM</h1>",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-05",
+  "expected": "all 403",
+  "actual": "403,403,403,403,403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-01",
+  "expected": "\"Demo data deleted - your trial data is kept\"; demo gone; own kept; audit",
+  "actual": "Demo data deleted - your trial data is kept; demo cases left=2,3,13,16,19,20",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-04",
+  "expected": "used demo case 13 kept, no error",
+  "actual": "left=2,3,13,16,19,20",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-02",
+  "expected": "\"Demo data reloaded\"; D001…D020; trial unchanged; audit",
+  "actual": "Demo data reloaded; demo=20; mine=CASE-2026-0041,CASE-2026-0042",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-03",
+  "expected": "delete → new case → reload: no error, numbers disjoint",
+  "actual": "CASE-2026-0041,CASE-2026-0042",
+  "result": "PASS",
+  "note": ""
+ }
+]

@@ -1,8 +1,10 @@
 const express = require('express');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
-const { logAction } = require('../utils/audit');
+const { logAction, changeList } = require('../utils/audit');
 const { parseActive, MAX_NAME } = require('../utils/forms');
+const { settlementOn } = require('../services/payments');
+const { todayMYT } = require('../utils/helpers');
 const router = express.Router();
 const canView = requireRole('admin','manager','auditor');
 const canEdit = requireRole('admin','manager');
@@ -57,7 +59,8 @@ router.post('/', requireLogin, canEdit, (req, res) => {
 router.get('/:id', requireLogin, canView, (req, res) => {
   const agent = get(`${STAT} FROM agents a WHERE a.id=?`, [req.params.id]);
   if (!agent) return res.status(404).render('error', { message: 'Agent not found' });
-  const cases = all(`SELECT cases.*, debtors.name AS debtor_name FROM cases JOIN debtors ON debtors.id=cases.debtor_id WHERE agent_id=? ORDER BY opened_at DESC`, [req.params.id]);
+  const cases = all(`SELECT cases.*, debtors.name AS debtor_name FROM cases JOIN debtors ON debtors.id=cases.debtor_id WHERE agent_id=? ORDER BY opened_at DESC`, [req.params.id])
+    .map(c => ({ ...c, settlement: settlementOn(c.id, todayMYT()) }));
   const attainment = agent.target_amount ? Math.round((agent.collected / agent.target_amount) * 100) : 0;
   res.render('agents/show', { title: agent.name, agent, cases, attainment });
 });
@@ -71,9 +74,12 @@ router.post('/:id', requireLogin, canEdit, (req, res) => {
   const f = agentFields(b);
   if (f.error) return res.redirect(`/agents/${req.params.id}/edit?err=${encodeURIComponent(f.error)}`);
   const { name } = f;
-  run('UPDATE agents SET name=?,contact=?,department=?,target_amount=?,commission_rate=?,active=? WHERE id=?',
-    [name,S(b.contact),S(b.department),f.target_amount,f.commission_rate, parseActive(b.active), req.params.id]);
-  logAction(req,'update','agent',Number(req.params.id),`Updated agent ${name}`);
+  const old = get('SELECT * FROM agents WHERE id=?', [req.params.id]);
+  if (!old) return res.status(404).render('error', { message: 'Agent not found' });
+  const next = { name, contact: S(b.contact), department: S(b.department), target_amount: f.target_amount, commission_rate: f.commission_rate, active: parseActive(b.active) };
+  run('UPDATE agents SET name=?,contact=?,department=?,target_amount=?,commission_rate=?,active=? WHERE id=?', [...Object.values(next), req.params.id]);
+  const changes = changeList(old, next);
+  logAction(req,'update','agent',Number(req.params.id),`Updated agent ${name}${changes.length ? ': ' + changes.join('; ') : ' (no field changes)'}`);
   res.redirect(`/agents/${req.params.id}?ok=Saved`);
 });
 module.exports = router;

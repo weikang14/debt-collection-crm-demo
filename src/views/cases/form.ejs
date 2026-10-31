@@ -2,10 +2,10 @@
 <% const locked = typeof termsLocked !== 'undefined' && termsLocked; %>
 <div class="page-head"><h1><%= title %></h1></div>
 <form class="card form" method="post" action="<%= action %>">
-  <% if (locked) { %><p style="margin:0;color:var(--muted);">Loan terms are locked after a restructure — re-plan them with a new restructure on the case page.</p><% } %>
+  <% if (locked) { %><p style="margin:0;color:var(--muted);">Loan terms and the debtor are locked once a payment is recorded or the loan is restructured — re-plan the terms with a restructure on the case page, or void the payments first.</p><% } %>
   <label>Debtor <select name="debtor_id" required>
-    <option value="">— Select debtor —</option>
-    <% debtors.forEach(d => { %><option value="<%= d.id %>" <%= c.debtor_id===d.id?'selected':'' %>><%= d.name %></option><% }) %>
+    <% if (!locked) { %><option value="">— Select debtor —</option><% } %>
+    <% debtors.filter(d => !locked || d.id === c.debtor_id).forEach(d => { %><option value="<%= d.id %>" <%= c.debtor_id===d.id?'selected':'' %>><%= d.name %></option><% }) %>
   </select></label>
   <label>Agent <select name="agent_id">
     <option value="">— Unassigned —</option>

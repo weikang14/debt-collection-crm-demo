@@ -1,0 +1,11 @@
+== m1.json: 上次 {'PASS': 27, 'FAIL': 8}  本次 {'PASS': 28, 'FAIL': 8}
+  AUTH-05: None → PASS :: 前5次 401,401,401,401,401；第6次(正确密码) HTTP 429；另一 IP 正常登录=true。15 分钟锁定由代码 LOCK_MS=15*60*1000 确认；重启清零见 m1-restart 步骤
+== m2.json: 上次 {'PASS': 30, 'FAIL': 13}  本次 {'PASS': 30, 'FAIL': 13}
+== m3.json: 上次 {'PASS': 17, 'FAIL': 13}  本次 {'PASS': 17, 'FAIL': 13}
+== m4.json: 上次 {'FAIL': 13, 'PASS': 47}  本次 {'FAIL': 13, 'PASS': 47}
+== m5.json: 上次 {'FAIL': 8, 'PASS': 24, 'BLOCKED': 1}  本次 {'FAIL': 8, 'PASS': 24, 'BLOCKED': 1}
+== p1.json: 上次 {'FAIL': 1, 'BLOCKED': 1}  本次 {'FAIL': 1, 'PASS': 1, 'BLOCKED': 1}
+  DATA-01: None → PASS :: 旧 seed exit=0，迁移 exit=0 ；迁移前 {"cases":20,"payments":4,"ptps":4,"tasks":4,"timeline_events":28,"users":7}（next_action_at 列=1）；迁移后 {"cases":20,"payments":4,"ptps":4,"timeline_events":28,"users":7}；interest_charged=true timeline 含 restructure=true case_restructur
+== ui.json: 上次 {'PASS': 20, 'FAIL': 1, '未执行': 1}  本次 {'PASS': 21, '未执行': 1}
+  COMPAT-EDGE: FAIL → PASS :: Edge 156.0.4314.42: 还款弹窗=True 超额拦截=True 重组弹窗=True date 输入=date
+== x1.json: 上次 {'FAIL': 9, 'PASS': 14}  本次 {'FAIL': 9, 'PASS': 14}

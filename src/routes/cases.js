@@ -4,12 +4,12 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
-const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES, caseBalance, settlementOn, overpayError, rateCapError } = require('../services/payments');
+const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES, caseBalance, settlementOn, overpayError, rateCapError, snapshotPayment } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { caseStatusLabel, dateFmt, round2, todayMYT, money } = require('../utils/helpers');
 const { splitInstallments, dueDates, maturityDate } = require('../utils/installments');
-const { restructuresOf, lockDate, afterLock, canRestructure, effectiveDateRange, balanceAtCut, createRestructure, undoRestructure,
-  paymentDateError, lockedPaymentError, lockedTerms, scheduleView, arrearsOf } = require('../services/restructure');
+const { restructuresOf, afterLock, canRestructure, effectiveDateRange, balanceAtCut, createRestructure, undoRestructure,
+  paymentDateError, lockedPaymentError, termsLocked, lockedTerms, scheduleView, arrearsOf, todayFigures } = require('../services/restructure');
 const crypto = require('node:crypto');
 const router = express.Router();
 
@@ -130,10 +130,16 @@ router.get('/', requireLogin, (req, res) => {
   const cases = all(`SELECT cases.*, clients.company_name AS client_name, debtors.name AS debtor_name, debtors.phone AS debtor_phone, agents.name AS agent_name,
     (SELECT COALESCE(SUM(amount),0) FROM payments WHERE case_id=cases.id) AS paid
     FROM cases JOIN clients ON clients.id=cases.client_id JOIN debtors ON debtors.id=cases.debtor_id
-    LEFT JOIN agents ON agents.id=cases.agent_id WHERE ${filters.join(' AND ')} ORDER BY cases.opened_at DESC`, params);
+    LEFT JOIN agents ON agents.id=cases.agent_id WHERE ${filters.join(' AND ')} ORDER BY cases.opened_at DESC`, params)
+    .map(c => ({ ...c, ...todayFigures(c) }));
+  // G-23: a work queue by days past due, most overdue first; no schedule last.
+  if (req.query.sort === 'dpd') cases.sort((a, b) => (b.dpd ?? -1) - (a.dpd ?? -1));
   if (req.query.format === 'csv') {
-    const rows = cases.map(c => [c.case_no, c.debtor_name, c.debtor_phone || '', c.agent_name || '', c.outstanding_amount, round2(c.paid), c.priority, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
-    return sendCsv(res, 'cases.csv', toCsv(['Case No', 'Debtor', 'Debtor Phone', 'Agent', 'Outstanding', 'Paid', 'Priority', 'Status', 'Opened'], rows));
+    const rows = cases.map(c => [c.case_no, c.debtor_name, c.debtor_phone || '', c.agent_name || '', c.settlement, c.overdue ?? '', c.dpd ?? '',
+      c.outstanding_amount, round2(c.paid), c.priority, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
+    logAction(req, 'export', 'case', null, `Exported cases.csv (${rows.length} rows)`);
+    return sendCsv(res, 'cases.csv', toCsv(['Case No', 'Debtor', 'Debtor Phone', 'Agent', 'Settlement Today', 'Overdue', 'DPD',
+      'Contract Balance', 'Paid', 'Priority', 'Status', 'Opened'], rows));
   }
   res.render('cases/list', { title: 'Cases', cases, statuses: CASE_STATUSES, priorities: PRIORITIES });
 });
@@ -175,7 +181,7 @@ router.get('/:id/edit', requireLogin, noAgentCreate, (req, res) => {
   res.render('cases/form', { title: 'Edit Case', c, action: `/cases/${c.id}`,
     debtors: all('SELECT id,name FROM debtors ORDER BY name'),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
-    statuses: CASE_STATUSES, priorities: PRIORITIES, termsLocked: !!lockDate(c.id) });
+    statuses: CASE_STATUSES, priorities: PRIORITIES, termsLocked: termsLocked(c.id) });
 });
 router.get('/:id/statement', requireLogin, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
@@ -186,6 +192,14 @@ router.get('/:id/statement', requireLogin, (req, res) => {
   const restructures = restructuresOf(c.id);
   res.render('cases/statement', { c, payments, paid, today, company, restructures,
     settlement: settlementOn(c.id, today), arrears: arrearsOf(c, payments, restructures) });
+});
+// F-25: a printable receipt for one payment, for anyone who can see the case.
+router.get('/:id/payments/:pid/receipt', requireLogin, (req, res) => {
+  const c = loadCase(req, res); if (!c) return;
+  const p = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
+  if (!p) return res.status(404).render('error', { message: 'Payment not found (it may have been voided)' });
+  const amended = get("SELECT MAX(changed_at) at FROM payment_history WHERE payment_id=? AND change='edit'", [p.id]).at;
+  res.render('cases/receipt', { c, p, amended, company: get('SELECT * FROM settings WHERE id=1') || {} });
 });
 router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
@@ -202,10 +216,15 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const { start: loanStart, tenure, unit: tenureUnit, maturity } = tenureFields(b);
   const t = lockedTerms(req.params.id, { principal_amount: principal, interest_amount: interest, interest_mode: mode,
     interest_rate: rate, interest_from: from, loan_start_date: loanStart, tenure, tenure_unit: tenureUnit, maturity_date: maturity });
-  const next = { debtor_id: Number(b.debtor_id), agent_id: b.agent_id ? Number(b.agent_id) : null, priority: b.priority || 'medium', remark: b.remark || null, ...t };
+  // Who owes the money is locked with the terms (F-24).
+  const debtorId = termsLocked(old.id) ? old.debtor_id : Number(b.debtor_id);
+  const next = { debtor_id: debtorId, agent_id: b.agent_id ? Number(b.agent_id) : null, priority: b.priority || 'medium', remark: b.remark || null, ...t };
   // Limits apply to changed terms only, so an older case can still get a new
   // agent or remark; its terms are re-planned through a restructure.
-  const termKeys = ['principal_amount', 'interest_amount', 'interest_mode', 'interest_rate', 'loan_start_date', 'tenure'];
+  // interest_amount is only a term of a fixed loan; a rate-based loan may carry a
+  // stale value (older demo rows), which must not count as a change (D-1).
+  const termKeys = ['principal_amount', 'interest_mode', 'interest_rate', 'loan_start_date', 'tenure',
+    ...(t.interest_mode === 'fixed' || old.interest_mode === 'fixed' ? ['interest_amount'] : [])];
   if (termKeys.some(k => String(old[k] ?? '') !== String(t[k] ?? ''))) {
     const limitErr = loanLimitError(t);
     if (limitErr) return res.redirect(`/cases/${old.id}/edit?err=${encodeURIComponent(limitErr)}`);
@@ -233,6 +252,7 @@ router.get('/:id', requireLogin, (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const timeline = all('SELECT * FROM timeline_events WHERE case_id=? ORDER BY created_at DESC, id DESC', [c.id]);
   const payments = all('SELECT * FROM payments WHERE case_id=? ORDER BY payment_date DESC', [c.id]);
+  const voided = all("SELECT * FROM payment_history WHERE case_id=? AND change='void' ORDER BY changed_at DESC, id DESC", [c.id]);
   const ptps = all('SELECT * FROM ptps WHERE case_id=? ORDER BY (plan_id IS NULL), plan_id, installment_no, due_date DESC', [c.id]);
   const tasks = all('SELECT * FROM tasks WHERE case_id=? ORDER BY due_date', [c.id]);
   const calls = all('SELECT * FROM call_logs WHERE case_id=? ORDER BY call_time DESC', [c.id]);
@@ -248,7 +268,7 @@ router.get('/:id', requireLogin, (req, res) => {
   const role = req.session.user.role;
   // The status menu an agent sees omits Fully Paid and terminal statuses (D-12).
   const statusOptions = role === 'agent' ? AGENT_STATUSES : CASE_STATUSES;
-  res.render('cases/show', { title: c.case_no, c, timeline, payments, ptps, tasks, calls, schedule,
+  res.render('cases/show', { title: c.case_no, c, timeline, payments, voided, ptps, tasks, calls, schedule,
     scheduleHistory, lastRestructure, lock, lockMin: afterLock(lock), restructureForm, canUndo,
     settlement: settlementOn(c.id, todayMYT()), arrears: arrearsOf(c, asc, restructures), frozen: FROZEN.includes(c.status),
     statuses: statusOptions, terminal: TERMINAL_STATUSES,
@@ -265,7 +285,8 @@ router.post('/:id/payments', requireLogin, requireRole('admin','manager','financ
   // same-day payments with different references still both record.
   const dup = get(`SELECT receipt_no FROM payments WHERE case_id=? AND amount=? AND payment_date=? AND IFNULL(reference,'')=?
     AND created_at >= datetime('now','-10 seconds')`, [c.id, v.amount, req.body.payment_date, String(req.body.reference || '')]);
-  if (dup) return res.redirect(`/cases/${c.id}?ok=Payment+${dup.receipt_no}+recorded`);
+  // Said as such, so the user doesn't take it for a second payment (O-5).
+  if (dup) return res.redirect(`/cases/${c.id}?ok=${encodeURIComponent(`Duplicate submission ignored: payment ${dup.receipt_no} was already recorded`)}`);
   const dateErr = paymentDateError(c.id, req.body.payment_date) || methodError(req.body.method)
     || (FROZEN.includes(c.status) && blank(req.body.remark) ? `A reason is required to accept a payment on a ${caseStatusLabel(c.status)} case` : null)
     || overpayError(c.id, { amount: v.amount, payment_date: req.body.payment_date });
@@ -291,14 +312,14 @@ router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','f
   const overErr = overpayError(c.id, { amount: next.amount, payment_date: String(next.payment_date).slice(0, 10), replaceId: pay.id });
   if (overErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(overErr)}`);
   db.transaction(() => {
+    snapshotPayment(pay.id, 'edit', null, by);
     run('UPDATE payments SET amount=?, payment_date=?, method=?, reference=?, bank=? WHERE id=?',
       [next.amount, next.payment_date, next.method, next.reference, next.bank, pay.id]);
     resyncCaseStatus(c.id, by);
     run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
       [c.id, 'payment', `Payment ${pay.receipt_no} edited: RM ${pay.amount.toFixed(2)} → RM ${v.amount.toFixed(2)}`, by]);
   })();
-  // ponytail: the row is overwritten in place; the old values survive only here
-  // in the audit log. An append-only ledger (correction rows) is F-24's full fix.
+  // The row as it stood is in payment_history (F-24); the audit names the change.
   const fmt = (k, x) => (x == null ? '—' : k === 'amount' ? Number(x).toFixed(2) : x);
   const changes = Object.keys(next).filter(k => String(pay[k] ?? '') !== String(next[k] ?? ''))
     .map(k => `${k} ${fmt(k, pay[k])} → ${fmt(k, next[k])}`);
@@ -306,10 +327,10 @@ router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','f
   res.redirect(`/cases/${c.id}?ok=Payment+updated`);
 });
 
-// Void (delete) a recorded payment. numbering.js keeps a high-water mark per
-// year, so the freed receipt number is never reused — not even the newest one.
-// The timeline + audit keep the paper trail.
-// ponytail: hard delete; add a `voided` flag only if an immutable ledger is required.
+// Void a recorded payment: the row leaves the ledger, but a copy as it stood
+// (with who voided it and why) stays in payment_history and on the case page
+// (F-24). numbering.js keeps a high-water mark per year, so the receipt number
+// is never reused — not even the newest one.
 router.post('/:id/payments/:pid/void', requireLogin, requireRole('admin','manager','finance'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
@@ -317,13 +338,16 @@ router.post('/:id/payments/:pid/void', requireLogin, requireRole('admin','manage
   const lockErr = lockedPaymentError(c.id, pay);
   if (lockErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(lockErr)}`);
   const by = req.session.user.full_name;
+  const reason = String(req.body.reason ?? '').trim().slice(0, 500);
+  const why = reason ? ` — ${reason}` : '';
   db.transaction(() => {
+    snapshotPayment(pay.id, 'void', reason, by);
     run('DELETE FROM payments WHERE id=?', [pay.id]);
     resyncCaseStatus(c.id, by);
     run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
-      [c.id, 'payment', `Payment ${pay.receipt_no} voided (RM ${pay.amount.toFixed(2)})`, by]);
+      [c.id, 'payment', `Payment ${pay.receipt_no} voided (RM ${pay.amount.toFixed(2)})${why}`, by]);
   })();
-  logAction(req, 'payment_void', 'case', c.id, `Voided payment ${pay.receipt_no}`);
+  logAction(req, 'payment_void', 'case', c.id, `Voided payment ${pay.receipt_no} (RM ${pay.amount.toFixed(2)}, ${String(pay.payment_date).slice(0, 10)})${why}`);
   res.redirect(`/cases/${c.id}?ok=Payment+voided`);
 });
 
@@ -402,6 +426,7 @@ router.post('/:id/ptp-plans', requireLogin, requireRole('admin', 'manager', 'age
 // action, then revert the case status exactly like breakPtp does for a single
 // PTP (ptp -> negotiation once nothing is left pending).
 function cancelPtpPlan(caseId, planId, req) {
+  if (!get('SELECT 1 FROM ptps WHERE case_id=? AND plan_id=?', [caseId, planId])) return { ok: false, error: 'Installment plan not found' };
   const by = req.session.user.full_name;
   let broken = 0;
   db.transaction(() => {
@@ -425,7 +450,8 @@ function cancelPtpPlan(caseId, planId, req) {
 
 router.post('/:id/ptp-plans/:planId/cancel', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
-  cancelPtpPlan(c.id, req.params.planId, req);
+  const r = cancelPtpPlan(c.id, req.params.planId, req);
+  if (!r.ok) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(r.error)}`);
   res.redirect(`/cases/${c.id}?ok=Installment+plan+cancelled`);
 });
 

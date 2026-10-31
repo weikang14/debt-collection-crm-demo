@@ -1,7 +1,7 @@
 <% layout('layout') -%>
 <div class="page-head"><h1>Cases</h1>
   <div style="display:flex; gap:0.5rem;">
-    <a class="btn" href="/cases?format=csv<%= query.status ? '&status=' + query.status : '' %><%= query.priority ? '&priority=' + query.priority : '' %><%= query.q ? '&q=' + encodeURIComponent(query.q) : '' %>">Export CSV</a>
+    <a class="btn" href="/cases?format=csv<%= query.status ? '&status=' + encodeURIComponent(query.status) : '' %><%= query.priority ? '&priority=' + encodeURIComponent(query.priority) : '' %><%= query.q ? '&q=' + encodeURIComponent(query.q) : '' %><%= query.sort ? '&sort=' + encodeURIComponent(query.sort) : '' %>">Export CSV</a>
     <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn btn-gold" href="/cases/new">+ New Case</a><% } %>
   </div>
 </div>
@@ -15,13 +15,17 @@
     <% priorities.forEach(p => { %><option value="<%= p %>" <%= query.priority===p?'selected':'' %>><%= p %></option><% }) %>
   </select></label>
   <label>Search <input name="q" value="<%= query.q||'' %>" placeholder="Case No or Debtor"></label>
+  <% if (query.sort === 'dpd') { %><input type="hidden" name="sort" value="dpd"><% } %>
   <button class="btn btn-gold" type="submit">Filter</button>
 </form>
 <% if (!cases.length) { %><%- include('../partials/empty', { msg: 'No cases found.' }) %><% } else { %>
-<table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Agent</th><th class="num">Outstanding</th><th>Priority</th><th>Status</th></tr></thead>
+<% const keep = ['status', 'priority', 'q'].filter(k => query[k]).map(k => k + '=' + encodeURIComponent(query[k])).join('&'); %>
+<table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Agent</th><th class="num">Settlement Today</th><th class="num">Overdue</th>
+<th class="num"><a href="/cases?<%= keep %><%= keep ? '&' : '' %>sort=dpd" title="Sort by days past due">DPD<%= query.sort === 'dpd' ? ' ↓' : '' %></a></th><th>Priority</th><th>Status</th></tr></thead>
 <tbody><% cases.forEach(cs => { %>
 <tr><td><a class="mono" href="/cases/<%= cs.id %>"><%= cs.case_no %></a></td><td><%= cs.debtor_name %></td>
-<td><%= cs.agent_name||'—' %></td><td class="num"><%= h.money(cs.outstanding_amount) %></td>
+<td><%= cs.agent_name||'—' %></td><td class="num"><%= h.money(cs.settlement) %></td>
+<td class="num"><%= cs.overdue === null ? '—' : h.money(cs.overdue) %></td><td class="num"><%= cs.dpd === null ? '—' : cs.dpd %></td>
 <td><span class="badge <%= cs.priority==='urgent'||cs.priority==='high'?'is-red':cs.priority==='low'?'is-neutral':'is-gold' %>"><%= cs.priority %></span></td>
 <td><%- include('../partials/statusBadge', { status: cs.status }) %></td></tr>
 <% }) %></tbody></table><% } %>

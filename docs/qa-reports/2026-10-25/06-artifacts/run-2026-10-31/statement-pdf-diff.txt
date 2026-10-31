@@ -1,0 +1,143 @@
+######## r2-case14
+æ—§: 
+æ–°: 
+< 2026-10-25
+> 2026-10-31
+< 900215-10-5522 Negotiation
+> 900015-00-5522 Negotiation
+< SETTLEMENT AMOUNT AS OF 2026-10-25 OVERDUE
+< RM 13,340.47 RM 239.95 · 10 days past due
+> SETTLEMENT AMOUNT AS OF 2026-10-31 OVERDUE
+> RM 13,340.47 RM 0.00
+< 2026-09-08 1.5%/month
+> 2026-09-14 1.5%/month
+< 12 months 2028-04-15
+> 12 months 2028-04-21
+< From 2026-10-15: 1.2%/month, 18 months · arrears carried RM 239.95
+> From 2026-10-21: 1.2%/month, 18 months · arrears carried RM 239.95
+######## r1-case5
+æ—§: 
+æ–°: 
+< 2026-10-24
+> 2026-10-31
+< Wong Kar Wai 013-5556667
+> Wong Kah Mun 013-5556667
+< 780612-05-5555 Partial Paid
+> 780012-00-5555 Partial Paid
+< PAID OUTSTANDING
+> PAID OUTSTANDING (CONTRACT, TO MATURITY)
+> SETTLEMENT AMOUNT AS OF 2026-10-31 OVERDUE
+> RM 2,916.00 RM 0.00
+> LOAN START DATE INTEREST TERMS
+> 2026-09-05 fixed RM 432.00
+> TENURE MATURITY DATE
+> 12 months 2027-09-05
+< RCPT-2026-D003 2026-10-14 RM 2,916.00 bank_transfer
+> RCPT-2026-D003 2026-10-21 RM 2,916.00 bank_transfer
+######## smoke-local-case2
+æ—§: 
+æ–°: 
+< Case Statement 2026-10-26
+< DEBTOR PHONE
+< Sarah Lim 012-2223334
+< IC/PASSPORT STATUS
+< 900015-00-5522 Assigned
+< PRINCIPAL INTEREST
+< RM 2,850.00 RM 513.00
+< PAID OUTSTANDING (CONTRACT, TO MATURITY)
+< RM 0.00 RM 3,363.00
+< SETTLEMENT AMOUNT AS OF 2026-10-26 OVERDUE
+< RM 2,932.65 RM 42.75 · 28 days past due
+< LOAN START DATE INTEREST TERMS
+< 2026-08-28 1.5%/month
+< TENURE MATURITY DATE
+< 12 months 2027-08-28
+> 2026-10-31
+> Case Statement
+> PHONE
+> DEBTOR
+> 012-2223334
+> Sarah Lim
+> STATUS
+> IC/PASSPORT
+> Assigned
+> 900015-00-5522
+> INTEREST
+> PRINCIPAL
+> RM 513.00
+> RM 2,850.00
+> OUTSTANDING (CONTRACT, TO MATURITY)
+> PAID
+> RM 3,363.00
+> RM 0.00
+> OVERDUE
+> SETTLEMENT AMOUNT AS OF 2026-10-31
+> RM 42.75 · 29 days past due
+> RM 2,932.74
+> INTEREST TERMS
+> LOAN START DATE
+> 1.5%/month
+> 2026-09-02
+> MATURITY DATE
+> TENURE
+> 2027-09-02
+> 12 months
+######## smoke-local-case5
+æ—§: 
+æ–°: 
+< Case Statement 2026-10-26
+> 2026-10-31
+> Case Statement
+< SETTLEMENT AMOUNT AS OF 2026-10-26 OVERDUE
+> SETTLEMENT AMOUNT AS OF 2026-10-31 OVERDUE
+< 2026-08-31 fixed RM 432.00
+> 2026-09-05 fixed RM 432.00
+< 12 months 2027-08-31
+> 12 months 2027-09-05
+< RCPT-2026-D003 2026-10-16 RM 2,916.00 bank_transfer
+> RCPT-2026-D003 2026-10-21 RM 2,916.00 bank_transfer
+######## smoke-local-case14
+æ—§: 
+æ–°: 
+< Case Statement 2026-10-26
+> 2026-10-31
+> Case Statement
+< SETTLEMENT AMOUNT AS OF 2026-10-26 OVERDUE
+> SETTLEMENT AMOUNT AS OF 2026-10-31 OVERDUE
+< 2026-09-09 1.5%/month
+> 2026-09-14 1.5%/month
+< 12 months 2028-04-16
+> 12 months 2028-04-21
+< From 2026-10-16: 1.2%/month, 18 months · arrears carried RM 239.95
+> From 2026-10-21: 1.2%/month, 18 months · arrears carried RM 239.95
+######## online-vs-local-case2
+æ—§: 
+æ–°: 
+< RM 42.75 · 29 days past due
+< RM 2,932.74
+> RM 85.50 · 33 days past due
+> RM 2,939.64
+< 2026-09-02
+> 2026-08-28
+< 2027-09-02
+> 2027-08-28
+######## online-vs-local-case5
+æ—§: 
+æ–°: 
+< 2026-09-05 fixed RM 432.00
+> 2026-08-31 fixed RM 432.00
+< 12 months 2027-09-05
+> 12 months 2027-08-31
+< RCPT-2026-D003 2026-10-21 RM 2,916.00 bank_transfer
+> RCPT-2026-D003 2026-10-16 RM 2,916.00 bank_transfer
+######## online-vs-local-case14
+æ—§: 
+æ–°: 
+< RM 13,340.47 RM 0.00
+> RM 13,365.73 RM 0.00
+< 2026-09-14 1.5%/month
+> 2026-09-09 1.5%/month
+< 12 months 2028-04-21
+> 12 months 2028-04-16
+< From 2026-10-21: 1.2%/month, 18 months · arrears carried RM 239.95
+> From 2026-10-16: 1.2%/month, 18 months · arrears carried RM 239.95

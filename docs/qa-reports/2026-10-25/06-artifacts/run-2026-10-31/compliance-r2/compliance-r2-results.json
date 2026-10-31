@@ -1,0 +1,307 @@
+{
+ "run_at": "2026-10-31T03:49:51.460Z",
+ "today_myt": "2026-10-31",
+ "results": [
+  {
+   "id": "A1 monthly 1.5% x12 from 2026-01-01",
+   "expect": "accepted; interest 1,800 (18.00%)",
+   "actual": "id=21 interest_charged=1800",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "A2 monthly from 2026-01-31: whole month in a 28-day Feb",
+   "expect": "12 months = 1,800; note per-day effect of whole-month convention",
+   "actual": "interest_charged=1800; months(01-31→02-28)=1; settlement interest on 2026-03-01=154.84 for 29 days = 19.49% p.a. on actual/365",
+   "verdict": "PASS",
+   "note": "whole-month convention: 1.5% for a 28-day month"
+  },
+  {
+   "id": "A3 annual 18% x12 from 2027-03-01 (contains 2028-02-29)",
+   "expect": "lawyer item: ≤1,800 if cap is strict per calendar year",
+   "actual": "accepted=true; interest_charged=1804.93 (18.049%)",
+   "verdict": "OBSERVE",
+   "note": ""
+  },
+  {
+   "id": "A5 monthly 1.6% rejected",
+   "expect": "rejected: exceeds 18% p.a.",
+   "actual": "id=null flash=red:Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.)",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "A6 annual 18.5% rejected",
+   "expect": "rejected",
+   "actual": "id=null flash=red:Interest rate exceeds the 18% p.a. limit (this loan: 18.5% p.a.)",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "A7 fixed 2,000 / 10,000 / 12m rejected",
+   "expect": "rejected (20% p.a.)",
+   "actual": "id=null flash=red:Interest rate exceeds the 18% p.a. limit (this loan: 20% p.a.)",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "A8 fixed 9,000 / 10,000 with no tenure",
+   "expect": "should be refused or rate made assessable",
+   "actual": "accepted=false id=null flash=red:Tenure is required for a loan that charges interest; nominalAnnualRate=null",
+   "verdict": "PASS",
+   "note": "cap skipped when tenure blank"
+  },
+  {
+   "id": "A9 crafted POST: fixed 1,800 / 10,000, tenure 30 DAYS",
+   "expect": "should be refused (≈219% p.a.)",
+   "actual": "accepted=true; stored tenure=30 months, maturity=2029-04-30; cap saw 7.199999999999999% p.a.; actual 219.0% p.a.",
+   "verdict": "FAIL",
+   "note": "nominalAnnualRate assumes months; form has no unit field but server accepts tenure_unit"
+  },
+  {
+   "id": "A10 monthly 1.5%, NO tenure, start 2021-06-01",
+   "expect": "interest ≤ principal at all times",
+   "actual": "accepted=false; interest today=null; projected interest at 2027-12-31=null vs principal 10,000",
+   "verdict": "PASS",
+   "note": "open-ended accrual has no cap; check runs once at creation"
+  },
+  {
+   "id": "A11 monthly 1.5% x120 rejected (interest > principal)",
+   "expect": "rejected",
+   "actual": "id=null flash=red:Total interest cannot exceed the principal",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "A12a manager cannot change cap",
+   "expect": "403",
+   "actual": "403",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "A12b admin raises cap 18→100",
+   "expect": "saved; audit should record old→new cap",
+   "actual": "flash=red:Max annual interest rate must be above 0 and at most 18% (the legal limit); audit=\"create Created case CASE-2026-0004\"",
+   "verdict": "FAIL",
+   "note": "audit text lacks the rate values"
+  },
+  {
+   "id": "A12c with cap 100: monthly 8% x12 (96% p.a.)",
+   "expect": "accepted (shows the setting is the only guard)",
+   "actual": "accepted=false interest=null",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "A12d cap back to 18: existing 96% loan flagged?",
+   "expect": "case page or list should flag terms above current cap",
+   "actual": "restored=18; page mentions limit/exceeds=n/a",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "B1a monthly loan, day 92: pay contract total 11,800",
+   "expect": "refused",
+   "actual": "settlement shown=10450; flash=red:Amount exceeds what is owed on 2026-10-31: at most RM 10450.00",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "B1b pay settlement amount",
+   "expect": "fully paid; interest = accrued only",
+   "actual": "flash=green:Payment RCPT-2026-0001 recorded; status=fully_paid; interest_charged=450; outstanding=0",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "B2 fixed 1,800/12m settled on day 30",
+   "expect": "D-02: Fixed keeps full interest (pending lawyer)",
+   "actual": "settlement=11800; green:Payment RCPT-2026-0002 recorded; interest kept=1800 ≈ 219% p.a. over the 30 days actually lent",
+   "verdict": "OBSERVE",
+   "note": ""
+  },
+  {
+   "id": "C1 restructure 1.2%→1.5%/month",
+   "expect": "refused",
+   "actual": "red:A restructure cannot raise the interest rate (14.4% → 18% p.a.)",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "C2 restructure monthly 1.5% (reducing) → fixed 1,800 flat over 12m",
+   "expect": "lawyer item: same nominal 18% but higher effective cost",
+   "actual": "flash=red:A rate-based loan cannot be restructured to a fixed amount (pending legal review); effective rate of equal instalments=31.72% p.a. vs 18% on the interest-first basis",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "C3 s.17A(2): restructure 3,800 remaining principal over 120 months",
+   "expect": "unpaid interest should not exceed the principal then due",
+   "actual": "remaining principal=3800; restructure red:Interest after the restructure plus carried arrears cannot exceed the remaining principal; unpaid interest at undefined if unpaid=undefined vs principal due undefined",
+   "verdict": "PASS",
+   "note": "check compares lifetime interest with ORIGINAL principal"
+  },
+  {
+   "id": "D1 edit principal & debtor of a case with payments",
+   "expect": "should be locked (F-24); audit has old→new",
+   "actual": "flash=red:Tenure is required for a loan that charges interest; payments=1; audit=\"Recorded payment RCPT-2026-0003 amount 8000\"",
+   "verdict": "FAIL",
+   "note": "audit fixed, lock not"
+  },
+  {
+   "id": "D2 edit payment",
+   "expect": "audit old→new incl. date/method/reference",
+   "actual": "flash=green:Payment updated; audit=\"Edited payment RCPT-2026-D004: amount 7965.00 → 7964.00; method bank_transfer → cash; reference TXN1003 → QA-NEW-REF; bank Maybank → —\"",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "D3 void newest payment then record another",
+   "expect": "receipt number never reused; void should keep the row (F-24)",
+   "actual": "void RCPT-2026-0004: green:Payment voided; row deleted=true; next receipt=RCPT-2026-0005",
+   "verdict": "PARTIAL",
+   "note": "hard delete remains"
+  },
+  {
+   "id": "D4a agent edits manager note",
+   "expect": "refused",
+   "actual": "red:You can only change your own notes",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "D4b agent deletes own note",
+   "expect": "audited with text; row soft-deleted ideally",
+   "actual": "audit=\"note_delete: Deleted note 50 (by Lim Wei Sheng): Agent note QA to delete\"; row still exists=false",
+   "verdict": "PASS",
+   "note": "hard delete; text survives only in audit"
+  },
+  {
+   "id": "D5a task type visit",
+   "expect": "refused",
+   "actual": "red:Invalid task type",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "D5b follow_up task titled \"Visit debtor at home address\"",
+   "expect": "no system control (free text); audited",
+   "actual": "flash=green:Task created; audit=task_create",
+   "verdict": "OBSERVE",
+   "note": ""
+  },
+  {
+   "id": "D6 audit filter + CSV export",
+   "expect": "200 + text/csv; export itself logged ideally",
+   "actual": "page=200; csv=200 text/csv; charset=utf-8; lines=30; audit rows added by export=0",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "D7 agent changes debtor phone",
+   "expect": "audit should record old→new contact data",
+   "actual": "flash=green:Saved; audit=\"Updated debtor Wong Kah Mun\"",
+   "verdict": "FAIL",
+   "note": ""
+  },
+  {
+   "id": "E0 session cookie lifetime",
+   "expect": "expires ~120 min after last request",
+   "actual": "Expires=Sat, 31 Oct 2026 05:49:51 GMT (~120 min)",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "E1 deactivated user existing session",
+   "expect": "redirect to /login",
+   "actual": "302 /login",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "E2 cross-origin POST",
+   "expect": "403",
+   "actual": "403",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "E3 7-char password",
+   "expect": "refused",
+   "actual": "red:Password must be at least 8 characters",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "E4 payment reference with script payload",
+   "expect": "escaped in page",
+   "actual": "raw <script>alert(1) present=false",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "F1 finance sees IC/salary/guarantor; searches by IC; agent exports CSV; statement printed",
+   "expect": "minimum-necessary + access log (F-30/F-31 known open)",
+   "actual": "list has IC=false salary col=true; guarantor phone shown=true; IC search hit=false; csv phone=true; audit rows added=0",
+   "verdict": "FAIL",
+   "note": "known unfixed F-30/F-31"
+  },
+  {
+   "id": "G1 bankrupt case 10: PTP / call / restructure / payment without & with reason",
+   "expect": "first four refused, last accepted",
+   "actual": "ptp=red:Not allowed while the case is Bankruptcy | call=red:Not allowed while the case is Bankruptcy | rs=red:This case cannot be restructured | pay no reason=red:A reason is required to accept a payment on a Bankruptcy case | pay with reason=green:Payment RCPT-2026-0007 recorded",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "G2 agent moves bankrupt case back to Negotiation, then PTP + call",
+   "expect": "agent should not be able to lift the bankruptcy freeze",
+   "actual": "status flash=red:Only a manager can change a Bankruptcy case; status now=bankruptcy; then PTP=red:Not allowed while the case is Bankruptcy; call=red:Not allowed while the case is Bankruptcy",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "G3 case 4 set bankrupt with a pending PTP; agent3 adds call task on deceased case 11",
+   "expect": "pending PTPs closed / collection tasks blocked",
+   "actual": "PTP#1 status after bankruptcy=broken; task on deceased case: red:Only legal tasks can be added to a bankrupt or deceased case",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "H1 agent: new debtor / Fully Paid / Closed",
+   "expect": "403 / refused / refused",
+   "actual": "new debtor=403; fully_paid=red:Only a manager can set Fully Paid; closed=red:Only a manager can set Closed",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "I1 statement elements present",
+   "expect": "all present",
+   "actual": "Loan Start Date=true; Interest Terms=true; Tenure=true; Maturity=true; Settlement=true; Overdue=true; Restructured=true; Payment history=true",
+   "verdict": "PASS",
+   "note": ""
+  },
+  {
+   "id": "I2 statement elements still missing (s.19(1)/First Schedule)",
+   "expect": "present",
+   "actual": "rate per annum wording for monthly loans=false; licence no.=false; signature=false; borrower address=false; instalments due & unpaid with due dates=false; title Statement of Account=false",
+   "verdict": "OBSERVE",
+   "note": ""
+  },
+  {
+   "id": "K1 receipt page",
+   "expect": "exists (s.19(4)) — known F-25",
+   "actual": "404",
+   "verdict": "FAIL",
+   "note": "known unfixed"
+  },
+  {
+   "id": "L1 demo debtors",
+   "expect": "fictional names; IC visibly invalid",
+   "actual": "Ahmad bin Ismail:880001-00-5501, Sarah Lim:900015-00-5522, Ravi Chandran:850020-00-5533, Nadia Hassan:920010-00-5544, Wong Kah Mun:780012-00-5555, Farah Aziz:950001-00-5566, Tan Boon Huat:830025-00-5577, Kavitha Nair:890003-00-5588, Muhammad Faiz:910028-00-5599, Lee Kok Seng:870017-00-5610, Aisyah Rahman:930022-00-5621, Ganesh Pillai:800011-00-5632",
+   "verdict": "PARTIAL",
+   "note": "names replaced; IC still realistic format"
+  }
+ ]
+}

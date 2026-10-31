@@ -5,10 +5,12 @@ dayjs.extend(utc);
 const money = (n) =>
   Number(n || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-// Round a money value to whole cents. Use at any boundary where a derived/aggregate
-// amount is stored or exported as a raw number (on-screen money already goes through
-// money()). Absorbs float residue like 0.1 + 0.2.
-const round2 = (n) => Math.round((Number(n) || 0) * 100) / 100;
+// Round a money value to whole cents, half a sen up. Use at any boundary where a
+// derived/aggregate amount is stored or exported as a raw number (on-screen money
+// already goes through money()). Absorbs float residue like 0.1 + 0.2 — and the
+// residue that made 1,030.225 (×100 = 103022.49999999999) round down (K-01):
+// 15 significant digits is past any real amount's cents but before the noise.
+const round2 = (n) => Math.round(Number(((Number(n) || 0) * 100).toPrecision(15))) / 100;
 
 // Today in Malaysia local time (UTC+8) as YYYY-MM-DD — the format of every
 // user-entered date (payment_date, effective_date, due_date).

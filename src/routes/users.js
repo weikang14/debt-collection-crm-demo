@@ -2,7 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
-const { logAction } = require('../utils/audit');
+const { logAction, changeList } = require('../utils/audit');
 const { parseActive, MAX_NAME, MIN_PASSWORD, HASH_COST } = require('../utils/forms');
 const router = express.Router();
 
@@ -109,7 +109,7 @@ router.get('/:id/edit', requireLogin, adminOnly, (req, res) => {
 });
 
 router.post('/:id', requireLogin, adminOnly, (req, res) => {
-  const u = get('SELECT id FROM users WHERE id=?', [req.params.id]);
+  const u = get('SELECT id, username, full_name, role, agent_id, client_id, active FROM users WHERE id=?', [req.params.id]);
   if (!u) return res.redirect('/users?err=User+not+found');
   const b = req.body;
   const username = (b.username || '').trim();
@@ -128,7 +128,8 @@ router.post('/:id', requireLogin, adminOnly, (req, res) => {
   try {
     run('UPDATE users SET username=?,full_name=?,role=?,agent_id=?,client_id=?,active=? WHERE id=?',
       [username, full_name, role, agent_id, client_id, active, u.id]);
-    logAction(req, 'update', 'user', u.id, `Updated user ${username} (${role})`);
+    const changes = changeList(u, { username, full_name, role, agent_id, client_id, active });
+    logAction(req, 'update', 'user', u.id, `Updated user ${username} (${role})${changes.length ? ': ' + changes.join('; ') : ' (no field changes)'}`);
     res.redirect('/users?ok=User+updated');
   } catch (e) {
     res.redirect(`/users/${u.id}/edit?err=Could+not+save+(username+may+already+exist)`);

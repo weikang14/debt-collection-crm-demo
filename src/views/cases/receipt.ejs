@@ -1,0 +1,44 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Receipt <%= p.receipt_no %> — Debt Collection CRM</title>
+<link rel="stylesheet" href="/css/style.css">
+<style>
+  body { background: #fff; padding: 32px; max-width: 640px; margin: 0 auto; color: var(--ink-text); }
+  .rc-head { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--ink); padding-bottom: 12px; margin-bottom: 22px; }
+  .rc-head h1 { margin: 0; }
+  .rc-actions { margin-bottom: 20px; display: flex; gap: 8px; }
+  .rc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 28px; margin-bottom: 26px; }
+  .rc-grid div span { display: block; font-size: 11.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+  .rc-amount { font-size: 28px; font-family: var(--font-mono); margin: 6px 0 22px; }
+  @media print { .rc-actions { display: none; } body { padding: 0; max-width: none; } }
+</style>
+</head><body>
+  <div class="rc-actions">
+    <button class="btn btn-gold" type="button" onclick="window.print()">Print / Save as PDF</button>
+    <a class="btn" href="/cases/<%= c.id %>">&larr; Back</a>
+  </div>
+  <div class="rc-head">
+    <div>
+      <% if (company.logo) { %><img src="<%= company.logo %>" alt="" style="max-height:48px;display:block;margin-bottom:6px"><% } %>
+      <h1><%= company.company_name || 'Debt Collection CRM' %></h1>
+      <% if (company.address) { %><div><%= company.address %></div><% } %>
+      <% if (company.phone) { %><div>Tel: <%= company.phone %></div><% } %>
+      <% if (company.reg_no) { %><div>Reg No: <%= company.reg_no %></div><% } %>
+      <div style="margin-top:4px"><b>Payment Receipt</b></div>
+    </div>
+    <div style="text-align:right"><div class="mono"><%= p.receipt_no %></div><div><%= h.dateFmt(p.payment_date) %></div></div>
+  </div>
+  <div>Received from <b><%= c.debtor_name %></b><% if (c.ic_passport) { %> (<span class="mono"><%= c.ic_passport %></span>)<% } %> for case <span class="mono"><%= c.case_no %></span>:</div>
+  <div class="rc-amount">RM <%= h.money(p.amount) %></div>
+  <div class="rc-grid">
+    <div><span>Payment Date</span><%= h.dateFmt(p.payment_date) %></div>
+    <div><span>Method</span><%= p.method %></div>
+    <div><span>Reference</span><%= p.reference || '—' %></div>
+    <div><span>Bank</span><%= p.bank || '—' %></div>
+    <% if (p.remark) { %><div style="grid-column: 1 / -1"><span>Remark</span><%= p.remark %></div><% } %>
+    <div><span>Recorded By</span><%= p.created_by || '—' %></div>
+    <div><span>Recorded At</span><%= h.dateTimeFmt(p.created_at) %></div>
+  </div>
+  <% if (amended) { %><p style="color:var(--muted)">This payment was amended on <%= h.dateTimeFmt(amended) %>; the figures above are the current ones.</p><% } %>
+  <p style="color:var(--muted);font-size:12px">Computer-generated receipt.</p>
+</body></html>

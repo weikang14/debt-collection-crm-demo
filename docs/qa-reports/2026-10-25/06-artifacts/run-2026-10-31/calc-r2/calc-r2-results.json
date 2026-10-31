@@ -1,0 +1,3252 @@
+[
+ {
+  "g": "INT",
+  "id": "A0.interest",
+  "scenario": "示例A 无还款：合同利息",
+  "formula": "10000 × 1.5% × 12 个月",
+  "expected": "1800.00",
+  "actual": "1800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.outstanding",
+  "scenario": "示例A 无还款：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "11800.00",
+  "actual": "11800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.settlement",
+  "scenario": "示例A 无还款：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "11495.16",
+  "actual": "11495.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.dpd",
+  "scenario": "示例A 无还款：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "272",
+  "actual": "272",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.overdue",
+  "scenario": "示例A 无还款：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "1350.00",
+  "actual": "1350.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.maturity",
+  "scenario": "示例A 无还款：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2027-01-01",
+  "actual": "2027-01-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.schedule",
+  "scenario": "示例A 无还款：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-01|150.00|0.00|150.00|Overdue … 2027-01-01|10150.00|0.00|10150.00|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.settle.formula",
+  "scenario": "示例A 今日结清额的算式",
+  "formula": "10000 + 10000×1.5%×(9 + 24/31)",
+  "expected": "11466.13",
+  "actual": "11495.16",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.stmt",
+  "scenario": "示例A 对账单 = 案件页（合同欠款/结清额/逾期/DPD）",
+  "formula": "同一案件同一天",
+  "expected": "11800.00/11495.16/1350.00/272",
+  "actual": "11800.00/11495.16/1350.00/272",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A0.paymax",
+  "scenario": "示例A Record Payment 弹窗 max = 今日结清额",
+  "formula": "",
+  "expected": "11495.16",
+  "actual": "label 11495.16 attr 11495.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.reject11800",
+  "scenario": "示例A 03-02 还合同全额 11,800（PAY-17）",
+  "formula": "应拒收；上限 = 10000 + 10000×1.5%×(2+1/31)",
+  "expected": "10304.84",
+  "actual": "10304.84",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.outstanding",
+  "scenario": "示例A 03-02 还 1,000：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10696.06",
+  "actual": "10696.06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.interest",
+  "scenario": "示例A 03-02 还 1,000：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "1696.06",
+  "actual": "1696.06",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.paid",
+  "scenario": "示例A 03-02 还 1,000：Paid",
+  "formula": "Σ 还款",
+  "expected": "1000.00",
+  "actual": "1000.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.settlement",
+  "scenario": "示例A 03-02 还 1,000：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "10412.41",
+  "actual": "10412.41",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.dpd",
+  "scenario": "示例A 03-02 还 1,000：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "91",
+  "actual": "91",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.overdue",
+  "scenario": "示例A 03-02 还 1,000：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "350.00",
+  "actual": "350.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.schedule",
+  "scenario": "示例A 03-02 还 1,000：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-01|150.00|150.00|0.00|Paid … 2027-01-01|10150.00|0.00|10150.00|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.drop",
+  "scenario": "PAY-15 欠款降幅",
+  "formula": "11800 − 10696.06",
+  "expected": "1103.94",
+  "actual": "1103.94",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "A1.sett0615",
+  "scenario": "5.2 示例A 06-15 结清额（用超额拦截提示探测）",
+  "formula": "9304.84 + 9304.84×1.5%×(5+14/30−2−1/31)",
+  "expected": "9784.19",
+  "actual": "9784.19",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "C3.outstanding",
+  "scenario": "示例C：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10450.00",
+  "actual": "10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "C3.interest",
+  "scenario": "示例C：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "450.00",
+  "actual": "450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "C3.settlement",
+  "scenario": "示例C：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "10450.00",
+  "actual": "10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "C3.dpd",
+  "scenario": "示例C：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "272",
+  "actual": "272",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "C3.overdue",
+  "scenario": "示例C：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "10450.00",
+  "actual": "10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "C3.maturity",
+  "scenario": "示例C：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2026-04-01",
+  "actual": "2026-04-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "C3.schedule",
+  "scenario": "示例C：还款计划 3 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-01|150.00|0.00|150.00|Overdue … 2026-04-01|10150.00|0.00|10150.00|Overdue",
+  "actual": "一致（3 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "G.outstanding",
+  "scenario": "示例G Annual 36,500×18%：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "43070.00",
+  "actual": "43070.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "G.interest",
+  "scenario": "示例G Annual 36,500×18%：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "6570.00",
+  "actual": "6570.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "G.settlement",
+  "scenario": "示例G Annual 36,500×18%：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "41954.00",
+  "actual": "41954.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "G.dpd",
+  "scenario": "示例G Annual 36,500×18%：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "272",
+  "actual": "272",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "G.overdue",
+  "scenario": "示例G Annual 36,500×18%：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "4914.00",
+  "actual": "4914.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "G.schedule",
+  "scenario": "示例G Annual 36,500×18%：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-01|558.00|0.00|558.00|Overdue … 2027-01-01|37058.00|0.00|37058.00|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D1.outstanding",
+  "scenario": "示例D Fixed 1,000/3 期 起 01-31：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "1000.00",
+  "actual": "1000.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D1.dpd",
+  "scenario": "示例D Fixed 1,000/3 期 起 01-31：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "245",
+  "actual": "245",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D1.overdue",
+  "scenario": "示例D Fixed 1,000/3 期 起 01-31：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "1000.00",
+  "actual": "1000.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D1.schedule",
+  "scenario": "示例D Fixed 1,000/3 期 起 01-31：还款计划 3 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-28|333.33|0.00|333.33|Overdue … 2026-04-30|333.34|0.00|333.34|Overdue",
+  "actual": "一致（3 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D2.outstanding",
+  "scenario": "示例D Fixed 11,200/12 还 2,000：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "9200.00",
+  "actual": "9200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D2.settlement",
+  "scenario": "示例D Fixed 11,200/12 还 2,000：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "9200.00",
+  "actual": "9200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D2.dpd",
+  "scenario": "示例D Fixed 11,200/12 还 2,000：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "213",
+  "actual": "213",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D2.overdue",
+  "scenario": "示例D Fixed 11,200/12 还 2,000：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "6399.97",
+  "actual": "6399.97",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D2.schedule",
+  "scenario": "示例D Fixed 11,200/12 还 2,000：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-01|933.33|933.33|0.00|Paid … 2027-01-01|933.37|0.00|933.37|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "D2.pay",
+  "scenario": "SCH-07 Pay 预填",
+  "formula": "min(最早未还期 799.99, 结清额 9,200)",
+  "expected": "799.99",
+  "actual": "799.99",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "E0.dpd",
+  "scenario": "示例E 未还款（今天）：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "272",
+  "actual": "272",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "E0.overdue",
+  "scenario": "示例E 未还款（今天）：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "900.00",
+  "actual": "900.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "E1.dpd",
+  "scenario": "示例E 再还 150：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "244",
+  "actual": "244",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "E1.overdue",
+  "scenario": "示例E 再还 150：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "750.00",
+  "actual": "750.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "E1.schedule",
+  "scenario": "示例E 再还 150：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-01|100.00|100.00|0.00|Paid … 2027-01-01|100.00|0.00|100.00|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RULE",
+  "id": "N-02",
+  "scenario": "起始=今天 无期限：v1.11.0 起不填期限被拒",
+  "formula": "",
+  "expected": "v1.10.0 允许",
+  "actual": "Tenure is required for a loan that charges interest",
+  "result": "RULE-CHANGE",
+  "note": "改用 tenure=12 继续"
+ },
+ {
+  "g": "INT",
+  "id": "INT07",
+  "scenario": "INT-07 起始=今天、无期限：利息",
+  "formula": "同一天 0 天",
+  "expected": "0.00",
+  "actual": "1800.00",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "INT07.dpd",
+  "scenario": "INT-07 无计划：DPD/Overdue 不显示",
+  "formula": "null",
+  "expected": "null",
+  "actual": "0",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "SHORT.outstanding",
+  "scenario": "1 个月贷款 起 10-01：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10150.00",
+  "actual": "10150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "SHORT.settlement",
+  "scenario": "1 个月贷款 起 10-01：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "10145.16",
+  "actual": "10145.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "SHORT.maturity",
+  "scenario": "1 个月贷款 起 10-01：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2026-11-01",
+  "actual": "2026-11-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "SHORT.dpd",
+  "scenario": "1 个月贷款 起 10-01：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "0",
+  "actual": "0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "INT",
+  "id": "SHORT.schedule",
+  "scenario": "1 个月贷款 起 10-01：还款计划 1 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-11-01|10150.00|0.00|10150.00|Pending … 2026-11-01|10150.00|0.00|10150.00|Pending",
+  "actual": "一致（1 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 3期.outstanding",
+  "scenario": "闰年 起2024-01-31 3期：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10450.00",
+  "actual": "10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 3期.interest",
+  "scenario": "闰年 起2024-01-31 3期：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "450.00",
+  "actual": "450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 3期.maturity",
+  "scenario": "闰年 起2024-01-31 3期：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2024-04-30",
+  "actual": "2024-04-30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 3期.schedule",
+  "scenario": "闰年 起2024-01-31 3期：还款计划 3 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2024-02-29|150.00|0.00|150.00|Overdue … 2024-04-30|10150.00|0.00|10150.00|Overdue",
+  "actual": "一致（3 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 3期@2024-02-29",
+  "scenario": "闰年 起2024-01-31 3期：2024-02-29 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2024-01-31→2024-02-29)",
+  "expected": "10150.00",
+  "actual": "10150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 3期@2024-03-01",
+  "scenario": "闰年 起2024-01-31 3期：2024-03-01 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2024-01-31→2024-03-01)",
+  "expected": "10154.84",
+  "actual": "10154.84",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 3期@2024-03-30",
+  "scenario": "闰年 起2024-01-31 3期：2024-03-30 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2024-01-31→2024-03-30)",
+  "expected": "10295.16",
+  "actual": "10295.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 3期@2024-03-31",
+  "scenario": "闰年 起2024-01-31 3期：2024-03-31 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2024-01-31→2024-03-31)",
+  "expected": "10300.00",
+  "actual": "10300.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "平年 起2026-01-31 3期.outstanding",
+  "scenario": "平年 起2026-01-31 3期：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10450.00",
+  "actual": "10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "平年 起2026-01-31 3期.interest",
+  "scenario": "平年 起2026-01-31 3期：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "450.00",
+  "actual": "450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "平年 起2026-01-31 3期.maturity",
+  "scenario": "平年 起2026-01-31 3期：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2026-04-30",
+  "actual": "2026-04-30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "平年 起2026-01-31 3期.schedule",
+  "scenario": "平年 起2026-01-31 3期：还款计划 3 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-28|150.00|0.00|150.00|Overdue … 2026-04-30|10150.00|0.00|10150.00|Overdue",
+  "actual": "一致（3 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "平年 起2026-01-31 3期@2026-02-28",
+  "scenario": "平年 起2026-01-31 3期：2026-02-28 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2026-01-31→2026-02-28)",
+  "expected": "10150.00",
+  "actual": "10150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "平年 起2026-01-31 3期@2026-03-01",
+  "scenario": "平年 起2026-01-31 3期：2026-03-01 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2026-01-31→2026-03-01)",
+  "expected": "10154.84",
+  "actual": "10154.84",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "平年 起2026-01-31 3期@2026-03-30",
+  "scenario": "平年 起2026-01-31 3期：2026-03-30 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2026-01-31→2026-03-30)",
+  "expected": "10295.16",
+  "actual": "10295.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "平年 起2026-01-31 3期@2026-03-31",
+  "scenario": "平年 起2026-01-31 3期：2026-03-31 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2026-01-31→2026-03-31)",
+  "expected": "10300.00",
+  "actual": "10300.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "起2026-01-30 3期.outstanding",
+  "scenario": "起2026-01-30 3期：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10450.00",
+  "actual": "10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "起2026-01-30 3期.interest",
+  "scenario": "起2026-01-30 3期：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "450.00",
+  "actual": "450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "起2026-01-30 3期.maturity",
+  "scenario": "起2026-01-30 3期：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2026-04-30",
+  "actual": "2026-04-30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "起2026-01-30 3期.schedule",
+  "scenario": "起2026-01-30 3期：还款计划 3 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-28|150.00|0.00|150.00|Overdue … 2026-04-30|10150.00|0.00|10150.00|Overdue",
+  "actual": "一致（3 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "起2026-01-30 3期@2026-02-28",
+  "scenario": "起2026-01-30 3期：2026-02-28 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2026-01-30→2026-02-28)",
+  "expected": "10150.00",
+  "actual": "10150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "起2026-01-30 3期@2026-03-01",
+  "scenario": "起2026-01-30 3期：2026-03-01 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2026-01-30→2026-03-01)",
+  "expected": "10155.00",
+  "actual": "10155.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "起2026-01-30 3期@2026-03-29",
+  "scenario": "起2026-01-30 3期：2026-03-29 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2026-01-30→2026-03-29)",
+  "expected": "10295.00",
+  "actual": "10295.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-02-29 12期.outstanding",
+  "scenario": "闰年 起2024-02-29 12期：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "11800.00",
+  "actual": "11800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-02-29 12期.interest",
+  "scenario": "闰年 起2024-02-29 12期：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "1800.00",
+  "actual": "1800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-02-29 12期.maturity",
+  "scenario": "闰年 起2024-02-29 12期：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2025-02-28",
+  "actual": "2025-02-28",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-02-29 12期.schedule",
+  "scenario": "闰年 起2024-02-29 12期：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2024-03-29|150.00|0.00|150.00|Overdue … 2025-02-28|10150.00|0.00|10150.00|Overdue",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-02-29 12期@2024-03-28",
+  "scenario": "闰年 起2024-02-29 12期：2024-03-28 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2024-02-29→2024-03-28)",
+  "expected": "10144.83",
+  "actual": "10144.83",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-02-29 12期@2024-03-29",
+  "scenario": "闰年 起2024-02-29 12期：2024-03-29 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2024-02-29→2024-03-29)",
+  "expected": "10150.00",
+  "actual": "10150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-02-29 12期@2025-02-27",
+  "scenario": "闰年 起2024-02-29 12期：2025-02-27 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2024-02-29→2025-02-27)",
+  "expected": "11795.00",
+  "actual": "11795.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "跨闰2月 起2023-12-01 12期.outstanding",
+  "scenario": "跨闰2月 起2023-12-01 12期：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "11800.00",
+  "actual": "11800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "跨闰2月 起2023-12-01 12期.interest",
+  "scenario": "跨闰2月 起2023-12-01 12期：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "1800.00",
+  "actual": "1800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "跨闰2月 起2023-12-01 12期.maturity",
+  "scenario": "跨闰2月 起2023-12-01 12期：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2024-12-01",
+  "actual": "2024-12-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "跨闰2月 起2023-12-01 12期.schedule",
+  "scenario": "跨闰2月 起2023-12-01 12期：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2024-01-01|150.00|0.00|150.00|Overdue … 2024-12-01|10150.00|0.00|10150.00|Overdue",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "跨闰2月 起2023-12-01 12期@2024-02-15",
+  "scenario": "跨闰2月 起2023-12-01 12期：2024-02-15 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2023-12-01→2024-02-15)",
+  "expected": "10372.41",
+  "actual": "10372.41",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "跨闰2月 起2023-12-01 12期@2024-03-01",
+  "scenario": "跨闰2月 起2023-12-01 12期：2024-03-01 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2023-12-01→2024-03-01)",
+  "expected": "10450.00",
+  "actual": "10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "跨闰2月 起2023-12-01 12期@2024-03-15",
+  "scenario": "跨闰2月 起2023-12-01 12期：2024-03-15 结清额（超额拦截提示）",
+  "formula": "10000 × 1.5% × 月数(2023-12-01→2024-03-15)",
+  "expected": "10517.74",
+  "actual": "10517.74",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 1期.outstanding",
+  "scenario": "闰年 起2024-01-31 1期：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10150.00",
+  "actual": "10150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 1期.interest",
+  "scenario": "闰年 起2024-01-31 1期：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "150.00",
+  "actual": "150.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 1期.maturity",
+  "scenario": "闰年 起2024-01-31 1期：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2024-02-29",
+  "actual": "2024-02-29",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "闰年 起2024-01-31 1期.schedule",
+  "scenario": "闰年 起2024-01-31 1期：还款计划 1 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2024-02-29|10150.00|0.00|10150.00|Overdue … 2024-02-29|10150.00|0.00|10150.00|Overdue",
+  "actual": "一致（1 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "Annual 起2024-01-01 12期（366天）.outstanding",
+  "scenario": "Annual 起2024-01-01 12期（366天）：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "43088.00",
+  "actual": "43088.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "Annual 起2024-01-01 12期（366天）.interest",
+  "scenario": "Annual 起2024-01-01 12期（366天）：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "6588.00",
+  "actual": "6588.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "Annual 起2024-01-01 12期（366天）.maturity",
+  "scenario": "Annual 起2024-01-01 12期（366天）：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2025-01-01",
+  "actual": "2025-01-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "Annual 起2024-01-01 12期（366天）.schedule",
+  "scenario": "Annual 起2024-01-01 12期（366天）：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2024-02-01|558.00|0.00|558.00|Overdue … 2025-01-01|37058.00|0.00|37058.00|Overdue",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "Annual 起2024-01-01 12期（366天）@2024-02-29",
+  "scenario": "Annual 起2024-01-01 12期（366天）：2024-02-29 结清额（超额拦截提示）",
+  "formula": "36500 × 18% × 月数(2024-01-01→2024-02-29)",
+  "expected": "37562.00",
+  "actual": "37562.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "Annual 起2024-01-01 12期（366天）@2024-12-31",
+  "scenario": "Annual 起2024-01-01 12期（366天）：2024-12-31 结清额（超额拦截提示）",
+  "formula": "36500 × 18% × 月数(2024-01-01→2024-12-31)",
+  "expected": "43070.00",
+  "actual": "43070.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "FUT-M.outstanding",
+  "scenario": "未来闰年 Monthly 起2027-12-01 12期：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "11800.00",
+  "actual": "11800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "FUT-M.interest",
+  "scenario": "未来闰年 Monthly 起2027-12-01 12期：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "1800.00",
+  "actual": "1800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "FUT-M.maturity",
+  "scenario": "未来闰年 Monthly 起2027-12-01 12期：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2028-12-01",
+  "actual": "2028-12-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "FUT-M.schedule",
+  "scenario": "未来闰年 Monthly 起2027-12-01 12期：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2028-01-01|150.00|0.00|150.00|Pending … 2028-12-01|10150.00|0.00|10150.00|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "FUT-D.outstanding",
+  "scenario": "未来闰年 Annual 起2027-12-01 12期（366天 ÷365）：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "43088.00",
+  "actual": "43088.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "FUT-D.interest",
+  "scenario": "未来闰年 Annual 起2027-12-01 12期（366天 ÷365）：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "6588.00",
+  "actual": "6588.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "FUT-D.maturity",
+  "scenario": "未来闰年 Annual 起2027-12-01 12期（366天 ÷365）：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2028-12-01",
+  "actual": "2028-12-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EDGE",
+  "id": "FUT-D.eff",
+  "scenario": "同上：实际年化（366/365×18%）",
+  "formula": "6588 ÷ 36500",
+  "expected": "18.05",
+  "actual": "18.05",
+  "result": "PASS",
+  "note": "规则如此（闰年 ÷366 待律师确认）"
+ },
+ {
+  "g": "EDGE",
+  "id": "FUTPAY",
+  "scenario": "明天日期的还款",
+  "formula": "拒收",
+  "expected": "Payment date cannot be in the future",
+  "actual": "Payment date cannot be in the future",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1015.int",
+  "scenario": "P=1015 1 个月利息",
+  "formula": "1015 × 1.5% = 609/40",
+  "expected": "15.23",
+  "actual": "15.23",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1015.out",
+  "scenario": "P=1015 合同欠款",
+  "formula": "1015 + 1015×1.5%（half-up）",
+  "expected": "1030.23",
+  "actual": "1030.22",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1015.ident",
+  "scenario": "P=1015 恒等式 Principal + Interest = Outstanding（页面）",
+  "formula": "应相等",
+  "expected": "1030.22",
+  "actual": "1030.23",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1015.sett",
+  "scenario": "P=1015 今日结清额",
+  "formula": "同上（今天到期）",
+  "expected": "1030.23",
+  "actual": "1030.22",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1079.int",
+  "scenario": "P=1079 1 个月利息",
+  "formula": "1079 × 1.5% = 3237/200",
+  "expected": "16.19",
+  "actual": "16.18",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1079.out",
+  "scenario": "P=1079 合同欠款",
+  "formula": "1079 + 1079×1.5%（half-up）",
+  "expected": "1095.19",
+  "actual": "1095.19",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1079.ident",
+  "scenario": "P=1079 恒等式 Principal + Interest = Outstanding（页面）",
+  "formula": "应相等",
+  "expected": "1095.19",
+  "actual": "1095.18",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1079.sett",
+  "scenario": "P=1079 今日结清额",
+  "formula": "同上（今天到期）",
+  "expected": "1095.19",
+  "actual": "1095.19",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1001.int",
+  "scenario": "P=1001 1 个月利息",
+  "formula": "1001 × 1.5% = 3003/200",
+  "expected": "15.02",
+  "actual": "15.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1001.out",
+  "scenario": "P=1001 合同欠款",
+  "formula": "1001 + 1001×1.5%（half-up）",
+  "expected": "1016.02",
+  "actual": "1016.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1001.ident",
+  "scenario": "P=1001 恒等式 Principal + Interest = Outstanding（页面）",
+  "formula": "应相等",
+  "expected": "1016.02",
+  "actual": "1016.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1001.sett",
+  "scenario": "P=1001 今日结清额",
+  "formula": "同上（今天到期）",
+  "expected": "1016.02",
+  "actual": "1016.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P3001.int",
+  "scenario": "P=3001 1 个月利息",
+  "formula": "3001 × 1.5% = 9003/200",
+  "expected": "45.02",
+  "actual": "45.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P3001.out",
+  "scenario": "P=3001 合同欠款",
+  "formula": "3001 + 3001×1.5%（half-up）",
+  "expected": "3046.02",
+  "actual": "3046.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P3001.ident",
+  "scenario": "P=3001 恒等式 Principal + Interest = Outstanding（页面）",
+  "formula": "应相等",
+  "expected": "3046.02",
+  "actual": "3046.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P3001.sett",
+  "scenario": "P=3001 今日结清额",
+  "formula": "同上（今天到期）",
+  "expected": "3046.02",
+  "actual": "3046.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1015.payShown",
+  "scenario": "P=1015 按页面显示的结清额 1030.22 还款后应结清",
+  "formula": "",
+  "expected": "Outstanding 0.00 / Fully Paid",
+  "actual": "Payment RCPT-2026-0004 recorded; Outstanding 0.00; Fully Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ROUND",
+  "id": "P1015.payHalfUp",
+  "scenario": "P=1015 还 1,030.23（精确 1,030.225 四舍五入）",
+  "formula": "",
+  "expected": "接受（超出 0.005 在容差内）并 Fully Paid",
+  "actual": "Amount exceeds outstanding; New; Outstanding 1030.22",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "amt=0",
+  "scenario": "还款金额 0",
+  "formula": "拒收",
+  "expected": "Invalid amount",
+  "actual": "Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "amt=-5",
+  "scenario": "还款金额 -5",
+  "formula": "拒收",
+  "expected": "Invalid amount",
+  "actual": "Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "amt=0.001",
+  "scenario": "还款金额 0.001",
+  "formula": "拒收",
+  "expected": "Invalid amount",
+  "actual": "Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "amt=100.004",
+  "scenario": "还款金额 100.004",
+  "formula": "拒收",
+  "expected": "Invalid amount",
+  "actual": "Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "amt=1e2",
+  "scenario": "还款金额 1e2",
+  "formula": "拒收",
+  "expected": "Invalid amount",
+  "actual": "Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "amt=1000.01",
+  "scenario": "还款金额 1000.01",
+  "formula": "拒收",
+  "expected": "Amount exceeds outstanding",
+  "actual": "Amount exceeds outstanding",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "date=02-30",
+  "scenario": "还款日期 2026-02-30",
+  "formula": "拒收",
+  "expected": "Invalid payment date",
+  "actual": "Invalid payment date",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "method",
+  "scenario": "非法还款方式",
+  "formula": "拒收",
+  "expected": "Invalid payment method",
+  "actual": "Invalid payment method",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "sett+0.01",
+  "scenario": "今日结清额 11495.16 + 0.01",
+  "formula": "拒收，提示上限 = 结清额",
+  "expected": "11495.16",
+  "actual": "11495.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "chain.hintOk",
+  "scenario": "按提示金额 727.96 补录时 06-01 那笔的超额",
+  "formula": "提示金额本身可接受（超额 0）",
+  "expected": "0.00",
+  "actual": "0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "chain.hint",
+  "scenario": "已有 06-01 还 10,000，补录 03-02 的 800：拒收提示中的上限",
+  "formula": "独立计算：使 06-01 那笔不超过其当日结清额的最大补录额",
+  "expected": "731.03",
+  "actual": "727.96",
+  "result": "FAIL",
+  "note": "提示按线性扣减计算，未考虑补录额变小会增加后续利息"
+ },
+ {
+  "g": "PAYV",
+  "id": "chain.max",
+  "scenario": "按独立计算的上限 731.03 补录",
+  "formula": "",
+  "expected": "接受",
+  "actual": "Payment RCPT-2026-0006 recorded",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PAYV",
+  "id": "beforeStart",
+  "scenario": "B-16 起息日（2026-06-01）之前的还款 05-01",
+  "formula": "",
+  "expected": "拒收（业务预期；F-20 范围）",
+  "actual": "Payment date cannot be before the loan start date (2026-06-01)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "P200.outstanding",
+  "scenario": "03-02 还 200（< 已计利息 304.84）：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "11600.00",
+  "actual": "11600.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "P200.interest",
+  "scenario": "03-02 还 200（< 已计利息 304.84）：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "1800.00",
+  "actual": "1800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "P200.settlement",
+  "scenario": "03-02 还 200（< 已计利息 304.84）：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "11295.16",
+  "actual": "11295.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "P200.split",
+  "scenario": "03-02 的 200 全部冲利息",
+  "formula": "toInterest",
+  "expected": "200.00",
+  "actual": "200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "ORDER.outstanding",
+  "scenario": "先录 05-01 的 500、后补录 03-02 的 1,000：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10169.02",
+  "actual": "10169.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "ORDER.interest",
+  "scenario": "先录 05-01 的 500、后补录 03-02 的 1,000：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "1669.02",
+  "actual": "1669.02",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "ORDER.settlement",
+  "scenario": "先录 05-01 的 500、后补录 03-02 的 1,000：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "9892.24",
+  "actual": "9892.24",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "ORDER.schedule",
+  "scenario": "先录 05-01 的 500、后补录 03-02 的 1,000：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-01|150.00|150.00|0.00|Paid … 2027-01-01|10150.00|0.00|10150.00|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "AFTERMAT.outstanding",
+  "scenario": "到期（2025-04-01）后 2026-10-01 还 500：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "9950.00",
+  "actual": "9950.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "AFTERMAT.interest",
+  "scenario": "到期（2025-04-01）后 2026-10-01 还 500：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "450.00",
+  "actual": "450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "AFTERMAT.settlement",
+  "scenario": "到期（2025-04-01）后 2026-10-01 还 500：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "9950.00",
+  "actual": "9950.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "AFTERMAT.dpd",
+  "scenario": "到期（2025-04-01）后 2026-10-01 还 500：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "578",
+  "actual": "578",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "AFTERMAT.overdue",
+  "scenario": "到期（2025-04-01）后 2026-10-01 还 500：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "9950.00",
+  "actual": "9950.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "INTONLY.outstanding",
+  "scenario": "03-02 恰好还已计利息 304.84：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "11495.16",
+  "actual": "11495.16",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "INTONLY.interest",
+  "scenario": "03-02 恰好还已计利息 304.84：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "1800.00",
+  "actual": "1800.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "ALLOC",
+  "id": "INTONLY.settlement",
+  "scenario": "03-02 恰好还已计利息 304.84：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "11190.32",
+  "actual": "11190.32",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "A+0.01",
+  "scenario": "03-02 还 10,304.85（结清额 + 0.01）",
+  "formula": "拒收",
+  "expected": "10304.84",
+  "actual": "10304.84",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "A.outstanding",
+  "scenario": "03-02 还 10,304.84 结清：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "0.00",
+  "actual": "0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "A.interest",
+  "scenario": "03-02 还 10,304.84 结清：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "304.84",
+  "actual": "304.84",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "A.paid",
+  "scenario": "03-02 还 10,304.84 结清：Paid",
+  "formula": "Σ 还款",
+  "expected": "10304.84",
+  "actual": "10304.84",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "A.recovered",
+  "scenario": "03-02 还 10,304.84 结清：% recovered",
+  "formula": "round(已还 ÷ (本金+利息))",
+  "expected": "100",
+  "actual": "100",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "A.schedule",
+  "scenario": "03-02 还 10,304.84 结清：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-02-01|150.00|150.00|0.00|Paid … 2027-01-01|10150.00|8654.84|0.00|Paid",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "A.status",
+  "scenario": "状态",
+  "formula": "",
+  "expected": "Fully Paid",
+  "actual": "Fully Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "EDIT+0.01",
+  "scenario": "把 03-02 的 1,000 改为 10,304.85",
+  "formula": "拒收（上限 = 当日结清额）",
+  "expected": "10304.84",
+  "actual": "10304.84",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "EDIT=sett",
+  "scenario": "改为 10,304.84",
+  "formula": "",
+  "expected": "接受，Fully Paid，Outstanding 0.00",
+  "actual": "Payment updated; Fully Paid; 0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.afterPtp",
+  "scenario": "PTP 1,000 当天履行后今日结清额",
+  "formula": "10000 − 1000（当天利息 0）",
+  "expected": "9000.00",
+  "actual": "9000.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.status1",
+  "scenario": "履行后状态",
+  "formula": "",
+  "expected": "Partial Paid",
+  "actual": "Partial Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.payPrefill",
+  "scenario": "计划 Pay 预填（最早未还清期 = 第 7 期 2027-05-31）",
+  "formula": "min(该期未还, 今日结清额)；PTP 的 1,000 已按 FIFO 冲掉前 6 期",
+  "expected": "50.00",
+  "actual": "50.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.paidAhead",
+  "scenario": "PTP 1,000 当天全部冲本金后，计划前 6 期显示 Paid",
+  "formula": "",
+  "expected": "记录现状（见 B2 发现：计划 FIFO 与账本口径不一致）",
+  "actual": "Paid,Paid,Paid,Paid,Paid,Paid,Partially Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.max",
+  "scenario": "再看 max（今日结清额）",
+  "formula": "9000 − 50.00",
+  "expected": "8950.00",
+  "actual": "8950.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.outstanding",
+  "scenario": "E2E-01 用 max 还清后：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "0.00",
+  "actual": "0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.interest",
+  "scenario": "E2E-01 用 max 还清后：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "0.00",
+  "actual": "0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.paid",
+  "scenario": "E2E-01 用 max 还清后：Paid",
+  "formula": "Σ 还款",
+  "expected": "10000.00",
+  "actual": "10000.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.recovered",
+  "scenario": "E2E-01 用 max 还清后：% recovered",
+  "formula": "round(已还 ÷ (本金+利息))",
+  "expected": "100",
+  "actual": "100",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.schedule",
+  "scenario": "E2E-01 用 max 还清后：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-11-30|150.00|150.00|0.00|Paid … 2027-10-31|10150.00|8350.00|0.00|Paid",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "E2E.status",
+  "scenario": "E2E-01 状态",
+  "formula": "",
+  "expected": "Fully Paid",
+  "actual": "Fully Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "FIXED.sett",
+  "scenario": "Fixed 11,200 第 2 个月的今日结清额",
+  "formula": "Fixed 全额（D-02 演示前维持）",
+  "expected": "11200.00",
+  "actual": "11200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "EARLY",
+  "id": "FIXED+0.01",
+  "scenario": "Fixed 还 11,200.01",
+  "formula": "拒收",
+  "expected": "Amount exceeds outstanding",
+  "actual": "Amount exceeds outstanding",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.ok",
+  "scenario": "示例B 重组提交",
+  "formula": "",
+  "expected": "Restructured",
+  "actual": "Restructured",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.cut",
+  "scenario": "示例B 截点本金 / 挂账欠息",
+  "formula": "9304.84 / 9304.84×1.5%×30/31",
+  "expected": "9304.84/135.07",
+  "actual": "9304.84/135.07",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.outstanding",
+  "scenario": "示例B 重组后：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "11449.75",
+  "actual": "11449.75",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.interest",
+  "scenario": "示例B 重组后：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "2449.75",
+  "actual": "2449.75",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.maturity",
+  "scenario": "示例B 重组后：Maturity",
+  "formula": "起始日 + 期限月（月末对齐）",
+  "expected": "2027-10-01",
+  "actual": "2027-10-01",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.settlement",
+  "scenario": "示例B 重组后：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "10217.91",
+  "actual": "10217.91",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.dpd",
+  "scenario": "示例B 重组后：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "213",
+  "actual": "183",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.overdue",
+  "scenario": "示例B 重组后：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "805.03",
+  "actual": "805.03",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.schedule",
+  "scenario": "示例B 重组后：还款计划 19 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-04-01|135.07|0.00|135.07|Overdue … 2027-10-01|9416.50|0.00|9416.50|Pending",
+  "actual": "#1 预期 2026-04-01|135.07|0.00|135.07|Overdue / 实际 2026-05-01|135.07|0.00|135.07|Overdue",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B.payOnEff",
+  "scenario": "重组后补录生效日当天（04-01）的还款",
+  "formula": "拒收（D-04：新还款须晚于生效日）",
+  "expected": "Payment date must be after the restructure date (2026-04-01)",
+  "actual": "Payment date must be after the restructure date (2026-04-01)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B2.outstanding",
+  "scenario": "示例B 重组后 05-01 还 500：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10898.09",
+  "actual": "10898.09",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B2.interest",
+  "scenario": "示例B 重组后 05-01 还 500：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "2398.09",
+  "actual": "2398.09",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B2.settlement",
+  "scenario": "示例B 重组后 05-01 还 500：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "9699.78",
+  "actual": "9699.78",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B2.dpd",
+  "scenario": "示例B 重组后 05-01 还 500：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "91",
+  "actual": "91",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B2.overdue",
+  "scenario": "示例B 重组后 05-01 还 500：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "305.03",
+  "actual": "305.03",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "B2.schedule",
+  "scenario": "示例B 重组后 05-01 还 500：还款计划 19 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-04-01|135.07|135.07|0.00|Paid … 2027-10-01|9416.50|0.00|9416.50|Pending",
+  "actual": "#1 预期 2026-04-01|135.07|135.07|0.00|Paid / 实际 2026-05-01|135.07|135.07|0.00|Paid",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "SAME.cut",
+  "scenario": "06-01 还 5,000 后以 06-01 重组：截点",
+  "formula": "本金 10000 −（5000 − 10000×1.5%×5）；挂账 0",
+  "expected": "5750.00/0.00",
+  "actual": "5750.00/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "SAME.outstanding",
+  "scenario": "同日还款后重组：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "6785.00",
+  "actual": "6785.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "SAME.interest",
+  "scenario": "同日还款后重组：Interest",
+  "formula": "已收利息 + 未收利息（合同期）",
+  "expected": "1785.00",
+  "actual": "1785.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "SAME.settlement",
+  "scenario": "同日还款后重组：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "6178.47",
+  "actual": "6178.47",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "SAME.dpd",
+  "scenario": "同日还款后重组：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "122",
+  "actual": "122",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "SAME.overdue",
+  "scenario": "同日还款后重组：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "345.00",
+  "actual": "345.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "SAME.schedule",
+  "scenario": "同日还款后重组：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-07-01|86.25|0.00|86.25|Overdue … 2027-06-01|5836.25|0.00|5836.25|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "SAME.undo",
+  "scenario": "RS-16 生效日当天的还款不阻止撤销（有 Undo 按钮）",
+  "formula": "",
+  "expected": "Undo 可见",
+  "actual": "Undo 可见",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "TODAY.dialog",
+  "scenario": "RS-02/25 今天还 2,000 后重组弹窗“截至今天”",
+  "formula": "本金 10000 −（2000 − 150）；未付利息 0",
+  "expected": "8154.84/0.00",
+  "actual": "8154.84/0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "TODAY.outstanding",
+  "scenario": "今天还款后今天重组：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "9329.14",
+  "actual": "9329.14",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "TODAY.settlement",
+  "scenario": "今天还款后今天重组：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "8154.84",
+  "actual": "8154.84",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "TODAY.schedule",
+  "scenario": "今天还款后今天重组：还款计划 12 行（到期日|应还|已还|未还|状态）",
+  "formula": "",
+  "expected": "2026-11-30|97.86|0.00|97.86|Pending … 2027-10-31|8252.70|0.00|8252.70|Pending",
+  "actual": "一致（12 行）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "TODAY.again",
+  "scenario": "同一天再重组",
+  "formula": "",
+  "expected": "拒收（下限 = 上次生效日次日）",
+  "actual": "Effective date must be between 2026-11-01 and 2026-10-31",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "RAISE",
+  "scenario": "1.2%/月 → 1.5%/月（RS-23）",
+  "formula": "拒收",
+  "expected": "A restructure cannot raise the interest rate (14.4% → 18% p.a.)",
+  "actual": "A restructure cannot raise the interest rate (14.4% → 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "CAP",
+  "scenario": "重组为 2%/月（RS-24）",
+  "formula": "拒收（上限优先）",
+  "expected": "Interest rate exceeds the 18% p.a. limit (this loan: 24% p.a.)",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 24% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "FIXCAP.1800",
+  "scenario": "重组为 Fixed 利息 1800、12 期（截点本金 10,000）名义年化 18.00…%",
+  "formula": "",
+  "expected": "接受",
+  "actual": "A rate-based loan cannot be restructured to a fixed amount (pending legal review)",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "FIXCAP.1801",
+  "scenario": "重组为 Fixed 利息 1801、12 期（截点本金 10,000）名义年化 18.01…%",
+  "formula": "",
+  "expected": "拒收（> 18%）",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18.01% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "FIXCAP.1800.40",
+  "scenario": "重组为 Fixed 利息 1800.40、12 期（截点本金 10,000）名义年化 18.00…%",
+  "formula": "",
+  "expected": "拒收（> 18%）",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "TOTINT.74",
+  "scenario": "06-01 重组为 1.25%/月 × 74 个月：总利息 10000.00（本金 10,000）",
+  "formula": "",
+  "expected": "接受（= 本金）",
+  "actual": "Restructured",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "TOTINT.75",
+  "scenario": "06-01 重组为 1.25%/月 × 75 个月：总利息 10125.00（本金 10,000）",
+  "formula": "",
+  "expected": "拒收（> 本金）",
+  "actual": "Interest after the restructure plus carried arrears cannot exceed the remaining principal",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "MATURED.cut",
+  "scenario": "RS-21 已到期贷款今天重组：挂账",
+  "formula": "只计到原到期日 10000×1.5%×3",
+  "expected": "450.00",
+  "actual": "450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "MATURED.outstanding",
+  "scenario": "RS-21 重组后：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "11650.00",
+  "actual": "11650.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "MATURED.settlement",
+  "scenario": "RS-21 重组后：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "10450.00",
+  "actual": "10450.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "MATURED.dpd",
+  "scenario": "RS-21 重组后：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "0",
+  "actual": "0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "MATURED.overdue",
+  "scenario": "RS-21 重组后：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "0.00",
+  "actual": "0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "BORN.dpd",
+  "scenario": "生效日 2026-09-30 重组（挂账欠息生效日即到期）：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "31",
+  "actual": "1",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "RS",
+  "id": "BORN.overdue",
+  "scenario": "生效日 2026-09-30 重组（挂账欠息生效日即到期）：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "1495.00",
+  "actual": "1495.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.5",
+  "scenario": "建案 monthly 1.5；名义年化 18.00%；合同总利息 1800.00",
+  "formula": "",
+  "expected": "接受",
+  "actual": "接受（案件 68）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.5008",
+  "scenario": "建案 monthly 1.5008；名义年化 18.01%；合同总利息 1800.96",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18.01% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.50004",
+  "scenario": "建案 monthly 1.50004；名义年化 18.00%；合同总利息 1800.05",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.6",
+  "scenario": "建案 monthly 1.6；名义年化 19.20%；合同总利息 1920.00",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 19.2% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "daily 18",
+  "scenario": "建案 daily 18；名义年化 18.00%；合同总利息 1800.00",
+  "formula": "",
+  "expected": "接受",
+  "actual": "接受（案件 69）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "daily 18.01",
+  "scenario": "建案 daily 18.01；名义年化 18.01%；合同总利息 1801.00",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18.01% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "daily 18.004",
+  "scenario": "建案 daily 18.004；名义年化 18.00%；合同总利息 1800.40",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 1800/12",
+  "scenario": "建案 fixed 1800/12；名义年化 18.00%；合同总利息 1800.00",
+  "formula": "",
+  "expected": "接受",
+  "actual": "接受（案件 70）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 1801/12",
+  "scenario": "建案 fixed 1801/12；名义年化 18.01%；合同总利息 1801.00",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18.01% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 1800.40/12",
+  "scenario": "建案 fixed 1800.40/12；名义年化 18.00%；合同总利息 1800.40",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 1800.01/12",
+  "scenario": "建案 fixed 1800.01/12；名义年化 18.00%；合同总利息 1800.01",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 9000 无期限",
+  "scenario": "建案 fixed 9000 无期限；名义年化 —%；合同总利息 无期限/无法计算",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Tenure is required for a loan that charges interest",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 1500 期限30 tenure_unit=days（篡改请求）",
+  "scenario": "建案 fixed 1500 期限30 tenure_unit=days（篡改请求）；名义年化 —%；合同总利息 无期限/无法计算",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "接受（案件 71）",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 1500 期限30 tenure_unit=days（篡改请求）.stored",
+  "scenario": "同上：存储的期限与到期日",
+  "formula": "",
+  "expected": "30 days → 实际年化 1500/10000 ÷ (30/365) = 182.5%",
+  "actual": "{\"tenure\":30,\"tenure_unit\":\"months\",\"maturity_date\":\"2029-04-01\"}",
+  "result": "INFO",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.25 × 80 期（总利息 = 本金）",
+  "scenario": "建案 monthly 1.25 × 80 期（总利息 = 本金）；名义年化 15.00%；合同总利息 10000.00",
+  "formula": "",
+  "expected": "接受",
+  "actual": "接受（案件 72）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.25 × 81 期（101.25%）",
+  "scenario": "建案 monthly 1.25 × 81 期（101.25%）；名义年化 15.00%；合同总利息 10125.00",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Total interest cannot exceed the principal",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.5 × 120 期（INT-13）",
+  "scenario": "建案 monthly 1.5 × 120 期（INT-13）；名义年化 18.00%；合同总利息 18000.00",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Total interest cannot exceed the principal",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 10000 / 120 期（= 本金，10% p.a.）",
+  "scenario": "建案 fixed 10000 / 120 期（= 本金，10% p.a.）；名义年化 10.00%；合同总利息 10000.00",
+  "formula": "",
+  "expected": "接受",
+  "actual": "接受（案件 73）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "fixed 10000.01 / 120 期",
+  "scenario": "建案 fixed 10000.01 / 120 期；名义年化 10.00%；合同总利息 10000.01",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Total interest cannot exceed the principal",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.5 无期限 起2023-01-01（至今 68.66%）",
+  "scenario": "建案 monthly 1.5 无期限 起2023-01-01（至今 68.66%）；名义年化 18.00%；合同总利息 无期限/无法计算",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Tenure is required for a loan that charges interest",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "monthly 1.5 无期限 起2020-06-01（至今 > 本金）",
+  "scenario": "建案 monthly 1.5 无期限 起2020-06-01（至今 > 本金）；名义年化 18.00%；合同总利息 无期限/无法计算",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Tenure is required for a loan that charges interest",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "CAP.1",
+  "scenario": "PTP 6,000（7 天后）",
+  "formula": "",
+  "expected": "接受",
+  "actual": "PTP created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "CAP.2",
+  "scenario": "再建 4,000.01（14 天后），合计 10,000.01",
+  "formula": "拒收：合计 > 最后到期日结清额 10,000",
+  "expected": "Promised total RM 10,000.01 exceeds the settlement amount on 2026-11-14 (RM 10,000.00)",
+  "actual": "Promised total RM 10,000.01 exceeds the settlement amount on 2026-11-14 (RM 10,000.00)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "CAP.3",
+  "scenario": "再建 4,000，合计 10,000.00",
+  "formula": "",
+  "expected": "接受",
+  "actual": "PTP created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "DATE.past",
+  "scenario": "PTP 到期日昨天",
+  "formula": "拒收",
+  "expected": "Due date cannot be in the past",
+  "actual": "Due date cannot be in the past",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "DATE.blank",
+  "scenario": "PTP 到期日为空",
+  "formula": "拒收",
+  "expected": "Invalid due date",
+  "actual": "Invalid due date",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "DATE.bad",
+  "scenario": "PTP 到期日 2027-02-30",
+  "formula": "拒收",
+  "expected": "Invalid due date",
+  "actual": "Invalid due date",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "MCAP.today",
+  "scenario": "今天到期 PTP 10000.01",
+  "formula": "拒收：上限 = 今日结清额 10000.00",
+  "expected": "Promised total RM 10,000.01 exceeds the settlement amount on 2026-10-31 (RM 10,000.00)",
+  "actual": "Promised total RM 10,000.01 exceeds the settlement amount on 2026-10-31 (RM 10,000.00)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "MCAP.1m+",
+  "scenario": "一个月后到期 PTP 10150.01",
+  "formula": "",
+  "expected": "拒收：上限 = 2026-11-30 结清额 10150.00",
+  "actual": "Promised total RM 10,150.01 exceeds the settlement amount on 2026-11-30 (RM 10,150.00)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "MCAP.1m",
+  "scenario": "一个月后到期 PTP 10150.00（= 当日结清额，含 1 个月利息）",
+  "formula": "",
+  "expected": "接受",
+  "actual": "PTP created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.1000/3.amt",
+  "scenario": "分期 1000 / 3 期",
+  "formula": "前 n−1 期向下取到分，末期吸收零头",
+  "expected": "333.33,333.33,333.34",
+  "actual": "333.33,333.33,333.34",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.1000/3.dates",
+  "scenario": "分期 1000 / 3 期 首期 2026-11-30：到期日",
+  "formula": "按首期日的对应日逐月（月末对齐）",
+  "expected": "2026-11-30,2026-12-30,2027-01-30",
+  "actual": "2026-11-30,2026-12-30,2027-01-30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.100/7.amt",
+  "scenario": "分期 100 / 7 期",
+  "formula": "前 n−1 期向下取到分，末期吸收零头",
+  "expected": "14.28,14.28,14.28,14.28,14.28,14.28,14.32",
+  "actual": "14.28,14.28,14.28,14.28,14.28,14.28,14.32",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.100/7.dates",
+  "scenario": "分期 100 / 7 期 首期 2027-01-31：到期日",
+  "formula": "按首期日的对应日逐月（月末对齐）",
+  "expected": "2027-01-31,2027-02-28,2027-03-31,2027-04-30,2027-05-31,2027-06-30,2027-07-31",
+  "actual": "2027-01-31,2027-02-28,2027-03-31,2027-04-30,2027-05-31,2027-06-30,2027-07-31",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.300/3.amt",
+  "scenario": "分期 300 / 3 期",
+  "formula": "前 n−1 期向下取到分，末期吸收零头",
+  "expected": "100.00,100.00,100.00",
+  "actual": "100.00,100.00,100.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.300/3.dates",
+  "scenario": "分期 300 / 3 期 首期 2028-01-31：到期日",
+  "formula": "按首期日的对应日逐月（月末对齐）",
+  "expected": "2028-01-31,2028-02-29,2028-03-31",
+  "actual": "2028-01-31,2028-02-29,2028-03-31",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.cap",
+  "scenario": "同一案件再建分期 3,600.01（已承诺 1,400，结清额 5,000）",
+  "formula": "",
+  "expected": "拒收",
+  "actual": "Promised total RM 5,000.01 exceeds the settlement amount on 2028-03-31 (RM 5,000.00)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.past",
+  "scenario": "分期首期日期为昨天",
+  "formula": "拒收",
+  "expected": "First due date cannot be in the past",
+  "actual": "First due date cannot be in the past",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.mcap+",
+  "scenario": "Monthly 分期 3 期首期今天，总额 10300.01",
+  "formula": "",
+  "expected": "拒收：上限 = 末期日 2026-12-31 结清额 10300.00",
+  "actual": "Promised total RM 10,300.01 exceeds the settlement amount on 2026-12-31 (RM 10,300.00)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.mcap",
+  "scenario": "同上总额 10300.00",
+  "formula": "",
+  "expected": "接受",
+  "actual": "Installment plan created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PK.status",
+  "scenario": "PTP 1,000 只收 600：PTP 状态",
+  "formula": "partially kept（D-10）",
+  "expected": "partially kept",
+  "actual": "partially kept",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PK.timeline",
+  "scenario": "时间线",
+  "formula": "",
+  "expected": "“PTP partially kept: RM 600.00 of RM 1000.00”",
+  "actual": "PTP partially kept: RM 600.00 of RM 1000.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PK.noNew",
+  "scenario": "不自动生成新承诺：pending PTP 数",
+  "formula": "0",
+  "expected": "0",
+  "actual": "0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PK.out",
+  "scenario": "部分履行后欠款",
+  "formula": "1000 − 600",
+  "expected": "400.00",
+  "actual": "400.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PK.caseStatus",
+  "scenario": "部分履行后案件状态",
+  "formula": "",
+  "expected": "Partial Paid（已无 pending PTP）",
+  "actual": "Partial Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "PLAN.kept",
+  "scenario": "分期 3 期，第 1 期 100 只收 50：标题行 “N/3 kept”",
+  "formula": "",
+  "expected": "0/3 kept（部分履行不应算 kept）",
+  "actual": "0/3 kept",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N0.dpd",
+  "scenario": "首期到期 2026-10-31（起始 2026-09-30）：DPD",
+  "formula": "2026-10-31 − 2026-10-31",
+  "expected": "1",
+  "actual": "1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N0.overdue",
+  "scenario": "同上：逾期金额",
+  "formula": "100 × 已到期期数",
+  "expected": "100.00",
+  "actual": "100.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N0.bucket",
+  "scenario": "同上：仪表盘 Aging 档位变化",
+  "formula": "+1,200 落在 “1–30”",
+  "expected": "1–30:1200.00",
+  "actual": "1–30:1200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N1.dpd",
+  "scenario": "首期到期 2026-10-30（起始 2026-09-30）：DPD",
+  "formula": "2026-10-31 − 2026-10-30",
+  "expected": "1",
+  "actual": "1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N1.overdue",
+  "scenario": "同上：逾期金额",
+  "formula": "100 × 已到期期数",
+  "expected": "100.00",
+  "actual": "100.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N1.bucket",
+  "scenario": "同上：仪表盘 Aging 档位变化",
+  "formula": "+1,200 落在 “1–30”",
+  "expected": "1–30:1200.00",
+  "actual": "1–30:1200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N30.dpd",
+  "scenario": "首期到期 2026-10-01（起始 2026-09-01）：DPD",
+  "formula": "2026-10-31 − 2026-10-01",
+  "expected": "30",
+  "actual": "30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N30.overdue",
+  "scenario": "同上：逾期金额",
+  "formula": "100 × 已到期期数",
+  "expected": "100.00",
+  "actual": "100.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N30.bucket",
+  "scenario": "同上：仪表盘 Aging 档位变化",
+  "formula": "+1,200 落在 “1–30”",
+  "expected": "1–30:1200.00",
+  "actual": "1–30:1200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N31.dpd",
+  "scenario": "首期到期 2026-09-30（起始 2026-08-30）：DPD",
+  "formula": "2026-10-31 − 2026-09-30",
+  "expected": "31",
+  "actual": "31",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N31.overdue",
+  "scenario": "同上：逾期金额",
+  "formula": "100 × 已到期期数",
+  "expected": "200.00",
+  "actual": "200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N31.bucket",
+  "scenario": "同上：仪表盘 Aging 档位变化",
+  "formula": "+1,200 落在 “31–60”",
+  "expected": "31–60:1200.00",
+  "actual": "31–60:1200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N60.dpd",
+  "scenario": "首期到期 2026-09-01（起始 2026-08-01）：DPD",
+  "formula": "2026-10-31 − 2026-09-01",
+  "expected": "60",
+  "actual": "60",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N60.overdue",
+  "scenario": "同上：逾期金额",
+  "formula": "100 × 已到期期数",
+  "expected": "200.00",
+  "actual": "200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N60.bucket",
+  "scenario": "同上：仪表盘 Aging 档位变化",
+  "formula": "+1,200 落在 “31–60”",
+  "expected": "31–60:1200.00",
+  "actual": "31–60:1200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N61.dpd",
+  "scenario": "首期到期 2026-08-31（起始 2026-07-31）：DPD",
+  "formula": "2026-10-31 − 2026-08-31",
+  "expected": "61",
+  "actual": "61",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N61.overdue",
+  "scenario": "同上：逾期金额",
+  "formula": "100 × 已到期期数",
+  "expected": "200.00",
+  "actual": "200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N61.bucket",
+  "scenario": "同上：仪表盘 Aging 档位变化",
+  "formula": "+1,200 落在 “61–90”",
+  "expected": "61–90:1200.00",
+  "actual": "61–90:1200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N90.dpd",
+  "scenario": "首期到期 2026-08-02（起始 2026-07-02）：DPD",
+  "formula": "2026-10-31 − 2026-08-02",
+  "expected": "90",
+  "actual": "90",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N90.overdue",
+  "scenario": "同上：逾期金额",
+  "formula": "100 × 已到期期数",
+  "expected": "300.00",
+  "actual": "300.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N90.bucket",
+  "scenario": "同上：仪表盘 Aging 档位变化",
+  "formula": "+1,200 落在 “61–90”",
+  "expected": "61–90:1200.00",
+  "actual": "61–90:1200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N91.dpd",
+  "scenario": "首期到期 2026-08-01（起始 2026-07-01）：DPD",
+  "formula": "2026-10-31 − 2026-08-01",
+  "expected": "91",
+  "actual": "91",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N91.overdue",
+  "scenario": "同上：逾期金额",
+  "formula": "100 × 已到期期数",
+  "expected": "300.00",
+  "actual": "300.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "N91.bucket",
+  "scenario": "同上：仪表盘 Aging 档位变化",
+  "formula": "+1,200 落在 “90+”",
+  "expected": "90+:1200.00",
+  "actual": "90+:1200.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE.outstanding",
+  "scenario": "2025-10-01 起、次日还 5,000、已到期：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "5903.29",
+  "actual": "5903.29",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE.settlement",
+  "scenario": "2025-10-01 起、次日还 5,000、已到期：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "5903.29",
+  "actual": "5903.29",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE.dpd",
+  "scenario": "2025-10-01 起、次日还 5,000、已到期：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "30",
+  "actual": "30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE.overdue",
+  "scenario": "2025-10-01 起、次日还 5,000、已到期：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "6800.00",
+  "actual": "5903.29",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE.biz",
+  "scenario": "业务预期：逾期金额不应超过今日结清额（总欠款）",
+  "formula": "",
+  "expected": "Overdue ≤ 5903.29",
+  "actual": "Overdue 5903.29 vs Settlement 5903.29 / 合同欠款 5903.29",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE2.outstanding",
+  "scenario": "起始日（2026-04-30）还 1,000 冲本金、之后未付利息：合同欠款",
+  "formula": "剩余本金 + 合同期利息 − 已还",
+  "expected": "10620.00",
+  "actual": "10620.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE2.settlement",
+  "scenario": "起始日（2026-04-30）还 1,000 冲本金、之后未付利息：Settlement Today (2026-10-31)",
+  "formula": "剩余本金 + 截至今天利息（D-02）",
+  "expected": "9814.35",
+  "actual": "9814.35",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE2.dpd",
+  "scenario": "起始日（2026-04-30）还 1,000 冲本金、之后未付利息：DPD",
+  "formula": "最早未还清期到期日 → 今天（D-09）",
+  "expected": "0",
+  "actual": "0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE2.overdue",
+  "scenario": "起始日（2026-04-30）还 1,000 冲本金、之后未付利息：Overdue",
+  "formula": "Σ 已到期未还（计划 FIFO）",
+  "expected": "0.00",
+  "actual": "0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "DPD",
+  "id": "PRE2.biz",
+  "scenario": "业务预期：账本上已产生且未付的利息 > 0 时，不应显示 up to date",
+  "formula": "",
+  "expected": "账本未付利息 810.00（截至昨天）→ DPD > 0",
+  "actual": "up to date; Overdue 0.00",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "REASSIGN",
+  "scenario": "改派 A → B",
+  "formula": "",
+  "expected": "Saved",
+  "actual": "Saved",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "A.collected",
+  "scenario": "A 本月 Collected（改派前收 933.63）",
+  "formula": "933.63（D-11 归收款时催收员）",
+  "expected": "933.63",
+  "actual": "933.63",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "A.earned",
+  "scenario": "A 本月 Earned",
+  "formula": "933.63 × 5%",
+  "expected": "46.68",
+  "actual": "46.68",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "B.collected",
+  "scenario": "B 本月 Collected（改派后录入 1,234.57 + 补录昨天 100）",
+  "formula": "1334.57（系统按录入时的案件催收员）",
+  "expected": "1334.57",
+  "actual": "1234.57",
+  "result": "FAIL",
+  "note": "昨天（改派前）的 100 归 B：D-11 “收款时”指录入时还是收款日，待确认"
+ },
+ {
+  "g": "COM",
+  "id": "B.earned",
+  "scenario": "B 本月 Earned",
+  "formula": "1334.57 × 7.5%",
+  "expected": "100.09",
+  "actual": "92.59",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "BACKDATE",
+  "scenario": "补录 2026-10-30（改派前那天）的 100 归属",
+  "formula": "",
+  "expected": "业务预期：A（当天负责的催收员）",
+  "actual": "v1.11.0 拒收：还款日期早于贷款起始日（N-14），无法验证归属",
+  "result": "FAIL",
+  "note": "RULE-CHANGE"
+ },
+ {
+  "g": "COM",
+  "id": "TASKS",
+  "scenario": "改派后任务：待办随案件转 B，已完成留 A",
+  "formula": "",
+  "expected": "QA 待办→B；QA 已完成→A",
+  "actual": "[{\"title\":\"QA 待办\",\"agent_id\":6,\"status\":\"pending\"},{\"title\":\"QA 已完成\",\"agent_id\":5,\"status\":\"done\"}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "RPT.A",
+  "scenario": "Reports 本月业绩 A：Collected/Commission",
+  "formula": "同 Commissions 页",
+  "expected": "933.63/46.68",
+  "actual": "933.63/46.68",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "RPT.B",
+  "scenario": "Reports 本月业绩 B：Collected/Commission",
+  "formula": "同 Commissions 页",
+  "expected": "1234.57/92.59",
+  "actual": "1234.57/92.59",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "CSV.A",
+  "scenario": "agent-performance.csv A：Collected,Commission",
+  "formula": "933.63 / 46.68（RPT-06 无尾差）",
+  "expected": "933.63,46.68",
+  "actual": "933.63,46.68",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "CSV.B",
+  "scenario": "agent-performance.csv B：Collected,Commission",
+  "formula": "1234.57 / 92.59",
+  "expected": "1234.57,92.59",
+  "actual": "1234.57,92.59",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "AGT.A",
+  "scenario": "Agents 页 A：案件数/Collected/Commission",
+  "formula": "0 件（已改派）/933.63/46.68",
+  "expected": "0/933.63/46.68",
+  "actual": "0/933.63/46.68",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "AGT.B",
+  "scenario": "Agents 页 B：案件数/Collected",
+  "formula": "1/1234.57",
+  "expected": "1/1234.57",
+  "actual": "1/1234.57",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "OVERSETTLE",
+  "scenario": "A 结算 50.00 > Earned 46.68",
+  "formula": "",
+  "expected": "Pending −3.32 红字（超额发放无硬拦截，K-05）",
+  "actual": "-3.32 red=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "VOID",
+  "scenario": "作废 A 收的 933.63 后 A 的本月 Earned/Pending",
+  "formula": "",
+  "expected": "0.00 / −50.00（追溯变动，K-05 快照延后）",
+  "actual": "0.00 / -50.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "COM",
+  "id": "RCPT",
+  "scenario": "作废最新一笔 RCPT-2026-0026 后再记一笔（B-06/F-03）",
+  "formula": "",
+  "expected": "新号 ≠ 作废号",
+  "actual": "RCPT-2026-0027",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "RSCAP+",
+  "scenario": "示例B 重组后 PTP 10255.02，到期 2026-11-10",
+  "formula": "拒收：上限 = 2026-11-10 结清额（新条款，含不足一月部分）",
+  "expected": "Promised total RM 10,255.02 exceeds the settlement amount on 2026-11-10 (RM 10,255.01)",
+  "actual": "Promised total RM 10,255.02 exceeds the settlement amount on 2026-11-10 (RM 10,255.01)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "PTP",
+  "id": "RSCAP",
+  "scenario": "同上 PTP 10255.01",
+  "formula": "接受",
+  "expected": "PTP created",
+  "actual": "PTP created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "CAP",
+  "id": "NEGINT",
+  "scenario": "B-13 Fixed 利息 −100 建案",
+  "formula": "拒收",
+  "expected": "Invalid interest amount",
+  "actual": "Invalid interest amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "g": "SCH",
+  "id": "K02",
+  "scenario": "B-18/K-02 示例A 03-02 还 1,000 后：计划未还合计 vs 合同欠款",
+  "formula": "Σ 计划未还 vs 账本",
+  "expected": "10696.06",
+  "actual": "10800.00",
+  "result": "FAIL",
+  "note": "差 103.94（已知延后 K-02）"
+ },
+ {
+  "g": "SCH",
+  "id": "K03",
+  "scenario": "B-19/K-03 演示案件 14：计划与 PTP 并存",
+  "formula": "",
+  "expected": "记录现状",
+  "actual": "计划首行 2026-11-21 239.95（Pending），下一期 2026-11-21 156.60；PTP 1800.00 2026-11-10 pending",
+  "result": "INFO",
+  "note": "已知延后 K-03"
+ }
+]

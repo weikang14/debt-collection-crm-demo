@@ -1,0 +1,323 @@
+<!doctype html>
+<!-- 本文件是同名 PDF 的源文件。生成 PDF：Chrome（Playwright channel=chrome）打印 A4、打印背景，页脚“催收管理系统 v1.11.0 修复报告与线上冒烟测试 · 第 N / M 页”。 -->
+<html lang="zh-CN"><head><meta charset="utf-8">
+<title>v1.11.0 修复报告与线上冒烟测试</title>
+<style>@page { size: A4; margin: 16mm 14mm 18mm; }
+:root { --ink: #1f2a37; --muted: #6b7280; --gold: #b8892f; --gold-bg: #f8f1e3; --line: #d9dee5; --head: #2c3a4b; --zebra: #f7f8fa; }
+* { box-sizing: border-box; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; color: var(--ink); background: #fff;
+  font-family: "Microsoft YaHei", "PingFang SC", "Noto Sans SC", "Segoe UI", sans-serif; font-size: 9.6pt; line-height: 1.55; }
+code, .pre { font-family: Consolas, "Cascadia Mono", monospace; }
+code { background: #eef1f5; border-radius: 3px; padding: 0 3px; font-size: 0.92em; overflow-wrap: anywhere; }
+a { color: inherit; text-decoration: none; }
+
+/* cover */
+.cover { height: 262mm; display: flex; flex-direction: column; justify-content: center; padding: 0 8mm; page-break-after: always;
+  border-left: 6px solid var(--gold); }
+.cover-top { letter-spacing: 4px; color: var(--gold); font-weight: 700; font-size: 11pt; }
+.cover h1 { font-size: 32pt; line-height: 1.25; margin: 10mm 0 4mm; }
+.cover-sub { font-size: 13pt; color: var(--muted); margin-bottom: 16mm; }
+.cover-meta { border-collapse: collapse; font-size: 10.5pt; }
+.cover-meta td { padding: 5px 18px 5px 0; border-bottom: 1px solid var(--line); }
+.cover-meta td:first-child { color: var(--muted); width: 30mm; }
+.cover-foot { margin-top: 28mm; color: var(--muted); font-size: 9pt; }
+
+/* toc */
+.toc { page-break-after: always; }
+.toc h2 { border: 0; }
+.toc ol { list-style: none; padding: 0; margin: 0; }
+.toc > ol > li { padding: 5px 0; border-bottom: 1px dotted var(--line); font-weight: 600; font-size: 10.5pt; }
+.toc ol.sub { columns: 2; column-gap: 10mm; margin: 4px 0 2px 14px; }
+.toc ol.sub li { font-weight: 400; font-size: 9pt; padding: 1px 0; color: #374151; }
+
+/* headings */
+.chapter { page-break-before: always; }
+h2 { font-size: 17pt; margin: 0 0 10px; padding-bottom: 6px; border-bottom: 2px solid var(--gold); }
+h3 { font-size: 12pt; margin: 16px 0 6px; color: var(--head); page-break-after: avoid; }
+h3 + .pre-cond { margin-top: 0; }
+p { margin: 6px 0; }
+ul, ol { margin: 6px 0; padding-left: 20px; }
+li { margin: 2px 0; }
+.pre-cond { color: #374151; font-size: 9pt; background: var(--zebra); border-left: 3px solid var(--line); padding: 4px 8px; }
+
+/* tables */
+table.tc, table.grid { width: 100%; border-collapse: collapse; margin: 6px 0 10px; font-size: 8.6pt; }
+table.tc th, table.grid th { background: var(--head); color: #fff; font-weight: 600; text-align: left; padding: 5px 6px; }
+table.tc td, table.grid td { border-bottom: 1px solid var(--line); padding: 5px 6px; vertical-align: top; }
+table.tc tbody tr:nth-child(even), table.grid tbody tr:nth-child(even) { background: var(--zebra); }
+thead { display: table-header-group; }
+tr { page-break-inside: avoid; }
+td.id { font-family: Consolas, monospace; font-weight: 700; white-space: nowrap; color: var(--head); }
+td.c { text-align: center; }
+table.matrix td:not(:first-child), table.matrix th:not(:first-child) { text-align: center; width: 13%; }
+table.issues { font-size: 8.2pt; }
+table.issues td:first-child { font-family: Consolas, monospace; font-weight: 700; white-space: nowrap; }
+table.check td { padding: 7px 6px; }
+
+.pri { display: inline-block; min-width: 24px; text-align: center; border-radius: 3px; font-size: 8pt; font-weight: 700; padding: 0 3px; color: #fff; }
+.pri.P0 { background: #c0392b; } .pri.P1 { background: var(--gold); } .pri.P2 { background: #8a94a3; }
+.warn { color: #c0392b; font-weight: 700; }
+
+.pre { white-space: pre-wrap; background: #1f2a37; color: #e5e7eb; border-radius: 4px; padding: 8px 10px; font-size: 8.6pt; margin: 6px 0 10px; page-break-inside: avoid; }
+.note { background: var(--gold-bg); border-left: 4px solid var(--gold); padding: 7px 10px; margin: 8px 0; font-size: 9pt; page-break-inside: avoid; }
+.note.red { background: #fdecea; border-left-color: #c0392b; }
+ol.steps li { margin: 4px 0; }
+table.issues th:nth-child(1) { width: 6%; } table.issues th:nth-child(2) { width: 27%; }
+table.issues th:nth-child(3) { width: 22%; } table.issues th:nth-child(4) { width: 6%; }
+table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table.issues th:nth-child(4) { white-space: nowrap; text-align: center; }
+</style>
+<style>
+  .chk { width: 9%; text-align: center; white-space: nowrap; }
+  table.smoke th:nth-child(1) { width: 6%; } table.smoke th:nth-child(2) { width: 10%; }
+  table.smoke th:nth-child(3) { width: 33%; } table.smoke th:nth-child(5) { width: 9%; }
+  .sign td { padding: 9px 6px; }
+  .done { color: #1e7d4f; font-weight: 700; }
+</style>
+</head><body>
+
+<section class="cover">
+  <div class="cover-top">QA · 第二轮回归之后</div>
+  <h1>v1.11.0 修复报告<br>与线上冒烟测试</h1>
+  <div class="cover-sub">催收管理系统（DebtCollectionCRM）</div>
+  <table class="cover-meta">
+    <tr><td>报告日期</td><td>2026-10-26</td></tr>
+    <tr><td>版本</td><td>v1.11.0</td></tr>
+    <tr><td>代码基线</td><td>master · 1c2c4be（已推送）</td></tr>
+    <tr><td>线上环境</td><td>https://debt-collection-crm-demo.onrender.com</td></tr>
+    <tr><td>依据</td><td>docs/qa-reports/2026-10-25/04-final-assessment.md；QA 测试手册 v1.2</td></tr>
+    <tr><td>修订</td><td>2026-10-31：第 5 节按 v1.12.0 更新；冒烟清单 A-2、A-8、A-15 措辞修正；填写第 9 节的执行结果</td></tr>
+  </table>
+  <div class="cover-foot">第一部分：修复报告（第 1–5 节）　·　第二部分：线上冒烟测试（第 6–9 节）</div>
+</section>
+
+<!-- ───────────── 第一部分 ───────────── -->
+<section>
+<h2>1　结论</h2>
+<ul>
+  <li>第二轮回归（v1.10.0）发现的 <b>11 个演示阻断问题（G-01…G-11）已全部修复</b>。同一批还完成了 G-12（逾期封顶）、G-14、G-15、G-19、G-20、G-21、G-22，以及 G-16、G-18、G-24 的演示前部分。</li>
+  <li>14 项决策 N-01…N-14 全部按建议执行（2026-10-25 确认）。其中需要律师或客户答复的部分仍未定，见第 3 节和第 5 节。</li>
+  <li><code>npm test</code>：35 个测试文件、248 个测试全部通过。已合并到 master 并推送，Render 线上已是 v1.11.0。</li>
+  <li><b>线上冒烟测试已于 2026-10-31 执行</b>（第二部分，结果见 <code>06-v1.11.0-冒烟测试结果.md</code>）：A 部分 15/15 通过；B 部分 14 项通过，B-6、B-9、B-13 部分通过（作废 / 撤销步骤在代码里是删除，线上没有执行，本地验证通过）。</li>
+  <li>冒烟发现的 D-1、D-2，以及第 5 节里不需要外部答复的事项，已在 <b>v1.12.0</b> 完成（第 5.1 节）。演示前还要在 Render 重启一次，清掉测试数据。</li>
+</ul>
+
+<h2 style="margin-top:18px">2　修复清单</h2>
+<h3>2.1 演示阻断（全部修复）</h3>
+<table class="grid issues"><thead><tr><th>编号</th><th>问题</th><th>修复（v1.11.0）</th><th>级别</th><th>决策</th></tr></thead><tbody>
+<tr><td>G-01</td><td>不填期限时，利率上限和“总利息 ≤ 本金”的检查失效</td><td>收利息的贷款必须填期限；演示贷款都补上 12 个月期限</td><td>High</td><td>N-02</td></tr>
+<tr><td>G-02</td><td>催收员可以把 Legal、Cancelled、Bankruptcy、Deceased 案件改回在办</td><td>催收员不能改动已结案、已还清或冻结的案件；解除破产或已故必须填原因并记入审计；改回在办会清除结案时间</td><td>High</td><td>N-08</td></tr>
+<tr><td>G-03</td><td>利率上限可以改到 100%，审计没有改前改后的值</td><td>上限最高 18%，只能调低；审计记录“max_annual_rate: 18 → 12”这样的改动；设置页列出超过上限的在办贷款</td><td>Medium</td><td>N-03</td></tr>
+<tr><td>G-04</td><td>挂账欠息在重组生效日当天到期，重组第二天就显示逾期</td><td>挂账欠息与新计划第一期同一天到期；演示案件 14 显示 up to date</td><td>Medium</td><td>N-01</td></tr>
+<tr><td>G-05</td><td>新建案件页“!”里还是“÷ 30”的旧公式</td><td>改为整月计息的说明；测试会检查页面脚本能否正常解析</td><td>Medium</td><td>—</td></tr>
+<tr><td>G-06</td><td>演示催收员收过款后，删除演示数据报 500</td><td>收过款的演示催收员保留，不再报错</td><td>Medium</td><td>—</td></tr>
+<tr><td>G-07</td><td>PTP / 分期弹窗显示的上限是合同欠款，与服务端的结清额上限不一致</td><td>弹窗说明改为“合计不超过到期日的结清额”，并附今天的结清额</td><td>Low</td><td>—</td></tr>
+<tr><td>G-08</td><td>分期标题的“kept”把部分履行也算进去</td><td>kept 只计全额履行，另外显示“· N partial”</td><td>Low</td><td>—</td></tr>
+<tr><td>G-09</td><td>《使用手册》还有“上门”，也没写新规则</td><td>删除“上门”，补上结清额、利率上限、状态权限、冻结、重组、任务改派、佣金归属的说明</td><td>Low</td><td>—</td></tr>
+<tr><td>G-10</td><td>演示债务人的身份证号是合法格式，可能撞上真人</td><td>改用 00 月份和 00 地区码（如 880001-00-5501），明显无效</td><td>Low</td><td>N-04</td></tr>
+<tr><td>G-11</td><td>375px 宽度下仪表盘出现横向滚动</td><td>Upcoming Follow-ups 表格在框内滚动；6 个主要页面都不再横向滚动</td><td>Low</td><td>—</td></tr>
+</tbody></table>
+
+<h3>2.2 同批完成的上线前事项</h3>
+<table class="grid issues"><thead><tr><th>编号</th><th>问题</th><th>修复（v1.11.0）</th><th>级别</th><th>决策</th></tr></thead><tbody>
+<tr><td>G-12</td><td>提前还本后，逾期金额可能大于总欠款</td><td>逾期金额封顶为今日结清额（完整的 DPD 口径见第 5 节）</td><td>High</td><td>N-06</td></tr>
+<tr><td>G-14</td><td>上限先四舍五入再比较，18.0048% 能通过</td><td>按精确值比较</td><td>Medium</td><td>N-03</td></tr>
+<tr><td>G-15</td><td>篡改请求把期限单位改为 days，可以绕过上限</td><td>服务端把期限单位固定为 months</td><td>Medium</td><td>N-02</td></tr>
+<tr><td>G-16</td><td>计息贷款重组为 Fixed 时，判定“没有加息”的口径不可靠</td><td>演示前部分：计息贷款暂时不能重组为 Fixed</td><td>Medium</td><td>N-09</td></tr>
+<tr><td>G-18</td><td>重组后新增利息没有按剩余本金封顶</td><td>新增利息加挂账欠息不得超过剩余本金（延期限制见第 5 节）</td><td>Medium</td><td>N-11</td></tr>
+<tr><td>G-19</td><td>改为破产 / 已故后，待履行的 PTP 不关闭，仍可建催收任务</td><td>pending PTP 自动变为 broken 并写入时间线；仪表盘的 PTP 指标排除冻结案件；冻结案件只能建 legal 任务，不显示 Fulfill</td><td>Medium</td><td>N-08</td></tr>
+<tr><td>G-20</td><td>破产 / 已故收款填的原因在页面上看不到</td><td>原因显示在 Payments 的 Remark 列、时间线和审计中</td><td>Medium</td><td>—</td></tr>
+<tr><td>G-21</td><td>同一张还款表单重复提交会记两笔</td><td>提交后按钮变灰；服务端 10 秒内同金额、同日期、同 Reference 只记一笔</td><td>Medium</td><td>—</td></tr>
+<tr><td>G-22</td><td>早于贷款起始日的还款被接受</td><td>拒绝，提示“Payment date cannot be before the loan start date”</td><td>Medium</td><td>N-14</td></tr>
+<tr><td>G-24</td><td>案件页的大号数字是含未到期利息的合同欠款</td><td>演示前部分：案件页主数字改为今日结清额，合同余额放在次要位置</td><td>Medium</td><td>N-07</td></tr>
+</tbody></table>
+</section>
+
+<section class="chapter">
+<h2>3　决策落实（N-01…N-14）</h2>
+<table class="grid"><thead><tr><th style="width:7%">编号</th><th style="width:30%">决策</th><th style="width:33%">采纳的建议</th><th>落实情况</th></tr></thead><tbody>
+<tr><td class="id">N-01</td><td>挂账欠息何时到期</td><td>A：与新计划第一期同日到期</td><td class="done">已实现</td></tr>
+<tr><td class="id">N-02</td><td>期限是否必填</td><td>A：收利息的贷款必须填期限</td><td class="done">已实现</td></tr>
+<tr><td class="id">N-03</td><td>利率上限设置的护栏</td><td>A：最高 18%，只能调低</td><td class="done">已实现</td></tr>
+<tr><td class="id">N-04</td><td>演示身份证号</td><td>A：改为明显无效的号段</td><td class="done">已实现</td></tr>
+<tr><td class="id">N-05</td><td>Render 演示环境能否让客户自行试用</td><td>B：加提示，只用虚构数据</td><td><span class="done">已实现</span>：登录页和每个页面顶部显示“Demo environment — use made-up data only.”</td></tr>
+<tr><td class="id">N-06</td><td>提前还本后 DPD 和逾期的口径</td><td>演示前先封顶；上线前在 A、B 之间选</td><td><span class="done">封顶已实现</span>；完整口径待定</td></tr>
+<tr><td class="id">N-07</td><td>对外金额的主口径</td><td>A：以今日结清额为主</td><td><span class="done">案件页已改</span>；仪表盘、报表、CSV 上线前改</td></tr>
+<tr><td class="id">N-08</td><td>冻结案件的补充规则</td><td>按建议：只有 manager / admin 能解除并须填原因；转冻结时关闭待履行承诺；只能建 legal 任务</td><td class="done">已实现</td></tr>
+<tr><td class="id">N-09</td><td>Fixed 年化用 flat 还是实际利率</td><td>律师答复前禁止“计息 → Fixed”重组</td><td><span class="done">禁止已实现</span>；口径待律师</td></tr>
+<tr><td class="id">N-10</td><td>Fixed 提前结清是否回扣</td><td>律师答复前，演示时说“待法律确认”</td><td>无代码改动；待律师</td></tr>
+<tr><td class="id">N-11</td><td>重组利息上限和延期限制</td><td>先按 B：新增利息 + 挂账 ≤ 剩余本金</td><td><span class="done">已实现</span>；延期限制待问客户</td></tr>
+<tr><td class="id">N-12</td><td>佣金“按收款时的催收员”的含义</td><td>A：按录入时的催收员，写进使用手册</td><td class="done">已写入使用手册</td></tr>
+<tr><td class="id">N-13</td><td>改为未分派时任务归谁</td><td>A：留在原催收员名下</td><td class="done">已实现</td></tr>
+<tr><td class="id">N-14</td><td>起息日之前的还款</td><td>A：拒绝</td><td class="done">已实现</td></tr>
+</tbody></table>
+
+<h2 style="margin-top:18px">4　验证与交付</h2>
+<h3>4.1 测试</h3>
+<ul>
+  <li><code>npm test</code>：35 个测试文件、248 个测试全部通过。合并前在分支上、合并后在 master 上各跑了一次。</li>
+  <li>新增 <code>test/qa_round2.test.js</code>（17 个测试，覆盖 G-01…N-14）；<code>qa_demo_fixes</code> 增加 G-10、N-02、G-06 场景；<code>qa_decisions</code> 的 D-03 按新上限规则改写；<code>schedule</code> 测试改为挂账与第一期同日到期。</li>
+  <li>浏览器核对（临时数据库，模拟 Render 环境）：演示提示条、案件 14 显示 up to date、主数字为今日结清额、公式说明正常显示、agent 看到破产案件只有状态标签、上限输入最高 18；375px 宽度下 6 个页面都没有横向滚动。</li>
+</ul>
+<h3>4.2 测试隔离与正式库</h3>
+<ul>
+  <li>原来有 8 个测试文件没有隔离数据库，其中 <code>numbering.test.js</code> 会往 <code>data/crm.db</code> 写编号。现在所有测试文件都用临时库，跑完测试后 <code>data/crm.db</code> 字节不变。</li>
+  <li>测试写进正式库的 2 行编号已删除（经确认）。下一个编号恢复为 CASE-2026-0005 和 RCPT-2026-0001，案件、还款、审计数据没有变化。</li>
+</ul>
+<h3>4.3 提交与部署</h3>
+<table class="grid"><thead><tr><th style="width:14%">提交</th><th>内容</th></tr></thead><tbody>
+<tr><td class="id">4be6792</td><td>test: isolate every test file from the real data/crm.db</td></tr>
+<tr><td class="id">1c2c4be</td><td>fix: QA round-2 findings (v1.11.0)：代码、测试和 <code>docs/使用手册.md</code></td></tr>
+</tbody></table>
+<ul>
+  <li>master <code>5244ed3..1c2c4be</code> 已推送；Render 自动部署后，登录页显示 v1.11.0 和演示提示（2026-10-25 确认）。</li>
+  <li>按要求没有提交：QA 报告、<code>tests/qa/</code> 脚本、<code>docs/QA测试手册.pdf</code>。</li>
+</ul>
+<h3>4.4 QA 测试手册 v1.2</h3>
+<ul>
+  <li>42 页，223 条功能用例（v1.1 为 213 条），已保存到 <code>docs/QA测试手册.pdf</code>。</li>
+  <li>按 v1.11.0 的规则改写 18 条用例，新增 10 条：CASE-25、INT-15、INT-16、INT-17、PAY-18、PAY-19、RS-26、RS-27、TASK-12、TASK-13。</li>
+  <li>同时更新了演示数据地图、权限矩阵、计算规则（5.1）、重组示例（5.3）、E2E-02、附录 A 状态说明和附录 D 的错误提示。</li>
+</ul>
+</section>
+
+<section class="chapter">
+<h2>5　尚未完成（正式上线前处理）</h2>
+<p style="font-size:8.6pt;color:#6b7280">2026-10-31 更新：不需要律师或客户答复的事项已在 v1.12.0 完成（5.1），其余仍待外部决定（5.2）。<code>npm test</code> 36 个文件、261 个测试全部通过（UTC 与马来西亚时区各跑一次）。</p>
+<h3>5.1 已在 v1.12.0 完成</h3>
+<table class="grid issues"><thead><tr><th>编号</th><th>问题</th><th>处理（v1.12.0）</th></tr></thead><tbody>
+<tr><td>D-1</td><td>调低利率上限后，计息案件只改催收员也被拒（冒烟发现，违反 INT-14）</td><td>计息贷款比较条款时不看 <code>interest_amount</code>；演示种子不再给计息贷款存固定利息</td></tr>
+<tr><td>D-2</td><td>破产案件 Fulfill 提示“PTP already resolved”（与 PTP-16 不符）</td><td>先判断破产 / 已故，提示改用 Record Payment 并填原因</td></tr>
+<tr><td>G-23</td><td>案件列表和 CSV 没有 DPD、逾期金额、今日结清额</td><td>案件列表、cases.csv、cases-detailed.csv 增加这三列；列表可按 DPD 排序</td></tr>
+<tr><td>G-24</td><td>仪表盘、报表、CSV 的合计含未到期利息</td><td>合计改为今日结清额，合同余额并列显示；账龄、跟进表、债务人页、催收员页同样</td></tr>
+<tr><td>G-25</td><td>审计缺口</td><td>债务人、用户、催收员修改记录改前改后值；每次提交的业务改动与审计同一事务，审计写不进去则整笔回滚；导出留审计记录；审计表拒绝改写（触发器）</td></tr>
+<tr><td>G-27</td><td>补录较早日期的还款时，拒收提示的上限偏低</td><td>按分二分查找，提示的金额正好能收</td></tr>
+<tr><td>G-28</td><td>佣金结算、重组利率和金额解析过宽；取消不存在的计划也提示成功</td><td>与还款、建案相同的严格解析（<code>0x10</code>、<code>1e0</code>、三位小数被拒）；不存在的计划报错</td></tr>
+<tr><td>G-29</td><td>非 UTC 主机上的时区解析差一天</td><td>SQLite 时间串一律按 UTC 解析；演示种子的日期与主机时区无关</td></tr>
+<tr><td>K-01</td><td>半分舍入的浮点误差（如 1,030.225 舍成 .22）</td><td>先按 15 位有效数字去掉浮点尾差，再四舍五入到分</td></tr>
+<tr><td>F-24</td><td>改账不留痕、作废是硬删除、有还款的案件可改条款</td><td>修改或作废前的原记录永久保留（<code>payment_history</code>，只增不改），作废可填原因、案件页列出已作废还款；有还款或重组后，贷款条款和债务人锁定</td></tr>
+<tr><td>F-25</td><td>不出具收据</td><td>每笔还款有可打印的收据页，修改过的注明修改时间（版式与法定要素随 D-08 / G-26 再定）</td></tr>
+<tr><td>O-1 / O-5 / O-8</td><td>冒烟观察：上限报错把 18.0048% 显示成 18%；重复提交没有提示；侧栏悬停盖住按钮</td><td>报错显示精确年化；提示“Duplicate submission ignored”；侧栏停留约 0.3 秒才展开</td></tr>
+</tbody></table>
+<h3>5.2 仍待外部决定</h3>
+<table class="grid issues"><thead><tr><th>编号</th><th>内容</th><th>前提</th></tr></thead><tbody>
+<tr><td>G-13</td><td>区分有担保 / 无担保贷款（有担保上限 12%）</td><td>先问客户有没有有担保贷款，再由律师界定</td></tr>
+<tr><td>G-16</td><td>Fixed 模式改用实际利率（IRR）年化和判断“不加息”</td><td>N-09，律师</td></tr>
+<tr><td>G-17</td><td>Fixed 贷款提前结清的利息回扣</td><td>N-10，律师</td></tr>
+<tr><td>G-18</td><td>重组的延期限制</td><td>N-11，问客户的审批惯例</td></tr>
+<tr><td>G-26</td><td>对账单的法定要素（逐期明细、签署栏、牌照号、借款人地址）；收据的正式版式</td><td>D-08，由哪个系统出具</td></tr>
+<tr><td>G-30</td><td>闰年和短期贷款的年化边界</td><td>D-17，律师</td></tr>
+<tr><td>G-31</td><td>改派后补录的还款，佣金归属</td><td>N-12，问客户</td></tr>
+<tr><td>N-06</td><td>计息贷款 DPD 的完整口径（按账本还是按计划）</td><td>在 A、B 之间选</td></tr>
+<tr><td>G-25 余项</td><td>审计与业务同库，管理员能直接改库；需要外部存证（定期导出到只读存储或哈希锚定）</td><td>与 F-36（托管地）一起定</td></tr>
+<tr><td>O-10</td><td>Partial Paid 案件作废唯一一笔还款后，状态仍是 Partial Paid</td><td>问业务：是否回到 Negotiation</td></tr>
+</tbody></table>
+<p>另外仍未处理的：</p>
+<ul>
+  <li>上一轮已知未修：F-30、F-31、F-33、F-35、F-36、F-43、F-48…F-51；D-17 的 11 项律师书面确认；已知延后 K-02…K-13；正式上线前停用或改掉公开演示账号。</li>
+  <li>第二轮三个角色的 QA 脚本已于 2026-10-31 按 v1.11.0 重跑（06 报告第 5 节）。r2 脚本按 v1.10.0 写，约 20 项因规则变更判失败，已按手册 v1.2 逐条判定；31 日日期溢出的脚本问题已修。</li>
+  <li>QA 测试手册 v1.2 中随 v1.12.0 改变预期的用例：CASE-02、RPT-02、RPT-05（新增列）、DASH-05（合计改为今日结清额）、PAY-09、PAY-10（原记录保留、作废原因、Voided 表）、CASE-08（有还款后条款锁定）、AUD-04（导出留记录）、PTP-16（现在符合手册），下次改版手册时一起更新。</li>
+</ul>
+</section>
+
+<!-- ───────────── 第二部分 ───────────── -->
+<section class="chapter">
+<h2>6　线上冒烟测试：准备</h2>
+<table class="grid"><tbody>
+<tr><td style="width:18%">网址</td><td>https://debt-collection-crm-demo.onrender.com</td></tr>
+<tr><td>版本</td><td>v1.11.0（登录页底部可以看到）</td></tr>
+<tr><td>预计用时</td><td>约 60 分钟（A 部分约 25 分钟，B 部分约 35 分钟）</td></tr>
+</tbody></table>
+<h3>6.1 测试账号</h3>
+<table class="grid"><thead><tr><th>用户名</th><th>密码</th><th>角色</th><th>数据范围</th></tr></thead><tbody>
+<tr><td>admin</td><td>admin123</td><td>admin</td><td>全部</td></tr>
+<tr><td>manager</td><td>manager123</td><td>manager</td><td>全部</td></tr>
+<tr><td>agent1</td><td>agent123</td><td>agent</td><td>案件 5、9、13、17</td></tr>
+<tr><td>agent2</td><td>agent123</td><td>agent</td><td>案件 2、6、10、14、18</td></tr>
+<tr><td>agent3</td><td>agent123</td><td>agent</td><td>案件 3、7、11、15、19</td></tr>
+<tr><td>finance</td><td>finance123</td><td>finance</td><td>全部</td></tr>
+<tr><td>auditor</td><td>auditor123</td><td>auditor</td><td>全部（只读）</td></tr>
+</tbody></table>
+<p style="font-size:8.6pt;color:#6b7280">以上是公开的演示账号，正式上线前必须停用或改密码。</p>
+<h3>6.2 注意事项</h3>
+<ul>
+  <li><b>只用虚构数据</b>，不要录入真实的人名、身份证号、电话。</li>
+  <li>Render 每次重启或部署都会重新载入演示数据。测试中改动的数据会在下次重启时清掉；测完后要重启一次，把演示数据恢复干净（见第 9 节）。10-31 实测线上数据仍是 10-26 载入的，测试前先核对 Render 最近一次重启的时间。</li>
+  <li>演示数据的日期以服务最近一次启动那天为基准，例如案件 14 是启动日的“10 天前重组”。</li>
+  <li>多人同时测试会互相影响数据，最好一个人执行。</li>
+  <li>登录连续输错 5 次会锁 15 分钟。</li>
+  <li>先做 A 部分，再做 B 部分。A-5 改了利率上限，做完要马上改回 18。</li>
+  <li>每项勾“通过”或“失败”；失败时记下账号、案件号、马来西亚时间和截图。</li>
+</ul>
+<h3>6.3 演示数据速查</h3>
+<table class="grid"><thead><tr><th style="width:10%">案件</th><th style="width:18%">状态</th><th style="width:16%">催收员</th><th>本次用途</th></tr></thead><tbody>
+<tr><td>2</td><td>Assigned</td><td>agent2</td><td>Monthly 1.5%/月，有还款计划：看主数字（A-3）</td></tr>
+<tr><td>4</td><td>PTP</td><td>Tan Mei Ling</td><td>Annual 18%，一条 5 天后到期的 pending PTP：冻结规则（A-9…A-12）</td></tr>
+<tr><td>5 / 17</td><td>Partial Paid / Legal</td><td>agent1</td><td>agent 的状态权限（A-4）</td></tr>
+<tr><td>8 / 9 / 10 / 11</td><td>Closed / Cancelled / Bankruptcy / Deceased</td><td>各不相同</td><td>终态案件；案件 10 属于 agent2（A-4）</td></tr>
+<tr><td>14</td><td>Negotiation</td><td>agent2</td><td>10 天前重组：up to date（A-2）</td></tr>
+<tr><td>19</td><td>Assigned</td><td>agent3</td><td>防重复提交、起息日（A-7、A-8）</td></tr>
+<tr><td>20</td><td>Negotiation</td><td>Tan Mei Ling</td><td>Monthly 1.5%/月：重组为 Fixed 被拒（A-13）</td></tr>
+</tbody></table>
+</section>
+
+<section class="chapter">
+<h2>7　A 部分：v1.11.0 新改动</h2>
+<table class="grid smoke check"><thead><tr><th>#</th><th>账号</th><th>操作</th><th>预期结果</th><th>用例</th><th class="chk">通过 / 失败</th></tr></thead><tbody>
+<tr><td class="id">A-1</td><td>任意</td><td>打开登录页，登录后再随便打开几个页面</td><td>登录页显示 v1.11.0 和红色提示“Demo environment — use made-up data only.”；登录后每个页面顶部也有这条提示</td><td>AUTH-10</td><td class="chk">☐ / ☐<br><span style="font-size:7.5pt;color:#6b7280">登录页 10-25 已确认</span></td></tr>
+<tr><td class="id">A-2</td><td>agent2</td><td>打开案件 14，点 Records</td><td>显示 up to date，不是 Overdue；挂账行标注“Arrears (carried)”，与新计划第一期同一天到期；重组历史为服务启动日的 10 天前、1.2%/月、18 个月</td><td>RS-09、RS-22</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-3</td><td>agent2</td><td>打开案件 2</td><td>最大的数字是 Settlement Today；旁边有 Contract Balance（含未到期利息）和逾期情况（up to date，或逾期金额与天数）；逾期金额不超过今日结清额</td><td>CASE-10</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-4</td><td>agent1、agent2</td><td>agent1 打开案件 5 看 Status 下拉，再打开案件 17（Legal）；agent2 打开案件 10（Bankruptcy）</td><td>案件 5 的下拉只有 New、Assigned、Negotiation、PTP、Partial Paid；案件 17 和 10 没有下拉，只显示状态和“only a manager can change it”</td><td>CASE-21</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-5</td><td>admin</td><td>Settings 的 Max annual interest rate 先填 24 提交；再填 12 保存，看设置页和 Audit Log；<b>最后改回 18</b></td><td>24 被拒（浏览器会先拦截）；12 保存成功，设置页出现红框“Open loans above the 12% p.a. cap: …”，审计显示“max_annual_rate: 18 → 12”；改回 18 后红框消失</td><td>INT-12、SET-09</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-6</td><td>manager</td><td>新建案件（选一个现有债务人）：① Fixed 利息 200，不填期限；② Monthly 1.5%，不填期限；③ Monthly 1.5004%，期限 12 个月</td><td>①② 提示“Tenure is required for a loan that charges interest”；③ 因超过 18% p.a. 被拒；三次都没有建成案件</td><td>INT-15、INT-16</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-7</td><td>manager</td><td>案件 19 记一笔小额还款（如 10.00），快速双击 Add Payment</td><td>提交后按钮变灰；只生成一笔还款、一个收据号</td><td>PAY-18</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-8</td><td>manager</td><td>案件 19 再记一笔还款，日期填详情页 Opened 日期的前一天（案件 19 是 Fixed 贷款，起始日就是开案日，详情页不单独显示 Loan Start Date）</td><td>提示“Payment date cannot be before the loan start date (日期)”，没有入账</td><td>PAY-19</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-9</td><td>admin</td><td>把案件 4 的状态改为 Bankruptcy</td><td>原来的 pending PTP 自动变为 broken，时间线显示“1 pending promise(s) closed: case marked Bankruptcy”；页面上不再有 New PTP、New Plan、Restructure、Log Call、Fulfill</td><td>CASE-24</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-10</td><td>admin</td><td>案件 4 新建一个 follow_up 任务，再新建一个 legal 任务</td><td>follow_up 被拒，提示“Only legal tasks can be added to a bankrupt or deceased case”；legal 任务可以建</td><td>TASK-12</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-11</td><td>admin</td><td>案件 4 记一笔小额还款，Reason 填“Trustee distribution”</td><td>弹窗里 Reason 是必填项（不填时浏览器拦截）；提交后，原因显示在 Payments 的 Remark 列、时间线和 Audit Log 中</td><td>CASE-24</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-12</td><td>admin</td><td>案件 4 改回 Negotiation：先不填原因点 Update，再填原因</td><td>不填时提示“A reason is required to lift Bankruptcy”；填了可以改，审计记下原因</td><td>CASE-24</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-13</td><td>manager</td><td>对案件 20（Monthly）点 Restructure，利息模式选 Fixed</td><td>提示“A rate-based loan cannot be restructured to a fixed amount (pending legal review)”</td><td>RS-26</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-14</td><td>manager</td><td>新建案件页点 Interest Mode 旁的金色“!”，切换三种模式</td><td>Monthly 说明为“remaining principal × monthly% for each full month … pro-rated by the actual days in that month”；切换正常，没有脚本错误</td><td>INT-02</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">A-15</td><td>任意</td><td>用手机，或把浏览器宽度调到 375px，打开 Dashboard、Cases、案件详情</td><td>页面没有横向滚动；Dashboard 的 Upcoming Follow-ups 表格在框内滚动；点 ☰ 打开侧栏，点遮罩关闭</td><td>NAV-04</td><td class="chk">☐ / ☐</td></tr>
+</tbody></table>
+</section>
+
+<section class="chapter">
+<h2>8　B 部分：常规回归冒烟</h2>
+<p>来自 QA 测试手册 v1.2 第 8 章，详细步骤见对应用例。新建的债务人和案件请用虚构资料。</p>
+<table class="grid smoke check"><thead><tr><th>#</th><th>检查项</th><th style="width:40%"></th><th style="width:16%">用例</th><th class="chk">通过 / 失败</th></tr></thead><tbody>
+<tr><td class="id">B-1</td><td colspan="2">admin、manager、agent1–3、finance、auditor 都能登录，菜单与权限矩阵一致</td><td>NAV-01</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-2</td><td colspan="2">Dashboard 各项数字正常显示，没有报错页</td><td>—</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-3</td><td colspan="2">新建债务人和案件（Monthly，12 个月），还款计划正确</td><td>CASE-04、SCH-03</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-4</td><td colspan="2">在 B-3 的案件上记一笔部分还款，状态与欠款正确</td><td>PAY-01、PAY-02</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-5</td><td colspan="2">超额还款在弹窗内被拦截，提前结清只收到今天为止的利息</td><td>PAY-04、PAY-17</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-6</td><td colspan="2">编辑并作废一笔还款，欠款恢复</td><td>PAY-09、PAY-10</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-7</td><td colspan="2">还款计划第一期的 Pay 按钮能预填金额</td><td>SCH-07</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-8</td><td colspan="2">新建 PTP → 履行 → 新建分期计划 → 取消计划</td><td>PTP-01、03、06、10</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-9</td><td colspan="2">重组 → 锁定检查 → 撤销</td><td>RS-08、RS-12、RS-15</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-10</td><td colspan="2">记一次通话、加一条备注、修改状态，时间线正确</td><td>—</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-11</td><td colspan="2">新建并完成一个任务</td><td>TASK-02、TASK-06</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-12</td><td colspan="2">报表页正常显示，三个 CSV 都能下载</td><td>RPT-05</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-13</td><td colspan="2">佣金结算与作废</td><td>COM-03、COM-05</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-14</td><td colspan="2">对账单可以打印</td><td>SET-06</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-15</td><td colspan="2">agent1 直接访问 /cases/2 被拒绝</td><td>CASE-18</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-16</td><td colspan="2">auditor 的案件页只读</td><td>CASE-19</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-17</td><td colspan="2">Audit Log 有本次测试操作的记录</td><td>—</td><td class="chk">☐ / ☐</td></tr>
+<tr><td class="id">B-18</td><td colspan="2"><code>npm test</code> 全部通过</td><td>—</td><td class="chk"><span class="done">本地已通过</span><br><span style="font-size:7.5pt;color:#6b7280">248/248，10-25、10-31</span></td></tr>
+</tbody></table>
+
+<h2 style="margin-top:18px">9　测试结束后</h2>
+<ol class="steps">
+  <li>确认 Settings 的利率上限已经改回 18。</li>
+  <li>在 Render 控制台重启服务（或重新部署一次），让演示数据恢复干净。注意：这会清空本次测试录入的数据和审计记录。</li>
+  <li>重启后打开案件 14，确认显示 up to date，作为演示前的最后确认。</li>
+  <li>有失败项：记下失败编号和截图，修复后重跑失败项和相关项。</li>
+</ol>
+<table class="grid sign"><tbody>
+<tr><td style="width:18%">执行人</td><td>Claude Code（<code>tests/qa/r3/smoke.qa.py</code>，公开演示账号）</td><td style="width:18%">日期 / 时间（MYT）</td><td>2026-10-31 11:36–11:37</td></tr>
+<tr><td>通过 / 失败</td><td>A：15 / 0　　B：14 / 0（另 3 项部分通过）</td><td>结论</td><td>☑ 可以演示　☐ 需要修复</td></tr>
+<tr><td>失败项与备注</td><td colspan="3" style="height:28mm">没有失败项。A-2 的“10 天前”按线上数据载入日（10-26）计算，符合手册。B-6、B-9、B-13 的作废 / 撤销步骤在代码里是删除，按要求没有在线上执行，本地模拟 Render 验证通过。冒烟发现 D-1、D-2，已在 v1.12.0 修复（第 5.1 节）。线上留下的测试数据见 06 报告 §2.5：<b>演示前先在 Render 重启一次</b>清除。详见 <code>docs/qa-reports/2026-10-25/06-v1.11.0-冒烟测试结果.md</code>。</td></tr>
+</tbody></table>
+</section>
+
+</body></html>

@@ -48,6 +48,13 @@
       g.classList.toggle('open', stored === '1');
     });
   })();
+  // O-8: open the rail only once the pointer rests on it; passing over it toward
+  // the page leaves it shut, so it never covers buttons near the left edge.
+  (function(){
+    var s = document.querySelector('.sidebar'), t;
+    s.addEventListener('mouseenter', function(){ t = setTimeout(function(){ s.classList.add('is-open'); }, 300); });
+    s.addEventListener('mouseleave', function(){ clearTimeout(t); s.classList.remove('is-open'); });
+  })();
   function toggleGrp(head){
     var g = head.closest('.grp');
     g.classList.toggle('open');

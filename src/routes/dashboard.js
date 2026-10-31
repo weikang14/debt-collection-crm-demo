@@ -3,8 +3,9 @@ const { get, all } = require('../db');
 const { requireLogin } = require('../middleware/auth');
 const { caseWhere, isScoped } = require('../utils/scope');
 const { bucketAging, BUCKET_LABELS, bucketDpd, DPD_LABELS } = require('../utils/aging');
-const { arrearsOf, restructuresOf } = require('../services/restructure');
-const { TERMINAL_STATUSES } = require('../services/payments');
+const { todayFigures } = require('../services/restructure');
+const { TERMINAL_STATUSES, settlementOn } = require('../services/payments');
+const { round2, todayMYT, daysOverdue, dateFmt } = require('../utils/helpers');
 const { followupTasks } = require('../utils/followups');
 const router = express.Router();
 
@@ -13,9 +14,14 @@ router.get('/', requireLogin, (req, res) => {
   const w = caseWhere(u); // clause on `cases`
   const cq = (extra, params = []) => get(`SELECT COUNT(*) c, COALESCE(SUM(outstanding_amount),0) s FROM cases WHERE ${w.clause} ${extra}`, [...w.params, ...params]);
   // Portfolio balance (D-09): closed / cancelled cases don't count; legal,
-  // bankruptcy and deceased do, and are also shown on their own.
-  const outstanding = cq("AND status NOT IN ('closed','cancelled')").s;
-  const specialOutstanding = cq("AND status IN ('legal','bankruptcy','deceased')").s;
+  // bankruptcy and deceased do, and are also shown on their own. Totals are
+  // today's settlement amounts (N-07, G-24); the contract balance, which
+  // includes interest not yet due, is shown beside it.
+  const open = all(`SELECT * FROM cases WHERE ${w.clause} AND status NOT IN ('closed','cancelled')`, w.params).map(c => ({ ...c, ...todayFigures(c) }));
+  const sum = rows => round2(rows.reduce((s, c) => s + c.settlement, 0));
+  const outstanding = sum(open);
+  const contractOutstanding = round2(open.reduce((s, c) => s + c.outstanding_amount, 0));
+  const specialOutstanding = sum(open.filter(c => ['legal', 'bankruptcy', 'deceased'].includes(c.status)));
   const legalCount = cq("AND status='legal'").c;
   // opened_at / closed_at are stored in UTC: shift them to MYT before taking the date.
   const openedToday = cq("AND date(opened_at,'+8 hours')=date('now','+8 hours')").c;
@@ -29,25 +35,20 @@ router.get('/', requireLogin, (req, res) => {
   const overdueTasks = isScoped(u)
     ? get("SELECT COUNT(*) c FROM tasks WHERE agent_id=? AND status='pending' AND due_date IS NOT NULL AND date(due_date) < date('now','+8 hours')", [u.agent_id]).c
     : get("SELECT COUNT(*) c FROM tasks WHERE status='pending' AND due_date IS NOT NULL AND date(due_date) < date('now','+8 hours')").c;
-  // Aging: active outstanding grouped by debt age (days since opened), MYT.
+  // Aging of the cases still being worked (not terminal, not paid off), by
+  // settlement amount: by days past due (D-09, the primary view: the bucket of
+  // the oldest missed instalment) and by debt age (days since opened, MYT).
   const tph = TERMINAL_STATUSES.map(() => '?').join(',');
-  const agingRows = all(`SELECT CAST(julianday(date('now','+8 hours')) - julianday(date(opened_at,'+8 hours')) AS INTEGER) age, outstanding_amount amt
-    FROM cases WHERE ${w.clause} AND outstanding_amount > 0 AND status NOT IN (${tph})`, [...w.params, ...TERMINAL_STATUSES]);
-  const aging = bucketAging(agingRows);
-  // Aging by days past due (D-09, the primary view): each open case's balance in
-  // the bucket of its oldest missed instalment.
-  // ponytail: computed per case on every load; cache DPD on the case if the book grows large.
-  const dpdRows = all(`SELECT * FROM cases WHERE ${w.clause} AND outstanding_amount > 0 AND status NOT IN (${tph})`, [...w.params, ...TERMINAL_STATUSES])
-    .map(c => ({ dpd: arrearsOf(c, all('SELECT amount, payment_date FROM payments WHERE case_id=? ORDER BY payment_date, id', [c.id]), restructuresOf(c.id)).dpd,
-      amt: c.outstanding_amount }));
-  const agingDpd = bucketDpd(dpdRows);
+  const working = open.filter(c => c.outstanding_amount > 0 && !TERMINAL_STATUSES.includes(c.status));
+  const aging = bucketAging(working.map(c => ({ age: daysOverdue(dateFmt(c.opened_at)), amt: c.settlement })));
+  const agingDpd = bucketDpd(working.map(c => ({ dpd: c.dpd, amt: c.settlement })));
   // Active = still being worked: not terminal and not already paid off (D-09).
   const activeCases = get(`SELECT COUNT(*) c FROM cases WHERE ${w.clause} AND status NOT IN (${tph}) AND status <> 'fully_paid'`, [...w.params, ...TERMINAL_STATUSES]).c;
   // Upcoming follow-ups: pending tasks linked to a case, due within the next
   // 14 days (including anything already overdue) — see utils/followups.js.
   // followupCount is the full-window total; followups is the top 10 for display.
   const followupRows = followupTasks(u, 14);
-  const followups = followupRows.slice(0, 10);
+  const followups = followupRows.slice(0, 10).map(f => ({ ...f, settlement: settlementOn(f.case_id, todayMYT()) }));
   const followupCount = followupRows.length;
   const recent = all(`SELECT e.*, c.case_no FROM timeline_events e JOIN cases c ON c.id=e.case_id WHERE ${w.clause.replace(/cases\./g,'c.')} ORDER BY e.created_at DESC, e.id DESC LIMIT 12`, w.params);
   let leaderboard = null;
@@ -56,7 +57,7 @@ router.get('/', requireLogin, (req, res) => {
       LEFT JOIN payments p ON p.agent_id=a.id
       GROUP BY a.id ORDER BY collected DESC LIMIT 5`);
   }
-  res.render('dashboard/index', { title: 'Dashboard', kpi: { outstanding, specialOutstanding, legalCount, openedToday, closedToday, collectedToday, paymentsToday, activeCases, ptpToday, brokenPtp, overduePtp, overdueTasks, followupCount },
+  res.render('dashboard/index', { title: 'Dashboard', kpi: { outstanding, contractOutstanding, specialOutstanding, legalCount, openedToday, closedToday, collectedToday, paymentsToday, activeCases, ptpToday, brokenPtp, overduePtp, overdueTasks, followupCount },
     aging, agingLabels: BUCKET_LABELS, agingDpd, dpdLabels: DPD_LABELS, followups, leaderboard, recent });
 });
 module.exports = router;

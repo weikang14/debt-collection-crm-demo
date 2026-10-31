@@ -1,0 +1,422 @@
+[
+ {
+  "id": "TASK-01",
+  "expected": "各筛选结果符合；逾期待办红色 · overdue",
+  "actual": "{\"status\":[\"4\",\"4\"],\"type\":[\"\",\"\"],\"overdue\":[\"2,6\",\"2,6\"],\"w1_Today\":[\"4\",\"2,4,6\"],\"w7\":[\"1,2,3,4,5,6\",\"1,2,3,4,5,6\"],\"w14\":[\"1,2,3,4,5,6\",\"1,2,3,4,5,6\"],\"w30\":[\"1,2,3,4,5,6\",\"1,2,3,4,5,6\"]} 红色逾期=true",
+  "result": "FAIL",
+  "note": "Due within “Today” = window=1，SQL 为 ≤ 今天+1 天（src/routes/tasks.js:18-22），会把明天到期的任务也列入"
+ },
+ {
+  "id": "TASK-02",
+  "expected": "Agent 自动带出案件催收员并锁定；Task created",
+  "actual": "Task created; 提交 agent_id=1 → 实际 2（案件 2 属 agent2）; 前端锁定脚本存在=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-03",
+  "expected": "① 归所选催收员；② 归 agent1 自己",
+  "actual": "admin 选 3 → 3; agent1（提交 agent_id=3）→ 1",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-04",
+  "expected": "浏览器拦截",
+  "actual": "required=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-05",
+  "expected": "Task updated",
+  "actual": "null; QA case task/follow_up/2026-11-02/null",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "TASK-06",
+  "expected": "Task completed；done；Complete 消失",
+  "actual": "Task completed; status=done",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-07",
+  "expected": "只看自己的任务；越权提示 Forbidden",
+  "actual": "列表 4,5,9（本人 4,5,9）; complete→Forbidden; edit→Forbidden",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-08",
+  "expected": "Invalid case",
+  "actual": "Invalid case",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-09",
+  "expected": "没有 + New Task；Actions 列显示 —",
+  "actual": "finance: new=false edit=false dash=true; auditor: new=false edit=false dash=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "TASK-10",
+  "expected": "Upcoming Follow-ups 出现，徽章 in 3d",
+  "actual": "true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-01",
+  "expected": "Collected 降序；Commission=Collected×Rate%；达成率颜色",
+  "actual": "[{\"id\":\"2\",\"col\":24516,\"rate\":5,\"com\":\"1,225.80\",\"cls\":\"is-red\",\"pct\":5},{\"id\":\"4\",\"col\":7965,\"rate\":4,\"com\":\"318.60\",\"cls\":\"is-red\",\"pct\":3},{\"id\":\"1\",\"col\":2916,\"rate\":5,\"com\":\"145.80\",\"cls\":\"is-red\",\"pct\":1},{\"id\":\"3\",\"col\":0,\"rate\":6,\"com\":\"0.00\",\"cls\":\"is-red\",\"pct\":0}]",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-02",
+  "expected": "结果符合条件",
+  "actual": "Consumer→1,2; active→1,2,3,4; inactive→空",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-03",
+  "expected": "Name is required；Commission 默认 5；Status 默认 Active；Agent created",
+  "actual": "Name is required; 默认 5=true; Active 默认=true; Agent created",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-04",
+  "expected": "详情 Active=No；新建/编辑案件、新建用户下拉不出现",
+  "actual": "Saved; Active No=true; 下拉 new=false edit=false user=false",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-05",
+  "expected": "联系方式、部门、目标、已收、案件数、佣金率、达成率与进度条、名下案件",
+  "actual": "Lim Wei Sheng — Debt Collection CRM &#9776; Debt Collection CRM D Debt Collection CRM Dashboard Debtors Cases Tasks Team &rsaquo; Agents Users Reports Commissions Admin &rsaquo; Settings Demo Data Audit Log Search System",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AGT-06",
+  "expected": "auditor 只读；agent1/finance 403",
+  "actual": "auditor 200 new=false POST=403; agent1 403; finance 403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-01",
+  "expected": "User xxx created；可立即登录",
+  "actual": "null; login 401→",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "USR-02",
+  "expected": "Username, full name, password and role are required",
+  "actual": "Username, full name, password and role are required | Username, full name, password and role are required | Username, full name, password and role are required | Username, full name, password and role are required",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-03",
+  "expected": "只有 admin、manager、agent、finance、auditor",
+  "actual": "admin,manager,agent,finance,auditor",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-04",
+  "expected": "出现 Linked Agent；不选提示 Agent accounts must be linked to an agent",
+  "actual": "Password must be at least 8 characters",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "USR-05",
+  "expected": "Could not create user (username may already exist)",
+  "actual": "Password must be at least 8 characters",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "USR-07",
+  "expected": "分别提示 You cannot change your own admin role / You cannot deactivate your own account",
+  "actual": "You cannot change your own admin role | You cannot deactivate your own account | toggle→You cannot deactivate your own account",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-12",
+  "expected": "1 位密码被拒绝",
+  "actual": "Password must be at least 8 characters; 1 位密码登录 → ",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "USR-13",
+  "expected": "create、update user 有记录，含 Reset password for xxx",
+  "actual": "create 0 条; update 0 条: ",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RPT-01",
+  "expected": "From=本月 1 日，To=今天",
+  "actual": "2026-10-01 ~ 2026-10-31",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-02",
+  "expected": "按状态分组+合计；最大组满格；不受日期影响",
+  "actual": "Legal:2/24,516.00/100% Negotiation:3/23,821.75/97% PTP:2/20,381.00/83% Assigned:3/19,023.00/78% New:2/14,418.00/59% Deceased:1/11,340.00/46% Partial Paid:2/10,881.00/44% Bankruptcy:1/10,422.00/43% Cancelled:1/9,504.00/39% Closed:1/8,586.00/35% Fully Paid:2/0.00/0%; Total 20 152,892.75; 日期改变后一致=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-03",
+  "expected": "Collected 只统计范围内；Commission=Collected×Rate%；有达成率条",
+  "actual": "10 月 {\"col\":\"0.00\",\"rate\":\"6\",\"com\":\"0.00\"}（库 null）; 9 月 {\"col\":\"0.00\",\"rate\":\"6\",\"com\":\"0.00\"}",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "RPT-04",
+  "expected": "只看自己范围欠款；无 Agent Performance；导出地址只显示页面",
+  "actual": "分组 Legal:1,Assigned:1,Cancelled:1,Partial Paid:1（库 assigned:1,cancelled:1,legal:1,partial_paid:1）; export → text/html; charset=utf-8",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-05",
+  "expected": "三个文件名与列正确",
+  "actual": "cases-detailed.csv: Case No,Debtor,Agent,Principal,Interest,Paid,Outstanding,Status,Opened || outstanding-by-status.csv: Status,Cases,Outstanding || agent-performance.csv: Agent,Collected,Rate %,Commission,Target",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "RPT-06",
+  "expected": "带 BOM；金额无多余小数尾差",
+  "actual": "BOM=true; 尾差单元格: 无",
+  "result": "PASS",
+  "note": "Excel 实际打开未执行（本机自动化不驱动 Excel），以文件内容判定"
+ },
+ {
+  "id": "COM-01",
+  "expected": "默认当前月（MYT）；Collected 只统计该月",
+  "actual": "默认月 2026-10; 10 月 0.00（库 0）; 9 月 0.00",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "COM-02",
+  "expected": "Earned=Collected×Rate%；Pending=Earned−Settled；负数红色",
+  "actual": "{\"Lim Wei Sheng\":{\"col\":\"2,916.00\",\"rate\":\"5\",\"earned\":\"145.80\",\"settled\":\"100.00\",\"cls\":\"\",\"pending\":\"45.80\"},\"Nurul Ain\":{\"col\":\"24,516.00\",\"rate\":\"5\",\"earned\":\"1,225.80\",\"settled\":\"500.00\",\"cls\":\"\",\"pending\":\"725.80\"},\"QA 新催收员\":{\"col\":\"0.00\",\"rate\":\"5\",\"earned\":\"0.00\",\"settled\":\"0.00\",\"cls\":\"\",\"pending\":\"0.00\"},\"Rajesh Kumar\":{\"col\":\"0.00\",\"rate\":\"6\",\"earned\":\"0.00\",\"settled\":\"0.00\",\"cls\":\"\",\"p",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "COM-03",
+  "expected": "Pending>0 时预填；Settlement recorded；出现在历史；audit commission_settle",
+  "actual": "data-pending=0（页面 Pending 0.00）; 预填逻辑=true; Settlement recorded; audit=Settled RM 10.5 for 2026-10",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-04",
+  "expected": "浏览器 min 拦截；服务端 Invalid amount",
+  "actual": "Invalid amount | Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-05",
+  "expected": "Settlement voided；Settled/Pending 回退；audit commission_void",
+  "actual": "Settlement voided; settled 10.50→0.00; pending -10.50→0.00",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-06",
+  "expected": "只看到自己一行和自己的结算记录；没有 Settle/Void",
+  "actual": "行 Lim Wei Sheng; 历史 Lim Wei Sheng; POST settle → 403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "COM-07",
+  "expected": "auditor 可查看，没有 Settle/Void",
+  "actual": "5 行; POST → 403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SRCH-01",
+  "expected": "列出匹配的案件",
+  "actual": "{\"caseNo\":[10],\"name\":[15,3],\"ic\":[],\"phone\":[11]}",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SRCH-02",
+  "expected": "没有结果",
+  "actual": "结果 0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SRCH-03",
+  "expected": "没有结果，不报错",
+  "actual": "200/200",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SRCH-04",
+  "expected": "最多显示 50 条",
+  "actual": "50 条",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SRCH-05",
+  "expected": "不报错，不执行脚本",
+  "actual": "':200:0:esc \":200:0:esc %:200:50:esc _:200:50:esc <script>alert(1)</script>:200:0:esc",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-01",
+  "expected": "admin/auditor 可看；其他 403",
+  "actual": "{\"admin\":200,\"auditor\":200,\"manager\":403,\"agent1\":403,\"finance\":403}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-02",
+  "expected": "最近 200 条，倒序；列 Time/User/Action/Entity/Details/IP",
+  "actual": "显示 76 条（库 76）; 列正确=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-03",
+  "expected": "只显示该动作",
+  "actual": "0 条，动作 ",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "AUD-05",
+  "expected": "没有修改或删除入口",
+  "actual": "POST 表单 0; POST /audit-log → 404; DELETE → 404",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-01",
+  "expected": "Company settings saved；audit update settings",
+  "actual": "Company settings saved; audit=Updated company settings: company_name:  → QA 放贷有限公司",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-02",
+  "expected": "设置页预览；对账单抬头显示 Logo",
+  "actual": "Company settings saved; 预览=true; 对账单=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-03",
+  "expected": "Logo must be PNG, JPEG, SVG or WebP",
+  "actual": "Logo must be PNG, JPEG, SVG or WebP | Logo must be PNG, JPEG, SVG or WebP",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-04",
+  "expected": "保存失败并显示错误（File too large）",
+  "actual": "File too large",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-05",
+  "expected": "Logo 被移除",
+  "actual": "logo=''",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-06",
+  "expected": "新标签页；公司抬头、案件号、当天日期、债务人、本金/利息/已还/欠款、还款历史",
+  "actual": "内容完整=false 缺失=Outstanding</span>RM 2,916.00; target=_blank=true",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SET-07",
+  "expected": "打印时不出现按钮",
+  "actual": "print CSS 隐藏 .stmt-actions；PDF 生成见 ui.qa.py",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SET-08",
+  "expected": "标题显示 Debt Collection CRM",
+  "actual": "<h1>Debt Collection CRM</h1>",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-01",
+  "expected": "Demo data deleted - your trial data is kept；演示案件消失；自建保留；audit demo_delete",
+  "actual": "HTTP 302 Demo data deleted - your trial data is kept; 剩余演示案件 2（被自建数据引用而保留）; 自建案件保留=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-02",
+  "expected": "Demo data reloaded；CASE-年份-D001…；自建数据不变；audit demo_reload",
+  "actual": "HTTP 302 Demo data reloaded; 演示案件 20",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-03",
+  "expected": "不报错；编号互不冲突",
+  "actual": "delete 302; 新案 CASE-2026-0058; reload Demo data reloaded; 重复号 0",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-04",
+  "expected": "该案件及相关数据保留，不报错",
+  "actual": "HTTP 302; 案件 13 保留=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DEMO-05",
+  "expected": "非 admin 403",
+  "actual": "manager:403/403 agent1:403/403 finance:403/403 auditor:403/403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "AUD-04",
+  "expected": "附录 C 各项操作均产生审计记录",
+  "actual": "缺失: create:user,update:user；备注/任务相关审计 7 条（E-11 现状）",
+  "result": "FAIL",
+  "note": ""
+ }
+]

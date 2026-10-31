@@ -5,7 +5,8 @@
 #   RENDER=true NODE_ENV=production SESSION_SECRET=local-smoke CRM_DB_PATH=data/qa/smoke-r3.db PORT=3311 node --no-warnings src/app.js
 #   PLAYWRIGHT_BROWSERS_PATH=/opt/pw-browsers python tests/qa/r3/smoke.qa.py
 # 线上：QA_BASE=https://debt-collection-crm-demo.onrender.com QA_ALLOW_ONLINE=1 python tests/qa/r3/smoke.qa.py
-#   只用公开演示账号；B-6 会作废一笔本脚本自己录入的还款，B-9 会撤销本脚本自己做的重组，不动其它数据。
+#   只用公开演示账号；线上不删除数据：B-6 的作废、B-9 的作废尝试与撤销、B-13 的作废都跳过（记 PARTIAL）。
+#   QA_OUT=<目录> 把结果写到别处，不覆盖上次基线。
 # 浏览器：云端没有 Chrome，用 Playwright 自带的 Chromium（有 Chrome 时也可 QA_CHANNEL=chrome）。
 # 结果：tests/qa/r3/results/smoke.json，截图与对账单 PDF 在 tests/qa/r3/results/smoke/。
 import datetime, json, os, re, sys, traceback
@@ -13,9 +14,13 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright
 
 BASE = os.environ.get('QA_BASE', 'http://127.0.0.1:3311').rstrip('/')
-if not re.match(r'^http://(127\.0\.0\.1|localhost)(:\d+)?$', BASE) and os.environ.get('QA_ALLOW_ONLINE') != '1':
+ONLINE = not re.match(r'^http://(127\.0\.0\.1|localhost)(:\d+)?$', BASE)
+if ONLINE and os.environ.get('QA_ALLOW_ONLINE') != '1':
     sys.exit('refusing: non-local QA_BASE needs QA_ALLOW_ONLINE=1')
-OUT = Path(__file__).resolve().parent / 'results'
+# 线上不删除数据：作废还款、作废佣金结算、撤销重组在代码里都是 DELETE，线上跳过这几步（只在本地验证）。
+NO_DELETE = 'ONLINE：不删除线上数据（作废还款 / 作废结算 / 撤销重组都是 DELETE），此步跳过，见本地结果'
+# QA_OUT：结果另存，避免覆盖 tests/qa/r3/results 里的上次基线
+OUT = Path(os.environ['QA_OUT']) if os.environ.get('QA_OUT') else Path(__file__).resolve().parent / 'results'
 SHOTS = OUT / 'smoke'
 SHOTS.mkdir(parents=True, exist_ok=True)
 PW = {'admin': 'admin123', 'manager': 'manager123', 'agent1': 'agent123', 'agent2': 'agent123', 'agent3': 'agent123', 'finance': 'finance123', 'auditor': 'auditor123'}
@@ -165,14 +170,29 @@ with sync_playwright() as pw:
             f'案件5 选项={opts}；案件17 锁定={lock(h17)}；案件10(agent2) 锁定={lock(h10)}')
     run('A-4', 'agent 状态权限', a4)
 
-    def a5():
+    def restore_cap():
+        # 兜底：无论 A-5 哪一步出错，都用真实表单把上限改回 18（表单带着现有的公司信息，其它字段不变）
         p = S('admin'); p.goto(BASE + '/settings')
+        if p.input_value('input[name=max_annual_rate]') != '18':
+            p.fill('input[name=max_annual_rate]', '18')
+            with p.expect_navigation(): p.evaluate("document.querySelector('form[action=\"/settings\"]').requestSubmit()")
+            p.goto(BASE + '/settings')
+        v = p.input_value('input[name=max_annual_rate]')
+        if v != '18': print(f'!!! 利率上限没能改回 18（现在 {v}），请手工改回', flush=True)
+        return v
+    def a5():
+        try: a5_body()
+        finally: rec('A-5-restore', '结束时利率上限为 18', restore_cap() == '18', f'上限 = {S("admin").input_value("input[name=max_annual_rate]")}')
+    def a5_body():
+        p = S('admin'); p.goto(BASE + '/settings')
+        # 直接提交时带上表单现有的值，万一服务端误收也不会清空公司信息
+        cur = p.evaluate("""() => Object.fromEntries([...new FormData(document.querySelector('form[action="/settings"]'))].filter(([k, v]) => typeof v === 'string'))""")
         p.fill('input[name=max_annual_rate]', '24')
         blocked = not p.evaluate("document.querySelector('input[name=max_annual_rate]').checkValidity()")
         vmsg = p.evaluate("document.querySelector('input[name=max_annual_rate]').validationMessage")
         p.click('form[action="/settings"] button[type=submit]'); p.wait_for_timeout(300)
         stayed = p.url.endswith('/settings') and p.input_value('input[name=max_annual_rate]') == '24'
-        srv24 = post('admin', '/settings', {'company_name': '', 'max_annual_rate': '24'}, multipart=True)
+        srv24 = post('admin', '/settings', {**cur, 'max_annual_rate': '24'}, multipart=True)
         p.goto(BASE + '/settings'); p.fill('input[name=max_annual_rate]', '12')
         with p.expect_navigation(): p.click('form[action="/settings"] button[type=submit]')
         k12, t12 = flash(p.content()); p.goto(BASE + '/settings'); h12 = p.content()
@@ -180,7 +200,8 @@ with sync_playwright() as pw:
         box = re.search(r'Open loans above the 12% p\.a\. cap:[^<]*', strip(h12))
         aud = strip(get('admin', '/audit-log')[1])
         a = re.search(r'max_annual_rate: 18 → 12', aud)
-        p.fill('input[name=max_annual_rate]', '18')
+        # 整页截图后 Chrome 156 点不到页底的 Save（视口状态未复原），重新打开页面再点
+        p.goto(BASE + '/settings'); p.fill('input[name=max_annual_rate]', '18')
         with p.expect_navigation(): p.click('form[action="/settings"] button[type=submit]')
         p.goto(BASE + '/settings'); h18 = p.content()
         gone = 'Open loans above' not in h18 and p.input_value('input[name=max_annual_rate]') == '18'
@@ -376,7 +397,7 @@ with sync_playwright() as pw:
                 if (name in expect[u]) != (s == 200): bad.append(f'{u} {href}→{s}')
         rec('B-1', '7 个账号都能登录，菜单与权限一致（菜单里的页面 200，菜单外的 403/404）', not bad,
             f'全部登录成功；菜单: ' + '; '.join(f'{u}={len(m)}项' for u, m in menus.items()) + f'；不一致: {bad or "无"}',
-            '手册 v1.2 的权限矩阵不在仓库里；期望值取自《使用手册》第三章角色表 + 侧栏代码')
+            '期望值 = QA 手册 v1.2 第 3 章“侧边栏菜单对照”')
     run('B-1', '登录与菜单权限', b1)
 
     def b2():
@@ -447,6 +468,11 @@ with sync_playwright() as pw:
         cb_before = num(lval(h, 'Contract Balance'))
         e = post('manager', f'/cases/{cid}/payments/{pid}', {'payment_date': iso(TODAY), 'amount': '600.00', 'method': 'cheque', 'reference': 'B-6 edited', 'bank': ''})
         h1 = show('manager', cid); cb1 = num(lval(h1, 'Contract Balance'))
+        if ONLINE:
+            ok = e['ok'] and abs(cb_before - cb1 - 115) < 0.005
+            rec('B-6', '编辑并作废一笔还款，欠款恢复', 'PARTIAL' if ok else 'FAIL',
+                f'编辑 500→600：{e["ok"] or e["err"]}，Contract Balance {money(cb_before)} → {money(cb1)}（降 {money(cb_before - cb1)}，独立计算 115.00）；作废：未执行', NO_DELETE)
+            return
         v = post('manager', f'/cases/{cid}/payments/{pid}/void', {})
         h2 = show('manager', cid); cb2 = num(lval(h2, 'Contract Balance'))
         st = re.search(r'<h1>[^<]*<span class="badge[^"]*"><span class="dot"></span>([^<]+)</span>', h2).group(1)
@@ -474,6 +500,7 @@ with sync_playwright() as pw:
         cid = B['cid']
         r1 = post('manager', f'/cases/{cid}/ptps', {'amount': '100.00', 'due_date': add_days(3), 'remark': 'B-8'})
         h = show('manager', cid); pid = re.search(r'openFulfill\((\d+), 100\)', h).group(1)
+        n0 = len(payment_rows(h))  # 线上 B-6 没作废，案件上已有 1 笔
         r2 = post('manager', f'/ptps/{pid}/fulfill', {'amount': '100.00', 'payment_date': iso(TODAY), 'method': 'cash'})
         h = show('manager', cid); st1 = [r[3] for r in ptp_rows(h)]
         r3 = post('manager', f'/cases/{cid}/ptp-plans', {'total_amount': '300.00', 'num_installments': '3', 'first_due_date': add_days(7)})
@@ -481,9 +508,9 @@ with sync_playwright() as pw:
         r4 = post('manager', f'/cases/{cid}/ptp-plans/{plan}/cancel', {})
         h = show('manager', cid); rows = ptp_rows(h)
         inst = [r[3] for r in rows if '/' in r[0]]
-        ok = r1['ok'] and r2['ok'] and 'fulfilled' in st1 and r3['ok'] and r4['ok'] and inst == ['broken'] * 3 and len(payment_rows(h)) == 1
+        ok = r1['ok'] and r2['ok'] and 'fulfilled' in st1 and r3['ok'] and r4['ok'] and inst == ['broken'] * 3 and len(payment_rows(h)) == n0 + 1
         rec('B-8', '新建 PTP → 履行（自动记一笔还款）→ 新建分期计划 → 取消计划（各期变 broken）', bool(ok),
-            f'PTP {r1["ok"] or r1["err"]}；履行 {r2["ok"] or r2["err"]}；计划 {r3["ok"] or r3["err"]}；取消 {r4["ok"] or r4["err"]}；分期状态 {inst}；还款行 {len(payment_rows(h))}')
+            f'PTP {r1["ok"] or r1["err"]}；履行 {r2["ok"] or r2["err"]}；计划 {r3["ok"] or r3["err"]}；取消 {r4["ok"] or r4["err"]}；分期状态 {inst}；还款行 {n0} → {len(payment_rows(h))}')
     run('B-8', 'PTP 与分期计划', b8)
 
     def b9():
@@ -500,6 +527,11 @@ with sync_playwright() as pw:
         locked = 'Locked · restructured' in section(h, 'Payments')
         pid = re.search(r'/cases/\d+/payments/(\d+)/void', h0).group(1)
         e = post('manager', f'/cases/{cid}/payments/{pid}', {'payment_date': pay_day, 'amount': '200.00', 'method': 'cash', 'reference': 'B-9 edit'})
+        if ONLINE:
+            ok = r['ok'] == 'Restructured' and locked and e['err']
+            rec('B-9', '重组 → 生效日前的还款被锁定（不能编辑/作废）→ 撤销后恢复原条款', 'PARTIAL' if ok else 'FAIL',
+                f'案件 #{cid}；生效日 {eff.group(3)}（可选 {eff.group(1)}…{eff.group(2)}）→ {r["ok"] or r["err"]}；Payments 显示 Locked={locked}；改锁定还款 → {e["err"]}；作废尝试、撤销：未执行', NO_DELETE)
+            return
         v = post('manager', f'/cases/{cid}/payments/{pid}/void', {})
         rid = re.search(r'/restructures/(\d+)/undo', h).group(1)
         u = post('manager', f'/cases/{cid}/restructures/{rid}/undo', {})
@@ -551,6 +583,11 @@ with sync_playwright() as pw:
         aid, name, pend = cand[0]
         r = post('finance', '/commissions/settle', {'agent_id': aid, 'period': month, 'amount': '1.00', 'note': 'B-13 smoke'})
         h2 = get('finance', f'/commissions?month={month}')[1]
+        if ONLINE:
+            listed = '<td>B-13 smoke</td>' in h2
+            rec('B-13', '佣金结算与作废（作废后待结算金额恢复）', 'PARTIAL' if r['ok'] and listed else 'FAIL',
+                f'{name} 待结算 {pend}；结算 1.00 → {r["ok"] or r["err"]}；出现在结算历史={listed}；作废：未执行', NO_DELETE)
+            return
         # 只作废本脚本这笔（按 Note 定位），不碰其它结算
         sid = re.search(r'<td>B-13 smoke</td>[\s\S]*?/commissions/(\d+)/void', h2)
         v = post('finance', f'/commissions/{sid.group(1)}/void', {}) if sid else {'ok': None, 'err': 'no void button for B-13 smoke'}
@@ -576,9 +613,11 @@ with sync_playwright() as pw:
     run('B-14', '对账单打印', b14)
 
     def b15():
-        s, h = get('agent1', '/cases/2')
+        s, h = get('agent1', '/cases/2'); s2, h2 = get('agent1', '/cases/2/statement')
         listed = 2 in case_ids('agent1')
-        rec('B-15', 'agent1 直接访问 /cases/2 被拒绝', s in (403, 404) and not listed, f'HTTP {s}；agent1 的案件列表含 2={listed}；agent1 列表 {case_ids("agent1")}')
+        msg = 'Case not found or access denied'
+        rec('B-15', 'agent1 直接访问 /cases/2 及其 /statement 被拒绝（404 “Case not found or access denied”）', s == 404 and s2 == 404 and msg in h and msg in h2 and not listed,
+            f'/cases/2 → HTTP {s}（提示={msg in h}）；/cases/2/statement → HTTP {s2}（提示={msg in h2}）；agent1 的案件列表含 2={listed}；agent1 列表 {case_ids("agent1")}')
     run('B-15', '行级权限', b15)
 
     def b16():
@@ -594,6 +633,7 @@ with sync_playwright() as pw:
     def b17():
         t = strip(get('admin', '/audit-log')[1])
         want = {'利率上限': 'max_annual_rate: 18 → 12', '冻结原因收款': 'Trustee distribution', '解除破产原因': 'Bankruptcy order annulled (smoke test)', 'B-3 案件': 'Created case', '还款': 'Recorded payment', '作废': 'Voided', '重组撤销': 'ndo'}
+        if ONLINE: del want['作废'], want['重组撤销']  # 线上没执行这两步
         got = {k: (v in t) for k, v in want.items()}
         rec('B-17', 'Audit Log 有本次测试操作的记录', all(got.values()), got)
     run('B-17', '审计', b17)

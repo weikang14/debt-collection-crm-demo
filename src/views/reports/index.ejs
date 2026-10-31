@@ -10,19 +10,19 @@
 <p><a class="btn" href="/reports?export=cases">Export detailed cases (CSV)</a></p>
 
 <div class="card">
-  <h2>Outstanding by Status <a class="btn btn-sm" style="float:right" href="/reports?from=<%= from %>&to=<%= to %>&export=outstanding">Export CSV</a></h2>
+  <h2>Outstanding by Status <span class="meta">settlement today · contract balance incl. interest not yet due</span> <a class="btn btn-sm" style="float:right" href="/reports?from=<%= from %>&to=<%= to %>&export=outstanding">Export CSV</a></h2>
   <% if (!outstanding.length) { %><%- include('../partials/empty', { msg: 'No open cases.' }) %><% } else { %>
-  <% const oTotals = outstanding.reduce((a, r) => ({ cnt: a.cnt + r.cnt, total: a.total + r.total }), { cnt: 0, total: 0 }); %>
+  <% const oTotals = outstanding.reduce((a, r) => ({ cnt: a.cnt + r.cnt, total: a.total + r.total, contract: a.contract + r.contract }), { cnt: 0, total: 0, contract: 0 }); %>
   <% const omax = outstanding.reduce((m, r) => Math.max(m, r.total), 0); %>
-  <table class="data"><thead><tr><th>Status</th><th class="num">Cases</th><th class="num">Outstanding</th><th>Proportion</th></tr></thead>
+  <table class="data"><thead><tr><th>Status</th><th class="num">Cases</th><th class="num">Settlement Today</th><th class="num">Contract Balance</th><th>Proportion</th></tr></thead>
   <tbody>
   <% outstanding.forEach(row => { const pct = omax > 0 ? Math.round(row.total / omax * 100) : 0; %>
   <tr><td><span class="badge <%= h.caseStatusClass(row.status) %>"><%= h.caseStatusLabel(row.status) %></span></td>
-  <td class="num"><%= row.cnt %></td><td class="num"><%= h.money(row.total) %></td>
+  <td class="num"><%= row.cnt %></td><td class="num"><%= h.money(row.total) %></td><td class="num"><%= h.money(row.contract) %></td>
   <td><div class="bar"><div class="fill is-green" style="width: <%= pct %>%"></div></div></td></tr>
   <% }) %>
   </tbody>
-  <tfoot><tr><td>Total</td><td class="num"><%= oTotals.cnt %></td><td class="num"><%= h.money(oTotals.total) %></td><td></td></tr></tfoot>
+  <tfoot><tr><td>Total</td><td class="num"><%= oTotals.cnt %></td><td class="num"><%= h.money(oTotals.total) %></td><td class="num"><%= h.money(oTotals.contract) %></td><td></td></tr></tfoot>
   </table>
   <% } %>
 </div>

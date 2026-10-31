@@ -1,0 +1,11 @@
+== a-auth-nav-dash-deb.json: 上次 {'PASS': 34, 'FAIL': 2}  本次 {'PASS': 34, 'FAIL': 2}
+== b-case-int-pay-sch.json: 上次 {'PASS': 52, 'BLOCKED': 5, 'FAIL': 6}  本次 {'PASS': 52, 'BLOCKED': 5, 'FAIL': 6}
+== c-ptp-rs.json: 上次 {'PASS': 38, 'FAIL': 2, 'BLOCKED': 1}  本次 {'PASS': 37, 'FAIL': 3, 'BLOCKED': 1}
+  PTP-06: PASS → FAIL :: Installment plan created; 333.33,333.33,333.34; 2026-10-31,2026-11-30,2026-12-31; "Installment Plan · RM 1,000.00 · 0/3 kept"
+== d-task-agt-usr-rpt-com-misc.json: 上次 {'PASS': 65, 'BLOCKED': 1, 'FAIL': 3}  本次 {'PASS': 65, 'BLOCKED': 1, 'FAIL': 3}
+== e-smoke-e2e-sec.json: 上次 {'PASS': 30, '见 npm test': 1, 'FAIL': 1, '未执行': 1, 'BLOCKED': 1}  本次 {'PASS': 32, '见 npm test': 1, 'FAIL': 1, '未执行': 1}
+  AUTH-05: BLOCKED → PASS :: fails=401,401,401,401,401 sixth=429; 127.0.0.1 login=302
+  SEC-07: None → PASS :: see AUTH-05
+== r-regression.json: 上次 {'PASS': 13, 'PARTIAL': 1}  本次 {'PASS': 13, 'PARTIAL': 1}
+== x-outside-manual.json: 上次 {'PASS': 28, 'FAIL': 6}  本次 {'PASS': 28, 'FAIL': 6}
+== ui.json: 上次 {'PASS': 30}  本次 {'PASS': 30}

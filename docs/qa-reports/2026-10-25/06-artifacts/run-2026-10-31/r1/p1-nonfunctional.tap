@@ -1,0 +1,97 @@
+TAP version 13
+# Subtest: setup
+not ok 1 - setup
+  ---
+  duration_ms: 44.704
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\p1-nonfunctional.qa.js:15:1'
+  failureType: 'testCodeFailure'
+  error: 'login admin failed: 429 '
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    as (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:67:53)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\p1-nonfunctional.qa.js:15:39)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+  ...
+# Subtest: PERF-01 页面响应时间（本地，演示数据量）
+not ok 2 - PERF-01 页面响应时间（本地，演示数据量）
+  ---
+  duration_ms: 1.5657
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\p1-nonfunctional.qa.js:17:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'get')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\p1-nonfunctional.qa.js:21:82)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: TZ-01 页面时间按 MYT 显示
+not ok 3 - TZ-01 页面时间按 MYT 显示
+  ---
+  duration_ms: 0.4252
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\p1-nonfunctional.qa.js:24:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'post')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    newCase (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:101:21)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\p1-nonfunctional.qa.js:25:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: TZ-02 MYT 00:00–08:00 新开案件的“今日新开”统计（模拟，E-09 复核）
+not ok 4 - TZ-02 MYT 00:00–08:00 新开案件的“今日新开”统计（模拟，E-09 复核）
+  ---
+  duration_ms: 0.323
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\p1-nonfunctional.qa.js:31:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'post')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    newCase (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:101:21)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\p1-nonfunctional.qa.js:32:20)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: TZ-03 时区相关代码审阅
+ok 5 - TZ-03 时区相关代码审阅
+  ---
+  duration_ms: 3.4894
+  type: 'test'
+  ...
+# Subtest: DATA-01 旧版本数据库升级（c2355cd → 当前）
+ok 6 - DATA-01 旧版本数据库升级（c2355cd → 当前）
+  ---
+  duration_ms: 1254.3936
+  type: 'test'
+  ...
+# Subtest: DATA-02 npm run backup
+ok 7 - DATA-02 npm run backup
+  ---
+  duration_ms: 1.1977
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 3
+# fail 4
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 2639.3724

@@ -70,7 +70,8 @@ test('r2 C: PTP / RS', { timeout: 300000 }, async () => {
     const r = await a1.act(`/cases/${planCase}/ptp-plans`, { total_amount: '1000', num_installments: '3', first_due_date: today() });
     const p = ptpRows(r.html);
     const d = qa('SELECT due_date FROM ptps WHERE case_id=? ORDER BY installment_no', planCase).map(x => x.due_date);
-    const exp = [0, 1, 2].map(k => { const x = new Date(today() + 'T00:00:00Z'); x.setUTCMonth(x.getUTCMonth() + k); return x.toISOString().slice(0, 10); });
+    // Same day each month, clamped to month end (31 Oct → 30 Nov → 31 Dec); setUTCMonth would roll 31 Nov into 1 Dec.
+    const exp = [0, 1, 2].map(k => { const [y, m, d] = today().split('-').map(Number); const last = new Date(Date.UTC(y, m + k, 0)).getUTCDate(); return new Date(Date.UTC(y, m - 1 + k, Math.min(d, last))).toISOString().slice(0, 10); });
     check('PTP-06', 'split, dates, header, status', r.ok === 'Installment plan created' && p.rows.map(x => x.amount).join() === '333.33,333.33,333.34' && d.join() === exp.join() && p.heads[0] === 'Installment Plan · RM 1,000.00 · 0/3 kept' && q1('SELECT status FROM cases WHERE id=?', planCase).status === 'ptp',
       `${r.ok}; ${p.rows.map(x => x.amount)}; ${d}; "${p.heads[0]}"`);
   });

@@ -4,6 +4,7 @@ const { requireLogin, requireRole } = require('../middleware/auth');
 const { isISODate } = require('../utils/forms');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { dateTimeFmt } = require('../utils/helpers');
+const { logAction } = require('../utils/audit');
 const router = express.Router();
 
 router.get('/', requireLogin, requireRole('admin','auditor'), (req, res) => {
@@ -17,6 +18,7 @@ router.get('/', requireLogin, requireRole('admin','auditor'), (req, res) => {
   if (req.query.format === 'csv') {
     const rows = all(`SELECT * FROM audit_logs ${clause} ORDER BY created_at DESC, id DESC`, params)
       .map(l => [dateTimeFmt(l.created_at), l.username || '', l.action, l.entity_type, l.entity_id ?? '', l.details || '', l.ip_address || '']);
+    logAction(req, 'export', 'audit_log', null, `Exported audit-log.csv (${rows.length} rows${clause ? ', filtered' : ''})`);
     return sendCsv(res, 'audit-log.csv', toCsv(['Time', 'User', 'Action', 'Entity', 'Entity ID', 'Details', 'IP'], rows));
   }
   const logs = all(`SELECT * FROM audit_logs ${clause} ORDER BY created_at DESC, id DESC LIMIT 200`, params);

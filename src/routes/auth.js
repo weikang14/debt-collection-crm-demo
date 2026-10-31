@@ -50,7 +50,8 @@ router.post('/login', (req, res) => {
     run('UPDATE users SET password_hash=? WHERE id=?', [bcrypt.hashSync(password, HASH_COST), u.id]);
   }
   req.session.user = { id: u.id, username: u.username, full_name: u.full_name, role: u.role, agent_id: u.agent_id, client_id: u.client_id };
-  logAction(req, 'login', 'user', u.id, `User ${u.username} logged in`);
+  // No login without its audit row (G-25).
+  try { logAction(req, 'login', 'user', u.id, `User ${u.username} logged in`); } catch (e) { delete req.session.user; throw e; }
   res.redirect('/');
 });
 

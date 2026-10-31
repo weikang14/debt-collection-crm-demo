@@ -15,12 +15,12 @@
 </div>
 
 <div class="qrow">
-  <div class="q"><div class="lbl2">Total Outstanding</div><div class="v2">RM <%= h.money(kpi.outstanding) %></div>
-    <div class="sub2">contract balance, excl. closed &amp; cancelled · RM <%= h.money(kpi.specialOutstanding) %> in legal / bankruptcy / deceased</div></div>
+  <div class="q"><div class="lbl2">Total Outstanding <small>· settlement today</small></div><div class="v2">RM <%= h.money(kpi.outstanding) %></div>
+    <div class="sub2">excl. closed &amp; cancelled · RM <%= h.money(kpi.specialOutstanding) %> in legal / bankruptcy / deceased · contract balance RM <%= h.money(kpi.contractOutstanding) %> (incl. interest not yet due)</div></div>
   <div class="q"><div class="lbl2">Case Activity</div><div class="v2"><%= kpi.openedToday %> <small>opened</small> · <%= kpi.closedToday %> <small>closed</small> · <%= kpi.overdueTasks %> <small>overdue</small> · <%= kpi.followupCount %> <small>upcoming</small></div></div>
 </div>
 
-<h2>Aging <span class="meta">open balances by days past due (oldest missed instalment)</span></h2>
+<h2>Aging <span class="meta">settlement amounts by days past due (oldest missed instalment)</span></h2>
 <% const maxDpd = Math.max(...agingDpd, 1); %>
 <div class="panel">
   <div class="agelines">
@@ -30,7 +30,7 @@
   </div>
 </div>
 
-<h2>Case Age <span class="meta">open balances by days since the case was opened</span></h2>
+<h2>Case Age <span class="meta">settlement amounts by days since the case was opened</span></h2>
 <% const maxAge = Math.max(...aging, 1); %>
 <div class="panel">
   <div class="agelines">
@@ -46,13 +46,13 @@
     <% if (!followups.length) { %><%- include('../partials/empty', { msg: 'Nothing due for follow-up.' }) %><% } else { %>
     <div class="panel flush">
       <div style="overflow-x:auto">
-      <table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Agent</th><th>Task</th><th class="num">Outstanding</th></tr></thead>
+      <table class="data"><thead><tr><th>Case No</th><th>Debtor</th><th>Agent</th><th>Task</th><th class="num">Settlement Today</th></tr></thead>
       <tbody>
       <% followups.forEach(f => { const b = h.followupBadge(f.days_over); %>
       <tr><td><a href="/cases/<%= f.case_id %>"><%= f.case_no %></a></td><td><%= f.debtor_name %></td>
       <td><%= f.agent_name || '—' %></td>
       <td><span class="badge <%= b.cls %>"><%= b.label %></span> <%= f.title %></td>
-      <td class="num"><%= h.money(f.outstanding_amount) %></td></tr>
+      <td class="num"><%= h.money(f.settlement) %></td></tr>
       <% }) %>
       </tbody></table>
       </div>

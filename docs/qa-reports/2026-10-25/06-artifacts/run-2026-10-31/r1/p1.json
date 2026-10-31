@@ -1,0 +1,23 @@
+[
+ {
+  "id": "TZ-03",
+  "expected": "所有“今天”按 MYT",
+  "actual": "reports 默认 To 用服务器时区 dayjs()=false; 收据号/案件号年份用服务器时区 new Date().getFullYear()=false; seed 演示日期用服务器时区 dayjs()=true; 佣金默认月份用 MYT=true",
+  "result": "FAIL",
+  "note": "服务器为 UTC（如 Render）时生效；本机为 UTC+8 无法实测"
+ },
+ {
+  "id": "DATA-01",
+  "expected": "旧库自动迁移，原有数据不丢失",
+  "actual": "旧 seed exit=0，迁移 exit=0 ；迁移前 {\"cases\":20,\"payments\":4,\"ptps\":4,\"tasks\":4,\"timeline_events\":28,\"users\":7}（next_action_at 列=1）；迁移后 {\"cases\":20,\"payments\":4,\"ptps\":4,\"timeline_events\":28,\"users\":7}；interest_charged=true timeline 含 restructure=true case_restructures=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "DATA-02",
+  "expected": "data/backups 生成带时间戳副本，可还原",
+  "actual": "未执行：src/db/backup.js:7 写死 data/crm.db，不读 CRM_DB_PATH（含 CRM_DB_PATH=false）；按安全规则不得读写 data/crm.db",
+  "result": "BLOCKED",
+  "note": ""
+ }
+]

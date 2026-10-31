@@ -211,7 +211,9 @@ test('D-09: total outstanding leaves out closed and cancelled cases', () => {
   const id = monthlyCase();
   const before = call(dashboardRouter, 'get', '/').locals.kpi.outstanding;
   db.run("UPDATE cases SET status='cancelled' WHERE id=?", [id]);
-  near(call(dashboardRouter, 'get', '/').locals.kpi.outstanding, before - caseRow(id).outstanding_amount, 'cancelled excluded');
+  // Totals are today's settlement amounts (N-07, G-24).
+  const settled = require('../src/services/payments').settlementOn(id, today);
+  near(call(dashboardRouter, 'get', '/').locals.kpi.outstanding, before - settled, 'cancelled excluded');
 });
 
 // ── D-10 · PTP rules ───────────────────────────────────────────────

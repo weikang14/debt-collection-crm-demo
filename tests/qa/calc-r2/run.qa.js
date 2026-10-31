@@ -194,7 +194,10 @@ async function main() {
   // ===================== ROUND: sen rounding, 0.005 boundary (K-01) =====================
   {
     const g = 'ROUND';
-    const start = addMonths(T, -1) === T ? T : (() => { const [y, m, d] = T.split('-').map(Number); return `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; })();
+    let start = addMonths(T, -1) === T ? T : (() => { const [y, m, d] = T.split('-').map(Number); return `${m === 1 ? y - 1 : y}-${String(m === 1 ? 12 : m - 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`; })();
+    // 2026-10-31 补：上月没有同一天（如 09-31）时日期无效、建案被拒，脚本崩溃。退到上月最后一天（到期日 = 昨天），
+    // 预期值仍由独立计算器按同一起始日给出，所以对比照样成立。
+    if (new Date(start + 'T00:00:00Z').toISOString().slice(0, 10) !== start) start = addMonths(T, -1);
     // 1-month loans maturing today: settlement today = P + P×1.5% (exact x.xx5 for these P)
     for (const P of [1015, 1079, 1001, 3001]) {
       const id = await newC(`1个月 P=${P}`, { principal_amount: P, interest_mode: 'monthly', interest_rate: 1.5, loan_start_date: start, tenure: 1 });

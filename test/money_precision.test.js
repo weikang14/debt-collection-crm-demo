@@ -15,13 +15,15 @@ test('round2 snaps to whole cents and absorbs float residue', () => {
 
 const { recordSettlement } = require('../src/routes/commissions');
 
-test('commission settlement amount is stored rounded to cents', () => {
+test('commission settlement amount is parsed like a payment: whole sen only (G-28)', () => {
   db.run("INSERT INTO agents (id,name,commission_rate) VALUES (1,'A',10)");
   const req = { session: { user: { full_name: 'T' } }, ip: '127.0.0.1' };
-  const r = recordSettlement({ agent_id: 1, period: '2026-07', amount: '10.005' }, req);
+  for (const bad of ['10.005', '0x10', '1e2']) {
+    assert.deepStrictEqual(recordSettlement({ agent_id: 1, period: '2026-07', amount: bad }, req), { ok: false, error: 'Invalid amount' }, bad);
+  }
+  const r = recordSettlement({ agent_id: 1, period: '2026-07', amount: '10.01' }, req);
   assert.strictEqual(r.ok, true);
-  const row = db.get('SELECT amount FROM commission_settlements WHERE id=?', [r.id]);
-  assert.strictEqual(row.amount, 10.01); // 10.005 -> 10.01, not stored raw
+  assert.strictEqual(db.get('SELECT amount FROM commission_settlements WHERE id=?', [r.id]).amount, 10.01);
 });
 
 const { toCsv } = require('../src/utils/csv');

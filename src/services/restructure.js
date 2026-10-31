@@ -1,6 +1,6 @@
 const dayjs = require('dayjs');
 const { db, get, all, run } = require('../db');
-const { caseBalance, resyncCaseStatus, localDate, nominalAnnualRate, rateCapError, accrue } = require('./payments');
+const { caseBalance, resyncCaseStatus, localDate, nominalAnnualRate, rateCapError, accrue, ratePct } = require('./payments');
 const { maturityDate } = require('../utils/installments');
 const { repaymentSchedule } = require('../utils/schedule');
 const { logAction } = require('../utils/audit');
@@ -11,7 +11,7 @@ const { todayMYT, interestTerms, money } = require('../utils/helpers');
 // original terms. Payment ownership (D-04): payment_date ≤ E → earlier segment,
 // so a payment taken on the day of the restructure is inside its cut.
 
-const { isISODate } = require('../utils/forms');
+const { isISODate, parseMoney } = require('../utils/forms');
 
 const MODES = ['fixed', 'monthly', 'daily'];
 
@@ -60,10 +60,11 @@ function parseTerms(body) {
   const blank = v => v === undefined || v === '';
   if (interest_mode !== 'fixed' && blank(body.interest_rate)) return { error: 'Interest rate is required' };
   if (interest_mode === 'fixed' && blank(body.interest_amount)) return { error: 'Interest amount is required' };
+  // Same strict parsing as the case form, so '0x10' or '1e0' is refused (G-28).
+  if (interest_mode !== 'fixed' && !/^\d+(\.\d+)?$/.test(String(body.interest_rate).trim())) return { error: 'Invalid interest rate' };
   const interest_rate = interest_mode === 'fixed' ? 0 : Number(body.interest_rate);
-  const interest_amount = interest_mode === 'fixed' ? Number(body.interest_amount) : 0;
-  if (!Number.isFinite(interest_rate) || interest_rate < 0) return { error: 'Invalid interest rate' };
-  if (!Number.isFinite(interest_amount) || interest_amount < 0) return { error: 'Invalid interest amount' };
+  const interest_amount = interest_mode === 'fixed' ? parseMoney(body.interest_amount) : 0;
+  if (!(interest_amount >= 0)) return { error: 'Invalid interest amount' };
   const tenure = body.tenure === '' || body.tenure === undefined ? NaN : Number(body.tenure);
   if (!Number.isInteger(tenure) || tenure < 1 || tenure > 120) return { error: 'Tenure must be 1–120 months' };
   const reason = String(body.reason || '').trim();
@@ -93,7 +94,7 @@ function termsError(c, payments, prior, t, cut) {
   const before = nominalAnnualRate(prev || c, prev ? prev.principal_at_cut : c.principal_amount);
   const after = nominalAnnualRate(t, cut.principal);
   if (before !== null && after !== null && after > before + 1e-9) {
-    return `A restructure cannot raise the interest rate (${Math.round(before * 100) / 100}% → ${Math.round(after * 100) / 100}% p.a.)`;
+    return `A restructure cannot raise the interest rate (${ratePct(before)}% → ${ratePct(after)}% p.a.)`;
   }
   const draft = { ...t, maturity_date: maturity };
   if (caseBalance(c, payments, undefined, [...prior, draft]).interest > c.principal_amount + 0.005) {
@@ -171,10 +172,13 @@ function lockedPaymentError(caseId, payment) {
   return lock && localDate(payment.payment_date) <= lock ? 'This payment belongs to a restructured period; undo the restructure first' : null;
 }
 
-// After a restructure the original loan terms are history: Edit Case keeps the
-// stored values whatever the form sent. Keys are cases column names.
+// After a restructure, or once money has been taken against them (F-24), the
+// loan terms and the debtor are history: Edit Case keeps the stored values
+// whatever the form sent. Terms are re-planned through a restructure (or the
+// payments voided first). Keys are cases column names.
+const termsLocked = caseId => !!lockDate(caseId) || !!get('SELECT 1 FROM payments WHERE case_id = ?', [caseId]);
 function lockedTerms(caseId, terms) {
-  if (!lockDate(caseId)) return terms;
+  if (!termsLocked(caseId)) return terms;
   return get(`SELECT principal_amount, interest_amount, interest_mode, interest_rate, interest_from,
     loan_start_date, tenure, tenure_unit, maturity_date FROM cases WHERE id = ?`, [caseId]);
 }
@@ -220,5 +224,19 @@ function arrearsOf(c, payments, restructures) {
   return { dpd: dayjs(today).diff(dayjs(due[0].due_date), 'day'), overdue };
 }
 
+// A case's figures as of today for lists, totals and exports (G-23, N-07): the
+// settlement amount (the primary figure; the cached outstanding_amount is the
+// contract balance incl. interest not yet due) plus overdue amount and DPD.
+// `c` is a full cases row.
+// ponytail: walks the ledger per case on each list/report load; cache these on
+// the case in recomputeOutstanding once the book grows past a few thousand cases.
+function todayFigures(c) {
+  const payments = all('SELECT amount, payment_date FROM payments WHERE case_id = ? ORDER BY payment_date, id', [c.id]);
+  const restructures = restructuresOf(c.id);
+  const today = todayMYT();
+  const settlement = caseBalance(c, payments.filter(p => localDate(p.payment_date) <= today), today, restructures).outstanding;
+  return { settlement, ...arrearsOf(c, payments, restructures) };
+}
+
 module.exports = { restructuresOf, lockDate, afterLock, canRestructure, effectiveDateRange, balanceAtCut, parseTerms,
-  createRestructure, undoRestructure, paymentDateError, lockedPaymentError, lockedTerms, scheduleView, arrearsOf };
+  createRestructure, undoRestructure, paymentDateError, lockedPaymentError, termsLocked, lockedTerms, scheduleView, arrearsOf, todayFigures };

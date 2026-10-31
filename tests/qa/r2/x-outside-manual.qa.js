@@ -9,7 +9,8 @@ const { check, rec, has, strip, today, addDays, q1, qa, ledgerAmt, ledgerVal, nu
 
 const show = async (s, id) => (await s.get(`/cases/${id}`)).text;
 const M = (extra = {}) => ({ principal_amount: '10000', interest_mode: 'monthly', interest_rate: '1.5', loan_start_date: '2026-01-01', tenure: '12', ...extra });
-const addMonths = (iso, n) => { const d = new Date(iso + 'T00:00:00Z'); d.setUTCMonth(d.getUTCMonth() + n); return d.toISOString().slice(0, 10); };
+// Same day n months on, clamped to month end (31 Oct → 30 Nov), as the app's due dates are.
+const addMonths = (iso, n) => { const [y, m, d] = iso.split('-').map(Number); const last = new Date(Date.UTC(y, m + n - 1 + 1, 0)).getUTCDate(); return new Date(Date.UTC(y, m - 1 + n, Math.min(d, last))).toISOString().slice(0, 10); };
 
 test('r2 X: outside the manual', { timeout: 400000 }, async () => {
   reseed();

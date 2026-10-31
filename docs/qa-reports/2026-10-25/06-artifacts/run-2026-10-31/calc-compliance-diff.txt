@@ -1,0 +1,56 @@
+######## calc-r2 / compliance-r2：本次 vs 10-25（v1.10.0，data/qa 里上次的结果）
+== calc-r2-results.json: 上次 {'PASS': 302, 'FAIL': 21, 'INFO': 2}  本次 {'PASS': 299, 'FAIL': 23, 'RULE-CHANGE': 1, 'INFO': 2}
+  INT#A0.settle.formula: PASS → FAIL :: 11495.16
+  INT#INT07: PASS → FAIL :: 1800.00
+  INT#INT07.dpd: PASS → FAIL :: 0
+  PAYV#beforeStart: FAIL → PASS :: Payment date cannot be before the loan start date (2026-06-01)
+  PAYV#beforeStart.out: PASS → None :: 
+  RS#B.dpd: PASS → FAIL :: 183
+  RS#B.schedule: PASS → FAIL :: #1 预期 2026-04-01|135.07|0.00|135.07|Overdue / 实际 2026-05-01|135.07|0.00|135.07|Overdue
+  RS#B2.schedule: PASS → FAIL :: #1 预期 2026-04-01|135.07|135.07|0.00|Paid / 实际 2026-05-01|135.07|135.07|0.00|Paid
+  RS#FIXCAP.1800: PASS → FAIL :: A rate-based loan cannot be restructured to a fixed amount (pending legal review)
+  RS#FIXCAP.1800.40: FAIL → PASS :: Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)
+  RS#TOTINT.75: PASS → FAIL :: Interest after the restructure plus carried arrears cannot exceed the remaining principal
+  RS#BORN.dpd: PASS → FAIL :: 1
+  CAP#monthly 1.50004: FAIL → PASS :: Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)
+  CAP#daily 18.004: FAIL → PASS :: Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)
+  CAP#fixed 1800.40/12: FAIL → PASS :: Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)
+  CAP#fixed 1800.01/12: FAIL → PASS :: Interest rate exceeds the 18% p.a. limit (this loan: 18% p.a.)
+  CAP#fixed 9000 无期限: FAIL → PASS :: Tenure is required for a loan that charges interest
+  CAP#monthly 1.5 无期限 起2023-01-01（至今 68.66%）: FAIL → PASS :: Tenure is required for a loan that charges interest
+  PTP#PLAN.kept: FAIL → PASS :: 0/3 kept
+  DPD#PRE.overdue: PASS → FAIL :: 5903.29
+  DPD#PRE.biz: FAIL → PASS :: Overdue 5903.29 vs Settlement 5903.29 / 合同欠款 5903.29
+  COM#B.collected: PASS → FAIL :: 1234.57
+  COM#B.earned: PASS → FAIL :: 92.59
+  RULE#N-02: None → RULE-CHANGE :: Tenure is required for a loan that charges interest
+== calc-r2-recon.json: 上次 {'PASS': 156, 'FAIL': 12, 'INFO': 1}  本次 {'PASS': 142, 'FAIL': 20, 'INFO': 1}
+  CASE#CASE-2026-D014: PASS → FAIL :: 16108.75/3058.75/0.00/13340.47/0/0.00
+  CASE#CASE-2026-0044: PASS → FAIL :: 20000.00/10000.00/0.00/11370.97/122/1250.00
+  CASE#CASE-2026-0047: PASS → FAIL :: 13145.00/3145.00/0.00/11499.84/1/1495.00
+  CASE#CASE-2026-0068: PASS → FAIL :: 5903.29/903.29/5000.00/5903.29/30/5903.29
+  CASE#CASE-2026-0071: PASS → FAIL :: 11449.75/2449.75/1000.00/10217.91/183/805.03
+  CASE#CASE-2026-0072: PASS → None :: 
+  CASE#CASE-2026-0073: PASS → None :: 
+  CASE#CASE-2026-0074: PASS → None :: 
+  CASE#CASE-2026-0075: PASS → None :: 
+  CASE#CASE-2026-0076: PASS → None :: 
+  CASE#CASE-2026-0077: PASS → None :: 
+  CASE#ALL: PASS → FAIL :: 不一致 9 个：14,39,40,43,44,64,67,88,91
+  DASH#dpd.1–30: PASS → FAIL :: 213400.96
+  DASH#dpd.31–60: PASS → FAIL :: 2400.00
+== compliance-r2-results.json: 上次 {'PASS': 23, 'OBSERVE': 6, 'FAIL': 11, 'PARTIAL': 3}  本次 {'PASS': 31, 'OBSERVE': 4, 'FAIL': 6, 'PARTIAL': 2}
+  A8 fixed 9,000 / 10,000 with no tenure: FAIL → PASS :: accepted=false id=null flash=red:Tenure is required for a loan that charges interest; nominalAnnualRate=null
+  A10 monthly 1.5%, NO tenure, start 2021-06-01: FAIL → PASS :: accepted=false; interest today=null; projected interest at 2027-12-31=null vs principal 10,000
+  A12c with cap 100: monthly 8% x12 (96% p.a.): OBSERVE → PASS :: accepted=false interest=null
+  A12d cap back to 18: existing 96% loan flagged?: FAIL → PASS :: restored=18; page mentions limit/exceeds=n/a
+  C2 restructure monthly 1.5% (reducing) → fixed 1,800 flat over 12m: OBSERVE → PASS :: flash=red:A rate-based loan cannot be restructured to a fixed amount (pending legal review); effective rate of equal instalments=31.72% p.a. vs 18% on the interest-first basis
+  C3 s.17A(2): restructure 3,800 remaining principal over 120 months: FAIL → PASS :: remaining principal=3800; restructure red:Interest after the restructure plus carried arrears cannot exceed the remaining principal; unpaid interest at undefined if unpaid=undefined vs principal due undefined
+  D1 edit principal & debtor of a case with payments: PARTIAL → FAIL :: flash=red:Tenure is required for a loan that charges interest; payments=1; audit="Recorded payment RCPT-2026-0003 amount 8000"
+  G2 agent moves bankrupt case back to Negotiation, then PTP + call: FAIL → PASS :: status flash=red:Only a manager can change a Bankruptcy case; status now=bankruptcy; then PTP=red:Not allowed while the case is Bankruptcy; call=red:Not allowed while the case is Bankruptcy
+  G3 case 4 set bankrupt with a pending PTP; agent3 adds call task on deceased case 11: FAIL → PASS :: PTP#1 status after bankruptcy=broken; task on deceased case: red:Only legal tasks can be added to a bankrupt or deceased case
+
+######## 本次 vs 10-26 那次（v1.11.0，云端）
+== calc-r2-results.json: 上次 {'PASS': 299, 'FAIL': 23, 'RULE-CHANGE': 1, 'INFO': 2}  本次 {'PASS': 299, 'FAIL': 23, 'RULE-CHANGE': 1, 'INFO': 2}
+== calc-r2-recon.json: 上次 {'PASS': 142, 'FAIL': 20, 'INFO': 1}  本次 {'PASS': 142, 'FAIL': 20, 'INFO': 1}
+== compliance-r2-results.json: 上次 {'PASS': 31, 'OBSERVE': 4, 'FAIL': 6, 'PARTIAL': 2}  本次 {'PASS': 31, 'OBSERVE': 4, 'FAIL': 6, 'PARTIAL': 2}

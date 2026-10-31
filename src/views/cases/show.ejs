@@ -21,7 +21,7 @@
   const paid = payments.reduce((s, p) => s + p.amount, 0);
   const total = (c.principal_amount || 0) + (c.interest_charged || 0);
   const recovered = total > 0 ? Math.round(paid / total * 100) : 0;
-  const daysOpen = Math.max(0, Math.floor((Date.now() - new Date(c.opened_at).getTime()) / 86400000));
+  const daysOpen = h.daysOverdue(h.dateFmt(c.opened_at)); // Malaysia calendar days, whatever the host zone (G-29)
   const nextTask = tasks
     .filter(t => t.status === 'pending' && t.due_date)
     .sort((a, b) => a.due_date < b.due_date ? -1 : (a.due_date > b.due_date ? 1 : 0))[0];
@@ -168,12 +168,19 @@
     <h2>Payments</h2>
     <% if (!payments.length) { %><%- include('../partials/empty', { msg: 'No payments recorded.' }) %><% } else { %>
     <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th><th>Remark</th><% if (canEditPay) { %><th>Actions</th><% } %></tr></thead>
-    <tbody><% payments.forEach(p => { %><tr><td class="mono"><%= p.receipt_no %></td><td><%= h.dateFmt(p.payment_date) %></td>
+    <tbody><% payments.forEach(p => { %><tr><td class="mono"><a href="/cases/<%= c.id %>/payments/<%= p.id %>/receipt" target="_blank" title="Print receipt"><%= p.receipt_no %></a></td><td><%= h.dateFmt(p.payment_date) %></td>
     <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td><td><%= p.remark || '' %></td>
     <% if (canEditPay) { %><td><% if (lock && String(p.payment_date).slice(0, 10) <= lock) { %><small style="color:var(--muted)">Locked · restructured</small><% } else { %><div style="display:flex; gap:0.5rem;">
       <button type="button" class="btn btn-sm" onclick="openEditPayment(this)" data-id="<%= p.id %>" data-amount="<%= p.amount %>" data-date="<%= String(p.payment_date).slice(0, 10) %>" data-method="<%= p.method %>" data-ref="<%= p.reference||'' %>" data-bank="<%= p.bank||'' %>">Edit</button>
-      <form method="post" action="/cases/<%= c.id %>/payments/<%= p.id %>/void" style="margin:0;" onsubmit="return confirm('Void payment <%= p.receipt_no %>?')"><button class="btn btn-sm" type="submit">Void</button></form>
+      <form method="post" action="/cases/<%= c.id %>/payments/<%= p.id %>/void" style="margin:0;" data-receipt="<%= p.receipt_no %>" onsubmit="return voidReason(this)"><input type="hidden" name="reason"><button class="btn btn-sm" type="submit">Void</button></form>
     </div><% } %></td><% } %></tr><% }) %></tbody></table>
+    <% } %>
+    <% if (typeof voided !== 'undefined' && voided.length) { %>
+    <%# F-24: a voided payment leaves the ledger but stays on record. %>
+    <h3 style="margin-top:1rem">Voided</h3>
+    <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Voided</th><th>Reason</th></tr></thead>
+    <tbody><% voided.forEach(v => { %><tr style="color:var(--muted)"><td class="mono"><s><%= v.receipt_no %></s></td><td><%= h.dateFmt(v.payment_date) %></td>
+    <td class="num"><s><%= h.money(v.amount) %></s></td><td><%= h.dateTimeFmt(v.changed_at) %> · <%= v.changed_by || '—' %></td><td><%= v.reason || '—' %></td></tr><% }) %></tbody></table>
     <% } %>
     </section>
 
@@ -314,6 +321,13 @@
 <% } %>
 <script>
   function dlg(id){ document.getElementById(id).showModal(); }
+  // F-24: a void says why; Cancel keeps the payment.
+  function voidReason(f){
+    var r = prompt('Void payment ' + f.dataset.receipt + '? Reason:');
+    if (r === null) return false;
+    f.elements.reason.value = r;
+    return true;
+  }
   function editNote(btn){
     var f = document.getElementById('note-edit-form');
     f.action = '/cases/<%= c.id %>/notes/' + btn.dataset.id;

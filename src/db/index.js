@@ -9,9 +9,14 @@ fs.mkdirSync(path.dirname(path.resolve(DB_PATH)), { recursive: true });
 const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON;');
 
-// Transaction wrapper: returns a function that executes fn within a transaction
+// Transaction wrapper: returns a function that executes fn within a transaction.
+// Re-entrant: inside an open one (e.g. the per-request transaction in app.js)
+// fn just joins it — node:sqlite has no nested transactions.
+let txDepth = 0;
 db.transaction = function(fn) {
   return () => {
+    if (txDepth) return fn();
+    txDepth++;
     try {
       this.exec('BEGIN TRANSACTION');
       fn();
@@ -19,6 +24,8 @@ db.transaction = function(fn) {
     } catch (e) {
       this.exec('ROLLBACK');
       throw e;
+    } finally {
+      txDepth--;
     }
   };
 };

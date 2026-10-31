@@ -32,7 +32,11 @@ const TZ_OFFSET = 8 * 3600000; // dates are entered/stored in Malaysia local tim
 // time is dropped, so a case opened today accrues 0 (not a slice of a day that
 // creeps up every second the page is reloaded), and interest steps once per day.
 // ponytail: +8 offset hardcoded; lift to config/env if this ever runs off-Malaysia.
-const localDay = t => Math.floor((new Date(t).getTime() + TZ_OFFSET) / MS_DAY);
+// SQLite's datetime('now') text ("YYYY-MM-DD HH:MM:SS") is UTC but has no zone,
+// and Date reads a zone-less date-time as host-local time — a day early on a
+// Malaysian laptop (G-29). Read it as UTC; date-only strings already are.
+const asUTC = t => (typeof t === 'string' && /^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?$/.test(t) ? t.replace(' ', 'T') + 'Z' : t);
+const localDay = t => Math.floor((new Date(asUTC(t)).getTime() + TZ_OFFSET) / MS_DAY);
 const daysBetween = (a, b) => Math.max(0, localDay(b) - localDay(a));
 
 // Per-day interest rate of the daily (annual %) mode: annual rate /365, the
@@ -143,11 +147,15 @@ function settlementOn(caseId, date) {
 // `change` adds a payment ({amount, payment_date}) and/or replaces one (`replaceId`).
 function overpayError(caseId, change) {
   const { c, payments, restructures } = loadLedger(caseId);
-  const list = payments.filter(p => p.id !== change.replaceId).concat({ id: 0, amount: Number(change.amount), payment_date: change.payment_date })
-    .sort((a, b) => localDate(a.payment_date).localeCompare(localDate(b.payment_date)) || (a.id || Infinity) - (b.id || Infinity));
-  const { excess } = caseBalance(c, list, undefined, restructures);
-  if (excess <= 0.005) return null;
-  return `Amount exceeds what is owed on ${change.payment_date}: at most RM ${(Number(change.amount) - excess).toFixed(2)}`;
+  const excessWith = amount => caseBalance(c, payments.filter(p => p.id !== change.replaceId).concat({ id: 0, amount, payment_date: change.payment_date })
+    .sort((a, b) => localDate(a.payment_date).localeCompare(localDate(b.payment_date)) || (a.id || Infinity) - (b.id || Infinity)), undefined, restructures).excess;
+  if (excessWith(Number(change.amount)) <= 0.005) return null;
+  // The hint is the largest amount in sen that is still accepted (G-27). A
+  // backdated payment shifts later payments' interest, so "amount − excess"
+  // undershoots; binary search over sen instead (~20 ledger walks).
+  let lo = 0, hi = Math.round(Number(change.amount) * 100);
+  while (lo < hi) { const mid = Math.ceil((lo + hi) / 2); if (excessWith(mid / 100) <= 0.005) lo = mid; else hi = mid - 1; }
+  return `Amount exceeds what is owed on ${change.payment_date}: at most RM ${(lo / 100).toFixed(2)}`;
 }
 
 // Nominal annual rate of a set of loan terms, in % — what the legal cap is
@@ -167,8 +175,10 @@ const maxAnnualRate = () => Math.min(LEGAL_MAX_RATE, (get('SELECT max_annual_rat
 // The cap check shared by Case form and Restructure. null when allowed.
 function rateCapError(t, principal) {
   const rate = nominalAnnualRate(t, principal), cap = maxAnnualRate();
-  return rate !== null && rate > cap + 1e-9 ? `Interest rate exceeds the ${cap}% p.a. limit (this loan: ${round2(rate)}% p.a.)` : null;
+  return rate !== null && rate > cap + 1e-9 ? `Interest rate exceeds the ${cap}% p.a. limit (this loan: ${ratePct(rate)}% p.a.)` : null;
 }
+// A rate for a message: up to 4 decimals, so 18.0048% doesn't read as "18%" (O-1).
+const ratePct = r => String(Number(r.toFixed(4)));
 
 function recomputeOutstanding(caseId) {
   const c = get('SELECT principal_amount, interest_amount, interest_mode, interest_rate, interest_from, opened_at, maturity_date FROM cases WHERE id = ?', [caseId]);
@@ -211,6 +221,13 @@ function paymentWrites(caseId, p) {
   const outstanding = resyncCaseStatus(caseId, by);
   return { receipt_no, outstanding, status: get('SELECT status FROM cases WHERE id = ?', [caseId]).status };
 }
+// F-24: keep a payment's row as it stands, before an edit or void changes it.
+function snapshotPayment(paymentId, change, reason, by) {
+  run(`INSERT INTO payment_history (payment_id, case_id, receipt_no, payment_date, amount, method, reference, bank, remark, agent_id,
+      recorded_by, recorded_at, change, reason, changed_by, is_demo)
+    SELECT id, case_id, receipt_no, payment_date, amount, method, reference, bank, remark, agent_id, created_by, created_at, ?, ?, ?, is_demo
+    FROM payments WHERE id = ?`, [change, reason || null, by, paymentId]);
+}
 function applyPayment(caseId, p, req) {
   let r;
   db.transaction(() => { r = paymentWrites(caseId, { ...p, created_by: req.session.user.full_name }); })();
@@ -236,5 +253,5 @@ function resyncCaseStatus(caseId, by) {
   }
   return outstanding;
 }
-module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, refreshStaleAccruals, caseBalance, applyPayment, paymentWrites,
-  resyncCaseStatus, dailyRate, daysBetween, accrue, monthsSince, localDate, settlementOn, overpayError, nominalAnnualRate, maxAnnualRate, rateCapError, LEGAL_MAX_RATE };
+module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, refreshStaleAccruals, caseBalance, applyPayment, paymentWrites, snapshotPayment,
+  resyncCaseStatus, dailyRate, daysBetween, accrue, monthsSince, localDate, settlementOn, overpayError, nominalAnnualRate, maxAnnualRate, rateCapError, ratePct, LEGAL_MAX_RATE };

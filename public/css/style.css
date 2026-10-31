@@ -90,7 +90,10 @@ body.app {
   z-index: 50;
   transition: width 0.16s ease;
 }
-.sidebar:hover {
+/* .is-open is set by partials/sidebar.ejs once the pointer rests on the rail (O-8), so a
+   pointer passing over it toward a button near the content's left edge
+   doesn't open it over that button. */
+.sidebar.is-open {
   width: 236px;
   box-shadow: 4px 0 20px rgba(20, 26, 36, 0.18);
 }
@@ -104,7 +107,7 @@ body.app {
   white-space: nowrap;
   transition: opacity 0.1s ease;
 }
-.sidebar:hover .lbl {
+.sidebar.is-open .lbl {
   opacity: 1;
   width: auto;
 }
@@ -120,7 +123,7 @@ body.app {
   justify-content: center;
   border-bottom: 1px solid var(--sidebar-line);
 }
-.sidebar:hover .brand {
+.sidebar.is-open .brand {
   padding: 22px 20px;
   justify-content: flex-start;
 }
@@ -137,7 +140,7 @@ body.app {
 }
 /* the label already spells out "Debt..." so drop the redundant D badge
    once there's room to show the full wordmark */
-.sidebar:hover .brand .mark {
+.sidebar.is-open .brand .mark {
   display: none;
 }
 .sidebar .brand span {
@@ -163,7 +166,7 @@ body.app {
   font-size: 13.5px;
   border-left: 3px solid transparent;
 }
-.sidebar:hover nav a {
+.sidebar.is-open nav a {
   padding: 10px 20px;
   justify-content: flex-start;
 }
@@ -200,7 +203,7 @@ body.app {
   cursor: pointer;
   user-select: none;
 }
-.sidebar:hover .grp-head {
+.sidebar.is-open .grp-head {
   padding: 10px 20px;
   justify-content: flex-start;
 }
@@ -226,7 +229,7 @@ body.app {
   line-height: 1;
   transition: transform 0.15s ease;
 }
-.sidebar:hover .grp-head .chev {
+.sidebar.is-open .grp-head .chev {
   display: inline-block;
 }
 .sidebar .grp.open .grp-head .chev {
@@ -242,7 +245,7 @@ body.app {
 .sidebar .grp.open .grp-body {
   max-height: 160px;
 }
-.sidebar:not(:hover) .grp-body {
+.sidebar:not(.is-open) .grp-body {
   max-height: 0 !important;
 }
 .sidebar .grp-body a {
@@ -255,7 +258,7 @@ body.app {
   padding: 14px 0 18px;
   text-align: center;
 }
-.sidebar:hover .sidebar-foot {
+.sidebar.is-open .sidebar-foot {
   padding: 14px 20px 18px;
   text-align: left;
 }
@@ -284,7 +287,7 @@ body.app {
   color: var(--muted);
   font-size: 13px;
 }
-.sidebar:hover .sidebar-foot .logout {
+.sidebar.is-open .sidebar-foot .logout {
   justify-content: flex-start;
 }
 .sidebar-foot .logout:hover {

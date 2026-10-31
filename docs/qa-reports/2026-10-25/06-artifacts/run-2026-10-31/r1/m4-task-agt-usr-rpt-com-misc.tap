@@ -1,0 +1,641 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 762.4247
+  type: 'test'
+  ...
+# Subtest: TASK-01 列表与筛选
+not ok 2 - TASK-01 列表与筛选
+  ---
+  duration_ms: 92.947
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:18:1'
+  failureType: 'testCodeFailure'
+  error: 'TASK-01: expected 各筛选结果符合；逾期待办红色 · overdue; actual {"status":["4","4"],"type":["",""],"overdue":["2,6","2,6"],"w1_Today":["4","2,4,6"],"w7":["1,2,3,4,5,6","1,2,3,4,5,6"],"w14":["1,2,3,4,5,6","1,2,3,4,5,6"],"w30":["1,2,3,4,5,6","1,2,3,4,5,6"]} 红色逾期=true'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:37:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: TASK-02 新建（关联案件，Agent 跟随案件）
+ok 3 - TASK-02 新建（关联案件，Agent 跟随案件）
+  ---
+  duration_ms: 17.8037
+  type: 'test'
+  ...
+# Subtest: TASK-03 新建（不关联案件）
+ok 4 - TASK-03 新建（不关联案件）
+  ---
+  duration_ms: 39.1518
+  type: 'test'
+  ...
+# Subtest: TASK-04 标题必填
+ok 5 - TASK-04 标题必填
+  ---
+  duration_ms: 5.5335
+  type: 'test'
+  ...
+# Subtest: TASK-05 编辑
+not ok 6 - TASK-05 编辑
+  ---
+  duration_ms: 10.4717
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:56:1'
+  failureType: 'testCodeFailure'
+  error: 'TASK-05: expected Task updated; actual null; QA case task/follow_up/2026-11-02/null'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:59:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: TASK-06 完成
+ok 7 - TASK-06 完成
+  ---
+  duration_ms: 28.0209
+  type: 'test'
+  ...
+# Subtest: TASK-07 催收员范围
+ok 8 - TASK-07 催收员范围
+  ---
+  duration_ms: 26.5561
+  type: 'test'
+  ...
+# Subtest: TASK-08 越权关联案件
+ok 9 - TASK-08 越权关联案件
+  ---
+  duration_ms: 9.1895
+  type: 'test'
+  ...
+# Subtest: TASK-09 只读角色
+ok 10 - TASK-09 只读角色
+  ---
+  duration_ms: 10.9747
+  type: 'test'
+  ...
+# Subtest: TASK-10 与仪表盘联动
+ok 11 - TASK-10 与仪表盘联动
+  ---
+  duration_ms: 31.2616
+  type: 'test'
+  ...
+# Subtest: AGT-01 列表
+ok 12 - AGT-01 列表
+  ---
+  duration_ms: 23.2251
+  type: 'test'
+  ...
+# Subtest: AGT-02 筛选
+ok 13 - AGT-02 筛选
+  ---
+  duration_ms: 22.7971
+  type: 'test'
+  ...
+# Subtest: AGT-03 新建
+ok 14 - AGT-03 新建
+  ---
+  duration_ms: 39.9604
+  type: 'test'
+  ...
+# Subtest: AGT-04 停用
+ok 15 - AGT-04 停用
+  ---
+  duration_ms: 67.4398
+  type: 'test'
+  ...
+# Subtest: AGT-05 详情
+ok 16 - AGT-05 详情
+  ---
+  duration_ms: 10.4703
+  type: 'test'
+  ...
+# Subtest: AGT-06 权限
+ok 17 - AGT-06 权限
+  ---
+  duration_ms: 42.3899
+  type: 'test'
+  ...
+# Subtest: USR-01 新建员工账号
+not ok 18 - USR-01 新建员工账号
+  ---
+  duration_ms: 100.7653
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:130:1'
+  failureType: 'testCodeFailure'
+  error: 'USR-01: expected User xxx created；可立即登录; actual null; login 401→'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:133:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-02 必填
+ok 19 - USR-02 必填
+  ---
+  duration_ms: 24.8755
+  type: 'test'
+  ...
+# Subtest: USR-03 角色列表
+ok 20 - USR-03 角色列表
+  ---
+  duration_ms: 4.7687
+  type: 'test'
+  ...
+# Subtest: USR-04 催收员账号
+not ok 21 - USR-04 催收员账号
+  ---
+  duration_ms: 12.6792
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:145:1'
+  failureType: 'testCodeFailure'
+  error: 'USR-04: expected 出现 Linked Agent；不选提示 Agent accounts must be linked to an agent; actual Password must be at least 8 characters'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:148:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-05 用户名重复
+not ok 22 - USR-05 用户名重复
+  ---
+  duration_ms: 7.8946
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:150:1'
+  failureType: 'testCodeFailure'
+  error: 'USR-05: expected Could not create user (username may already exist); actual Password must be at least 8 characters'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:152:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-06 编辑
+not ok 23 - USR-06 编辑
+  ---
+  duration_ms: 0.6832
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:154:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'id')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:156:44)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-07 防止锁死自己
+ok 24 - USR-07 防止锁死自己
+  ---
+  duration_ms: 42.9506
+  type: 'test'
+  ...
+# Subtest: USR-08 重置密码
+not ok 25 - USR-08 重置密码
+  ---
+  duration_ms: 0.6092
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:167:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'id')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:169:44)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-09 停用账号
+not ok 26 - USR-09 停用账号
+  ---
+  duration_ms: 10.9877
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:175:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'id')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:178:34)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-10 停用后的已登录会话（期望立即失效）
+not ok 27 - USR-10 停用后的已登录会话（期望立即失效）
+  ---
+  duration_ms: 106.2093
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:184:1'
+  failureType: 'testCodeFailure'
+  error: 'login qa_sess failed: 401 '
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    as (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:67:53)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:186:13)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-11 角色变更生效时间
+not ok 28 - USR-11 角色变更生效时间
+  ---
+  duration_ms: 134.3047
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:193:1'
+  failureType: 'testCodeFailure'
+  error: 'login qa_role failed: 401 '
+  code: 'ERR_TEST_FAILURE'
+  stack: |-
+    as (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:67:53)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:195:13)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: USR-12 新建时的密码长度（期望至少 4 位）
+ok 29 - USR-12 新建时的密码长度（期望至少 4 位）
+  ---
+  duration_ms: 98.604
+  type: 'test'
+  ...
+# Subtest: USR-13 审计
+not ok 30 - USR-13 审计
+  ---
+  duration_ms: 0.6804
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:205:1'
+  failureType: 'testCodeFailure'
+  error: 'USR-13: expected create、update user 有记录，含 Reset password for xxx; actual create 0 条; update 0 条: '
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:208:3)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RPT-01 默认日期
+ok 31 - RPT-01 默认日期
+  ---
+  duration_ms: 5.844
+  type: 'test'
+  ...
+# Subtest: RPT-02 欠款按状态
+ok 32 - RPT-02 欠款按状态
+  ---
+  duration_ms: 18.4343
+  type: 'test'
+  ...
+# Subtest: RPT-03 催收员业绩（日期范围）
+not ok 33 - RPT-03 催收员业绩（日期范围）
+  ---
+  duration_ms: 74.2705
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:226:1'
+  failureType: 'testCodeFailure'
+  error: 'RPT-03: expected Collected 只统计范围内；Commission=Collected×Rate%；有达成率条; actual 10 月 {"col":"0.00","rate":"6","com":"0.00"}（库 null）; 9 月 {"col":"0.00","rate":"6","com":"0.00"}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:235:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RPT-04 催收员视图
+ok 34 - RPT-04 催收员视图
+  ---
+  duration_ms: 10.6783
+  type: 'test'
+  ...
+# Subtest: RPT-05 CSV 导出
+ok 35 - RPT-05 CSV 导出
+  ---
+  duration_ms: 9.529
+  type: 'test'
+  ...
+# Subtest: RPT-06 Excel 兼容（BOM + 无小数尾差）
+ok 36 - RPT-06 Excel 兼容（BOM + 无小数尾差）
+  ---
+  duration_ms: 9.9444
+  type: 'test'
+  ...
+# Subtest: COM-01 月份
+not ok 37 - COM-01 月份
+  ---
+  duration_ms: 12.4103
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:265:1'
+  failureType: 'testCodeFailure'
+  error: 'COM-01: expected 默认当前月（MYT）；Collected 只统计该月; actual 默认月 2026-10; 10 月 0.00（库 0）; 9 月 0.00'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:271:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: COM-02 计算（含负数红色）
+not ok 38 - COM-02 计算（含负数红色）
+  ---
+  duration_ms: 9.5738
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:273:1'
+  failureType: 'testCodeFailure'
+  error: 'COM-02: expected Earned=Collected×Rate%；Pending=Earned−Settled；负数红色; actual {"Lim Wei Sheng":{"col":"2,916.00","rate":"5","earned":"145.80","settled":"100.00","cls":"","pending":"45.80"},"Nurul Ain":{"col":"24,516.00","rate":"5","earned":"1,225.80","settled":"500.00","cls":"","pending":"725.80"},"QA 新催收员":{"col":"0.00","rate":"5","earned":"0.00","settled":"0.00","cls":"","pending":"0.00"},"Rajesh Kumar":{"col":"0.00","rate":"6","earned":"0.00","settled":"0.00","cls":"","pending":"0.00"},"Tan Mei Ling":{"col":"7,965.00","rate":"4","earned":"318.60","settled":"0.00","cls":"","pending":"318.60"}}; 负数行 '
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:278:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: COM-03 结算
+ok 39 - COM-03 结算
+  ---
+  duration_ms: 26.5768
+  type: 'test'
+  ...
+# Subtest: COM-04 金额校验
+ok 40 - COM-04 金额校验
+  ---
+  duration_ms: 23.5231
+  type: 'test'
+  ...
+# Subtest: COM-05 作废结算
+ok 41 - COM-05 作废结算
+  ---
+  duration_ms: 32.853
+  type: 'test'
+  ...
+# Subtest: COM-06 催收员视图
+ok 42 - COM-06 催收员视图
+  ---
+  duration_ms: 9.8114
+  type: 'test'
+  ...
+# Subtest: COM-07 只读角色
+ok 43 - COM-07 只读角色
+  ---
+  duration_ms: 10.9692
+  type: 'test'
+  ...
+# Subtest: SRCH-01 多字段搜索
+not ok 44 - SRCH-01 多字段搜索
+  ---
+  duration_ms: 19.6812
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:317:1'
+  failureType: 'testCodeFailure'
+  error: 'SRCH-01: expected 列出匹配的案件; actual {"caseNo":[10],"name":[15,3],"ic":[],"phone":[11]}'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:322:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SRCH-02 催收员范围
+ok 45 - SRCH-02 催收员范围
+  ---
+  duration_ms: 4.8878
+  type: 'test'
+  ...
+# Subtest: SRCH-03 空搜索
+ok 46 - SRCH-03 空搜索
+  ---
+  duration_ms: 9.8863
+  type: 'test'
+  ...
+# Subtest: SRCH-04 结果上限
+ok 47 - SRCH-04 结果上限
+  ---
+  duration_ms: 1807.3056
+  type: 'test'
+  ...
+# Subtest: SRCH-05 特殊字符
+ok 48 - SRCH-05 特殊字符
+  ---
+  duration_ms: 48.3792
+  type: 'test'
+  ...
+# Subtest: AUD-01 访问权限
+ok 49 - AUD-01 访问权限
+  ---
+  duration_ms: 28.7651
+  type: 'test'
+  ...
+# Subtest: AUD-02 内容
+ok 50 - AUD-02 内容
+  ---
+  duration_ms: 6.6636
+  type: 'test'
+  ...
+# Subtest: AUD-03 筛选
+not ok 51 - AUD-03 筛选
+  ---
+  duration_ms: 4.5899
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:358:1'
+  failureType: 'testCodeFailure'
+  error: 'AUD-03: expected 只显示该动作; actual 0 条，动作 '
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:361:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: AUD-05 不可修改
+ok 52 - AUD-05 不可修改
+  ---
+  duration_ms: 14.342
+  type: 'test'
+  ...
+# Subtest: SET-01 保存公司信息
+ok 53 - SET-01 保存公司信息
+  ---
+  duration_ms: 37.6937
+  type: 'test'
+  ...
+# Subtest: SET-02 上传 Logo
+ok 54 - SET-02 上传 Logo
+  ---
+  duration_ms: 38.9938
+  type: 'test'
+  ...
+# Subtest: SET-03 Logo 格式
+ok 55 - SET-03 Logo 格式
+  ---
+  duration_ms: 20.0385
+  type: 'test'
+  ...
+# Subtest: SET-04 Logo 大小
+ok 56 - SET-04 Logo 大小
+  ---
+  duration_ms: 12.9479
+  type: 'test'
+  ...
+# Subtest: SET-05 移除 Logo
+ok 57 - SET-05 移除 Logo
+  ---
+  duration_ms: 18.1022
+  type: 'test'
+  ...
+# Subtest: SET-06 对账单内容
+not ok 58 - SET-06 对账单内容
+  ---
+  duration_ms: 34.8433
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:397:1'
+  failureType: 'testCodeFailure'
+  error: 'SET-06: expected 新标签页；公司抬头、案件号、当天日期、债务人、本金/利息/已还/欠款、还款历史; actual 内容完整=false 缺失=Outstanding</span>RM 2,916.00; target=_blank=true'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:403:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: SET-07 打印（CSS 层）
+ok 59 - SET-07 打印（CSS 层）
+  ---
+  duration_ms: 4.3565
+  type: 'test'
+  ...
+# Subtest: SET-08 未设置公司名
+ok 60 - SET-08 未设置公司名
+  ---
+  duration_ms: 21.3588
+  type: 'test'
+  ...
+# Subtest: DEMO-01 删除演示数据
+ok 61 - DEMO-01 删除演示数据
+  ---
+  duration_ms: 63.7225
+  type: 'test'
+  ...
+# Subtest: DEMO-02 重新载入
+ok 62 - DEMO-02 重新载入
+  ---
+  duration_ms: 454.3344
+  type: 'test'
+  ...
+# Subtest: DEMO-03 编号不冲突
+ok 63 - DEMO-03 编号不冲突
+  ---
+  duration_ms: 451.2446
+  type: 'test'
+  ...
+# Subtest: DEMO-04 被使用过的演示案件
+ok 64 - DEMO-04 被使用过的演示案件
+  ---
+  duration_ms: 453.5965
+  type: 'test'
+  ...
+# Subtest: DEMO-05 权限
+ok 65 - DEMO-05 权限
+  ---
+  duration_ms: 28.8077
+  type: 'test'
+  ...
+# Subtest: AUD-04 覆盖范围
+not ok 66 - AUD-04 覆盖范围
+  ---
+  duration_ms: 563.5993
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m4-task-agt-usr-rpt-com-misc.qa.js:453:1'
+  failureType: 'testCodeFailure'
+  error: 'AUD-04: expected 附录 C 各项操作均产生审计记录; actual 缺失: create:user,update:user；备注/任务相关审计 7 条（E-11 现状）'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m4-task-agt-usr-rpt-com-misc.qa.js:479:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..66
+# tests 66
+# suites 0
+# pass 48
+# fail 18
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 7487.777

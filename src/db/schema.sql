@@ -101,6 +101,24 @@ CREATE TABLE IF NOT EXISTS payments (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- F-24: a payment's row as it stood just before each edit or void. Rows are
+-- only ever added (the triggers refuse UPDATE), so the ledger never loses a figure.
+CREATE TABLE IF NOT EXISTS payment_history (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  payment_id INTEGER NOT NULL,
+  case_id INTEGER NOT NULL REFERENCES cases(id),
+  receipt_no TEXT NOT NULL, payment_date TEXT NOT NULL, amount REAL NOT NULL,
+  method TEXT, reference TEXT, bank TEXT, remark TEXT, agent_id INTEGER,
+  recorded_by TEXT, recorded_at TEXT,
+  change TEXT NOT NULL CHECK (change IN ('edit','void')),
+  reason TEXT, changed_by TEXT,
+  is_demo INTEGER NOT NULL DEFAULT 0,
+  changed_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_payment_history_case ON payment_history(case_id);
+CREATE TRIGGER IF NOT EXISTS payment_history_append_only BEFORE UPDATE ON payment_history
+BEGIN SELECT RAISE(ABORT, 'payment_history is append-only'); END;
+
 -- One row per Extension / Restructure (docs/superpowers/specs/2026-10-23-restructure-design.md).
 -- The case's own columns stay the original loan terms; each row starts a new
 -- ledger segment at effective_date. *_at_cut are display/audit snapshots.
@@ -162,6 +180,10 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   details TEXT, ip_address TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- An audit row is never rewritten (G-25). Deleting stays possible for the demo
+-- reset only; there is no delete path in the app.
+CREATE TRIGGER IF NOT EXISTS audit_logs_append_only BEFORE UPDATE ON audit_logs
+BEGIN SELECT RAISE(ABORT, 'audit_logs is append-only'); END;
 
 CREATE TABLE IF NOT EXISTS commission_settlements (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

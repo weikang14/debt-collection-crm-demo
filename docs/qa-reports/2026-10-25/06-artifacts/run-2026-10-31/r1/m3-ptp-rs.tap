@@ -1,0 +1,429 @@
+TAP version 13
+# Subtest: setup
+ok 1 - setup
+  ---
+  duration_ms: 709.3526
+  type: 'test'
+  ...
+# Subtest: PTP-01 新建 PTP（agent1 本人案件）
+ok 2 - PTP-01 新建 PTP（agent1 本人案件）
+  ---
+  duration_ms: 74.631
+  type: 'test'
+  ...
+# Subtest: PTP-02 金额上限
+ok 3 - PTP-02 金额上限
+  ---
+  duration_ms: 20.3941
+  type: 'test'
+  ...
+# Subtest: PTP-03 履行
+not ok 4 - PTP-03 履行
+  ---
+  duration_ms: 34.0544
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:41:1'
+  failureType: 'testCodeFailure'
+  error: 'PTP-03: expected PTP fulfilled and payment recorded；fulfilled；自动还款备注 PTP fulfilled；欠款减少；audit 两条; actual 金额预填=true; PTP payment recorded; payment RCPT-2026-0001 remark=PTP fulfilled (RM 500.00); 欠款=2500; status=partial_paid'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:48:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-05 重复履行
+ok 5 - PTP-05 重复履行
+  ---
+  duration_ms: 13.4052
+  type: 'test'
+  ...
+# Subtest: PTP-04 违约
+not ok 6 - PTP-04 违约
+  ---
+  duration_ms: 110.7478
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:57:1'
+  failureType: 'testCodeFailure'
+  error: 'PTP-04: expected PTP broken；broken；无其他 pending 时回 Negotiation（无确认框 E-12）; actual PTP broken; 状态 ptp→negotiation; Break 无确认框=false'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:65:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-06 新建分期计划
+not ok 7 - PTP-06 新建分期计划
+  ---
+  duration_ms: 41.979
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:68:1'
+  failureType: 'testCodeFailure'
+  error: "Cannot read properties of undefined (reading 'plan_id')"
+  code: 'ERR_TEST_FAILURE'
+  name: 'TypeError'
+  stack: |-
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:71:103)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-07 期数校验
+ok 8 - PTP-07 期数校验
+  ---
+  duration_ms: 30.2721
+  type: 'test'
+  ...
+# Subtest: PTP-08 总额过小
+ok 9 - PTP-08 总额过小
+  ---
+  duration_ms: 12.8835
+  type: 'test'
+  ...
+# Subtest: PTP-09 逐期履行
+not ok 10 - PTP-09 逐期履行
+  ---
+  duration_ms: 0.8106
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:86:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    q1 (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:24:45)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:87:13)
+    Test.runInAsyncScope (node:async_hooks:214:14)
+    Test.run (node:internal/test_runner/test:1047:25)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-10 取消计划
+not ok 11 - PTP-10 取消计划
+  ---
+  duration_ms: 26.1559
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:92:1'
+  failureType: 'testCodeFailure'
+  error: 'Provided value cannot be bound to SQLite parameter 1.'
+  code: 'ERR_INVALID_ARG_TYPE'
+  name: 'TypeError'
+  stack: |-
+    qa (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:25:45)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:96:16)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: PTP-11 权限与范围
+ok 12 - PTP-11 权限与范围
+  ---
+  duration_ms: 56.5388
+  type: 'test'
+  ...
+# Subtest: RS-01 按钮可见性
+ok 13 - RS-01 按钮可见性
+  ---
+  duration_ms: 301.3126
+  type: 'test'
+  ...
+# Subtest: RS-02 弹窗信息
+not ok 14 - RS-02 弹窗信息
+  ---
+  duration_ms: 29.2048
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:126:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-02: expected 显示截至今天剩余本金/未付利息；默认今天；下限=起算日/最近还款日/上次重组次日最晚者；上限今天; actual 本金 9,304.84 利息 1,107.58（期望 1,129.95）; min=2026-03-02 max=2026-10-31 value=2026-10-31'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:131:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-05 必填校验（含留空利率不当 0%）
+ok 15 - RS-05 必填校验（含留空利率不当 0%）
+  ---
+  duration_ms: 82.3985
+  type: 'test'
+  ...
+# Subtest: RS-06 期限范围
+ok 16 - RS-06 期限范围
+  ---
+  duration_ms: 56.2283
+  type: 'test'
+  ...
+# Subtest: RS-07 生效日越界
+ok 17 - RS-07 生效日越界
+  ---
+  duration_ms: 36.0721
+  type: 'test'
+  ...
+# Subtest: RS-08 重组成功
+not ok 18 - RS-08 重组成功
+  ---
+  duration_ms: 71.6826
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:157:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-08: expected Restructured；Maturity=生效日+18 月；Restructured on；金色时间线；audit; actual Restructured; Maturity=2027-10-01; 时间线=false; audit=Restructured from 2026-04-01 (18 months)'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:163:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-09 新还款计划
+not ok 19 - RS-09 新还款计划
+  ---
+  duration_ms: 21.9322
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:165:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-09: expected 标题 since restructure on 日期；首行挂账 2026-04-01 139.50；之后 18 期; actual 首行 {"due":"2026-05-01","arrears":true,"exp":"135.07","paid":"0.00","out":"135.07","status":"Overdue"}; 行数 19; 第2行 2026-05-01 111.66'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:167:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-10 重组历史
+not ok 20 - RS-10 重组历史
+  ---
+  duration_ms: 25.1974
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:170:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-10: expected 卡片显示生效日/新条款/期限/操作人/截点本金/挂账欠息/原因；Superseded 未还期显示 Restructured; actual  Restructure History 2026-04-01 · 1.2%/month · 18 months · by Collection Manager Principal at cut RM 9,304.84 · Arrears carried RM 135.07 Reason: QA 降低月供 Undo Superseded schedule (12 rows) Due Date Expected Paid Outstanding Status 2026-02-01 150.00 150.00 0.00'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:174:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-11 欠息不再生息
+not ok 21 - RS-11 欠息不再生息
+  ---
+  duration_ms: 18.2927
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:176:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-11: expected 挂账 139.50；Total 11,478.06；总利息 2,478.06; actual Total=10,217.91 Interest=2,449.75'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:178:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-12 旧还款锁定
+ok 22 - RS-12 旧还款锁定
+  ---
+  duration_ms: 70.3399
+  type: 'test'
+  ...
+# Subtest: RS-13 新还款日期下限
+not ok 23 - RS-13 新还款日期下限
+  ---
+  duration_ms: 65.9489
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:187:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-13: expected 日期框 min=生效日；绕过提示 Payment date must be on or after the restructure date (日期); actual Payment date must be after the restructure date (2026-04-01)'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:190:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-14 案件条款锁定
+ok 24 - RS-14 案件条款锁定
+  ---
+  duration_ms: 65.7998
+  type: 'test'
+  ...
+# Subtest: PTP-12 重组后的履行日期
+not ok 25 - PTP-12 重组后的履行日期
+  ---
+  duration_ms: 78.8731
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:200:1'
+  failureType: 'testCodeFailure'
+  error: 'PTP-12: expected 日期框不能早于生效日；绕过提示 Payment date must be on or after the restructure date (日期); actual Payment date must be after the restructure date (2026-04-01)'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:205:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-16 撤销受限
+not ok 26 - RS-16 撤销受限
+  ---
+  duration_ms: 123.4592
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:209:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-16: expected 生效日后有还款时 Undo 消失；直接提交提示 Payments exist…；作废后可撤销; actual 有还款时 Undo=false; 提交→Payments exist after the effective date; void them first; 作废后 Undo=true'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:216:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-15 撤销重组
+not ok 27 - RS-15 撤销重组
+  ---
+  duration_ms: 75.6552
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:218:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-15: expected Restructure undone；恢复原条款；时间线 Restructure undone: from 日期；audit；Edit Case 解锁; actual Restructure undone; Total=10,412.41; 解锁=true; audit=true'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:223:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-17 多次重组
+ok 28 - RS-17 多次重组
+  ---
+  duration_ms: 133.9929
+  type: 'test'
+  ...
+# Subtest: RS-03 没有可选日期（当天已重组）
+ok 29 - RS-03 没有可选日期（当天已重组）
+  ---
+  duration_ms: 73.2444
+  type: 'test'
+  ...
+# Subtest: RS-18 Fixed 重组
+ok 30 - RS-18 Fixed 重组
+  ---
+  duration_ms: 89.5411
+  type: 'test'
+  ...
+# Subtest: RS-19 权限
+ok 31 - RS-19 权限
+  ---
+  duration_ms: 17.3703
+  type: 'test'
+  ...
+# Subtest: RS-20 不可重组
+ok 32 - RS-20 不可重组
+  ---
+  duration_ms: 190.6275
+  type: 'test'
+  ...
+# Subtest: RS-21 已到期贷款重组
+not ok 33 - RS-21 已到期贷款重组
+  ---
+  duration_ms: 67.9147
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:270:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-21: expected 截点欠息只计到原到期日（2025-07-01，181 天 = 905.00）; actual arrears_at_cut=900 principal_at_cut=10000'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:275:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+# Subtest: RS-22 演示案件 14
+not ok 34 - RS-22 演示案件 14
+  ---
+  duration_ms: 21.5899
+  type: 'test'
+  location: 'C:\\Users\\user\\OneDrive\\Documents\\AI\\DebtCollectionCRM\\tests\\qa\\m3-ptp-rs.qa.js:277:1'
+  failureType: 'testCodeFailure'
+  error: 'RS-22: expected 挂账行、新计划、重组历史（10 天前、1.2%/月、18 个月、原因）; actual 首行 {"due":"2026-11-21","arrears":true,"exp":"239.95","paid":"0.00","out":"239.95","status":"Pending"}; 行数 19'
+  code: 'ERR_ASSERTION'
+  name: 'AssertionError'
+  expected: true
+  actual: false
+  operator: '=='
+  stack: |-
+    check (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\_client.js:79:10)
+    TestContext.<anonymous> (C:\Users\user\OneDrive\Documents\AI\DebtCollectionCRM\tests\qa\m3-ptp-rs.qa.js:280:3)
+    process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    async Test.run (node:internal/test_runner/test:1054:7)
+    async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+  ...
+1..34
+# tests 34
+# suites 0
+# pass 18
+# fail 16
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 4146.2889

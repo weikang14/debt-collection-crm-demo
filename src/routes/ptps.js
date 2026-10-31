@@ -14,11 +14,13 @@ const router = express.Router();
 function recordFulfillment(ptpId, body, req) {
   const ptp = get('SELECT * FROM ptps WHERE id=?', [ptpId]);
   if (!ptp) return { ok: false, error: 'PTP not found' };
-  if (ptp.status !== 'pending') return { ok: false, error: 'PTP already resolved' };
-  const rawAmount = (body.amount !== undefined && body.amount !== '') ? body.amount : ptp.amount;
   const cs = get('SELECT outstanding_amount, status FROM cases WHERE id=?', [ptp.case_id]);
   // Bankrupt / deceased (D-13): money is taken through Record Payment with a reason.
+  // Checked first: freezing the case already closed its promises (G-19), and the
+  // useful answer is where to record the money, not that the PTP is closed (PTP-16).
   if (['bankruptcy', 'deceased'].includes(cs.status)) return { ok: false, error: 'Record this payment with a reason instead (bankrupt / deceased case)' };
+  if (ptp.status !== 'pending') return { ok: false, error: 'PTP already resolved' };
+  const rawAmount = (body.amount !== undefined && body.amount !== '') ? body.amount : ptp.amount;
   const v = validatePayment(rawAmount, cs.outstanding_amount);
   if (v.error) return { ok: false, error: v.error };
   const payment_date = body.payment_date || new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);

@@ -1,0 +1,303 @@
+[
+ {
+  "id": "CASE-01",
+  "expected": "结果符合条件；按开案时间倒序",
+  "actual": "negotiation→20,14,3; urgent→20,16,12,8,4; q=D007→7; q=Sarah→14,2; 倒序=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-02",
+  "expected": "cases.csv 带筛选；列正确",
+  "actual": "attachment; filename=\"cases.csv\"; 表头 Case No,Debtor,Debtor Phone,Agent,Outstanding,Paid,Priority,Status,Opened; 行数 3; 导出链接 /cases?format=csv&status=negotiation&priority=high&q=a",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-03",
+  "expected": "浏览器拦截；服务端提示 Debtor and principal are required",
+  "actual": "required 属性 debtor=true principal=true; 无债务人→Debtor and principal are required; 无本金→Debtor and principal are required",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-05",
+  "expected": "Priority=medium，Status=New",
+  "actual": "priority medium selected=true; status new selected=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-07",
+  "expected": "Maturity=2026-02-28；缺起始日或期限时不显示",
+  "actual": "到期日=2026-02-28; 缺期限显示=null; 缺起始日显示=null",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-09",
+  "expected": "看不到 + New Case/Edit Case；/cases/new 403",
+  "actual": "agent1: +New=false Edit=false /cases/new=403; finance: +New=false Edit=false /cases/new=403; auditor: +New=false Edit=false /cases/new=403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-10",
+  "expected": "Total Outstanding；x% recovered=已还÷(本金+利息)；Principal/Interest/Paid/Maturity；opened N days ago",
+  "actual": "Outstanding=10,412.41; 9%（期望 9%）; P=10,000.00 I=1,696.06 Paid=1,000.00 M=2027-01-01; opened 0 days ago",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-12",
+  "expected": "记录结案时间；Dashboard closed 当天 +1",
+  "actual": "closed:有 fully_paid:无 cancelled:有; dashboard closed=2",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-14",
+  "expected": "Call logged；Records→Calls；时间线 Call: answered (60s) — 备注",
+  "actual": "null; Calls 表=false; 时间线=false",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-15",
+  "expected": "依次 Repayment Schedule、Restructure History、Payments、Promise to Pay、Calls、Tasks",
+  "actual": "Repayment Schedule | Restructure History | Payments | Promise to Pay | Calls | Tasks",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-16",
+  "expected": "倒序；payment/ptp_fulfilled 绿，ptp_broken/legal 红，ptp_created/restructure 金，status_change/call 蓝，note 灰",
+  "actual": "时间线 restructure:is-gold, status_change:is-blue, status_change:is-blue, ptp_broken:is-red, ptp_created:is-gold, ptp_fulfilled:is-green, status_change:is-blue, payment:is-green, ptp_created:is-gold, call:is-blue, note:is-neutral, note:is-neutral；legal 类型无界面入口未覆盖",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-17",
+  "expected": "显示最早到期的待办（日期 · 标题）",
+  "actual": "Next Action = \"undefined\"",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "CASE-18",
+  "expected": "404 Case not found or access denied",
+  "actual": "/cases/2 → 404; /statement → 404",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-19",
+  "expected": "无 Record Payment/Restructure/New PTP/New Plan/Log Call/Edit Case/状态框/备注框；有 Records 与 Print statement",
+  "actual": "{\"pay\":false,\"rs\":false,\"ptp\":false,\"plan\":false,\"call\":false,\"edit\":false,\"status\":false,\"note\":false,\"records\":true,\"stmt\":true,\"payEdit\":false,\"voidBtn\":false}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "CASE-20",
+  "expected": "有 Record Payment，Payments 有 Edit/Void；无 New PTP/New Plan/Log Call/状态框/备注框",
+  "actual": "{\"pay\":true,\"rs\":false,\"ptp\":false,\"plan\":false,\"call\":false,\"edit\":false,\"status\":false,\"note\":false,\"records\":true,\"stmt\":true,\"payEdit\":true,\"voidBtn\":true}",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "INT-04",
+  "expected": "利息 1,825.00；Total 11,825.00（计到 2027-01-01）",
+  "actual": "I=1,800.00 T=11,495.16 M=2027-01-01",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "INT-05",
+  "expected": "利息 6,570.00；Total 43,070.00",
+  "actual": "I=6,570.00 T=41,954.00",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "INT-06",
+  "expected": "先冲 300 利息、700 冲本金；总利息 1,718.25；Total 10,718.25",
+  "actual": "Payment RCPT-2026-0003 recorded; I=1,696.06 T=10,412.41",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "INT-08",
+  "expected": "利息不再增加（封顶到期日 2025-09-01，92 天 = 460.00）",
+  "actual": "页面利息 450.00；asOf 2026-12-31 → 450",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PAY-01",
+  "expected": "Payment RCPT-年份-序号 recorded；欠款减少；Payments 有；绿色 payment；audit payment",
+  "actual": "Payment RCPT-2026-0004 recorded; Total=1,900.00; ref=QA-REF-1 bank=Maybank; 日期默认今天(JS)=true; audit=Recorded payment RCPT-2026-0004 amount 100",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-02",
+  "expected": "Assigned → Partial Paid",
+  "actual": "partial_paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-03",
+  "expected": "Fully Paid；欠款 0.00；计划全部 Paid",
+  "actual": "Payment RCPT-2026-0005 recorded; status=fully_paid; Total=0.00; 计划 Paid,Paid,Paid",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-04",
+  "expected": "浏览器 max 拦截；服务端 Amount exceeds outstanding",
+  "actual": "max 属性=true; 服务端 → Amount exceeds outstanding（弹窗内拦截见 ui.qa.py）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-05",
+  "expected": "浏览器 min 拦截；服务端 Invalid amount",
+  "actual": "0→Invalid amount; -5→Invalid amount",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-06",
+  "expected": "Invalid payment date",
+  "actual": "Invalid payment date",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-07",
+  "expected": "欠款减少，状态不变（含还清后）",
+  "actual": "legal:legal/0 bankruptcy:bankruptcy/500 deceased:deceased/500 closed:closed/0 cancelled:cancelled/0",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PAY-08",
+  "expected": "状态保持 PTP",
+  "actual": "Payment RCPT-2026-0012 recorded; status=ptp",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-09",
+  "expected": "上限=欠款+原金额；Payment updated；时间线 edited: RM a → RM b；audit payment_edit",
+  "actual": "前端上限公式=true; 超上限→Amount exceeds outstanding; Payment updated; Total=1,850.00; audit=true",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-10",
+  "expected": "Payment voided；欠款恢复；时间线 voided；audit；Fully Paid 作废后回 Negotiation",
+  "actual": "Payment voided; Total=2,000.00; audit=true; 还清=fully_paid → 作废后=negotiation",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-11",
+  "expected": "无 Actions 列；编辑/作废 403",
+  "actual": "edit 403; void 403",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-12",
+  "expected": "按年递增 1",
+  "actual": "0014 → 0014",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "PAY-13",
+  "expected": "作废的收据号不再使用",
+  "actual": "作废 RCPT-2026-0015 后新还款收据号 = RCPT-2026-0016；时间线同号记录: Payment RCPT-2026-0015: RM 10.00 via bank_transfer | Payment RCPT-2026-0015 voided (RM 10.00)",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "PAY-14",
+  "expected": "编辑弹窗正常打开",
+  "actual": "onclick 源码: openEditPayment(this)；HTML 解码后 JS 语法有效=true（浏览器点击验证见 ui.qa.py）",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-01",
+  "expected": "两项都填写才显示计划",
+  "actual": "都填=true 缺期限=false 缺起始=false",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-02",
+  "expected": "3 行：2026-02-28、2026-03-31、2026-04-30",
+  "actual": "2026-02-28,2026-03-31,2026-04-30",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-03",
+  "expected": "155.00 / 140.00 / 10,155.00",
+  "actual": "150.00 / 150.00 / 10,150.00",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SCH-04",
+  "expected": "333.33 / 333.33 / 333.34",
+  "actual": "333.33 / 333.33 / 333.34",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-05",
+  "expected": "第 1、2 期还清；第 3 期已还 133.34 剩 799.99；最后一期 933.37",
+  "actual": "933.33/933.33/0.00/Paid | 933.33/933.33/0.00/Paid | 933.33/133.34/799.99/Overdue … 末期 933.37",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-06",
+  "expected": "Paid/Overdue/Partially Paid/Pending 判定正确",
+  "actual": "还50: Overdue,Overdue,Pending；再还200: Paid,Paid,Partially Paid,Pending",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-07",
+  "expected": "只有最早未还清一期有 Pay，预填该期未还金额",
+  "actual": "Pay 列: —,—,50,—,—…（第 3 期剩 50.00）；预填写入 #pay-amount 见 ui.qa.py",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-08",
+  "expected": "auditor 无 Actions 列",
+  "actual": "actions=,,",
+  "result": "PASS",
+  "note": ""
+ },
+ {
+  "id": "SCH-09",
+  "expected": "所有期 Paid，Outstanding 全为 0",
+  "actual": "打开详情前库内欠款=11800; max=11800; null; 还后 Total=10,295.16; 计划 Overdue/150.00,Pending/150.00,Pending/10,150.00; 账面 Interest=1,800.00 Paid=0.00（恒等式见手册外 X-OVERPAY）",
+  "result": "FAIL",
+  "note": ""
+ },
+ {
+  "id": "SCH-10",
+  "expected": "计划按新条款重算",
+  "actual": "改前 3 期首期 12.00；改后 3 期首期 12.00",
+  "result": "FAIL",
+  "note": ""
+ }
+]

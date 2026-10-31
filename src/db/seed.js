@@ -1,5 +1,6 @@
 const bcrypt = require('bcryptjs');
 const dayjs = require('dayjs');
+dayjs.extend(require('dayjs/plugin/utc'));
 const { db, init, run } = require('./index');
 const { recomputeOutstanding } = require('../services/payments');
 const { maturityDate } = require('../utils/installments');
@@ -7,8 +8,13 @@ const { balanceAtCut } = require('../services/restructure');
 const { HASH_COST } = require('../utils/forms');
 
 const hash = (pw) => bcrypt.hashSync(pw, HASH_COST);
-const ago = (d) => dayjs().subtract(d, 'day').format('YYYY-MM-DD HH:mm:ss');
-const inDays = (d) => dayjs().add(d, 'day').format('YYYY-MM-DD');
+// G-29: datetimes are stored in UTC like SQLite's datetime('now'); dates
+// (loan start, due dates, payment dates) are Malaysia calendar dates. Neither
+// depends on the host's own time zone.
+const nowMYT = () => dayjs.utc().add(8, 'hour');
+const ago = (d) => dayjs.utc().subtract(d, 'day').format('YYYY-MM-DD HH:mm:ss');
+const agoDate = (d) => nowMYT().subtract(d, 'day').format('YYYY-MM-DD');
+const inDays = (d) => nowMYT().add(d, 'day').format('YYYY-MM-DD');
 
 const AGENTS = [
   ['Lim Wei Sheng', '012-3456789', 'Consumer', 500000, 5],
@@ -44,7 +50,7 @@ const PRIOS = ['low','medium','high','urgent'];
 
 function clearAllTables() {
   init();
-  for (const t of ['audit_logs','call_logs','commission_settlements','tasks','ptps','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users','number_sequences']) {
+  for (const t of ['audit_logs','call_logs','commission_settlements','tasks','ptps','payment_history','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users','number_sequences']) {
     db.exec(`DELETE FROM ${t}`);
     db.exec(`DELETE FROM sqlite_sequence WHERE name='${t}'`);
   }
@@ -58,7 +64,7 @@ function insertDemoRows() {
   CLIENTS.forEach((c, i) => run('INSERT OR IGNORE INTO clients (id,company_name,pic_name,phone,email,agreement_no,commission_rate,is_demo) VALUES (?,?,?,?,?,?,?,1)', [i + 1, ...c]));
   DEBTORS.forEach((d, i) => run('INSERT OR IGNORE INTO debtors (id,name,ic_passport,company,phone,email,address,employer,salary,risk_level,guarantor_name,guarantor_phone,is_demo) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,1)', [i + 1, ...d]));
 
-  const year = dayjs().year();
+  const year = nowMYT().year();
   STATUSES.forEach((st, i) => {
     const id = i + 1;
     // Demo case numbers use a "D" namespace (CASE-YYYY-D001) that customer
@@ -85,14 +91,16 @@ function insertDemoRows() {
     // seeded 8% lump), the rest monthly (1.5%/month).
     // Every other demo loan is a 12-month fixed-interest loan from its opening
     // date (N-02: a loan that charges interest has a term).
-    const opened = ago(60 - i).slice(0, 10);
+    const opened = agoDate(60 - i);
     run(`UPDATE cases SET loan_start_date=?, tenure=12, tenure_unit='months', maturity_date=? WHERE id=? AND tenure IS NULL`,
       [opened, maturityDate(opened, 12, 'months'), id]);
     if (id % 2 === 0 && ['new', 'assigned', 'negotiation', 'ptp'].includes(st)) {
-      const start = ago(60 - i).slice(0, 10);
+      const start = agoDate(60 - i);
       const mode = id === 4 ? 'daily' : id === 12 ? 'fixed' : 'monthly';
-      run(`UPDATE cases SET interest_mode=?, interest_rate=?, interest_from=?, loan_start_date=?, tenure=12, tenure_unit='months', maturity_date=? WHERE id=?`,
-        [mode, { daily: 18, fixed: 0, monthly: 1.5 }[mode], mode === 'fixed' ? null : start, start, maturityDate(start, 12, 'months'), id]);
+      // A rate-based loan has no fixed lump: interest_amount = 0, as the case form saves it (D-1).
+      run(`UPDATE cases SET interest_mode=?, interest_rate=?, interest_from=?, loan_start_date=?, tenure=12, tenure_unit='months', maturity_date=?,
+        interest_amount = CASE WHEN ? = 'fixed' THEN interest_amount ELSE 0 END WHERE id=?`,
+        [mode, { daily: 18, fixed: 0, monthly: 1.5 }[mode], mode === 'fixed' ? null : start, start, maturityDate(start, 12, 'months'), mode, id]);
       recomputeOutstanding(id);
     }
   });
@@ -104,7 +112,7 @@ function insertDemoRows() {
   // payment after it would land in the new segment unvalidated, so the demo
   // restructure is skipped then.
   const c14 = db.prepare('SELECT * FROM cases WHERE id=14 AND is_demo=1').get();
-  const eff = ago(10).slice(0, 10);
+  const eff = agoDate(10);
   const pays14 = db.prepare('SELECT amount, payment_date FROM payments WHERE case_id=14 ORDER BY payment_date, id').all();
   if (c14 && c14.interest_mode === 'monthly' && !db.prepare('SELECT 1 FROM case_restructures WHERE case_id=14').get()
       && !pays14.some(p => String(p.payment_date).slice(0, 10) > eff)) {
@@ -120,8 +128,8 @@ function insertDemoRows() {
   // Payments for demo partial_paid / fully_paid cases only (is_demo=1 guard).
   // Dated 10 days ago but never before the 1st of this month, so a seed run in
   // the first days of a month still shows this month's collections/commission.
-  const monthStart = dayjs().startOf('month');
-  const tenAgo = dayjs().subtract(10, 'day');
+  const monthStart = nowMYT().startOf('month');
+  const tenAgo = nowMYT().subtract(10, 'day');
   const payDate = (tenAgo.isBefore(monthStart) ? monthStart : tenAgo).format('YYYY-MM-DD');
   db.prepare("SELECT id,principal_amount,interest_amount,status FROM cases WHERE is_demo=1 AND status IN ('partial_paid','fully_paid')").all().forEach((c, idx) => {
     const total = c.principal_amount + c.interest_amount;
@@ -137,7 +145,7 @@ function insertDemoRows() {
 
   // Case 5's fulfilled PTP is the promise its demo payment kept: same amount, same day.
   const paid5 = db.prepare('SELECT amount, payment_date FROM payments WHERE case_id=5 AND is_demo=1').get();
-  const ptpSeed = [[4,3000,inDays(5),'pending'],[3,2500,ago(3).slice(0, 10),'broken'],
+  const ptpSeed = [[4,3000,inDays(5),'pending'],[3,2500,agoDate(3),'broken'],
     ...(paid5 ? [[5,paid5.amount,paid5.payment_date,'fulfilled']] : []),[14,1800,inDays(10),'pending']];
   ptpSeed.forEach((p) => {
     run('INSERT INTO ptps (case_id,amount,due_date,status,created_by,is_demo) VALUES (?,?,?,?,?,1)', [...p, 'Agent']);
@@ -148,10 +156,10 @@ function insertDemoRows() {
   callSeed.forEach((c) => run('INSERT INTO call_logs (case_id,agent_id,duration_seconds,result,notes,is_demo) VALUES (?,?,?,?,?,1)', [...c, 'Follow-up call']));
 
   // Each task belongs to its case's agent (case 2 → agent 2, cases 3/7 → agent 3, case 5 → agent 1).
-  const taskSeed = [[2,2,'follow_up','Call debtor re: overdue',inDays(1),'pending'],[3,3,'follow_up','Call debtor about the broken promise',ago(1).slice(0, 10),'pending'],[7,3,'legal','Prepare LOD',inDays(3),'pending'],[5,1,'reminder','Send WhatsApp reminder',inDays(0),'done']];
+  const taskSeed = [[2,2,'follow_up','Call debtor re: overdue',inDays(1),'pending'],[3,3,'follow_up','Call debtor about the broken promise',agoDate(1),'pending'],[7,3,'legal','Prepare LOD',inDays(3),'pending'],[5,1,'reminder','Send WhatsApp reminder',inDays(0),'done']];
   taskSeed.forEach((t) => run('INSERT INTO tasks (case_id,agent_id,type,title,due_date,status,is_demo) VALUES (?,?,?,?,?,?,1)', t));
 
-  const period = dayjs().format('YYYY-MM');
+  const period = nowMYT().format('YYYY-MM');
   // Both stay below what the agent earned this month (Lim 145.80, Nurul 1,225.80),
   // so no Pending starts negative; overpaying is shown live by settling more.
   run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by,is_demo) VALUES (?,?,?,?,?,1)', [1, period, 100, 'Partial payout', 'Collection Manager']);
@@ -183,7 +191,7 @@ function deleteDemo() {
   db.transaction(deleteDemoRows)();
 }
 function deleteDemoRows() {
-  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payments', 'commission_settlements']) {
+  for (const t of ['timeline_events', 'call_logs', 'tasks', 'ptps', 'payment_history', 'payments', 'commission_settlements']) {
     run(`DELETE FROM ${t} WHERE is_demo=1`);
   }
   // A demo restructure stays while its case still has (customer) payments —
@@ -191,6 +199,7 @@ function deleteDemoRows() {
   run('DELETE FROM case_restructures WHERE is_demo=1 AND case_id NOT IN (SELECT case_id FROM payments)');
   run(`DELETE FROM cases WHERE is_demo=1
     AND id NOT IN (SELECT case_id FROM payments)
+    AND id NOT IN (SELECT case_id FROM payment_history)
     AND id NOT IN (SELECT case_id FROM ptps)
     AND id NOT IN (SELECT case_id FROM tasks WHERE case_id IS NOT NULL)
     AND id NOT IN (SELECT case_id FROM call_logs)

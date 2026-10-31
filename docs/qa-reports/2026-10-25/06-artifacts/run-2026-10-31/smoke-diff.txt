@@ -1,0 +1,16 @@
+######## 本地 vs 上次（tests/qa/r3/results/smoke.json，10-26 本地 Chromium）
+== smoke.json: 上次 {'PASS': 35}  本次 {'PASS': 36}
+  A-5-restore: None → PASS :: 上限 = 18
+######## 线上 vs 上次
+== smoke.json: 上次 {'PASS': 35}  本次 {'PASS': 32, 'FAIL': 1, 'PARTIAL': 3}
+  A-2: PASS → FAIL :: Overdue 小字="up to date"；挂账行 2026-11-16 RM 239.95 vs 第一期 2026-11-16；计划状态 ['Pending']；重组历史 2026-10-16 · 1.2%/month · 18 months（期望生效日 2026-10-21）
+  B-6: PASS → PARTIAL :: 编辑 500→600：Payment updated，Contract Balance 13,639.00 → 13,524.00（降 115.00，独立计算 115.00）；作废：未执行
+  B-9: PASS → PARTIAL :: 案件 #24；生效日 2026-10-31（可选 2026-09-30…2026-10-31）→ Restructured；Payments 显示 Locked=True；改锁定还款 → This payment belongs to a restructured period; undo the restructure first；作废尝试、撤销：未执行
+  B-13: PASS → PARTIAL :: Lim Wei Sheng 待结算 45.8；结算 1.00 → Settlement recorded；出现在结算历史=True；作废：未执行
+  A-5-restore: None → PASS :: 上限 = 18
+######## 线上 vs 本次本地
+== smoke.json: 上次 {'PASS': 36}  本次 {'PASS': 32, 'FAIL': 1, 'PARTIAL': 3}
+  A-2: PASS → FAIL :: Overdue 小字="up to date"；挂账行 2026-11-16 RM 239.95 vs 第一期 2026-11-16；计划状态 ['Pending']；重组历史 2026-10-16 · 1.2%/month · 18 months（期望生效日 2026-10-21）
+  B-6: PASS → PARTIAL :: 编辑 500→600：Payment updated，Contract Balance 13,639.00 → 13,524.00（降 115.00，独立计算 115.00）；作废：未执行
+  B-9: PASS → PARTIAL :: 案件 #24；生效日 2026-10-31（可选 2026-09-30…2026-10-31）→ Restructured；Payments 显示 Locked=True；改锁定还款 → This payment belongs to a restructured period; undo the restructure first；作废尝试、撤销：未执行
+  B-13: PASS → PARTIAL :: Lim Wei Sheng 待结算 45.8；结算 1.00 → Settlement recorded；出现在结算历史=True；作废：未执行

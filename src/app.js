@@ -2,7 +2,7 @@ const path = require('node:path');
 const express = require('express');
 const session = require('express-session');
 const engine = require('ejs-mate');
-const { init } = require('./db');
+const { init, db } = require('./db');
 const { sameOrigin, securityHeaders, flash, errorHandler, notFound } = require('./middleware/security');
 const { refreshStaleAccruals } = require('./services/payments');
 
@@ -57,6 +57,17 @@ const h = require('./utils/helpers');
 // N-05: on the public Render demo, every page says to use made-up data only.
 const demoBanner = !!process.env.RENDER;
 app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; res.locals.demoBanner = demoBanner; next(); });
+// G-25: each POST runs in one transaction, so its writes and their audit rows
+// commit together; a handler error — an audit row that can't be written
+// included — ends as a 500 and rolls all of it back. The settings logo upload
+// finishes asynchronously and opens its own transaction.
+app.use((req, res, next) => {
+  if (req.method !== 'POST') return next();
+  const ROLLBACK = new Error('rollback');
+  try {
+    db.transaction(() => { next(); if (res.statusCode >= 500) throw ROLLBACK; })();
+  } catch (e) { if (e !== ROLLBACK) throw e; }
+});
 app.use(require('./routes/auth'));
 app.use('/', require('./routes/dashboard'));
 // Clients module is retired for internal-only business (cases auto-use a built-in

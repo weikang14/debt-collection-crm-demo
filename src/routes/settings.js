@@ -1,6 +1,6 @@
 const express = require('express');
 const multer = require('multer');
-const { get, all, run } = require('../db');
+const { db, get, all, run } = require('../db');
 const { LEGAL_MAX_RATE, maxAnnualRate, nominalAnnualRate } = require('../services/payments');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
@@ -68,10 +68,13 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
       logo = (get('SELECT logo FROM settings WHERE id=1') || {}).logo || '';
     }
 
-    run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, logo=?, max_annual_rate=?, updated_at=datetime('now') WHERE id=1`,
-      [company_name, address, phone, email, reg_no, logo, max_annual_rate]);
     const changes = settingsChanges(old, { company_name, address, phone, email, reg_no, logo, max_annual_rate });
-    logAction(req, 'update', 'settings', 1, `Updated company settings${changes.length ? ': ' + changes.join('; ') : ' (no changes)'}`);
+    // The upload callback runs after the per-request transaction (app.js) closed.
+    db.transaction(() => {
+      run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, logo=?, max_annual_rate=?, updated_at=datetime('now') WHERE id=1`,
+        [company_name, address, phone, email, reg_no, logo, max_annual_rate]);
+      logAction(req, 'update', 'settings', 1, `Updated company settings${changes.length ? ': ' + changes.join('; ') : ' (no changes)'}`);
+    })();
     res.redirect('/settings?ok=' + encodeURIComponent('Company settings saved'));
   });
 });

@@ -2,6 +2,7 @@ const express = require('express');
 const { all, get, run } = require('../db');
 const { commission, round2 } = require('../utils/helpers');
 const { logAction } = require('../utils/audit');
+const { parseMoney } = require('../utils/forms');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const dayjs = require('dayjs');
 const utc = require('dayjs/plugin/utc');
@@ -31,8 +32,9 @@ function commissionRows(user, month) {
 function currentMonth() { return dayjs.utc().add(8, 'hour').format('YYYY-MM'); }
 
 function recordSettlement(body, req) {
-  const amount = round2(Number(body.amount));
-  if (!Number.isFinite(amount) || amount <= 0 || amount > 1e9) return { ok: false, error: 'Invalid amount' };
+  // parseMoney, not Number(): '0x10' and '1e2' are not amounts (G-28).
+  const amount = parseMoney(body.amount);
+  if (!(amount > 0) || amount > 1e9) return { ok: false, error: 'Invalid amount' };
   const agent = get('SELECT id FROM agents WHERE id=?', [body.agent_id]);
   if (!agent) return { ok: false, error: 'Agent not found' };
   const period = body.period || currentMonth();
