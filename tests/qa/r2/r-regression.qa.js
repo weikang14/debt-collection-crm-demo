@@ -25,6 +25,8 @@ test('r2 R: regression of fixed F-items', { timeout: 300000 }, async () => {
     check('F-09', 'list shows the accrued amount straight after create (= case page Settlement Today); contract 11,800 cached', amt === page && q1('SELECT outstanding_amount o FROM cases WHERE id=?', id).o === 11800, `list=${amt} page=${page}`);
   });
   await step('F-10', 'Delete demo keeps a demo agent referenced by trial settlement/task', async () => {
+    // K-05 (v1.14.0): only earned commission can be settled — a trial collection on agent 3's case 19 first.
+    await fin.act('/cases/19/payments', { payment_date: today(), amount: '100', method: 'cash', reference: 'F-10 trial' });
     await fin.act('/commissions/settle', { agent_id: '3', period: today().slice(0, 7), amount: '1', note: 'trial' });
     await admin.act('/tasks/new', { case_id: '', agent_id: '4', type: 'reminder', title: 'trial task for Tan' });
     const r = await admin.act('/demo-tools/delete-demo');

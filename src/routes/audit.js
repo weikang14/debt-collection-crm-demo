@@ -2,12 +2,13 @@ const express = require('express');
 const { all } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { isISODate } = require('../utils/forms');
+const { requirePerm } = require('../utils/permissions');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { dateTimeFmt } = require('../utils/helpers');
 const { logAction } = require('../utils/audit');
 const router = express.Router();
 
-router.get('/', requireLogin, requireRole('admin','auditor'), (req, res) => {
+router.get('/', requireLogin, requirePerm('audit.view'), (req, res) => {
   // ?log=access shows who looked at personal data (F-31); the default is the audit log of changes.
   const access = req.query.log === 'access';
   const table = access ? 'access_logs' : 'audit_logs';

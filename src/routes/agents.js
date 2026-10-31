@@ -6,8 +6,9 @@ const { parseActive, MAX_NAME } = require('../utils/forms');
 const { settlementOn } = require('../services/payments');
 const { todayMYT } = require('../utils/helpers');
 const router = express.Router();
-const canView = requireRole('admin','manager','auditor');
-const canEdit = requireRole('admin','manager');
+const { requirePerm } = require('../utils/permissions');
+const canView = requirePerm('agents.view');
+const canEdit = requirePerm('agents.edit');
 
 // Optional text -> trimmed string or null (never undefined, which SQLite rejects).
 const S = (v) => { const s = (v == null ? '' : String(v)).trim(); return s === '' ? null : s; };

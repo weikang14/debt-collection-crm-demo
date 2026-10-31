@@ -39,13 +39,15 @@ const money = x => Number(x).toLocaleString('en-US', { minimumFractionDigits: 2,
   // 3. B-13: negative fixed interest
   r = await C.newCase(s, debtor, { principal_amount: 1000, interest_mode: 'fixed', interest_amount: '-100' });
   cmp('CAP', 'NEGINT', 'B-13 Fixed 利息 −100 建案', '拒收', 'Invalid interest amount', r.err);
-  // 4. B-18 / K-02: schedule after an early principal payment vs the ledger (example A + 03-02 1,000)
+  // 4. B-18 / K-02 (N-06 A, v1.14.0): after an early principal payment the plan is not recomputed — it
+  // lists the planned instalments (unpaid = 11,800 − 1,000); overdue and DPD follow the ledger, and the page says so.
   const st = JSON.parse(fs.readFileSync(path.join(C.DB_PATH, '..', 'calc-r2-run-state.json'), 'utf8'));
   const a1 = st.created.find(x => x.label === '示例A+03-02还1000').id;
   const v = await C.caseView(s, a1);
   const schedLeft = E.sum2(v.schedule.map(x => x.outstanding));
-  results.push({ g: 'SCH', id: 'K02', scenario: 'B-18/K-02 示例A 03-02 还 1,000 后：计划未还合计 vs 合同欠款', formula: 'Σ 计划未还 vs 账本', expected: v.outstanding, actual: schedLeft,
-    result: schedLeft === v.outstanding ? 'PASS' : 'PENDING', note: `差 ${r2(F.of(schedLeft).sub(v.outstanding))}（K-02：待决定 N-06 的口径后再重算计划）` });
+  const noted = /Overdue and days past due follow the ledger/.test((await s.get(`/cases/${a1}`)).text);
+  results.push({ g: 'SCH', id: 'K02', scenario: 'B-18/K-02 示例A 03-02 还 1,000 后：计划未还合计；页面说明', formula: '11800 − 1000（计划不重算）', expected: '10800.00；注明逾期按账本', actual: `${schedLeft}；说明=${noted}；合同欠款 ${v.outstanding}`,
+    result: schedLeft === '10800.00' && noted ? 'PASS' : 'FAIL', note: `与账本差 ${r2(F.of(schedLeft).sub(v.outstanding))} 属设计（N-06 A：逾期与 DPD 按账本，见 run.qa.js）` });
   // 5. B-19 / K-03: demo case 14 — PTP vs schedule
   const v14 = await C.caseView(s, 14);
   results.push({ g: 'SCH', id: 'K03', scenario: 'B-19/K-03 演示案件 14：计划与 PTP 并存', formula: '', expected: '记录现状', actual: `计划首行 ${v14.schedule[0].due} ${v14.schedule[0].expected}（${v14.schedule[0].status}），下一期 ${v14.schedule[1].due} ${v14.schedule[1].expected}；PTP ${v14.ptps.map(p => p.amount + ' ' + p.due + ' ' + p.status).join(', ')}`, result: 'INFO', note: '已知延后 K-03' });

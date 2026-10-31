@@ -77,8 +77,28 @@ const ICONS = {
   settings: '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
 };
 const icon = (name) => ICONS[name] || '';
+// D-08 A: the amount in words on a receipt — "Ringgit Malaysia One Thousand
+// Two Hundred Forty-Two and Sen Fifty Only".
+function amountInWords(n) {
+  const ones = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve',
+    'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
+  const tens = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
+  const under1000 = x => [x >= 100 ? ones[Math.floor(x / 100)] + ' Hundred' : '',
+    x % 100 < 20 ? ones[x % 100] : tens[Math.floor(x % 100 / 10)] + (x % 10 ? '-' + ones[x % 10] : '')].filter(Boolean).join(' ');
+  const words = x => {
+    if (x === 0) return 'Zero';
+    const parts = [];
+    for (const [size, name] of [[1e9, 'Billion'], [1e6, 'Million'], [1e3, 'Thousand'], [1, '']]) {
+      const k = Math.floor(x / size) % 1000;
+      if (k) parts.push(under1000(k) + (name ? ' ' + name : ''));
+    }
+    return parts.join(' ');
+  };
+  const sen = Math.round(round2(n) * 100), rm = Math.floor(sen / 100), cents = sen % 100;
+  return `Ringgit Malaysia ${words(rm)}${cents ? ' and Sen ' + words(cents) : ''} Only`;
+}
 // F-30: an IC/passport number in a list shows only its last 4 characters
 // (880001-00-5501 → ******-**-5501); the detail pages, where views are logged, show it whole.
 const maskId = (s) => (s ? String(s).slice(0, -4).replace(/[A-Za-z0-9]/g, '*') + String(s).slice(-4) : '');
 
-module.exports = { money, round2, todayMYT, interestTerms, commission, dateFmt, dateTimeFmt, daysOverdue, followupBadge, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon, maskId };
+module.exports = { money, round2, todayMYT, interestTerms, commission, dateFmt, dateTimeFmt, daysOverdue, followupBadge, statusLabel, statusClass, caseStatusLabel, caseStatusClass, icon, maskId, amountInWords };

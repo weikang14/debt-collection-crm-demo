@@ -1,0 +1,22 @@
+<%# A user's permissions as checkboxes, grouped; ticking follows the role picked
+    above (its current defaults) until the admin changes a box. admin has all. %>
+<fieldset class="card" style="margin:6px 0" id="perm-box">
+  <legend><b>Permissions</b> <span class="hint">— start from the role's defaults (Team → Permissions); tick or untick to give this user more or less</span></legend>
+  <input type="hidden" name="perms_form" value="1"><%# a form with these boxes: an all-unticked one means "none" %>
+  <% let group = null; permissions.forEach(p => { %>
+    <% if (p.group !== group) { group = p.group; %><div style="margin-top:6px"><b><%= group %></b></div><% } %>
+    <label class="inline" style="display:block;font-weight:normal"><input type="checkbox" name="perms" value="<%= p.key %>" <%= ticked.includes(p.key) ? 'checked' : '' %>> <%= p.label %></label>
+  <% }) %>
+</fieldset>
+<script>
+  (function () {
+    var roles = <%- JSON.stringify(roleMatrix).replace(/</g, '\\u003c') %>;
+    var sel = document.getElementById('role-select'), boxes = document.querySelectorAll('#perm-box input[name=perms]');
+    function apply() {
+      var on = roles[sel.value] || [];
+      boxes.forEach(function (b) { b.checked = sel.value === 'admin' || on.indexOf(b.value) >= 0; b.disabled = sel.value === 'admin'; });
+    }
+    sel.addEventListener('change', apply);
+    if (sel.value === 'admin') apply();
+  })();
+</script>

@@ -29,6 +29,25 @@ function recordFail(ip) {
   attempts.set(ip, a);
 }
 
+// K-09: per-account back-off on top of the per-IP lock, against guessing one
+// account's password from many IPs. Never a lock-out: from the 5th miss in a
+// row each next try waits 1, 2, 4 … s (at most 60 s); a success clears it.
+// Applies to any name typed, so it says nothing about which accounts exist.
+const accountFails = new Map(); // lower-case username -> { fails, next }
+const accountKey = u => String(u || '').trim().toLowerCase();
+function accountWait(username) {
+  const a = accountFails.get(accountKey(username));
+  return a && a.next > Date.now() ? Math.ceil((a.next - Date.now()) / 1000) : 0;
+}
+function accountFail(username) {
+  const k = accountKey(username), a = accountFails.get(k) || { fails: 0, next: 0 };
+  a.fails += 1;
+  if (a.fails >= MAX_FAILS) a.next = Date.now() + Math.min(60, 2 ** (a.fails - MAX_FAILS)) * 1000;
+  // ponytail: bounded by dropping idle entries; a shared store if run multi-process.
+  if (accountFails.size > 5000) for (const [key, v] of accountFails) if (v.next < Date.now() - 3600000) accountFails.delete(key);
+  accountFails.set(k, a);
+}
+
 router.get('/login', (req, res) => {
   if (req.session.user) return res.redirect('/');
   res.render('auth/login', { error: null, version: VERSION });
@@ -39,13 +58,15 @@ router.post('/login', (req, res) => {
   if (throttleState(req.ip)) {
     return res.status(429).render('auth/login', { error: 'Too many attempts. Try again later.', version: VERSION });
   }
+  const wait = accountWait(username);
+  if (wait) return res.status(429).render('auth/login', { error: `Too many attempts for this account. Try again in ${wait} s.`, version: VERSION });
   const u = get('SELECT * FROM users WHERE username = ? AND active = 1', [username]);
   const ok = bcrypt.compareSync(password || '', u ? u.password_hash : DUMMY_HASH);
   if (!u || !ok) {
-    recordFail(req.ip);
+    recordFail(req.ip); accountFail(username);
     return res.status(401).render('auth/login', { error: 'Invalid username or password', version: VERSION });
   }
-  attempts.delete(req.ip);
+  attempts.delete(req.ip); accountFails.delete(accountKey(username));
   if (bcrypt.getRounds(u.password_hash) < HASH_COST) {
     run('UPDATE users SET password_hash=? WHERE id=?', [bcrypt.hashSync(password, HASH_COST), u.id]);
   }

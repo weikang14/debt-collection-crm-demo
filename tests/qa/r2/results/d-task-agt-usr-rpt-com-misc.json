@@ -205,7 +205,7 @@
  {
   "id": "USR-13",
   "expected": "create, update, \"Reset password for qa_fin2\", (de)activated",
-  "actual": "create:Created user qa_fin2 (finance) | login:User qa_fin2 logged in | update:Updated user qa_fin2 (agent): full_name: QA Finance 2 → QA Finance Two; role: finance → agent; agent_id: — → 5 | update:Updated user qa_fin2 (finance): role: agent → finance; agent_id: 5 → — | update:Reset password for qa_fin2 | login:User qa_fin2 logged in | update:Deactivated user qa_fin2 | update:Activated user qa_fin2 | login:User qa_fin2 logged in | update:Deactivated user qa_fin2 | update:Activated user qa_fin2 | login:User qa_fin2 logged in | update:Updated user qa_fin2 (auditor): role: finance → auditor",
+  "actual": "create:Created user qa_fin2 (finance); permissions: commissions.settle, commissions.view, debtors.sensitive, debtors.view, payments.correct, payments.record, reports.performance | login:User qa_fin2 logged in | update:Updated user qa_fin2 (agent): full_name: QA Finance 2 → QA Finance Two; role: finance → agent; agent_id: — → 5; permissions added: calls.log, cases.status, debtors.edit, notes.write, ptps.manage, tasks.manage; permissions removed: commissions.settle, payments.correct, reports.performance | update:Updated user qa_fin2 (finance): role: agent → finance; agent_id: 5 → —; permissions ",
   "result": "PASS",
   "note": ""
  },
@@ -247,7 +247,7 @@
  {
   "id": "RPT-05",
   "expected": "filenames + headers",
-  "actual": "Case No,Debtor,Agent,Principal,Interest,Paid,Settlement Today,Overdue,DPD,Contract Balance,Status,Opened | Status,Cases,Settlement Today,Contract Balance | Agent,Collected,Rate %,Commission,Target",
+  "actual": "Case No,Debtor,Agent,Principal,Interest,Paid,Settlement Today,Overdue,DPD,Contract Balance,Status,Opened,Paid Principal,Paid Interest | Status,Cases,Settlement Today,Contract Balance | Agent,Collected,Rate %,Commission,Target",
   "result": "PASS",
   "note": ""
  },

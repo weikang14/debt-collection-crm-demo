@@ -1,4 +1,5 @@
 const { get } = require('../db');
+const { permsFor } = require('../utils/permissions');
 
 // The session holds a login-time snapshot; re-read the account on every request
 // so a deactivation or role change takes effect at once, not at next login.
@@ -11,6 +12,9 @@ function attachUser(req, res, next) {
       : null;
   }
   res.locals.currentUser = (req.session && req.session.user) || null;
+  // What this user may do, read once per request (role defaults ± own changes).
+  req.perms = permsFor(res.locals.currentUser);
+  res.locals.can = perm => req.perms.has(perm);
   next();
 }
 function requireLogin(req, res, next) {

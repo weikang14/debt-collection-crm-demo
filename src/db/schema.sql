@@ -119,6 +119,19 @@ CREATE INDEX IF NOT EXISTS idx_payment_history_case ON payment_history(case_id);
 CREATE TRIGGER IF NOT EXISTS payment_history_append_only BEFORE UPDATE ON payment_history
 BEGIN SELECT RAISE(ABORT, 'payment_history is append-only'); END;
 
+-- G-31 / N-12 B: who was responsible for a case from which day (Malaysia date).
+-- A payment's collector is the agent responsible on its payment date. No foreign
+-- keys: rows of deleted demo cases are swept with them (seed.js).
+CREATE TABLE IF NOT EXISTS case_assignments (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  case_id INTEGER NOT NULL,
+  agent_id INTEGER,
+  from_date TEXT NOT NULL,
+  created_by TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE INDEX IF NOT EXISTS idx_case_assignments_case ON case_assignments(case_id, from_date);
+
 -- One row per Extension / Restructure (docs/superpowers/specs/2026-10-23-restructure-design.md).
 -- The case's own columns stay the original loan terms; each row starts a new
 -- ledger segment at effective_date. *_at_cut are display/audit snapshots.
@@ -180,6 +193,11 @@ CREATE TABLE IF NOT EXISTS audit_logs (
   details TEXT, ip_address TEXT,
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
+-- Permissions (src/utils/permissions.js): what each role may do (editable by
+-- admin, seeded with the defaults) and a user's own grants (1) / revocations (0).
+CREATE TABLE IF NOT EXISTS role_permissions (role TEXT NOT NULL, permission TEXT NOT NULL, PRIMARY KEY (role, permission));
+CREATE TABLE IF NOT EXISTS user_permissions (user_id INTEGER NOT NULL, permission TEXT NOT NULL, granted INTEGER NOT NULL, PRIMARY KEY (user_id, permission));
+
 -- Login sessions (K-06; src/db/sessionStore.js). expires is epoch milliseconds.
 CREATE TABLE IF NOT EXISTS sessions (sid TEXT PRIMARY KEY, sess TEXT NOT NULL, expires INTEGER NOT NULL);
 CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires);

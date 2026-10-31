@@ -41,8 +41,12 @@ function expected(c, pays, rss) {
   }
   const ar = arrears(rows, T);
   const settlement = settlementOn(loan, P, T, { restructures: R });
-  const capped = E.capOverdue(ar, settlement); // G-12
-  return { exact: L.outstandingExact, paidAny: P.length > 0, outstanding: L.outstanding, interest: L.interest, paid: L.paid, settlement, dpd: capped.dpd, overdue: capped.overdue, cuts: L.cuts };
+  // N-06 A (v1.14.0): rate-based plans follow the ledger.
+  const cur = R.length ? R[R.length - 1] : null, curMode = cur ? cur.mode : c.interest_mode;
+  const capped = E.capOverdue(['monthly', 'daily'].includes(curMode)
+    ? E.ledgerArrears(loan, P, { restructures: R, today: T, start: cur ? cur.effective : c.loan_start_date, tenure: cur ? cur.tenure : (c.tenure_unit === 'months' || !c.tenure_unit ? c.tenure : null) })
+    : ar, settlement); // G-12
+  return { exact: L.outstandingExact, paidAny: P.length > 0, outstanding: L.outstanding, interest: L.interest, paid: L.paid, settlement, dpd: capped.dpd, overdue: capped.overdue, cuts: L.cuts, perPayment: L.perPayment };
 }
 
 async function main() {
@@ -71,6 +75,14 @@ async function main() {
   chk('CASE', 'ALL', `全部 ${cases.length} 个案件：页面 = 独立计算`, '0 个不一致（K-01 浮点行除外）', pageMismatch.filter(id => !known.has(id)).length === 0, `不一致 ${pageMismatch.length} 个：${pageMismatch.join(',')}`);
   chk('CASE', 'STMT', `全部 ${cases.length} 个案件：对账单 = 案件页（6 个数）`, '0 个不一致', stmtMismatch.length === 0, stmtMismatch.slice(0, 5).join('; ') || '全部一致');
   chk('CASE', 'CUT', '全部重组记录：存储的截点本金/挂账 = 独立计算（D-04）', '0 个不一致', cutMismatch.length === 0, cutMismatch.join('; ') || '全部一致');
+  // K-04 (v1.14.0): each stored payment's interest / principal share = the independent ledger's.
+  const splitBad = [];
+  for (const c of cases) {
+    const stored = C.qa('SELECT receipt_no, interest_part, principal_part FROM payments WHERE case_id=? ORDER BY payment_date, id', c.id);
+    const mine = exp[c.id].perPayment;
+    stored.forEach((p, i) => { const e = mine[i]; if (!e || Number(e.toInterest) !== p.interest_part || Number(e.toPrincipal) !== p.principal_part) splitBad.push(`${p.receipt_no}: ${p.interest_part}/${p.principal_part} vs ${e ? e.toInterest + '/' + e.toPrincipal : '?'}`); });
+  }
+  chk('PAY', 'SPLIT', '全部还款：存储的利息 / 本金拆分 = 独立账本（K-04，先息后本）', '0 笔不一致', splitBad.length === 0, splitBad.slice(0, 5).join('; ') || '全部一致');
 
   // ---------- dashboard ----------
   const all = Object.values(exp);

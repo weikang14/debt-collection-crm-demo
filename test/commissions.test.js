@@ -70,15 +70,17 @@ test('recordSettlement inserts and rejects bad amounts', () => {
   assert.strictEqual(b.pending, 120); // earned 300 - 180
 });
 
-test('over-settlement allowed (pending goes negative)', () => {
-  recordSettlement({ agent_id: 2, period: '2026-07', amount: '500' }, fakeReq({}));
+test('K-05: a settlement above the pending commission is refused; up to it is fine', () => {
+  const r = recordSettlement({ agent_id: 2, period: '2026-07', amount: '500' }, fakeReq({}));
+  assert.deepStrictEqual(r, { ok: false, error: 'Settlement exceeds the pending commission for 2026-07 (RM 120.00)' });
+  assert.strictEqual(recordSettlement({ agent_id: 2, period: '2026-07', amount: '120' }, fakeReq({})).ok, true);
   const b = commissionRows({ role: 'admin' }, '2026-07').find(r => r.agent_id === 2);
-  assert.strictEqual(b.settled, 680);   // 180 + 500
-  assert.strictEqual(b.pending, -380);  // 300 - 680
+  assert.strictEqual(b.settled, 300);   // 180 + 120
+  assert.strictEqual(b.pending, 0);     // 300 - 300
 });
 
 test('voidSettlement removes a payout', () => {
-  const row = get("SELECT id FROM commission_settlements WHERE agent_id=2 AND amount=500");
+  const row = get("SELECT id FROM commission_settlements WHERE agent_id=2 AND amount=120");
   const r = voidSettlement(row.id, fakeReq({}));
   assert.strictEqual(r.ok, true);
   const b = commissionRows({ role: 'admin' }, '2026-07').find(r => r.agent_id === 2);

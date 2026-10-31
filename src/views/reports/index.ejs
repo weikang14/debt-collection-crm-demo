@@ -7,6 +7,15 @@
   <button class="btn btn-gold" type="submit">Apply</button>
 </form>
 
+<div class="card">
+  <h2>Collected (<%= from %> to <%= to %>)</h2>
+  <% if (typeof collected !== 'undefined') { %>
+  <table class="data"><thead><tr><th class="num">Payments</th><th class="num">Total</th><th class="num">Interest</th><th class="num">Principal</th></tr></thead>
+  <tbody><tr><td class="num"><%= collected.n %></td><td class="num"><%= h.money(collected.total) %></td><td class="num"><%= h.money(collected.interest) %></td><td class="num"><%= h.money(collected.principal) %></td></tr></tbody></table>
+  <p class="hint">Each payment clears interest first, then principal (the same order the balances use).</p>
+  <% } %>
+</div>
+
 <p><a class="btn" href="/reports?export=cases">Export detailed cases (CSV)</a></p>
 
 <div class="card">
@@ -27,7 +36,7 @@
   <% } %>
 </div>
 
-<% if (!['agent','client'].includes(currentUser.role)) { %>
+<% if ((typeof can === 'function' ? can : () => true)('reports.performance')) { %>
 <div class="card">
   <h2>Agent Performance (<%= from %> to <%= to %>) <a class="btn btn-sm" style="float:right" href="/reports?from=<%= from %>&to=<%= to %>&export=performance">Export CSV</a></h2>
   <% if (!performance.length) { %><%- include('../partials/empty', { msg: 'No agents yet.' }) %><% } else { %>

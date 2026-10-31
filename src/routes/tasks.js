@@ -1,6 +1,7 @@
 const express = require('express');
 const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
+const { requirePerm } = require('../utils/permissions');
 const { caseWhere, isScoped } = require('../utils/scope');
 const { logAction } = require('../utils/audit');
 const { isISODate, MAX_NAME } = require('../utils/forms');
@@ -49,7 +50,7 @@ router.get('/', requireLogin, (req, res) => {
   const agents = scoped ? [] : all('SELECT id,name FROM agents ORDER BY name');
   res.render('tasks/index', { title: 'Tasks', tasks, cases, agents });
 });
-router.post('/new', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+router.post('/new', requireLogin, requirePerm('tasks.manage'), (req, res) => {
   const b = req.body;
   const u = req.session.user;
   const formErr = taskFormError(b);
@@ -77,7 +78,7 @@ router.post('/new', requireLogin, requireRole('admin','manager','agent'), (req, 
   logAction(req, 'task_create', 'task', r.lastInsertRowid, `Created task "${title}"${b.case_id ? ` on case ${b.case_id}` : ''}`);
   res.redirect('/tasks?ok=Task+created');
 });
-router.post('/:id/complete', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+router.post('/:id/complete', requireLogin, requirePerm('tasks.manage'), (req, res) => {
   const u = req.session.user;
   const task = get('SELECT * FROM tasks WHERE id=?', [req.params.id]);
   if (!task) return res.redirect('/tasks?err=Not+found');
@@ -86,7 +87,7 @@ router.post('/:id/complete', requireLogin, requireRole('admin','manager','agent'
   logAction(req, 'task_complete', 'task', task.id, `Completed task "${task.title}"`);
   res.redirect('/tasks?ok=Task+completed');
 });
-router.post('/:id', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+router.post('/:id', requireLogin, requirePerm('tasks.manage'), (req, res) => {
   const u = req.session.user;
   const task = get('SELECT * FROM tasks WHERE id=?', [req.params.id]);
   if (!task) return res.redirect('/tasks?err=Not+found');

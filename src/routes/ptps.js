@@ -3,6 +3,7 @@ const { db, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
+const { requirePerm } = require('../utils/permissions');
 const { paymentWrites, overpayError } = require('../services/payments');
 const { validatePayment, methodError } = require('../utils/forms');
 const { paymentDateError } = require('../services/restructure');
@@ -77,14 +78,14 @@ function loadScopedCaseId(req, res) {
   return ptp.case_id;
 }
 
-router.post('/:id/fulfill', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {
+router.post('/:id/fulfill', requireLogin, requirePerm('ptps.manage'), (req, res) => {
   const caseId = loadScopedCaseId(req, res); if (caseId === null) return;
   const r = recordFulfillment(req.params.id, req.body, req);
   if (!r.ok) return res.redirect(`/cases/${caseId}?err=${encodeURIComponent(r.error)}`);
   res.redirect(`/cases/${caseId}?ok=PTP+payment+recorded`);
 });
 
-router.post('/:id/break', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {
+router.post('/:id/break', requireLogin, requirePerm('ptps.manage'), (req, res) => {
   const caseId = loadScopedCaseId(req, res); if (caseId === null) return;
   const r = breakPtp(req.params.id, req);
   if (!r.ok) return res.redirect(`/cases/${caseId}?err=${encodeURIComponent(r.error)}`);

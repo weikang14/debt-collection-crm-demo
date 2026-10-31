@@ -135,6 +135,27 @@ function arrears(rows, today) {
   if (!due.length) return { dpd: 0, overdue: '0.00' };
   return { dpd: days(due[0].due, today), overdue: due.reduce((s, r) => s.add(r.outstanding), ZERO).r2() };
 }
+// N-06 A (v1.14.0): a rate-based loan's arrears from the ledger. By each instalment date
+// of the current plan the interest accrued to that date is due (all principal from the
+// final date); the interest paid so far (interest-first) covers it oldest-first, so a
+// principal prepayment does not stand in for later interest.
+function ledgerArrears(loan, payments, { restructures = [], today, start, tenure }) {
+  if (!tenure || !start) return { dpd: null, overdue: null };
+  const dues = Array.from({ length: tenure }, (_, k) => addMonths(start, k + 1));
+  const final = dues[dues.length - 1];
+  const upTo = d => payments.filter(p => p.date <= d);
+  const now = ledger(loan, upTo(today), { restructures, asOf: today, today });
+  const paidInt = F.of(now.interest).sub(now.interestUnpaid);
+  let due = ZERO, oldest = null;
+  for (const d of dues.filter(x => x < today)) {
+    due = F.of(ledger(loan, upTo(d), { restructures, asOf: d, today: d }).interest);
+    if (!oldest && due.cmp(paidInt.add('0.005')) > 0) oldest = d;
+  }
+  const principalDue = final < today ? F.of(now.principalRemaining) : ZERO;
+  if (!oldest && principalDue.isPos()) oldest = final;
+  const overdue = due.sub(paidInt).max(ZERO).add(principalDue);
+  return oldest && overdue.isPos() ? { dpd: days(oldest, today), overdue: overdue.r2() } : { dpd: 0, overdue: '0.00' };
+}
 // G-12 / N-06 (interim rule, v1.11.0): overdue never exceeds today's settlement amount; nothing overdue → DPD 0.
 function capOverdue(ar, settlement) {
   if (ar.overdue === null) return ar;
@@ -157,7 +178,7 @@ const commission = (collected, rate) => F.of(collected).mul(rate).div(100n).r2()
 const sum2 = xs => xs.reduce((s, x) => s.add(x), ZERO).r2();
 
 module.exports = { F, ZERO, r2, isLeap, addMonths, addDays, days, minD, monthsElapsed, interest, ledger, settlementOn,
-  splitEqual, schedule, arrears, capOverdue, dpdBucket, ageBucket, planDates, nominalRate, commission, sum2 };
+  splitEqual, schedule, arrears, ledgerArrears, capOverdue, dpdBucket, ageBucket, planDates, nominalRate, commission, sum2 };
 
 // ---------- self-check against the manual's worked examples (ch.5, v1.1) ----------
 if (require.main === module) {

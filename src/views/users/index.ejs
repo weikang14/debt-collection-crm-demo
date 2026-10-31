@@ -1,8 +1,8 @@
 <% layout('layout') -%>
 <div class="page-head"><h1>Users</h1>
-  <a class="btn btn-gold" href="/users/new">+ New User</a>
+  <div style="display:flex; gap:0.5rem;"><a class="btn" href="/users/permissions">Role Permissions</a><a class="btn btn-gold" href="/users/new">+ New User</a></div>
 </div>
-<p class="hint">Internal accounts. Only an admin can create or disable users. Agent / client accounts are scoped to their linked record.</p>
+<p class="hint">Internal accounts. Only an admin can create or disable users. Each user starts from their role's permissions (Role Permissions) and can be given more or less. Agent accounts see only their own cases.</p>
 <% if (!users.length) { %><%- include('../partials/empty', { msg: 'No users yet.' }) %><% } else { %>
 <table class="data">
   <thead><tr><th>Username</th><th>Full Name</th><th>Role</th><th>Linked to</th><th>Status</th><th>Action</th></tr></thead>

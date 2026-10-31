@@ -3,7 +3,7 @@
   const barCls = attainment >= 100 ? 'is-green' : attainment >= 50 ? '' : 'is-red';
 -%>
 <div class="page-head"><h1><%= agent.name %></h1>
-  <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/agents/<%= agent.id %>/edit">Edit</a><% } %>
+  <% if ((typeof can === 'function' ? can : () => true)('agents.edit')) { %><a class="btn" href="/agents/<%= agent.id %>/edit">Edit</a><% } %>
 </div>
 <div class="card kv">
   <div><span>Contact</span><span class="mono"><%= agent.contact||'—' %></span></div><div><span>Department</span><%= agent.department||'—' %></div>

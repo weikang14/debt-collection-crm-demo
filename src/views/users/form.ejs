@@ -21,6 +21,7 @@
       <% clients.forEach(c => { %><option value="<%= c.id %>"><%= c.company_name %></option><% }) %>
     </select>
   </label>
+  <%- include('../partials/permChecks') %>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Create User</button><a class="btn" href="/users">Cancel</a></div>
 </form>
 <script>

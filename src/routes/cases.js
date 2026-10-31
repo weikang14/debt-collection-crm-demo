@@ -1,11 +1,13 @@
 const express = require('express');
 const { db, all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
+const { requirePerm, can } = require('../utils/permissions');
 const { logAction, logAccess } = require('../utils/audit');
 const { caseWhere } = require('../utils/scope');
 const { nextCaseNo } = require('../utils/numbering');
-const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES, caseBalance, settlementOn, overpayError, rateCapError, snapshotPayment } = require('../services/payments');
+const { resyncCaseStatus, recomputeOutstanding, TERMINAL_STATUSES, caseBalance, settlementOn, overpayError, rateCapError, snapshotPayment, agentOn, recordAssignment } = require('../services/payments');
 const { toCsv, sendCsv } = require('../utils/csv');
+const { overSettledNotes } = require('./commissions');
 const { caseStatusLabel, dateFmt, round2, todayMYT, money } = require('../utils/helpers');
 const { splitInstallments, dueDates, maturityDate } = require('../utils/installments');
 const { restructuresOf, afterLock, canRestructure, effectiveDateRange, balanceAtCut, createRestructure, undoRestructure,
@@ -72,7 +74,7 @@ function caseFormError(b) {
   if (!blank(b.status) && !CASE_STATUSES.includes(b.status)) return 'Invalid status';
   return null;
 }
-const noAgentCreate = requireRole('admin','manager'); // who can create/edit cases
+const noAgentCreate = requirePerm('cases.edit'); // who can create/edit cases
 
 // shared loader with scope enforcement
 function loadCase(req, res) {
@@ -178,6 +180,7 @@ router.post('/', requireLogin, noAgentCreate, (req, res) => {
   // Accrual interest is derived; compute it now so lists and the dashboard
   // don't show the bare principal until someone opens the case.
   recomputeOutstanding(r.lastInsertRowid);
+  recordAssignment(r.lastInsertRowid, b.agent_id ? Number(b.agent_id) : null, req.session.user.full_name);
   run('INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)', [r.lastInsertRowid,'note',`Case ${case_no} created`,req.session.user.full_name]);
   logAction(req,'create','case',r.lastInsertRowid,`Created case ${case_no}`);
   res.redirect(`/cases/${r.lastInsertRowid}?ok=Case+created`);
@@ -207,7 +210,9 @@ router.get('/:id/payments/:pid/receipt', requireLogin, (req, res) => {
   if (!p) return res.status(404).render('error', { message: 'Payment not found (it may have been voided)' });
   const amended = get("SELECT MAX(changed_at) at FROM payment_history WHERE payment_id=? AND change='edit'", [p.id]).at;
   logAccess(req, 'print', 'payment', p.id, `Receipt ${p.receipt_no} (${c.case_no})`);
-  res.render('cases/receipt', { c, p, amended, company: get('SELECT * FROM settings WHERE id=1') || {} });
+  const paidDate = String(p.payment_date).slice(0, 10);
+  res.render('cases/receipt', { c, p, amended, company: get('SELECT * FROM settings WHERE id=1') || {},
+    balance: { date: paidDate, settlement: settlementOn(c.id, paidDate) } });
 });
 router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   const b = req.body;
@@ -246,6 +251,7 @@ router.post('/:id', requireLogin, noAgentCreate, (req, res) => {
   // collections stay credited to whoever did them. Unassigning keeps the tasks
   // with the previous agent until someone new takes the case (N-13).
   let movedTasks = 0;
+  if ((old.agent_id ?? null) !== next.agent_id) recordAssignment(cid, next.agent_id, req.session.user.full_name);
   if (next.agent_id !== null && (old.agent_id ?? null) !== next.agent_id) {
     movedTasks = run("UPDATE tasks SET agent_id=? WHERE case_id=? AND status='pending'", [next.agent_id, cid]).changes;
   }
@@ -276,17 +282,17 @@ router.get('/:id', requireLogin, (req, res) => {
   const lock = lastRestructure ? lastRestructure.effective_date : null;
   const canUndo = !!lastRestructure && !payments.some(p => String(p.payment_date).slice(0, 10) > lock);
   const role = req.session.user.role;
-  // The status menu an agent sees omits Fully Paid and terminal statuses (D-12).
-  const statusOptions = role === 'agent' ? AGENT_STATUSES : CASE_STATUSES;
+  // Without cases.status_any the menu omits Fully Paid and terminal statuses (D-12).
+  const statusOptions = can(req, 'cases.status_any') ? CASE_STATUSES : AGENT_STATUSES;
   res.render('cases/show', { title: c.case_no, c, timeline, payments, voided, ptps, callChannels: CALL_CHANNELS, callContacts: CALL_CONTACTS, tasks, calls, schedule,
     scheduleHistory, lastRestructure, lock, lockMin: afterLock(lock), restructureForm, canUndo,
     settlement: settlementOn(c.id, todayMYT()), arrears: arrearsOf(c, asc, restructures), frozen: FROZEN.includes(c.status),
     statuses: statusOptions, terminal: TERMINAL_STATUSES,
-    readOnly: ['auditor','client'].includes(role) });
+    readOnly: role === 'client' || !['payments.record', 'payments.correct', 'ptps.manage', 'calls.log', 'notes.write', 'cases.status', 'cases.restructure'].some(p => can(req, p)) });
 });
 
 const { applyPayment } = require('../services/payments');
-router.post('/:id/payments', requireLogin, requireRole('admin','manager','finance','agent'), (req, res) => {
+router.post('/:id/payments', requireLogin, requirePerm('payments.record'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const v = validatePayment(req.body.amount, c.outstanding_amount);
   if (v.error) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(v.error)}`);
@@ -307,7 +313,7 @@ router.post('/:id/payments', requireLogin, requireRole('admin','manager','financ
 
 // Correct a recorded payment. New amount is validated against what outstanding
 // WOULD be without this payment (current outstanding + this payment's amount).
-router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','finance'), (req, res) => {
+router.post('/:id/payments/:pid', requireLogin, requirePerm('payments.correct'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
   if (!pay) return res.redirect(`/cases/${c.id}?err=Payment+not+found`);
@@ -323,8 +329,9 @@ router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','f
   if (overErr) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(overErr)}`);
   db.transaction(() => {
     snapshotPayment(pay.id, 'edit', null, by);
-    run('UPDATE payments SET amount=?, payment_date=?, method=?, reference=?, bank=? WHERE id=?',
-      [next.amount, next.payment_date, next.method, next.reference, next.bank, pay.id]);
+    // A new date may fall in another agent's time on the case (G-31).
+    run('UPDATE payments SET amount=?, payment_date=?, method=?, reference=?, bank=?, agent_id=? WHERE id=?',
+      [next.amount, next.payment_date, next.method, next.reference, next.bank, agentOn(c.id, next.payment_date), pay.id]);
     resyncCaseStatus(c.id, by);
     run("INSERT INTO timeline_events (case_id,event_type,content,created_by) VALUES (?,?,?,?)",
       [c.id, 'payment', `Payment ${pay.receipt_no} edited: RM ${pay.amount.toFixed(2)} → RM ${v.amount.toFixed(2)}`, by]);
@@ -334,14 +341,16 @@ router.post('/:id/payments/:pid', requireLogin, requireRole('admin','manager','f
   const changes = Object.keys(next).filter(k => String(pay[k] ?? '') !== String(next[k] ?? ''))
     .map(k => `${k} ${fmt(k, pay[k])} → ${fmt(k, next[k])}`);
   logAction(req, 'payment_edit', 'case', c.id, `Edited payment ${pay.receipt_no}${changes.length ? ': ' + changes.join('; ') : ''}`);
-  res.redirect(`/cases/${c.id}?ok=Payment+updated`);
+  const after = get('SELECT agent_id, payment_date FROM payments WHERE id=?', [pay.id]);
+  const notes = overSettledNotes([{ agentId: pay.agent_id, date: pay.payment_date }, { agentId: after.agent_id, date: after.payment_date }]);
+  res.redirect(`/cases/${c.id}?${new URLSearchParams({ ok: ['Payment updated', ...notes].join(' — note: ') })}`);
 });
 
 // Void a recorded payment: the row leaves the ledger, but a copy as it stood
 // (with who voided it and why) stays in payment_history and on the case page
 // (F-24). numbering.js keeps a high-water mark per year, so the receipt number
 // is never reused — not even the newest one.
-router.post('/:id/payments/:pid/void', requireLogin, requireRole('admin','manager','finance'), (req, res) => {
+router.post('/:id/payments/:pid/void', requireLogin, requirePerm('payments.correct'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const pay = get('SELECT * FROM payments WHERE id=? AND case_id=?', [req.params.pid, c.id]);
   if (!pay) return res.redirect(`/cases/${c.id}?err=Payment+not+found`);
@@ -358,10 +367,11 @@ router.post('/:id/payments/:pid/void', requireLogin, requireRole('admin','manage
       [c.id, 'payment', `Payment ${pay.receipt_no} voided (RM ${pay.amount.toFixed(2)})${why}`, by]);
   })();
   logAction(req, 'payment_void', 'case', c.id, `Voided payment ${pay.receipt_no} (RM ${pay.amount.toFixed(2)}, ${String(pay.payment_date).slice(0, 10)})${why}`);
-  res.redirect(`/cases/${c.id}?ok=Payment+voided`);
+  const notes = overSettledNotes([{ agentId: pay.agent_id, date: pay.payment_date }]);
+  res.redirect(`/cases/${c.id}?${new URLSearchParams({ ok: ['Payment voided', ...notes].join(' — note: ') })}`);
 });
 
-router.post('/:id/ptps', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+router.post('/:id/ptps', requireLogin, requirePerm('ptps.manage'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const frozen = frozenError(c);
   if (frozen) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(frozen)}`);
@@ -425,7 +435,7 @@ function createPtpPlan(caseId, body, req) {
   return { ok: true, planId, count: n };
 }
 
-router.post('/:id/ptp-plans', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {
+router.post('/:id/ptp-plans', requireLogin, requirePerm('ptps.manage'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const r = createPtpPlan(c.id, req.body, req);
   if (!r.ok) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(r.error)}`);
@@ -458,14 +468,14 @@ function cancelPtpPlan(caseId, planId, req) {
   return { ok: true, broken };
 }
 
-router.post('/:id/ptp-plans/:planId/cancel', requireLogin, requireRole('admin', 'manager', 'agent'), (req, res) => {
+router.post('/:id/ptp-plans/:planId/cancel', requireLogin, requirePerm('ptps.manage'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const r = cancelPtpPlan(c.id, req.params.planId, req);
   if (!r.ok) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(r.error)}`);
   res.redirect(`/cases/${c.id}?ok=Installment+plan+cancelled`);
 });
 
-router.post('/:id/calls', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+router.post('/:id/calls', requireLogin, requirePerm('calls.log'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const frozen = frozenError(c);
   if (frozen) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(frozen)}`);
@@ -492,8 +502,8 @@ const noteText = b => String(b.content ?? '').trim();
 const findNote = (c, id) => get("SELECT * FROM timeline_events WHERE id=? AND case_id=? AND event_type='note'", [id, c.id]);
 // Agents change only their own notes (D-12). Notes store the author's name.
 // ponytail: matched on full_name; store the user id if two staff share a name.
-const notOwnNote = (req, note) => req.session.user.role === 'agent' && note.created_by !== req.session.user.full_name;
-router.post('/:id/notes', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+const notOwnNote = (req, note) => !can(req, 'notes.any') && note.created_by !== req.session.user.full_name;
+router.post('/:id/notes', requireLogin, requirePerm('notes.write'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const content = noteText(req.body);
   if (!content || content.length > MAX_NOTE) return res.redirect(`/cases/${c.id}?err=Note+must+be+1–${MAX_NOTE}+characters`);
@@ -501,7 +511,7 @@ router.post('/:id/notes', requireLogin, requireRole('admin','manager','agent'), 
   logAction(req, 'note_add', 'case', c.id, `Note ${r.lastInsertRowid}: ${content}`);
   res.redirect(`/cases/${c.id}?ok=Note+added`);
 });
-router.post('/:id/notes/:noteId', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+router.post('/:id/notes/:noteId', requireLogin, requirePerm('notes.write'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const note = findNote(c, req.params.noteId);
   if (!note) return res.redirect(`/cases/${c.id}?err=Note+not+found`);
@@ -512,7 +522,7 @@ router.post('/:id/notes/:noteId', requireLogin, requireRole('admin','manager','a
   logAction(req, 'note_edit', 'case', c.id, `Note ${note.id}: ${note.content} → ${content}`);
   res.redirect(`/cases/${c.id}?ok=Note+updated`);
 });
-router.post('/:id/notes/:noteId/delete', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+router.post('/:id/notes/:noteId/delete', requireLogin, requirePerm('notes.write'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const note = findNote(c, req.params.noteId);
   if (!note) return res.redirect(`/cases/${c.id}?err=Note+not+found`);
@@ -521,15 +531,15 @@ router.post('/:id/notes/:noteId/delete', requireLogin, requireRole('admin','mana
   logAction(req, 'note_delete', 'case', c.id, `Deleted note ${note.id} (by ${note.created_by || '—'}): ${note.content}`);
   res.redirect(`/cases/${c.id}?ok=Note+deleted`);
 });
-router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'), (req, res) => {
+router.post('/:id/status', requireLogin, requirePerm('cases.status'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const ns = req.body.status;
   if (!CASE_STATUSES.includes(ns)) return res.redirect(`/cases/${c.id}?err=Invalid+status`);
   const fail = msg => res.redirect(`/cases/${c.id}?err=${encodeURIComponent(msg)}`);
   // O-6: re-sending the current status changes nothing, so it leaves no timeline or audit entry.
   if (ns === c.status) return res.redirect(`/cases/${c.id}?ok=Status+unchanged`);
-  if (req.session.user.role === 'agent') {
-    // D-12 / G-02: an agent neither sets nor lifts a terminal or paid-off status.
+  if (!can(req, 'cases.status_any')) {
+    // D-12 / G-02: without cases.status_any (agents, by default) a user neither sets nor lifts a terminal or paid-off status.
     if (ns !== c.status && !AGENT_STATUSES.includes(c.status)) return fail(`Only a manager can change a ${caseStatusLabel(c.status)} case`);
     if (!AGENT_STATUSES.includes(ns)) return fail(`Only a manager can set ${caseStatusLabel(ns)}`);
   }
@@ -555,13 +565,13 @@ router.post('/:id/status', requireLogin, requireRole('admin','manager','agent'),
   res.redirect(`/cases/${c.id}?ok=Status+updated`);
 });
 
-router.post('/:id/restructures', requireLogin, requireRole('admin','manager'), (req, res) => {
+router.post('/:id/restructures', requireLogin, requirePerm('cases.restructure'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const r = createRestructure(c.id, req.body, req);
   if (!r.ok) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(r.error)}`);
   res.redirect(`/cases/${c.id}?ok=Restructured`);
 });
-router.post('/:id/restructures/:rid/undo', requireLogin, requireRole('admin','manager'), (req, res) => {
+router.post('/:id/restructures/:rid/undo', requireLogin, requirePerm('cases.restructure'), (req, res) => {
   const c = loadCase(req, res); if (!c) return;
   const r = undoRestructure(c.id, req.params.rid, req);
   if (!r.ok) return res.redirect(`/cases/${c.id}?err=${encodeURIComponent(r.error)}`);

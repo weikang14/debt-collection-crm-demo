@@ -225,15 +225,15 @@
  },
  {
   "id": "SEC-08",
-  "expected": "正式环境演示账号停用 / 移除 /demo-accounts 与 Demo Data",
-  "actual": "本轮不访问 Render；本地 demo 构建仍开放 /demo-accounts 与 Demo Data（设计如此）",
-  "result": "未执行",
-  "note": "【已知延后】K-07；上线前必须"
+  "expected": "正式部署默认 /demo-accounts、/demo-tools 均 404；DEMO_MODE=1 才开放",
+  "actual": "production=404,404 DEMO_MODE=1=200,302（Render 演示站仍开放，属设计）",
+  "result": "PASS",
+  "note": ""
  },
  {
   "id": "AUTH-05",
-  "expected": "6th: \"Too many attempts. Try again later.\"; per IP",
-  "actual": "fails=401,401,401,401,401 sixth=429; 127.0.0.1 login=302",
+  "expected": "6th: \"Too many attempts. Try again later.\"; per IP; the account backs off 1 s",
+  "actual": "fails=401,401,401,401,401 sixth=429; 127.0.0.1 at once=429, after 1 s=302",
   "result": "PASS",
   "note": "“锁 15 分钟”未等待验证；“重启清零”见报告第 6 节"
  },

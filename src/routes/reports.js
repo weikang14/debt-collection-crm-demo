@@ -1,11 +1,12 @@
 const express = require('express');
-const { all } = require('../db');
+const { all, get } = require('../db');
 const { requireLogin } = require('../middleware/auth');
 const { caseWhere } = require('../utils/scope');
 const { toCsv, sendCsv } = require('../utils/csv');
 const { caseStatusLabel, dateFmt, commission, round2, todayMYT } = require('../utils/helpers');
 const { logAction } = require('../utils/audit');
 const { todayFigures } = require('../services/restructure');
+const { can } = require('../utils/permissions');
 const router = express.Router();
 
 router.get('/', requireLogin, (req, res) => {
@@ -20,7 +21,9 @@ router.get('/', requireLogin, (req, res) => {
   // Every in-scope case with today's figures (N-07, G-24): `settlement` is the
   // primary amount, outstanding_amount the contract balance.
   const cases = all(`SELECT cases.*, debtors.name AS debtor_name, agents.name AS agent_name,
-      (SELECT COALESCE(SUM(amount),0) FROM payments WHERE case_id=cases.id) AS paid
+      (SELECT COALESCE(SUM(amount),0) FROM payments WHERE case_id=cases.id) AS paid,
+      (SELECT COALESCE(SUM(interest_part),0) FROM payments WHERE case_id=cases.id) AS paid_interest,
+      (SELECT COALESCE(SUM(principal_part),0) FROM payments WHERE case_id=cases.id) AS paid_principal
     FROM cases JOIN debtors ON debtors.id=cases.debtor_id LEFT JOIN agents ON agents.id=cases.agent_id
     WHERE ${w.clause} ORDER BY cases.opened_at DESC`, w.params).map(c => ({ ...c, ...todayFigures(c) }));
   const byStatus = {};
@@ -37,21 +40,24 @@ router.get('/', requireLogin, (req, res) => {
   const exported = (name, rows) => logAction(req, 'export', 'report', null, `Exported ${name} (${rows.length} rows)`);
   if (req.query.export === 'cases') {
     const rows = cases.map(c => [c.case_no, c.debtor_name, c.agent_name || '', c.principal_amount, c.interest_charged, round2(c.paid),
-      c.settlement, c.overdue ?? '', c.dpd ?? '', c.outstanding_amount, caseStatusLabel(c.status), dateFmt(c.opened_at)]);
+      c.settlement, c.overdue ?? '', c.dpd ?? '', c.outstanding_amount, caseStatusLabel(c.status), dateFmt(c.opened_at), round2(c.paid_principal), round2(c.paid_interest)]);
     exported('cases-detailed.csv', rows);
     return sendCsv(res, 'cases-detailed.csv', toCsv(['Case No', 'Debtor', 'Agent', 'Principal', 'Interest', 'Paid',
-      'Settlement Today', 'Overdue', 'DPD', 'Contract Balance', 'Status', 'Opened'], rows));
+      'Settlement Today', 'Overdue', 'DPD', 'Contract Balance', 'Status', 'Opened', 'Paid Principal', 'Paid Interest'], rows));
   }
   if (req.query.export === 'outstanding') {
     const rows = outstanding.map(r => [caseStatusLabel(r.status), r.cnt, r.total, r.contract]);
     exported('outstanding-by-status.csv', rows);
     return sendCsv(res, 'outstanding-by-status.csv', toCsv(['Status', 'Cases', 'Settlement Today', 'Contract Balance'], rows));
   }
-  if (req.query.export === 'performance' && !['agent', 'client'].includes(req.session.user.role)) {
+  if (req.query.export === 'performance' && can(req, 'reports.performance')) {
     const rows = performance.map(r => [r.name, round2(r.collected), r.commission_rate, round2(commission(r.collected, r.commission_rate)), r.target_amount]);
     exported('agent-performance.csv', rows);
     return sendCsv(res, 'agent-performance.csv', toCsv(['Agent', 'Collected', 'Rate %', 'Commission', 'Target'], rows));
   }
-  res.render('reports/index', { title: 'Reports', from, to, collection, outstanding, performance });
+  // K-04: what came in over the range, split into interest and principal (interest-first ledger).
+  const collected = get(`SELECT COUNT(p.id) n, COALESCE(SUM(p.amount),0) total, COALESCE(SUM(p.interest_part),0) interest, COALESCE(SUM(p.principal_part),0) principal
+    FROM payments p JOIN cases ON cases.id=p.case_id WHERE ${w.clause} AND date(p.payment_date) BETWEEN ? AND ?`, [...w.params, from, to]);
+  res.render('reports/index', { title: 'Reports', from, to, collection, outstanding, performance, collected });
 });
 module.exports = router;

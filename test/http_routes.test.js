@@ -10,7 +10,8 @@ const app = require('../src/app');
 const { todayMYT } = require('../src/utils/helpers');
 
 let server, base;
-before(() => new Promise(ok => { server = app.listen(0, '127.0.0.1', () => { base = `http://127.0.0.1:${server.address().port}`; ok(); }); }));
+// Dual-stack, so the K-09 test can come from two addresses (127.0.0.1 and ::1).
+before(() => new Promise(ok => { server = app.listen(0, () => { base = `http://127.0.0.1:${server.address().port}`; ok(); }); }));
 after(() => new Promise(ok => server.close(ok)));
 
 // A logged-in browser: keeps the session cookie, sends same-origin POSTs.
@@ -104,4 +105,17 @@ test('each payment has a printable receipt, within the agent’s scope (F-25)', 
   assert.strictEqual(r.status, 200);
   assert.match(await r.text(), /Payment Receipt/);
   assert.strictEqual((await s.get(`/cases/2/payments/${p.id}/receipt`)).status, 404, 'other agents’ cases stay out of scope');
+});
+
+test('K-09: an account backs off after 5 misses from any mix of addresses, without being locked out', async () => {
+  const v6 = base.replace('127.0.0.1', '[::1]');
+  const tryLogin = (b, password) => fetch(b + '/login', { method: 'POST', redirect: 'manual', headers: { 'content-type': 'application/x-www-form-urlencoded', origin: b },
+    body: new URLSearchParams({ username: 'auditor', password }) });
+  for (let i = 0; i < 4; i++) assert.strictEqual((await tryLogin(base, 'wrong' + i)).status, 401);
+  assert.strictEqual((await tryLogin(v6, 'wrong4')).status, 401);           // 5th miss, from another address
+  const early = await tryLogin(v6, 'auditor123');
+  assert.strictEqual(early.status, 429);
+  assert.match(await early.text(), /Too many attempts for this account/);
+  await new Promise(r => setTimeout(r, 1100));
+  assert.strictEqual((await tryLogin(v6, 'auditor123')).status, 302, 'after the wait the right password works');
 });

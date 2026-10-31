@@ -379,7 +379,8 @@ test('r2 B: CASE / INT / PAY / SCH', { timeout: 300000 }, async () => {
     const a = q1('SELECT status, outstanding_amount o, closed_at FROM cases WHERE id=18');
     const tl = q1("SELECT content FROM timeline_events WHERE case_id=18 AND event_type='payment' ORDER BY id DESC");
     const log = q1("SELECT 1 x FROM audit_logs WHERE action='payment_void' AND entity_id=18");
-    check('PAY-10', 'Payment voided; balance back; →negotiation', r.ok === 'Payment voided' && a.o === b.o + pay.amount && a.status === 'negotiation' && /voided/.test(tl.content) && !!log,
+    // v1.14.0 (K-05): the message may add a note when the void over-settles a commission month.
+    check('PAY-10', 'Payment voided; balance back; →negotiation', /^Payment voided/.test(r.ok || '') && a.o === b.o + pay.amount && a.status === 'negotiation' && /voided/.test(tl.content) && !!log,
       `${r.ok}; ${b.status}/${b.o} → ${a.status}/${a.o} closed_at=${a.closed_at}; "${tl.content}"`);
   });
   await step('PAY-11', 'agent cannot edit/void', async () => {

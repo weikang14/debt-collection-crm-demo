@@ -44,7 +44,11 @@ app.get('/health', (req, res) => res.type('text').send('ok'));
 const { VERSION, CHANGELOG } = require('./version');
 app.get('/version', (req, res) => res.render('version', { version: VERSION, changelog: CHANGELOG }));
 
-app.get('/demo-accounts', (req, res) => res.render('demo-accounts', { accounts: [
+// K-07: demo accounts page and Demo Data tools only where demo data belongs —
+// DEMO_MODE=1/0 decides; unset, they are on locally and on the Render demo
+// (RENDER is set there) and off on any other production deploy.
+const demoMode = process.env.DEMO_MODE !== undefined ? process.env.DEMO_MODE === '1' : (!!process.env.RENDER || process.env.NODE_ENV !== 'production');
+if (demoMode) app.get('/demo-accounts', (req, res) => res.render('demo-accounts', { accounts: [
   ['admin','admin123','Full access + user mgmt + audit'],
   ['manager','manager123','Cases/debtors/agents + reports'],
   ['agent1','agent123','Only own cases (agent2/agent3 too)'],
@@ -60,7 +64,7 @@ app.use((req, res, next) => { if (req.session.user) refreshStaleAccruals(); next
 const h = require('./utils/helpers');
 // N-05: on the public Render demo, every page says to use made-up data only.
 const demoBanner = !!process.env.RENDER;
-app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; res.locals.demoBanner = demoBanner; next(); });
+app.use((req, res, next) => { res.locals.h = h; res.locals.query = req.query; res.locals.path = req.path; res.locals.demoBanner = demoBanner; res.locals.demoMode = demoMode; next(); });
 // G-25: each POST runs in one transaction, so its writes and their audit rows
 // commit together; a handler error — an audit row that can't be written
 // included — ends as a 500 and rolls all of it back. The transaction ends just
@@ -96,7 +100,7 @@ app.use('/cases', require('./routes/cases').router);
 app.use('/ptps', require('./routes/ptps'));
 app.use('/agents', require('./routes/agents'));
 app.use('/users', require('./routes/users'));
-app.use('/demo-tools', require('./routes/demo'));
+if (demoMode) app.use('/demo-tools', require('./routes/demo'));
 app.use('/tasks', require('./routes/tasks'));
 app.use('/reports', require('./routes/reports'));
 app.use('/commissions', require('./routes/commissions').router);

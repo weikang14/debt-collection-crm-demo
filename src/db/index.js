@@ -114,15 +114,26 @@ function init() {
     db.prepare('ALTER TABLE payments ADD COLUMN agent_id INTEGER REFERENCES agents(id)').run();
     db.prepare('UPDATE payments SET agent_id = (SELECT agent_id FROM cases WHERE cases.id = payments.case_id)').run();
   } catch (e) { /* exists */ }
+  // G-31: every case has an assignment history; a case without one starts with
+  // its current agent from its opening day (the best history there is).
+  try {
+    db.prepare(`INSERT INTO case_assignments (case_id, agent_id, from_date, created_by)
+      SELECT id, agent_id, date(opened_at, '+8 hours'), 'migration' FROM cases WHERE id NOT IN (SELECT case_id FROM case_assignments)`).run();
+  } catch (e) { /* a pre-v1.0 cases table without opened_at: nothing to backfill from */ }
   // Migration (F-33): how and with whom a contact was made, and who logged it.
   try { db.prepare("ALTER TABLE call_logs ADD COLUMN channel TEXT NOT NULL DEFAULT 'phone'").run(); } catch (e) { /* exists */ }
   try { db.prepare("ALTER TABLE call_logs ADD COLUMN contact TEXT NOT NULL DEFAULT 'debtor'").run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE call_logs ADD COLUMN phone TEXT').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE call_logs ADD COLUMN created_by TEXT').run(); } catch (e) { /* exists */ }
+  // Migration (K-04): each payment's interest / principal share (kept by recomputeOutstanding).
+  try { db.prepare('ALTER TABLE payments ADD COLUMN interest_part REAL').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE payments ADD COLUMN principal_part REAL').run(); } catch (e) { /* exists */ }
   // Migration (F-48): loan agreement number and date on the case; the lender's KPKT licence number.
   try { db.prepare('ALTER TABLE cases ADD COLUMN agreement_no TEXT').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE cases ADD COLUMN agreement_date TEXT').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE settings ADD COLUMN licence_no TEXT').run(); } catch (e) { /* exists */ }
+  // Roles start with the default permissions the app shipped with.
+  require('../utils/permissions').seedRoleDefaults();
   // Migration: legal rate cap setting (default 18% p.a.).
   try { db.prepare('ALTER TABLE settings ADD COLUMN max_annual_rate REAL NOT NULL DEFAULT 18').run(); } catch (e) { /* exists */ }
   // Migration: PTP status 'partially_kept'. Same one-time rebuild as the

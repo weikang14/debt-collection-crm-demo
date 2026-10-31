@@ -294,7 +294,21 @@ test('r2 E: smoke / E2E / SEC', { timeout: 400000 }, async () => {
     check('SEC-06', '403 "Cross-site request blocked"; same-origin ok', evil.status === 403 && evil.text === 'Cross-site request blocked' && ref.status === 403 && bad.status === 403 && same.status === 302 && login.status === 403 && !q1("SELECT 1 x FROM timeline_events WHERE content='csrf'"),
       `origin=${evil.status} referer=${ref.status} null=${bad.status} same=${same.status} login=${login.status}`);
   });
-  rec('SEC-08', '正式环境演示账号停用 / 移除 /demo-accounts 与 Demo Data', '本轮不访问 Render；本地 demo 构建仍开放 /demo-accounts 与 Demo Data（设计如此）', '未执行', '【已知延后】K-07；上线前必须');
+  await step('SEC-08', '正式环境演示账号停用 / 移除 /demo-accounts 与 Demo Data', async () => {
+    // K-07 (v1.14.0): NODE_ENV=production off Render, DEMO_MODE unset → both 404; DEMO_MODE=1 turns them back on.
+    const probe = extra => {
+      const env = { ...process.env, NODE_ENV: 'production', SESSION_SECRET: 's', CRM_DB_PATH: c.DB_PATH, ...extra };
+      delete env.RENDER; if (!('DEMO_MODE' in extra)) delete env.DEMO_MODE;
+      return require('node:child_process').execFileSync(process.execPath, ['--no-warnings', '-e', `
+        const s = require('./src/app').listen(0, async () => {
+          const b = 'http://127.0.0.1:' + s.address().port;
+          const r = await Promise.all(['/demo-accounts', '/demo-tools'].map(p => fetch(b + p, { redirect: 'manual' }).then(x => x.status)));
+          console.log(r.join(',')); s.close();
+        });`], { cwd: c.ROOT, env, encoding: 'utf8', timeout: 15000 }).trim().split('\n').pop();
+    };
+    const prod = probe({}), on = probe({ DEMO_MODE: '1' });
+    check('SEC-08', '正式部署默认 /demo-accounts、/demo-tools 均 404；DEMO_MODE=1 才开放', prod === '404,404' && on === '200,302', `production=${prod} DEMO_MODE=1=${on}（Render 演示站仍开放，属设计）`);
+  });
 
   // ---------------- AUTH-05 / SEC-07 (last; [::1]) ----------------
   await step('AUTH-05', '5 fails → 6th correct refused (429)', async () => {
@@ -303,8 +317,12 @@ test('r2 E: smoke / E2E / SEC', { timeout: 400000 }, async () => {
     const fails = [];
     for (let i = 0; i < 5; i++) fails.push((await s.login('admin', 'bad' + i)).status);
     const sixth = await s.login('admin', 'admin123');
-    const other = await new c.Session().login('admin', 'admin123'); // 127.0.0.1 unaffected
-    check('AUTH-05', '6th: "Too many attempts. Try again later."; per IP', fails.every(x => x === 401) && sixth.status === 429 && has(sixth.text, 'Too many attempts. Try again later.') && other.status === 302, `fails=${fails} sixth=${sixth.status}; 127.0.0.1 login=${other.status}`, '“锁 15 分钟”未等待验证；“重启清零”见报告第 6 节');
+    // K-09 (v1.14.0): the account itself backs off too — another IP must wait 1 s after the 5th miss, then gets in.
+    const early = await new c.Session().login('admin', 'admin123');
+    await new Promise(r => setTimeout(r, 1100));
+    const other = await new c.Session().login('admin', 'admin123'); // 127.0.0.1 unaffected by the IP lock
+    check('AUTH-05', '6th: "Too many attempts. Try again later."; per IP; the account backs off 1 s', fails.every(x => x === 401) && sixth.status === 429 && has(sixth.text, 'Too many attempts. Try again later.')
+      && early.status === 429 && has(early.text, 'Too many attempts for this account') && other.status === 302, `fails=${fails} sixth=${sixth.status}; 127.0.0.1 at once=${early.status}, after 1 s=${other.status}`, '“锁 15 分钟”未等待验证；“重启清零”见报告第 6 节');
     rec('SEC-07', '= AUTH-05', 'see AUTH-05', sixth.status === 429 ? 'PASS' : 'FAIL');
   });
 

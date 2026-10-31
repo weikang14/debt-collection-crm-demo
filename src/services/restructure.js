@@ -1,7 +1,7 @@
 const dayjs = require('dayjs');
 const { db, get, all, run } = require('../db');
 const { caseBalance, resyncCaseStatus, localDate, nominalAnnualRate, rateCapError, accrue, ratePct } = require('./payments');
-const { maturityDate } = require('../utils/installments');
+const { maturityDate, dueDates } = require('../utils/installments');
 const { repaymentSchedule } = require('../utils/schedule');
 const { logAction } = require('../utils/audit');
 const { todayMYT, interestTerms, money } = require('../utils/helpers');
@@ -207,23 +207,49 @@ function scheduleView(c, payments, restructures) {
   return { current: repaymentSchedule(segCase(last), inWindow(last.effective_date), { arrears: last.arrears_at_cut }), history };
 }
 
-// Arrears from the current schedule (D-09): the unpaid amount of instalments
-// already due, and days past due (DPD) counted from the oldest of them.
-// { dpd: null, overdue: null } when the case has no schedule (no term set).
+// Arrears (D-09): the unpaid amount already due, and days past due (DPD) from
+// the oldest unpaid due date. { dpd: null, overdue: null } without a schedule.
+// - Fixed loans: the schedule's instalments, paid first-in first-out.
+// - Rate-based loans (N-06 A): the ledger. By each instalment date of the
+//   current plan, the interest accrued to that date (on the principal actually
+//   owed, carried arrears included) is due, and all principal from the final
+//   date. Payments clear interest first and oldest first, so interest accrued
+//   by date d is paid once the interest paid so far reaches it; a principal
+//   prepayment lowers later interest but does not stand in for it.
+// Never more overdue than would settle the loan today (G-12).
 function arrearsOf(c, payments, restructures) {
-  const rows = scheduleView(c, payments, restructures).current;
-  if (!rows.length) return { dpd: null, overdue: null };
+  const asc = payments.slice().sort((a, b) => localDate(a.payment_date).localeCompare(localDate(b.payment_date)));
   const today = todayMYT();
-  const due = rows.filter(r => r.due_date < today && r.outstanding_amount > 0);
-  if (!due.length) return { dpd: 0, overdue: 0 };
-  // The plan's FIFO can run ahead of the interest-first ledger after a principal
-  // prepayment; never call more overdue than would settle the loan today (N-06).
-  // ponytail: cap only; a ledger-based DPD is the full fix (N-06 A/B, K-02).
-  const settle = caseBalance(c, payments.filter(p => localDate(p.payment_date) <= today)
-    .sort((a, b) => localDate(a.payment_date).localeCompare(localDate(b.payment_date))), today, restructures).outstanding;
-  const overdue = Math.min(Math.round(due.reduce((s, r) => s + r.outstanding_amount, 0) * 100) / 100, settle);
-  if (overdue <= 0) return { dpd: 0, overdue: 0 };
-  return { dpd: dayjs(today).diff(dayjs(due[0].due_date), 'day'), overdue };
+  const upTo = d => asc.filter(p => localDate(p.payment_date) <= d);
+  const settle = caseBalance(c, upTo(today), today, restructures).outstanding;
+  const last = restructures[restructures.length - 1];
+  const seg = last ? { mode: last.interest_mode, start: last.effective_date, tenure: last.tenure }
+    : { mode: c.interest_mode, start: c.loan_start_date, tenure: c.tenure_unit === 'months' ? c.tenure : null };
+  let overdue, oldest;
+  if (seg.mode === 'monthly' || seg.mode === 'daily') {
+    if (!seg.tenure || !seg.start) return { dpd: null, overdue: null };
+    const dates = dueDates(String(seg.start).slice(0, 10), seg.tenure + 1).slice(1);
+    const final = dates[dates.length - 1];
+    const now = caseBalance(c, upTo(today), today, restructures);
+    const interestPaid = now.interest - now.interestUnpaid;
+    let interestDue = 0;
+    for (const d of dates.filter(x => x < today)) {
+      interestDue = caseBalance(c, upTo(d), d, restructures).interest;
+      if (!oldest && interestDue > interestPaid + 0.005) oldest = d;
+    }
+    const principalDue = final < today ? now.principalRemaining : 0;
+    if (!oldest && principalDue > 0.005) oldest = final;
+    overdue = Math.round((Math.max(0, interestDue - interestPaid) + principalDue) * 100) / 100;
+  } else {
+    const rows = scheduleView(c, payments, restructures).current;
+    if (!rows.length) return { dpd: null, overdue: null };
+    const due = rows.filter(r => r.due_date < today && r.outstanding_amount > 0);
+    overdue = Math.round(due.reduce((s, r) => s + r.outstanding_amount, 0) * 100) / 100;
+    oldest = due.length ? due[0].due_date : null;
+  }
+  overdue = Math.min(overdue, settle);
+  if (!(overdue > 0) || !oldest) return { dpd: 0, overdue: 0 };
+  return { dpd: dayjs(today).diff(dayjs(oldest), 'day'), overdue };
 }
 
 // A case's figures as of today for lists, totals and exports (G-23, N-07): the

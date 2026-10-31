@@ -1,0 +1,16 @@
+<% layout('layout') -%>
+<div class="page-head"><h1>Role Permissions</h1>
+  <form method="post" action="/users/permissions/reset" style="margin:0" onsubmit="return confirm('Restore every role to the default permissions?')"><button class="btn" type="submit">Restore defaults</button></form>
+</div>
+<p class="hint">What each role may do by default. A user's own permissions (Users → Edit) start from their role and can add or remove items. admin always has every permission; user management, company settings, this page and demo tools stay admin-only. Which cases a user sees follows the role: an agent sees only their own cases.</p>
+<form class="card" method="post" action="/users/permissions">
+<table class="data"><thead><tr><th>Permission</th><% roles.forEach(r => { %><th class="c"><%= r %></th><% }) %></tr></thead>
+<tbody>
+<% let group = null; permissions.forEach(p => { %>
+  <% if (p.group !== group) { group = p.group; %><tr class="plan-head"><td colspan="<%= roles.length + 1 %>"><b><%= group %></b></td></tr><% } %>
+  <tr><td><%= p.label %> <small class="mono" style="color:var(--muted)"><%= p.key %></small></td>
+  <% roles.forEach(r => { %><td class="c"><input type="checkbox" name="rp_<%= r %>" value="<%= p.key %>" <%= matrix[r].includes(p.key) ? 'checked' : '' %> <%= r === 'admin' ? 'disabled' : '' %> title="<%= r %>: <%= p.label %>"></td><% }) %></tr>
+<% }) %>
+</tbody></table>
+<div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="/users">Back</a></div>
+</form>

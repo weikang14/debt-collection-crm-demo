@@ -4,6 +4,10 @@ const { all, get, run } = require('../db');
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction, changeList } = require('../utils/audit');
 const { parseActive, MAX_NAME, MIN_PASSWORD, HASH_COST } = require('../utils/forms');
+const { PERMISSIONS, KEYS, permsFor, saveUserPerms, roleMatrix, rolePerms, seedRoleDefaults } = require('../utils/permissions');
+// The ticked boxes of a form (one value comes as a string, none as undefined).
+const ticked = v => [].concat(v || []).filter(k => KEYS.includes(k));
+const permForm = (extra) => ({ permissions: PERMISSIONS, roleMatrix: roleMatrix(), ...extra });
 const router = express.Router();
 
 // Shared by create and edit: the linked agent/client must exist and names stay sane.
@@ -39,7 +43,7 @@ router.get('/', requireLogin, adminOnly, (req, res) => {
 
 router.get('/new', requireLogin, adminOnly, (req, res) => {
   res.render('users/form', {
-    title: 'New User', roles: ROLES,
+    title: 'New User', roles: ROLES, ...permForm({ ticked: [...rolePerms(ROLES[0])] }),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     clients: all('SELECT id,company_name FROM clients ORDER BY company_name'),
   });
@@ -62,12 +66,37 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
   try {
     const r = run('INSERT INTO users (username,password_hash,full_name,role,agent_id,client_id,active) VALUES (?,?,?,?,?,?,1)',
       [username, bcrypt.hashSync(password, HASH_COST), full_name, role, agent_id, client_id]);
-    logAction(req, 'create', 'user', r.lastInsertRowid, `Created user ${username} (${role})`);
+    // Without the permission boxes (an API call, an older form) the user simply follows the role.
+    if (b.perms_form) saveUserPerms(r.lastInsertRowid, role, ticked(b.perms));
+    const perms = [...permsFor({ id: r.lastInsertRowid, role })];
+    logAction(req, 'create', 'user', r.lastInsertRowid, `Created user ${username} (${role}); permissions: ${perms.join(', ') || 'none'}`);
     res.redirect('/users?ok=User+' + encodeURIComponent(username) + '+created');
   } catch (e) {
     // UNIQUE constraint on username (or any insert failure)
     res.redirect('/users/new?err=Could+not+create+user+(username+may+already+exist)');
   }
+});
+
+// Role permissions (admin only): the defaults each role starts from.
+router.get('/permissions', requireLogin, adminOnly, (req, res) => {
+  res.render('users/permissions', { title: 'Role Permissions', roles: ROLES, permissions: PERMISSIONS, matrix: roleMatrix() });
+});
+router.post('/permissions', requireLogin, adminOnly, (req, res) => {
+  const before = roleMatrix(), changes = [];
+  run("DELETE FROM role_permissions WHERE role <> 'admin'");
+  for (const r of ROLES.filter(x => x !== 'admin')) {
+    const want = ticked(req.body['rp_' + r]);
+    for (const k of want) run('INSERT INTO role_permissions (role, permission) VALUES (?,?)', [r, k]);
+    const added = want.filter(k => !before[r].includes(k)), removed = before[r].filter(k => !want.includes(k));
+    if (added.length || removed.length) changes.push(`${r}: ${added.map(k => '+' + k).concat(removed.map(k => '-' + k)).join(' ')}`);
+  }
+  logAction(req, 'update', 'permissions', null, `Role permissions${changes.length ? ': ' + changes.join('; ') : ' (no changes)'}`);
+  res.redirect('/users/permissions?ok=Permissions+saved');
+});
+router.post('/permissions/reset', requireLogin, adminOnly, (req, res) => {
+  seedRoleDefaults(true);
+  logAction(req, 'update', 'permissions', null, 'Role permissions restored to the defaults');
+  res.redirect('/users/permissions?ok=Default+permissions+restored');
 });
 
 // reset password — admin sets a new password for any account (incl. their own)
@@ -102,7 +131,7 @@ router.get('/:id/edit', requireLogin, adminOnly, (req, res) => {
   const u = get('SELECT * FROM users WHERE id=?', [req.params.id]);
   if (!u) return res.redirect('/users?err=User+not+found');
   res.render('users/edit', {
-    title: 'Edit User', u, roles: ROLES,
+    title: 'Edit User', u, roles: ROLES, ...permForm({ ticked: [...permsFor(u)] }),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     clients: all('SELECT id,company_name FROM clients ORDER BY company_name'),
   });
@@ -126,9 +155,15 @@ router.post('/:id', requireLogin, adminOnly, (req, res) => {
   const linkErr = linkError(role, agent_id, client_id, full_name);
   if (linkErr) return res.redirect(`/users/${u.id}/edit?err=${encodeURIComponent(linkErr)}`);
   try {
+    const before = [...permsFor(u)];
     run('UPDATE users SET username=?,full_name=?,role=?,agent_id=?,client_id=?,active=? WHERE id=?',
       [username, full_name, role, agent_id, client_id, active, u.id]);
+    if (b.perms_form) saveUserPerms(u.id, role, ticked(b.perms)); // otherwise their own changes stay as they are
+    const after = [...permsFor({ id: u.id, role })];
     const changes = changeList(u, { username, full_name, role, agent_id, client_id, active });
+    const added = after.filter(k => !before.includes(k)), removed = before.filter(k => !after.includes(k));
+    if (added.length) changes.push('permissions added: ' + added.join(', '));
+    if (removed.length) changes.push('permissions removed: ' + removed.join(', '));
     logAction(req, 'update', 'user', u.id, `Updated user ${username} (${role})${changes.length ? ': ' + changes.join('; ') : ' (no field changes)'}`);
     res.redirect('/users?ok=User+updated');
   } catch (e) {

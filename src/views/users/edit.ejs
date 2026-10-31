@@ -20,6 +20,7 @@
       <% clients.forEach(c => { %><option value="<%= c.id %>" <%= u.client_id===c.id?'selected':'' %>><%= c.company_name %></option><% }) %>
     </select>
   </label>
+  <%- include('../partials/permChecks') %>
   <label>Status <select name="active">
     <option value="1" <%= u.active===0 ? '' : 'selected' %>>Active</option>
     <option value="0" <%= u.active===0 ? 'selected' : '' %>>Inactive</option>

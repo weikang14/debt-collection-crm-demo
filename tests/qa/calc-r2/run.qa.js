@@ -7,7 +7,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const E = require('./expected.qa.js');
 const C = require('./client.qa.js');
-const { F, ledger, settlementOn, schedule, arrears, capOverdue, addMonths, addDays, days, splitEqual, planDates, nominalRate, commission, sum2, r2 } = E;
+const { F, ledger, settlementOn, schedule, arrears, ledgerArrears, capOverdue, addMonths, addDays, days, splitEqual, planDates, nominalRate, commission, sum2, r2 } = E;
 
 const T = C.todayMYT();
 const results = [];
@@ -43,7 +43,11 @@ function expectCase(t, pays = [], rs = [], today = T) {
   } else if (t.tenure && t.loan_start_date) {
     rows = schedule({ principal: t.principal_amount, mode: loan.mode, rate: loan.rate, lump: loan.lump, start: t.loan_start_date, tenure: Number(t.tenure) }, pays, { today, settled });
   }
-  const ar = capOverdue(arrears(rows, today), sett); // G-12 cap
+  // N-06 A: rate-based plans follow the ledger; fixed plans the instalments. G-12 cap on both.
+  const cur = rsx.length ? rsx[rsx.length - 1] : null, curMode = cur ? cur.mode : loan.mode;
+  const ar = capOverdue(['monthly', 'daily'].includes(curMode)
+    ? ledgerArrears(loan, pays, { restructures: rsx, today, start: cur ? cur.effective : t.loan_start_date, tenure: cur ? cur.tenure : (t.tenure ? Number(t.tenure) : null) })
+    : arrears(rows, today), sett);
   const total = F.of(t.principal_amount).add(L.interest);
   const recovered = total.isPos() ? Number(F.of(L.paid).mul(100).div(total).add(new F(1n, 2n)).floor2().r2().split('.')[0]) : 0;
   return { ...L, settlement: sett, rows, dpd: ar.dpd, overdue: ar.overdue, maturity: rsx.length ? rsx[rsx.length - 1].maturity : loan.maturity, cuts: L.cuts, recovered };
@@ -576,17 +580,17 @@ async function main() {
     const month = T.slice(0, 7);
     const rows = await C.commissions(s, month);
     const rowA = rows.find(x => x.name === 'QA R2 Agent A'), rowB = rows.find(x => x.name === 'QA R2 Agent B');
-    cmp(g, 'A.collected', 'A 本月 Collected（改派前收 933.63）', '933.63（D-11 归收款时催收员）', '933.63', rowA && rowA.collected);
-    cmp(g, 'A.earned', 'A 本月 Earned', '933.63 × 5%', commission('933.63', 5), rowA && rowA.earned);
+    // G-31 / N-12 B (v1.14.0): a payment is credited to the agent responsible on its payment date,
+    // so yesterday's 100, entered after the reassignment, still goes to A.
     const bBack = backdated.slice(0, 7) === month;
-    cmp(g, 'B.collected', 'B 本月 Collected（改派后录入 1,234.57 + 补录昨天 100）', bBack ? '1334.57（系统按录入时的案件催收员）' : '1234.57', bBack ? '1334.57' : '1234.57', rowB && rowB.collected,
-      'N-12 A：归录入时的催收员 B（写入使用手册）；G-31 待客户确认是否改为按收款日');
-    cmp(g, 'B.earned', 'B 本月 Earned', '1334.57 × 7.5%', commission(bBack ? '1334.57' : '1234.57', 7.5), rowB && rowB.earned);
+    const aColl = bBack ? '1033.63' : '933.63';
+    cmp(g, 'A.collected', 'A 本月 Collected（改派前收 933.63 + 补录昨天 100）', '按收款日归属（G-31）', aColl, rowA && rowA.collected);
+    cmp(g, 'A.earned', 'A 本月 Earned', `${aColl} × 5%`, commission(aColl, 5), rowA && rowA.earned);
+    cmp(g, 'B.collected', 'B 本月 Collected（改派后收 1,234.57）', '按收款日归属（G-31）', '1234.57', rowB && rowB.collected);
+    cmp(g, 'B.earned', 'B 本月 Earned', '1234.57 × 7.5%', commission('1234.57', 7.5), rowB && rowB.earned);
     const pay100 = C.q1('SELECT agent_id FROM payments WHERE case_id=? AND payment_date=?', id, backdated);
-    // N-12 decided "A: the agent when it was entered" — so B; G-31 (by payment date → A) waits on the client.
     const who = !pay100 ? '未入账' : pay100.agent_id === aA ? 'A' : pay100.agent_id === aB ? 'B' : String(pay100.agent_id);
-    chk(g, 'BACKDATE', `补录 ${backdated}（改派前那天）的 100 归属`, 'N-12 A：录入时的催收员 B', who === 'B', who);
-    pending(g, 'BACKDATE.G31', '同上：若客户要求按收款日归属（G-31）', 'A（收款日负责的催收员）', who, 'N-12 / G-31，问客户');
+    chk(g, 'BACKDATE', `补录 ${backdated}（改派前那天）的 100 归属`, 'A：收款日负责的催收员（G-31 / N-12 B）', who === 'A', who);
     const tasks = C.qa('SELECT title, agent_id, status FROM tasks WHERE case_id=? ORDER BY id', id);
     chk(g, 'TASKS', '改派后任务：待办随案件转 B，已完成留 A', 'QA 待办→B；QA 已完成→A', tasks.find(t => t.title === 'QA 待办').agent_id === aB && tasks.find(t => t.title === 'QA 已完成').agent_id === aA, JSON.stringify(tasks));
     const rep = await C.reports(s);
@@ -595,22 +599,29 @@ async function main() {
     cmp(g, 'RPT.B', 'Reports 本月业绩 B：Collected/Commission', '同 Commissions 页', `${rowB.collected}/${rowB.earned}`, pB && `${pB.collected}/${pB.commission}`);
     const perfCsv = await C.csv(s, '/reports?export=performance');
     const cA = perfCsv.rows.find(x => x[0] === 'QA R2 Agent A'), cB = perfCsv.rows.find(x => x[0] === 'QA R2 Agent B');
-    cmp(g, 'CSV.A', 'agent-performance.csv A：Collected,Commission', '933.63 / 46.68（RPT-06 无尾差）', '933.63,46.68', cA && `${cA[1]},${cA[3]}`);
+    const earnA = commission(aColl, 5);
+    cmp(g, 'CSV.A', 'agent-performance.csv A：Collected,Commission', `${aColl} / ${earnA}（RPT-06 无尾差）`, `${Number(aColl)},${Number(earnA)}`, cA && `${cA[1]},${cA[3]}`);
     cmp(g, 'CSV.B', 'agent-performance.csv B：Collected,Commission', `${rowB.collected} / ${rowB.earned}`, `${Number(rowB.collected)},${Number(rowB.earned)}`, cB && `${cB[1]},${cB[3]}`);
     const ag = await C.agentsList(s);
     const lA = ag.find(x => x.name === 'QA R2 Agent A'), lB = ag.find(x => x.name === 'QA R2 Agent B');
-    cmp(g, 'AGT.A', 'Agents 页 A：案件数/Collected/Commission', '0 件（已改派）/933.63/46.68', '0/933.63/46.68', lA && `${lA.cases}/${lA.collected}/${lA.commission}`);
+    cmp(g, 'AGT.A', 'Agents 页 A：案件数/Collected/Commission', `0 件（已改派）/${aColl}/${earnA}`, `0/${aColl}/${earnA}`, lA && `${lA.cases}/${lA.collected}/${lA.commission}`);
     cmp(g, 'AGT.B', 'Agents 页 B：案件数/Collected', `1/${rowB.collected}`, `1/${rowB.collected}`, lB && `${lB.cases}/${lB.collected}`);
-    // settlement beyond earned → negative pending in red (K-05 known)
-    await s.post('/commissions/settle', { agent_id: String(aA), amount: '50', period: month });
+    // K-05 A (v1.14.0): settling more than the pending commission is refused; within it, recorded.
+    const overTry = await s.post('/commissions/settle', { agent_id: String(aA), amount: F.of(earnA).add('1').r2(), period: month });
+    const set40 = await s.post('/commissions/settle', { agent_id: String(aA), amount: '40', period: month });
     const rows2 = await C.commissions(s, month); const a2 = rows2.find(x => x.name === 'QA R2 Agent A');
-    chk(g, 'OVERSETTLE', 'A 结算 50.00 > Earned 46.68', 'Pending −3.32 红字（超额发放无硬拦截，K-05）', a2.pending === '-3.32' && a2.pendingRed, `${a2.pending} red=${a2.pendingRed}`);
-    // void the 933.63 payment → A's earned falls retroactively
+    const overMsg = `Settlement exceeds the pending commission for ${month} (RM ${earnA})`;
+    chk(g, 'OVERSETTLE', `A 结算 ${earnA} + 1 > 待结算 ${earnA}；再结算 40.00`, `拒收“${overMsg}”；40.00 入账，Pending ${F.of(earnA).sub('40').r2()}`,
+      overTry.err === overMsg && !!set40.ok && a2.pending === F.of(earnA).sub('40').r2(), `${overTry.err} / ${set40.ok || set40.err} / Pending ${a2.pending}`);
+    // void the 933.63 payment → A's earned falls retroactively; the void message names the over-settlement
     const pid = C.q1('SELECT id FROM payments WHERE case_id=? AND amount=933.63', id).id;
-    await s.post(`/cases/${id}/payments/${pid}/void`, {});
+    const vRes = await s.post(`/cases/${id}/payments/${pid}/void`, {});
     pays[id] = pays[id].filter(p => p.amount !== '933.63');
     const rows3 = await C.commissions(s, month); const a3 = rows3.find(x => x.name === 'QA R2 Agent A');
-    chk(g, 'VOID', '作废 A 收的 933.63 后 A 的本月 Earned/Pending', '0.00 / −50.00（追溯变动，K-05 快照延后）', a3.earned === '0.00' && a3.pending === '-50.00', `${a3.earned} / ${a3.pending}`);
+    const earn3 = commission(F.of(aColl).sub('933.63').r2(), 5), pend3 = F.of(earn3).sub('40').r2();
+    const note3 = `commission for QA R2 Agent A in ${month} is now over-settled by RM ${F.of('40').sub(earn3).r2()}`;
+    chk(g, 'VOID', '作废 A 收的 933.63 后 A 的本月 Earned/Pending，作废提示', `${earn3} / ${pend3}；提示“${note3}”（K-05）`,
+      a3.earned === earn3 && a3.pending === pend3 && a3.pendingRed && (vRes.ok || '').includes(note3), `${a3.earned} / ${a3.pending} red=${a3.pendingRed}；${vRes.ok || vRes.err}`);
     // receipt number after voiding the newest
     const lastNo = C.q1('SELECT receipt_no FROM payments ORDER BY id DESC LIMIT 1').receipt_no;
     const lid = C.lastPaymentId(id);

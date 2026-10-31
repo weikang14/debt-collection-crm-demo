@@ -31,6 +31,7 @@
   </div>
   <div>Received from <b><%= c.debtor_name %></b><% if (c.ic_passport) { %> (<span class="mono"><%= c.ic_passport %></span>)<% } %> for case <span class="mono"><%= c.case_no %></span><% if (c.agreement_no) { %> (agreement <span class="mono"><%= c.agreement_no %></span>)<% } %>:</div>
   <div class="rc-amount">RM <%= h.money(p.amount) %></div>
+  <div style="margin:-14px 0 22px"><i><%= h.amountInWords(p.amount) %></i><% if (p.interest_part != null) { %><br>of which interest RM <%= h.money(p.interest_part) %>, principal RM <%= h.money(p.principal_part) %><% } %></div>
   <div class="rc-grid">
     <div><span>Payment Date</span><%= h.dateFmt(p.payment_date) %></div>
     <div><span>Method</span><%= p.method %></div>
@@ -39,7 +40,12 @@
     <% if (p.remark) { %><div style="grid-column: 1 / -1"><span>Remark</span><%= p.remark %></div><% } %>
     <div><span>Recorded By</span><%= p.created_by || '—' %></div>
     <div><span>Recorded At</span><%= h.dateTimeFmt(p.created_at) %></div>
+    <% if (typeof balance !== 'undefined') { %><div style="grid-column: 1 / -1"><span>Balance to settle as of <%= balance.date %> (after payments up to that day)</span>RM <%= h.money(balance.settlement) %></div><% } %>
   </div>
   <% if (amended) { %><p style="color:var(--muted)">This payment was amended on <%= h.dateTimeFmt(amended) %>; the figures above are the current ones.</p><% } %>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:40px">
+    <div style="border-top:1px solid var(--ink);padding-top:6px">Received by, for <%= company.company_name || 'the lender' %></div>
+    <div style="border-top:1px solid var(--ink);padding-top:6px">Date</div>
+  </div>
   <p style="color:var(--muted);font-size:12px">Computer-generated receipt.</p>
 </body></html>

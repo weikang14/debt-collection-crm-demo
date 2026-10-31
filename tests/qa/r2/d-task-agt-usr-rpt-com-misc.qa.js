@@ -271,7 +271,7 @@ test('r2 D: TASK / AGT / USR / RPT / COM / SRCH / AUD / SET / DEMO', { timeout: 
     const a = await admin.get('/reports?export=cases'), b = await admin.get('/reports?export=outstanding'), p = await admin.get('/reports?export=performance');
     const hd = (r) => r.text.replace(/^﻿/, '').split('\r\n')[0];
     // v1.12.0 (G-23 / G-24): settlement today, overdue and DPD columns; contract figure is "Contract Balance".
-    check('RPT-05', 'filenames + headers', /cases-detailed\.csv/.test(a.headers.get('content-disposition')) && hd(a) === 'Case No,Debtor,Agent,Principal,Interest,Paid,Settlement Today,Overdue,DPD,Contract Balance,Status,Opened' && /outstanding-by-status\.csv/.test(b.headers.get('content-disposition')) && hd(b) === 'Status,Cases,Settlement Today,Contract Balance'
+    check('RPT-05', 'filenames + headers', /cases-detailed\.csv/.test(a.headers.get('content-disposition')) && hd(a) === 'Case No,Debtor,Agent,Principal,Interest,Paid,Settlement Today,Overdue,DPD,Contract Balance,Status,Opened,Paid Principal,Paid Interest' && /outstanding-by-status\.csv/.test(b.headers.get('content-disposition')) && hd(b) === 'Status,Cases,Settlement Today,Contract Balance'
       && /agent-performance\.csv/.test(p.headers.get('content-disposition')) && hd(p) === 'Agent,Collected,Rate %,Commission,Target', `${hd(a)} | ${hd(b)} | ${hd(p)}`);
   });
   await step('RPT-06', 'BOM + no float tails', async () => {

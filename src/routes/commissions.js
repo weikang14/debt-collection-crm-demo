@@ -31,6 +31,28 @@ function commissionRows(user, month) {
 
 function currentMonth() { return dayjs.utc().add(8, 'hour').format('YYYY-MM'); }
 
+// Earned minus settled for one agent and month; negative when over-settled.
+function pendingFor(agentId, period) {
+  const a = get('SELECT commission_rate r FROM agents WHERE id=?', [agentId]);
+  if (!a) return 0;
+  const collected = get('SELECT COALESCE(SUM(amount),0) s FROM payments WHERE agent_id=? AND substr(payment_date,1,7)=?', [agentId, period]).s;
+  const settled = get('SELECT COALESCE(SUM(amount),0) s FROM commission_settlements WHERE agent_id=? AND period=?', [agentId, period]).s;
+  return round2(round2(commission(collected, a.r)) - settled);
+}
+// K-05: after a payment changes, the months it touched that are now settled
+// beyond what was earned — reported to whoever made the change.
+function overSettledNotes(touched) {
+  const seen = new Set(), notes = [];
+  for (const { agentId, date } of touched) {
+    const period = String(date || '').slice(0, 7), key = agentId + '|' + period;
+    if (!agentId || !period || seen.has(key)) continue;
+    seen.add(key);
+    const p = pendingFor(agentId, period);
+    if (p < -0.005) notes.push(`commission for ${(get('SELECT name FROM agents WHERE id=?', [agentId]) || {}).name} in ${period} is now over-settled by RM ${(-p).toFixed(2)}`);
+  }
+  return notes;
+}
+
 function recordSettlement(body, req) {
   // parseMoney, not Number(): '0x10' and '1e2' are not amounts (G-28).
   const amount = parseMoney(body.amount);
@@ -39,6 +61,9 @@ function recordSettlement(body, req) {
   if (!agent) return { ok: false, error: 'Agent not found' };
   const period = body.period || currentMonth();
   if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(period)) return { ok: false, error: 'Invalid period' };
+  // K-05: never pay out more than was earned and is still unsettled for the month.
+  const pending = pendingFor(agent.id, period);
+  if (amount > pending + 0.005) return { ok: false, error: `Settlement exceeds the pending commission for ${period} (RM ${pending.toFixed(2)})` };
   const r = run('INSERT INTO commission_settlements (agent_id,period,amount,note,settled_by) VALUES (?,?,?,?,?)',
     [agent.id, period, amount, body.note || null, req.session.user.full_name]);
   logAction(req, 'commission_settle', 'agent', agent.id, `Settled RM ${amount} for ${period}`);
@@ -53,8 +78,9 @@ function voidSettlement(id, req) {
   return { ok: true };
 }
 
-const canView = requireRole('admin', 'manager', 'finance', 'auditor', 'agent'); // excludes client
-const canSettle = requireRole('admin', 'manager', 'finance');
+const { requirePerm, can } = require('../utils/permissions');
+const canView = requirePerm('commissions.view');
+const canSettle = requirePerm('commissions.settle');
 
 router.get('/', requireLogin, canView, (req, res) => {
   const month = req.query.month || currentMonth();
@@ -66,7 +92,7 @@ router.get('/', requireLogin, canView, (req, res) => {
     scoped ? [month, req.session.user.agent_id || -1] : [month]);
   res.render('commissions/index', {
     title: 'Commissions', rows, history, month,
-    canSettle: ['admin', 'manager', 'finance'].includes(req.session.user.role),
+    canSettle: can(req, 'commissions.settle'),
   });
 });
 
@@ -84,4 +110,4 @@ router.post('/:id/void', requireLogin, canSettle, (req, res) => {
   res.redirect(`/commissions?month=${encodeURIComponent(row.period)}&ok=Settlement+voided`);
 });
 
-module.exports = { router, commissionRows, round2, recordSettlement, voidSettlement };
+module.exports = { router, commissionRows, round2, recordSettlement, voidSettlement, pendingFor, overSettledNotes };

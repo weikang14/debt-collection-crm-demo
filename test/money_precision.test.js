@@ -21,9 +21,8 @@ test('commission settlement amount is parsed like a payment: whole sen only (G-2
   for (const bad of ['10.005', '0x10', '1e2']) {
     assert.deepStrictEqual(recordSettlement({ agent_id: 1, period: '2026-07', amount: bad }, req), { ok: false, error: 'Invalid amount' }, bad);
   }
-  const r = recordSettlement({ agent_id: 1, period: '2026-07', amount: '10.01' }, req);
-  assert.strictEqual(r.ok, true);
-  assert.strictEqual(db.get('SELECT amount FROM commission_settlements WHERE id=?', [r.id]).amount, 10.01);
+  // A well-formed amount gets past parsing; this agent has earned nothing yet, so the K-05 cap refuses it.
+  assert.match(recordSettlement({ agent_id: 1, period: '2026-07', amount: '10.01' }, req).error, /exceeds the pending commission/);
 });
 
 const { toCsv } = require('../src/utils/csv');

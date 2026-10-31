@@ -58,7 +58,7 @@
  {
   "id": "CASE-10",
   "expected": "all ledger items present",
-  "actual": "outstanding=10,696.06 settle=10,412.41 overdue=350.00 (91 days past due) 9% recovered I=1,696.06 mat=2027-01-01",
+  "actual": "outstanding=10,696.06 settle=10,412.41 overdue=972.51 (213 days past due) 9% recovered I=1,696.06 mat=2027-01-01",
   "result": "PASS",
   "note": ""
  },
@@ -72,7 +72,7 @@
  {
   "id": "CASE-12",
   "expected": "closed_at set (fully_paid covered by PAY-03/CASE-22)",
-  "actual": "[{\"id\":15,\"closed_at\":\"2026-10-31 10:54:11\"},{\"id\":19,\"closed_at\":\"2026-10-31 10:54:11\"}]",
+  "actual": "[{\"id\":15,\"closed_at\":\"2026-10-31 15:22:23\"},{\"id\":19,\"closed_at\":\"2026-10-31 15:22:23\"}]",
   "result": "PASS",
   "note": ""
  },
@@ -93,7 +93,7 @@
  {
   "id": "CASE-15",
   "expected": "Schedule, Restructure History, Payments, PTP, Calls, Tasks; schedule only with terms",
-  "actual": "positions=10861,15153,18425,18561,19342,19465",
+  "actual": "positions=10949,15410,18682,18818,19599,19722",
   "result": "PASS",
   "note": ""
  },
@@ -268,7 +268,7 @@
  {
   "id": "PAY-03",
   "expected": "Fully Paid + closed_at + event; 0.00; all Paid",
-  "actual": "max=3,214.02 attr=3214.02; Payment RCPT-2026-0007 recorded; {\"status\":\"fully_paid\",\"closed_at\":\"2026-10-31 10:54:12\",\"o\":0}; ev=\"Status changed negotiation → fully_paid\"; schedule=Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid",
+  "actual": "max=3,214.02 attr=3214.02; Payment RCPT-2026-0007 recorded; {\"status\":\"fully_paid\",\"closed_at\":\"2026-10-31 15:22:24\",\"o\":0}; ev=\"Status changed negotiation → fully_paid\"; schedule=Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid,Paid",
   "result": "PASS",
   "note": ""
  },
@@ -317,7 +317,7 @@
  {
   "id": "PAY-10",
   "expected": "Payment voided; balance back; →negotiation",
-  "actual": "Payment voided; fully_paid/0 → negotiation/17766 closed_at=null; \"Payment RCPT-2026-D002 voided (RM 17766.00)\"",
+  "actual": "Payment voided — note: commission for Nurul Ain in 2026-10 is now over-settled by RM 161.95; fully_paid/0 → negotiation/17766 closed_at=null; \"Payment RCPT-2026-D002 voided (RM 17766.00)\"",
   "result": "PASS",
   "note": ""
  },

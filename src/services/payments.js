@@ -10,9 +10,9 @@ function statusAfterPayment(current, outstanding, paymentCount) {
   if (TERMINAL_STATUSES.includes(current)) return current;
   if (outstanding <= 0) return 'fully_paid';
   if (paymentCount > 0) return 'partial_paid';
-  // Outstanding reappeared with no payments left (e.g. a payment was voided):
-  // a stale fully_paid must revert; any other status is left untouched.
-  if (current === 'fully_paid') return 'negotiation';
+  // No payments left (e.g. the only one was voided): a stale fully_paid or
+  // partial_paid reverts to negotiation (O-10); any other status is left untouched.
+  if (current === 'fully_paid' || current === 'partial_paid') return 'negotiation';
   return current;
 }
 // A pending PTP outranks partial_paid: a live promise-to-pay case shouldn't
@@ -100,6 +100,7 @@ function caseBalance(c, payments, asOf, restructures = []) {
   const segs = loanSegments(c, restructures);
   const paid = payments.reduce((s, p) => s + p.amount, 0);
   let remP = c.principal_amount, unpaidInt = 0, paidInt = 0, excess = 0, pi = 0;
+  const parts = []; // K-04: each payment's interest / principal share, in payment order
   segs.forEach((s, k) => {
     const next = segs[k + 1];
     // Interest stops at a segment's maturity — whether the accrual runs to the
@@ -114,6 +115,7 @@ function caseBalance(c, payments, asOf, restructures = []) {
       const p = payments[pi];
       if (accrues) unpaidInt += accrue(s, remP, last, capped(p.payment_date));
       const toInt = Math.min(p.amount, unpaidInt); unpaidInt -= toInt; paidInt += toInt;
+      parts.push({ interest: toInt, principal: Math.min(p.amount - toInt, remP) });
       excess += Math.max(0, p.amount - toInt - remP);
       remP = Math.max(0, remP - (p.amount - toInt));
       // Never move the accrual origin backwards: a payment dated before interest
@@ -124,7 +126,7 @@ function caseBalance(c, payments, asOf, restructures = []) {
   });
   return { principal: c.principal_amount, interest: round2(paidInt + unpaidInt), paid,
     outstanding: round2(Math.max(0, remP + unpaidInt)),
-    principalRemaining: round2(remP), interestUnpaid: round2(unpaidInt), excess: round2(excess) };
+    principalRemaining: round2(remP), interestUnpaid: round2(unpaidInt), excess: round2(excess), parts };
 }
 
 const loadLedger = caseId => ({
@@ -183,9 +185,16 @@ const ratePct = r => String(Number(r.toFixed(4)));
 function recomputeOutstanding(caseId) {
   const c = get('SELECT principal_amount, interest_amount, interest_mode, interest_rate, interest_from, opened_at, maturity_date FROM cases WHERE id = ?', [caseId]);
   if (!c) return 0; // case gone (e.g. recompute-on-load of an out-of-scope/missing id)
-  const payments = all('SELECT amount, payment_date FROM payments WHERE case_id = ? ORDER BY payment_date, id', [caseId]);
+  const payments = all('SELECT id, amount, payment_date, interest_part, principal_part FROM payments WHERE case_id = ? ORDER BY payment_date, id', [caseId]);
   const restructures = all('SELECT * FROM case_restructures WHERE case_id = ? ORDER BY effective_date, id', [caseId]);
   const b = caseBalance(c, payments, undefined, restructures);
+  // K-04: store each payment's interest / principal share. A backdated, edited or
+  // voided payment can move the split of later ones, so every row is re-checked;
+  // only changed rows are written.
+  payments.forEach((p, i) => {
+    const ip = round2(b.parts[i].interest), pp = round2(b.parts[i].principal);
+    if (p.interest_part !== ip || p.principal_part !== pp) run('UPDATE payments SET interest_part=?, principal_part=? WHERE id=?', [ip, pp, p.id]);
+  });
   // interest_charged caches total interest for every mode. interest_amount is the
   // fixed-mode input and is never overwritten: a restructure can switch a fixed
   // loan to an accrual mode, and segment 0 still needs its original lump.
@@ -201,7 +210,9 @@ function refreshStaleAccruals() {
   const today = todayMYT();
   if (refreshedOn === today) return;
   refreshedOn = today;
-  for (const { id } of all("SELECT id FROM cases WHERE interest_mode IN ('monthly','daily')")) recomputeOutstanding(id);
+  // ...and any case with a payment not yet split (K-04: rows from before the split existed).
+  for (const { id } of all(`SELECT id FROM cases WHERE interest_mode IN ('monthly','daily')
+    OR id IN (SELECT case_id FROM payments WHERE interest_part IS NULL)`)) recomputeOutstanding(id);
 }
 
 // The 4 DB writes of a payment, WITHOUT a transaction wrapper or audit log, so a
@@ -211,15 +222,27 @@ function refreshStaleAccruals() {
 function paymentWrites(caseId, p) {
   const receipt_no = nextReceiptNo();
   const by = p.created_by;
-  // agent_id = who held the case when the money came in, so commission stays
-  // with the collector after a reassignment (D-11).
+  // agent_id = who was responsible for the case on the payment date, so a
+  // payment entered after a reassignment still credits its collector (G-31).
   run(`INSERT INTO payments (case_id, receipt_no, payment_date, amount, method, reference, bank, remark, created_by, agent_id)
-       VALUES (?,?,?,?,?,?,?,?,?,(SELECT agent_id FROM cases WHERE id = ?))`,
-    [caseId, receipt_no, p.payment_date, Number(p.amount), p.method || 'bank_transfer', p.reference || null, p.bank || null, p.remark || null, by, caseId]);
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+    [caseId, receipt_no, p.payment_date, Number(p.amount), p.method || 'bank_transfer', p.reference || null, p.bank || null, p.remark || null, by, agentOn(caseId, p.payment_date)]);
   run(`INSERT INTO timeline_events (case_id, event_type, content, created_by) VALUES (?,?,?,?)`,
     [caseId, 'payment', `Payment ${receipt_no}: RM ${Number(p.amount).toFixed(2)} via ${p.method || 'bank_transfer'}${p.remark ? ' — ' + p.remark : ''}`, by]);
   const outstanding = resyncCaseStatus(caseId, by);
   return { receipt_no, outstanding, status: get('SELECT status FROM cases WHERE id = ?', [caseId]).status };
+}
+// G-31 / N-12 B: the agent responsible for a case on a date — the latest
+// assignment from that day or earlier; before the first one, the first agent.
+function agentOn(caseId, date) {
+  const r = get('SELECT agent_id FROM case_assignments WHERE case_id = ? AND from_date <= ? ORDER BY from_date DESC, id DESC LIMIT 1', [caseId, String(date).slice(0, 10)])
+    || get('SELECT agent_id FROM case_assignments WHERE case_id = ? ORDER BY from_date, id LIMIT 1', [caseId])
+    || get('SELECT agent_id FROM cases WHERE id = ?', [caseId]);
+  return r ? r.agent_id : null;
+}
+// Record who is responsible for a case from today on (create, reassign, unassign).
+function recordAssignment(caseId, agentId, by) {
+  run('INSERT INTO case_assignments (case_id, agent_id, from_date, created_by) VALUES (?,?,?,?)', [caseId, agentId ?? null, todayMYT(), by || null]);
 }
 // F-24: keep a payment's row as it stands, before an edit or void changes it.
 function snapshotPayment(paymentId, change, reason, by) {
@@ -253,5 +276,5 @@ function resyncCaseStatus(caseId, by) {
   }
   return outstanding;
 }
-module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, refreshStaleAccruals, caseBalance, applyPayment, paymentWrites, snapshotPayment,
+module.exports = { TERMINAL_STATUSES, statusAfterPayment, recomputeOutstanding, refreshStaleAccruals, caseBalance, applyPayment, paymentWrites, snapshotPayment, agentOn, recordAssignment,
   resyncCaseStatus, dailyRate, daysBetween, accrue, monthsSince, localDate, settlementOn, overpayError, nominalAnnualRate, maxAnnualRate, rateCapError, ratePct, LEGAL_MAX_RATE };

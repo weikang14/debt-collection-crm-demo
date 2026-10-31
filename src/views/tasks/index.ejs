@@ -21,7 +21,7 @@
   </select></label>
   <button class="btn btn-gold" type="submit">Filter</button>
 </form>
-<% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+<% if ((typeof can === 'function' ? can : () => true)('tasks.manage')) { %>
 <details class="new-panel">
   <summary class="btn btn-gold">+ New Task</summary>
   <form class="card form" method="post" action="/tasks/new">
@@ -56,7 +56,7 @@
   <td><% if (t.status==='pending' && t.due_date && h.daysOverdue(t.due_date) > 0) { %><span class="badge is-red"><%= h.dateFmt(t.due_date) %> · overdue</span><% } else if (t.due_date) { %><%= h.dateFmt(t.due_date) %><% } else { %>—<% } %></td>
   <td><span class="badge <%= t.status==='done'?'is-green':'is-gold' %>"><%= t.status %></span></td>
   <td>
-    <% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+    <% if ((typeof can === 'function' ? can : () => true)('tasks.manage')) { %>
     <div class="row-actions">
       <button type="button" class="btn btn-sm" onclick="editTask(this)"
         data-id="<%= t.id %>" data-title="<%= t.title %>" data-type="<%= t.type %>"
@@ -67,7 +67,7 @@
   </td>
 </tr>
 <% }) %></tbody></table><% } %>
-<% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+<% if ((typeof can === 'function' ? can : () => true)('tasks.manage')) { %>
 <dialog id="dlg-task-edit" class="modal"><form class="form" id="task-edit-form" method="post" action="">
   <h3>Edit Task</h3>
   <label>Title <input type="text" name="title" id="te-title" required></label>

@@ -50,7 +50,7 @@ const PRIOS = ['low','medium','high','urgent'];
 
 function clearAllTables() {
   init();
-  for (const t of ['audit_logs','access_logs','call_logs','commission_settlements','tasks','ptps','payment_history','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users','number_sequences']) {
+  for (const t of ['audit_logs','access_logs','case_assignments','user_permissions','role_permissions','call_logs','commission_settlements','tasks','ptps','payment_history','payments','timeline_events','case_restructures','cases','debtors','agents','clients','users','number_sequences']) {
     db.exec(`DELETE FROM ${t}`);
     db.exec(`DELETE FROM sqlite_sequence WHERE name='${t}'`);
   }
@@ -141,6 +141,7 @@ function insertDemoRows() {
     run('INSERT OR IGNORE INTO payments (case_id,receipt_no,payment_date,amount,method,reference,bank,created_by,agent_id,is_demo) VALUES (?,?,?,?,?,?,?,?,(SELECT agent_id FROM cases WHERE id=?),1)',
       [c.id, `RCPT-${year}-D${String(idx + 1).padStart(3, '0')}`, payDate, amt, 'bank_transfer', 'TXN' + (1000 + idx), 'Maybank', 'Finance Officer', c.id]);
     run('INSERT OR IGNORE INTO timeline_events (case_id,event_type,content,created_by,is_demo) VALUES (?,?,?,?,1)', [c.id, 'payment', `Payment received RM ${amt.toFixed(2)}`, 'Finance Officer']);
+    recomputeOutstanding(c.id); // splits the payment into interest / principal (K-04)
   });
 
   // Case 5's fulfilled PTP is the promise its demo payment kept: same amount, same day.
@@ -178,6 +179,7 @@ function insertDemoUsers() {
 
 function seedDemo() {
   clearAllTables();
+  require('../utils/permissions').seedRoleDefaults(); // a reset brings the default permissions back
   insertDemoRows();
   insertDemoUsers();
 }
@@ -205,6 +207,7 @@ function deleteDemoRows() {
     AND id NOT IN (SELECT case_id FROM call_logs)
     AND id NOT IN (SELECT case_id FROM timeline_events)
     AND id NOT IN (SELECT case_id FROM case_restructures)`);
+  run('DELETE FROM case_assignments WHERE case_id NOT IN (SELECT id FROM cases)');
   run(`DELETE FROM debtors WHERE is_demo=1 AND id NOT IN (SELECT debtor_id FROM cases)`);
   // A demo agent stays while trial rows (cases, tasks, settlements, calls, the
   // payments it collected) still point at it.
@@ -213,7 +216,8 @@ function deleteDemoRows() {
     AND id NOT IN (SELECT agent_id FROM tasks WHERE agent_id IS NOT NULL)
     AND id NOT IN (SELECT agent_id FROM commission_settlements)
     AND id NOT IN (SELECT agent_id FROM call_logs WHERE agent_id IS NOT NULL)
-    AND id NOT IN (SELECT agent_id FROM payments WHERE agent_id IS NOT NULL)`);
+    AND id NOT IN (SELECT agent_id FROM payments WHERE agent_id IS NOT NULL)
+    AND id NOT IN (SELECT agent_id FROM case_assignments WHERE agent_id IS NOT NULL)`);
   run(`DELETE FROM clients WHERE is_demo=1 AND id NOT IN (SELECT client_id FROM cases)`);
 }
 

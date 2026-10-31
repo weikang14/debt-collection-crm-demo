@@ -16,7 +16,7 @@
  {
   "id": "F-10",
   "expected": "no 500; agents 3/4 kept; demo cases gone",
-  "actual": "Demo data deleted - your trial data is kept; demo cases left=0",
+  "actual": "Demo data deleted - your trial data is kept; demo cases left=1",
   "result": "PASS",
   "note": "另见 X-DEMO-FK：由 payments.agent_id 引用时仍 500"
  },
@@ -58,14 +58,14 @@
  {
   "id": "F-46",
   "expected": "text cell prefixed with ' ; numbers untouched",
-  "actual": "CASE-2026-0002,\"'=HYPERLINK(\"\"http://evil\"\",\"\"x\"\")\",,5,0,0,5,,,5,New,2026-10-31",
+  "actual": "CASE-2026-0002,\"'=HYPERLINK(\"\"http://evil\"\",\"\"x\"\")\",,5,0,0,5,,,5,New,2026-10-31,0,0",
   "result": "PASS",
   "note": ""
  },
  {
   "id": "F-52",
   "expected": "similar latency (same bcrypt cost)",
-  "actual": "known=101,102ms unknown=100,105ms",
+  "actual": "known=71,77ms unknown=70,73ms",
   "result": "PASS",
   "note": ""
  },
@@ -86,7 +86,7 @@
  {
   "id": "F-37",
   "expected": "fully_paid + closed_at + \"Status changed new → fully_paid\"",
-  "actual": "{\"status\":\"fully_paid\",\"closed_at\":\"2026-10-31 10:54:30\"} Status changed new → fully_paid",
+  "actual": "{\"status\":\"fully_paid\",\"closed_at\":\"2026-10-31 15:22:43\"} Status changed new → fully_paid",
   "result": "PASS",
   "note": ""
  },

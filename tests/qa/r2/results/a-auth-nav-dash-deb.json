@@ -58,7 +58,7 @@
  {
   "id": "AUTH-10",
   "expected": "footer shows current version; /version newest first",
-  "actual": "footer v1.13.0; /version first=1.13.0 (1.13.0,1.13.0,1.12.0); src/version.js 1.13.0",
+  "actual": "footer v1.14.0; /version first=1.14.0 (1.14.0,1.14.0,1.13.0); src/version.js 1.14.0",
   "result": "PASS",
   "note": ""
  },
@@ -142,7 +142,7 @@
  {
   "id": "DASH-06",
   "expected": "opened +1, manual Closed +1, auto Fully Paid +1",
-  "actual": "opened 0→1; closed 0→1→2; Status updated; Payment RCPT-2026-0003 recorded; c12=fully_paid/2026-10-31 10:54:08",
+  "actual": "opened 0→1; closed 0→1→2; Status updated; Payment RCPT-2026-0003 recorded; c12=fully_paid/2026-10-31 15:22:19",
   "result": "PASS",
   "note": ""
  },
@@ -177,7 +177,7 @@
  {
   "id": "DASH-11",
   "expected": "call on top, ≤12 items, case link",
-  "actual": "items=12 first=\" Call: answered (30s) — DASH-11 call CASE-2026-D013 · System Admin · 2026-10-31 18:54 \"",
+  "actual": "items=12 first=\" Call: answered (30s) — DASH-11 call CASE-2026-D013 · System Admin · 2026-10-31 23:22 \"",
   "result": "PASS",
   "note": ""
  },

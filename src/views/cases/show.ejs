@@ -1,18 +1,19 @@
 <% layout('layout'); -%>
+<% const may = typeof can === 'function' ? can : () => true; %>
 <div class="page-head">
   <h1><%= c.case_no %> <%- include('../partials/statusBadge', { status: c.status }) %></h1>
   <div class="head-actions">
     <% if (!readOnly) { %>
-      <% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %><button type="button" class="btn btn-gold" onclick="dlg('dlg-payment')">Record Payment</button><% } %>
-      <% if (restructureForm && ['admin','manager'].includes(currentUser.role)) { %><button type="button" class="btn" onclick="dlg('dlg-restructure')">Restructure</button><% } %>
-      <% if (['admin','manager','agent'].includes(currentUser.role) && !frozen) { %>
-        <button type="button" class="btn" onclick="dlg('dlg-ptp')">New PTP</button>
-        <button type="button" class="btn" onclick="dlg('dlg-plan')">New Plan</button>
-        <button type="button" class="btn" onclick="dlg('dlg-call')">Log Call</button>
+      <% if (may('payments.record')) { %><button type="button" class="btn btn-gold" onclick="dlg('dlg-payment')">Record Payment</button><% } %>
+      <% if (restructureForm && may('cases.restructure')) { %><button type="button" class="btn" onclick="dlg('dlg-restructure')">Restructure</button><% } %>
+      <% if (!frozen) { %>
+        <% if (may('ptps.manage')) { %><button type="button" class="btn" onclick="dlg('dlg-ptp')">New PTP</button>
+        <button type="button" class="btn" onclick="dlg('dlg-plan')">New Plan</button><% } %>
+        <% if (may('calls.log')) { %><button type="button" class="btn" onclick="dlg('dlg-call')">Log Call</button><% } %>
       <% } %>
     <% } %>
     <a class="btn" href="/cases/<%= c.id %>/statement" target="_blank">Print statement</a>
-    <% if (['admin','manager'].includes(currentUser.role)) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
+    <% if (may('cases.edit')) { %><a class="btn" href="/cases/<%= c.id %>/edit">Edit Case</a><% } %>
     <button type="button" class="btn icon-btn" title="Records" aria-label="Records" onclick="dlg('dlg-records')">&#9776;</button>
   </div>
 </div>
@@ -54,7 +55,7 @@
 
 <div class="case-main">
     <div class="card kv">
-      <% if (!readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
+      <% if (!readOnly && may('cases.status')) { %>
       <div class="kv-head">
         <% if (!statuses.includes(c.status)) { %>
         <%# D-12 / G-02: an agent can't move a closed, frozen or paid-off case. %>
@@ -96,7 +97,7 @@
       <div><span>Remark</span><%= c.remark||'—' %></div>
     </div>
 
-    <% if (!readOnly && ['admin','manager','agent'].includes(currentUser.role)) { %>
+    <% if (!readOnly && may('notes.write')) { %>
     <form class="add-note" method="post" action="/cases/<%= c.id %>/notes">
       <input name="content" placeholder="Add a note…" required>
       <button class="btn btn-gold" type="submit">Add</button>
@@ -107,9 +108,9 @@
     <% if (!timeline.length) { %><%- include('../partials/empty', { msg: 'No activity yet.' }) %><% } else { %>
     <% const evClass = { payment:'is-green', ptp_fulfilled:'is-green', ptp_broken:'is-red', ptp_created:'is-gold', status_change:'is-blue', legal:'is-red', call:'is-blue', restructure:'is-gold' }; %>
     <ul class="timeline">
-    <% const canEditNote = !readOnly && ['admin','manager','agent'].includes(currentUser.role); %>
+    <% const canEditNote = !readOnly && may('notes.write'); %>
     <% timeline.forEach(ev => { %><li><span class="badge <%= evClass[ev.event_type]||'is-neutral' %>"><%= ev.event_type %></span>
-      <% if (ev.event_type==='note' && canEditNote && (currentUser.role !== 'agent' || ev.created_by === currentUser.full_name)) { %>
+      <% if (ev.event_type==='note' && canEditNote && (may('notes.any') || ev.created_by === currentUser.full_name)) { %>
         <%= ev.content %>
         <span class="note-actions">
           <button type="button" class="btn btn-sm" onclick="editNote(this)" data-id="<%= ev.id %>" data-content="<%= ev.content %>">Edit</button>
@@ -135,9 +136,10 @@
       // earliest unpaid period gets a Pay button — paying a later row would
       // still land on the earlier ones. The prefill is capped at today's
       // settlement amount — more than that is refused as an overpayment (D-02).
-      const canPay = !readOnly && ['admin','manager','finance','agent'].includes(currentUser.role);
+      const canPay = !readOnly && may('payments.record');
       const nextDue = schedule.findIndex(r => r.outstanding_amount > 0);
     %>
+    <% if (['monthly', 'daily'].includes((lastRestructure || c).interest_mode)) { %><p class="hint" style="margin:0 0 6px">Planned instalments. Overdue and days past due follow the ledger: interest accrued on the principal actually owed (N-06).</p><% } %>
     <%- include('../partials/scheduleTable', { rows: schedule, pay: canPay ? { nextDue, cap: settlement } : null }) %>
     </section>
     <% } %>
@@ -145,7 +147,7 @@
     <% if (scheduleHistory.length) { %>
     <section class="rec-section">
     <h2>Restructure History</h2>
-    <% const canManageRs = !readOnly && ['admin','manager'].includes(currentUser.role); %>
+    <% const canManageRs = !readOnly && may('cases.restructure'); %>
     <% scheduleHistory.slice().reverse().forEach(({ restructure: r, rows }) => { %>
       <div class="card" style="margin-bottom:0.75rem;">
         <div><b><%= h.dateFmt(r.effective_date) %></b> · <%= h.interestTerms(r.interest_mode, r.interest_rate, r.interest_amount) %> · <%= r.tenure %> months · by <%= r.created_by || '—' %></div>
@@ -165,12 +167,12 @@
     <% } %>
 
     <section class="rec-section">
-    <% const canEditPay = !readOnly && ['admin','manager','finance'].includes(currentUser.role); %>
+    <% const canEditPay = !readOnly && may('payments.correct'); %>
     <h2>Payments</h2>
     <% if (!payments.length) { %><%- include('../partials/empty', { msg: 'No payments recorded.' }) %><% } else { %>
-    <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th>Method</th><th>Remark</th><% if (canEditPay) { %><th>Actions</th><% } %></tr></thead>
+    <table class="data"><thead><tr><th>Receipt No</th><th>Date</th><th class="num">Amount</th><th class="num">Interest</th><th class="num">Principal</th><th>Method</th><th>Remark</th><% if (canEditPay) { %><th>Actions</th><% } %></tr></thead>
     <tbody><% payments.forEach(p => { %><tr><td class="mono"><a href="/cases/<%= c.id %>/payments/<%= p.id %>/receipt" target="_blank" title="Print receipt"><%= p.receipt_no %></a></td><td><%= h.dateFmt(p.payment_date) %></td>
-    <td class="num"><%= h.money(p.amount) %></td><td><%= p.method %></td><td><%= p.remark || '' %></td>
+    <td class="num"><%= h.money(p.amount) %></td><td class="num"><%= p.interest_part == null ? '—' : h.money(p.interest_part) %></td><td class="num"><%= p.principal_part == null ? '—' : h.money(p.principal_part) %></td><td><%= p.method %></td><td><%= p.remark || '' %></td>
     <% if (canEditPay) { %><td><% if (lock && String(p.payment_date).slice(0, 10) <= lock) { %><small style="color:var(--muted)">Locked · restructured</small><% } else { %><div style="display:flex; gap:0.5rem;">
       <button type="button" class="btn btn-sm" onclick="openEditPayment(this)" data-id="<%= p.id %>" data-amount="<%= p.amount %>" data-date="<%= String(p.payment_date).slice(0, 10) %>" data-method="<%= p.method %>" data-ref="<%= p.reference||'' %>" data-bank="<%= p.bank||'' %>">Edit</button>
       <form method="post" action="/cases/<%= c.id %>/payments/<%= p.id %>/void" style="margin:0;" data-receipt="<%= p.receipt_no %>" onsubmit="return voidReason(this)"><input type="hidden" name="reason"><button class="btn btn-sm" type="submit">Void</button></form>
@@ -192,7 +194,7 @@
       // Group by plan_id for headers/progress. Nulls (standalone PTPs) stay ungrouped.
       const planGroups = {};
       ptps.forEach(p => { if (p.plan_id) { (planGroups[p.plan_id] ||= []).push(p); } });
-      const canManagePtp = !readOnly && !frozen && ['admin','manager','agent'].includes(currentUser.role);
+      const canManagePtp = !readOnly && !frozen && may('ptps.manage');
       let lastPlan = undefined;
     %>
     <table class="data"><thead><tr><th>Installment</th><th class="num">Amount</th><th>Due Date</th><th>Status</th><th>Actions</th></tr></thead>
@@ -243,7 +245,7 @@
 </dialog>
 
 <% if (!readOnly) { %>
-<% if (restructureForm && ['admin','manager'].includes(currentUser.role)) { %>
+<% if (restructureForm && may('cases.restructure')) { %>
 <dialog id="dlg-restructure" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/restructures">
   <h3>Restructure Loan</h3>
   <p style="margin:0 0 0.5rem;color:var(--muted);font-size:13px;">Remaining principal RM <%= h.money(restructureForm.cut.principal) %> · unpaid interest RM <%= h.money(restructureForm.cut.arrears) %> as of today. Unpaid interest is carried as arrears (recalculated for the effective date you pick) and does not earn further interest.</p>
@@ -261,7 +263,7 @@
   <div class="form-actions"><button class="btn btn-gold" type="submit">Restructure</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
 <% } %>
-<% if (['admin','manager','finance','agent'].includes(currentUser.role)) { %>
+<% if (may('payments.record')) { %>
 <dialog id="dlg-payment" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/payments">
   <h3>Record Payment</h3>
   <% if (frozen) { %><div class="alert is-red">This case is <%= h.caseStatusLabel(c.status) %>. Payments can still be received, but the reason must be recorded.</div><% } %>
@@ -274,7 +276,7 @@
   <div class="form-actions"><button class="btn btn-gold" type="submit">Add Payment</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
 <% } %>
-<% if (['admin','manager','finance'].includes(currentUser.role)) { %>
+<% if (may('payments.correct')) { %>
 <dialog id="dlg-payment-edit" class="modal"><form class="form" id="payment-edit-form" method="post" action="">
   <h3>Edit Payment</h3>
   <label>Date <input type="date" name="payment_date" id="pe-date" required max="<%= h.todayMYT() %>"<% if (lock) { %> min="<%= lockMin %>"<% } %>></label>
@@ -285,7 +287,7 @@
   <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><button class="btn" type="button" onclick="this.closest('dialog').close()">Cancel</button></div>
 </form></dialog>
 <% } %>
-<% if (['admin','manager','agent'].includes(currentUser.role)) { %>
+<% if (may('ptps.manage') || may('calls.log') || may('notes.write')) { %>
 <dialog id="dlg-ptp" class="modal"><form class="form" method="post" action="/cases/<%= c.id %>/ptps">
   <h3>New PTP</h3>
   <label>Amount (RM) <small style="color:var(--muted)">· with other open promises, at most the settlement amount on the due date (today RM <%= h.money(settlement) %>)</small> <input type="number" step="0.01" min="0.01" max="<%= c.outstanding_amount %>" name="amount" required></label>

@@ -77,8 +77,8 @@ def section(html, h2):
     j = html.find('</section>', i)
     return html[i:j if j > 0 else None]
 def payment_rows(html):
-    # v1.12.0 (F-25): the receipt number links to its printable receipt.
-    return re.findall(r'<tr><td class="mono">(?:<a [^>]*>)?(RCPT-[\d-]+)(?:</a>)?</td><td>([^<]*)</td>\s*<td class="num">([^<]*)</td><td>([^<]*)</td><td>([^<]*)</td>', section(html, 'Payments'))
+    # v1.12.0 (F-25): the receipt number links to its printable receipt; v1.14.0 (K-04): Interest and Principal columns after Amount.
+    return re.findall(r'<tr><td class="mono">(?:<a [^>]*>)?(RCPT-[\d-]+)(?:</a>)?</td><td>([^<]*)</td>\s*<td class="num">([^<]*)</td>(?:<td class="num">[^<]*</td>){2}<td>([^<]*)</td><td>([^<]*)</td>', section(html, 'Payments'))
 def ptp_rows(html):
     return [(a.strip(), num(b), c, d) for a, b, c, d in re.findall(r'<tr><td>([^<]*)</td>\s*<td class="num">([^<]*)</td><td>([^<]*)</td>\s*<td><span class="badge [^"]*">([^<]*)</span>', section(html, 'Promise to Pay'))]
 def timeline(html):
@@ -378,7 +378,7 @@ with sync_playwright() as pw:
     def b1():
         menus = {}
         expect = {
-            'admin': ['Dashboard', 'Debtors', 'Cases', 'Tasks', 'Agents', 'Users', 'Reports', 'Commissions', 'Settings', 'Demo Data', 'Audit Log', 'Search'],
+            'admin': ['Dashboard', 'Debtors', 'Cases', 'Tasks', 'Agents', 'Users', 'Permissions', 'Reports', 'Commissions', 'Settings', 'Demo Data', 'Audit Log', 'Search'],
             'manager': ['Dashboard', 'Debtors', 'Cases', 'Tasks', 'Agents', 'Reports', 'Commissions', 'Search'],
             'agent1': ['Dashboard', 'Debtors', 'Cases', 'Tasks', 'Reports', 'Commissions', 'Search'],
             'agent2': ['Dashboard', 'Debtors', 'Cases', 'Tasks', 'Reports', 'Commissions', 'Search'],
@@ -386,7 +386,7 @@ with sync_playwright() as pw:
             'finance': ['Dashboard', 'Debtors', 'Cases', 'Tasks', 'Reports', 'Commissions', 'Search'],
             'auditor': ['Dashboard', 'Debtors', 'Cases', 'Tasks', 'Agents', 'Reports', 'Commissions', 'Audit Log', 'Search'],
         }
-        hrefs = {'Dashboard': '/', 'Debtors': '/debtors', 'Cases': '/cases', 'Tasks': '/tasks', 'Agents': '/agents', 'Users': '/users', 'Reports': '/reports',
+        hrefs = {'Dashboard': '/', 'Debtors': '/debtors', 'Cases': '/cases', 'Tasks': '/tasks', 'Agents': '/agents', 'Users': '/users', 'Permissions': '/users/permissions', 'Reports': '/reports',
                  'Commissions': '/commissions', 'Settings': '/settings', 'Demo Data': '/demo-tools', 'Audit Log': '/audit-log', 'Search': '/search'}
         bad = []
         for u in expect:
@@ -400,7 +400,7 @@ with sync_playwright() as pw:
                 if (name in expect[u]) != (s == 200): bad.append(f'{u} {href}→{s}')
         rec('B-1', '7 个账号都能登录，菜单与权限一致（菜单里的页面 200，菜单外的 403/404）', not bad,
             f'全部登录成功；菜单: ' + '; '.join(f'{u}={len(m)}项' for u, m in menus.items()) + f'；不一致: {bad or "无"}',
-            '期望值 = QA 手册 v1.2 第 3 章“侧边栏菜单对照”')
+            '期望值 = QA 手册第 3 章“侧边栏菜单对照”（v1.14 起 admin 多 Permissions）')
     run('B-1', '登录与菜单权限', b1)
 
     def b2():
