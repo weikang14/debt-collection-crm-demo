@@ -177,7 +177,7 @@
  {
   "id": "X-COOKIE",
   "expected": "session cookie flags: HttpOnly, SameSite=Lax (Secure only over HTTPS — K-06)",
-  "actual": "connect.sid=…; Path=/; Expires=Sat, 31 Oct 2026 17:22:39 GMT; HttpOnly; SameSite=Lax",
+  "actual": "connect.sid=…; Path=/; Expires=Sat, 31 Oct 2026 17:50:25 GMT; HttpOnly; SameSite=Lax",
   "result": "PASS",
   "note": ""
  },

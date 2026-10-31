@@ -30,7 +30,8 @@ CREATE TABLE IF NOT EXISTS debtors (
   guarantor_name TEXT, guarantor_phone TEXT,
   remark TEXT,
   is_demo INTEGER NOT NULL DEFAULT 0,
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  anonymized_at TEXT -- F-35: personal data removed after the retention period
 );
 
 CREATE TABLE IF NOT EXISTS agents (
@@ -257,5 +258,7 @@ CREATE TABLE IF NOT EXISTS settings (
   logo TEXT NOT NULL DEFAULT '',
   -- Legal ceiling on a loan's nominal annual rate, in % (checked on case and restructure terms).
   max_annual_rate REAL NOT NULL DEFAULT 18,
+  -- F-35: years after a debtor's last case closes before their personal data is removed.
+  retention_years INTEGER NOT NULL DEFAULT 7,
   updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );

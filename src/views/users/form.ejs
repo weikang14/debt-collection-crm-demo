@@ -6,7 +6,7 @@
   <label>Password <input name="password" type="password" required minlength="8" autocomplete="new-password"></label>
   <label>Role
     <select name="role" id="role-select">
-      <% roles.forEach(r => { %><option value="<%= r %>"><%= r %></option><% }) %>
+      <% roles.forEach(r => { %><option value="<%= r %>" <%= r === defaultRole ? 'selected' : '' %>><%= r %></option><% }) %>
     </select>
   </label>
   <label id="agent-field" style="display:none">Linked Agent <span class="hint">(required for agent accounts)</span>

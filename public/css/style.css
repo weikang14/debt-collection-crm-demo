@@ -374,6 +374,13 @@ label {
   color: var(--muted);
   margin-bottom: 14px;
 }
+/* A checkbox with its text on one line. */
+label.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-text);
+}
 
 input, select, textarea {
   font-family: var(--font-body);

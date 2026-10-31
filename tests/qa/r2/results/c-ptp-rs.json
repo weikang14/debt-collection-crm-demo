@@ -289,7 +289,7 @@
  {
   "id": "RS-25",
   "expected": "cut principal = 10000 − (1000 − 329.03) ; arrears 0; Undo still offered",
-  "actual": "unpaid before=329.03; dialog=9,329.03,0.00; cut=9329.03/0; undo=true; opened=2026-10-31 15:22:29",
+  "actual": "unpaid before=329.03; dialog=9,329.03,0.00; cut=9329.03/0; undo=true; opened=2026-10-31 15:50:16",
   "result": "PASS",
   "note": ""
  }

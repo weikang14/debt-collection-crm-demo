@@ -185,3 +185,49 @@ test('2: a user form without the permission boxes leaves the user on the role de
   assert.ok(!permsFor({ id: u.id, role: 'finance' }).has('payments.record'));
   assert.match(db.get("SELECT details FROM audit_logs WHERE entity_type='user' ORDER BY id DESC").details, /permissions removed: .*payments\.record/);
 });
+
+test('F-35: personal data is removed only for debtors past the retention period, on confirmation', () => {
+  const settingsRouter = require('../src/routes/settings');
+  const { dueForRemoval } = require('../src/services/retention');
+  db.run('INSERT OR IGNORE INTO settings (id) VALUES (1)');
+  const yrs = n => dayjs(today).subtract(n, 'year').format('YYYY-MM-DD');
+  db.run("INSERT INTO debtors (id,name,ic_passport,phone,salary,guarantor_name) VALUES (901,'Old Closed','800101-01-0001','012',3000,'G'),(902,'Recent Closed','x','y',1,'g'),(903,'Old Open','x','y',1,'g')");
+  // 901 closed 8 years ago; 902 closed 5 years ago; 903 opened 9 years ago and still in negotiation.
+  db.run(`INSERT INTO cases (id,case_no,client_id,debtor_id,principal_amount,status,opened_at,closed_at,remark) VALUES
+    (901,'RET-1',1,901,1000,'closed',?,?,'secret'),(902,'RET-2',1,902,1000,'fully_paid',?,?,NULL),(903,'RET-3',1,903,1000,'negotiation',?,NULL,NULL)`,
+  [yrs(9) + ' 00:00:00', yrs(8) + ' 00:00:00', yrs(9) + ' 00:00:00', yrs(5) + ' 00:00:00', yrs(9) + ' 00:00:00']);
+  db.run("INSERT INTO call_logs (case_id,result,notes,phone) VALUES (901,'answered','talked to his wife','0123')");
+  db.run("INSERT INTO timeline_events (case_id,event_type,content) VALUES (901,'note','lives at Jalan X'),(901,'status_change','Status changed negotiation → closed')");
+  db.run("INSERT INTO payments (case_id,receipt_no,payment_date,amount,remark) VALUES (901,'RET-R1',?,1000,'cash from brother')", [yrs(8)]);
+  assert.deepStrictEqual(dueForRemoval(today).list.map(d => d.id).filter(id => id >= 901), [901]);
+
+  assert.match(decodeURIComponent(call(settingsRouter, 'post', '/anonymize', { body: {} }).redirect), /err=Tick the box/);
+  assert.strictEqual(db.get('SELECT anonymized_at FROM debtors WHERE id=901').anonymized_at, null);
+  assert.match(decodeURIComponent(call(settingsRouter, 'post', '/anonymize', { body: { confirm: '1' } }).redirect), /ok=Personal data removed for \d+ debtor/);
+  const d = db.get('SELECT * FROM debtors WHERE id=901');
+  assert.deepStrictEqual([d.name, d.ic_passport, d.phone, d.salary, d.guarantor_name], ['Anonymized debtor #901', null, null, null, null]);
+  assert.ok(d.anonymized_at);
+  assert.deepStrictEqual({ ...db.get('SELECT notes, phone FROM call_logs WHERE case_id=901') }, { notes: null, phone: null });
+  assert.strictEqual(db.get("SELECT content FROM timeline_events WHERE case_id=901 AND event_type='note'").content, '[removed after the retention period]');
+  assert.match(db.get("SELECT content FROM timeline_events WHERE case_id=901 AND event_type='status_change'").content, /closed/);
+  assert.deepStrictEqual({ ...db.get("SELECT receipt_no, amount, remark FROM payments WHERE case_id=901") }, { receipt_no: 'RET-R1', amount: 1000, remark: null });
+  assert.strictEqual(db.get('SELECT remark FROM cases WHERE id=901').remark, null);
+  assert.deepStrictEqual(db.all('SELECT name FROM debtors WHERE id IN (902,903) ORDER BY id').map(r => r.name), ['Recent Closed', 'Old Open']);
+  assert.match(db.get("SELECT details FROM audit_logs WHERE action='anonymize' AND entity_id=901").details, /7-year retention period/);
+  // A removed debtor is not edited back.
+  assert.match(call(debtorsRouter, 'post', '/:id', { params: { id: '901' }, body: { name: 'X', risk_level: 'low' } }).redirect, /^\/debtors\/901\?err=/);
+});
+
+test('F-35: the retention period is whole years from 6', () => {
+  const { parseRetention } = require('../src/routes/settings');
+  assert.ok(parseRetention('5', 7).error);
+  assert.ok(parseRetention('7.5', 7).error);
+  assert.strictEqual(parseRetention('', 7).value, 7);
+  assert.strictEqual(parseRetention('10', 7).value, 10);
+});
+
+test('the new user form starts on the agent role and its permissions', () => {
+  const out = call(usersRouter, 'get', '/new');
+  assert.strictEqual(out.locals.defaultRole, 'agent');
+  assert.ok(out.locals.ticked.includes('ptps.manage') && !out.locals.ticked.includes('cases.edit'));
+});

@@ -81,9 +81,9 @@ test('r2 R: regression of fixed F-items', { timeout: 300000 }, async () => {
   await step('F-52', 'login timing: unknown user ≈ wrong password', async () => {
     const t = async (u) => { const s = Date.now(); await new c.Session().login(u, 'wrong-password-x'); return Date.now() - s; };
     const known = [], unknown = [];
-    for (let i = 0; i < 2; i++) { known.push(await t('manager')); unknown.push(await t('nobody_' + i)); }
-    await c.as('manager'); // clear the fail counter
-    const med = a => a.sort((x, y) => x - y)[Math.floor(a.length / 2)];
+    // 6 rounds, the fail counters cleared by a good login each round (2 samples were too noisy).
+    for (let i = 0; i < 6; i++) { known.push(await t('manager')); unknown.push(await t('nobody_' + i)); await c.as('manager'); }
+    const med = a => [...a].sort((x, y) => x - y)[Math.floor(a.length / 2)];
     check('F-52', 'similar latency (same bcrypt cost)', Math.abs(med(known) - med(unknown)) < 40, `known=${known}ms unknown=${unknown}ms`);
   });
   await step('F-54', 'banner cannot be forged by URL', async () => {

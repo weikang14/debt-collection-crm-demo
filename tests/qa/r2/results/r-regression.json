@@ -65,7 +65,7 @@
  {
   "id": "F-52",
   "expected": "similar latency (same bcrypt cost)",
-  "actual": "known=71,77ms unknown=70,73ms",
+  "actual": "known=69,80,72,67,65,71ms unknown=66,83,74,64,68,75ms",
   "result": "PASS",
   "note": ""
  },
@@ -86,7 +86,7 @@
  {
   "id": "F-37",
   "expected": "fully_paid + closed_at + \"Status changed new → fully_paid\"",
-  "actual": "{\"status\":\"fully_paid\",\"closed_at\":\"2026-10-31 15:22:43\"} Status changed new → fully_paid",
+  "actual": "{\"status\":\"fully_paid\",\"closed_at\":\"2026-10-31 15:51:45\"} Status changed new → fully_paid",
   "result": "PASS",
   "note": ""
  },

@@ -1,8 +1,9 @@
 <% layout('layout'); -%>
 <% const may = typeof can === 'function' ? can : () => true; %>
 <div class="page-head"><h1><%= debtor.name %></h1>
-  <% if (may('debtors.edit')) { %><a class="btn" href="/debtors/<%= debtor.id %>/edit">Edit</a><% } %>
+  <% if (may('debtors.edit') && !debtor.anonymized_at) { %><a class="btn" href="/debtors/<%= debtor.id %>/edit">Edit</a><% } %>
 </div>
+<% if (debtor.anonymized_at) { %><p class="hint">Personal data removed on <%= h.dateFmt(debtor.anonymized_at) %> after the retention period (F-35).</p><% } %>
 <div class="card kv">
   <div><span>IC/Passport</span><span class="mono"><%= debtor.ic_passport||'—' %></span></div><div><span>Company</span><%= debtor.company||'—' %></div>
   <div><span>Phone</span><span class="mono"><%= debtor.phone||'—' %></span></div><div><span>Email</span><%= debtor.email||'—' %></div>

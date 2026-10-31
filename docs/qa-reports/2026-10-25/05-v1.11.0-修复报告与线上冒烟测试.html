@@ -183,7 +183,7 @@ table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table
 
 <section class="chapter">
 <h2>5　尚未完成（正式上线前处理）</h2>
-<p style="font-size:8.6pt;color:#6b7280">2026-10-31 更新：不需要律师、客户或你决定的事项已在 v1.12.0 / v1.13.0 完成；你 10-31 答复的事项已在 v1.14.0 完成（5.1）；其余等待决定（5.2）。v1.14.0：<code>npm test</code> 38 个文件、283 个测试全部通过；QA 脚本全部重跑：r2 七组 292 项（另 1 项见 npm test）+ UI 30/30、手册 v1.2 补测 26/26、本地冒烟 36/36、业务验算 324 项与对账 166/166、合规 40 项通过（另 3 项 OBSERVE 待律师），没有失败项（结果和截图在 <code>06-artifacts/run-2026-10-31-v114/</code>）。</p>
+<p style="font-size:8.6pt;color:#6b7280">2026-10-31 更新：不需要律师、客户或你决定的事项已在 v1.12.0 / v1.13.0 完成；你 10-31 答复的事项已在 v1.14.0 完成（5.1）；其余等待决定（5.2）。v1.14.0：<code>npm test</code> 38 个文件、286 个测试全部通过；QA 脚本全部重跑：r2 七组 292 项（另 1 项见 npm test）+ UI 30/30、手册 v1.2 补测 26/26、本地冒烟 36/36、业务验算 324 项与对账 166/166、合规 40 项通过（另 3 项 OBSERVE 待律师），没有失败项（结果和截图在 <code>06-artifacts/run-2026-10-31-v114/</code>）。</p>
 <h3>5.1 已完成（v1.12.0 / v1.13.0 / v1.14.0）</h3>
 <table class="grid issues"><thead><tr><th>编号</th><th>问题</th><th>处理</th></tr></thead><tbody>
 <tr><td>D-1</td><td>调低利率上限后，计息案件只改催收员也被拒（冒烟发现，违反 INT-14）</td><td>v1.12：计息贷款比较条款时不看 <code>interest_amount</code>；演示种子不再给计息贷款存固定利息</td></tr>
@@ -214,6 +214,8 @@ table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table
 <tr><td>K-07</td><td>正式环境关闭演示账号和演示数据工具（A）</td><td>v1.14：<code>DEMO_MODE=1/0</code> 开关；未设置时只在 Render 演示站和非 production 开放</td></tr>
 <tr><td>K-09</td><td>登录锁定策略（A）</td><td>v1.14：按账号递增等待（连续错 5 次后 1、2、4…秒，最长 60 秒），登录成功清零，不会把账号锁死；原按 IP 的 15 分钟锁定保留</td></tr>
 <tr><td>G-31</td><td>改派后补录的还款归属（你选 B）</td><td>v1.14：按收款日当天负责的催收员计佣金（记录每次分派的起始日；改派后补录、修改收款日期都会重新归属）</td></tr>
+<tr><td>F-35（部分）</td><td>资料留存期限（你选 7 年）</td><td>v1.14：公司设置可填留存年限（默认 7 年，最少 6 年即诉讼时效）；案件全部 Fully Paid / Closed / Cancelled 且最后活动超过年限的债务人列在设置页，admin 勾选确认后清除姓名、证件号、联系方式、薪资、担保人和备注 / 通话 / 任务文字，金额、日期、收据号保留，每人记一条审计，清除后不能再编辑</td></tr>
+<tr><td>—</td><td>新建用户默认角色（你的答复）</td><td>v1.14：默认 agent（原来是 admin）</td></tr>
 <tr><td>D-08 / F-25</td><td>收据和对账单由哪个系统出具（A）</td><td>v1.14：由本系统出具；收据加金额大写、利息 / 本金、截至收款日的结清余额和签收栏。法定措辞仍待律师（见 5.2 G-26 余项）</td></tr>
 </tbody></table>
 <h3>5.2 等待决定</h3>
@@ -224,14 +226,14 @@ table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table
 <tr><td>G-26 余项</td><td>对账单、收据的正式版式和法定措辞（D-08 已定：由本系统出具）</td><td>律师</td></tr>
 <tr><td>G-30</td><td>闰年和短期贷款的年化边界</td><td>D-17，律师</td></tr>
 <tr><td>F-33 余项</td><td>联系时段与频率限制</td><td>D-17，律师</td></tr>
-<tr><td>F-35 / F-36</td><td>留存期限、删除与匿名化、当事人资料导出；托管地与跨境传输（也决定 G-25 的外部存证）</td><td>客户、律师</td></tr>
-<tr><td>F-43 / F-49 / F-50 / F-51</td><td>减免与和解；外部催收机构注册；诉讼时效；泄露登记与 DPO（DPO 已向你说明，待你决定是否设立和在系统里登记）</td><td>D-14、D-16、律师、组织</td></tr>
+<tr><td>F-35 余项 / F-36</td><td>审计日志、访问日志、还款修改历史和备份文件的留存（现在只增不删）；当事人资料导出；托管地与跨境传输（也决定 G-25 的外部存证）</td><td>客户、律师</td></tr>
+<tr><td>F-43 / F-49 / F-50 / F-51</td><td>减免与和解；外部催收机构注册；诉讼时效；泄露登记与 DPO（10-31 暂不做）</td><td>D-14、D-16、律师、组织</td></tr>
 <tr><td>K-10</td><td>线上持久化存储（Render 付费磁盘）</td><td>你（部署与费用）</td></tr>
 <tr><td>K-13 / D-17</td><td>PDPA 与催收行为的组织评估；律师书面确认清单</td><td>律师、组织</td></tr>
 </tbody></table>
 <p>另外：</p>
 <ul>
-  <li>r2、calc-r2、compliance-r2 三组脚本和冒烟脚本已按手册 v1.2 / v1.12–1.14 规则更新（v1.14：逾期按账本、佣金按收款日、超额结算拦截、拆分逐笔核对、账号延时、演示开关 SEC-08 实测、admin 菜单多 Permissions）；calc-r2 已没有 PENDING 项，只剩 K-03 的 INFO 记录。第一轮脚本（<code>tests/qa/*.qa.js</code>、<code>calc/</code>、<code>compliance/</code>）按 v1.8 写，已由第二轮取代，建议归档。</li>
+  <li>r2、calc-r2、compliance-r2 三组脚本和冒烟脚本已按手册 v1.2 / v1.12–1.14 规则更新（v1.14：逾期按账本、佣金按收款日、超额结算拦截、拆分逐笔核对、账号延时、演示开关 SEC-08 实测、admin 菜单多 Permissions；F-52 登录耗时比较改为 6 轮取中位数，原来 2 个样本会偶发误报）；calc-r2 已没有 PENDING 项，只剩 K-03 的 INFO 记录。第一轮脚本（<code>tests/qa/*.qa.js</code>、<code>calc/</code>、<code>compliance/</code>）按 v1.8 写，已由第二轮取代，建议归档。</li>
   <li>QA 测试手册 v1.2 中随 v1.12 / v1.13 改变预期的用例：CASE-02、RPT-02、RPT-05（新增列）、DASH-05（合计改为今日结清额）、PAY-09、PAY-10（原记录保留、作废原因）、CASE-08 与 RS-15（有还款后条款锁定）、AUD-02 / AUD-04（导出留记录、访问日志）、DEB-01 / SRCH-01（证件号脱敏）、CASE-14（通话字段）、SET-06（对账单标题和要素）、PTP-16（现在符合手册）。<b>已据此出 QA 测试手册 v1.3</b>（2026-10-31，改写 17 条、新增 6 条，共 229 条；<code>docs/QA测试手册.pdf</code>，源文件在 <code>docs/QA测试手册-源文件/</code>，按此前要求未提交）。</li>
   <li>v1.12 / v1.13 已于 2026-10-31 合并到 master 并部署（Render 23:02 起为 v1.13.0，线上只读核对通过）。v1.14.0 只提交在分支 <code>claude/v1-11-0-smoke-tests-ies3bs</code>，等你同意后再合并部署。</li>
 </ul>

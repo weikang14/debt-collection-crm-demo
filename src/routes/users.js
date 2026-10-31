@@ -43,7 +43,7 @@ router.get('/', requireLogin, adminOnly, (req, res) => {
 
 router.get('/new', requireLogin, adminOnly, (req, res) => {
   res.render('users/form', {
-    title: 'New User', roles: ROLES, ...permForm({ ticked: [...rolePerms(ROLES[0])] }),
+    title: 'New User', roles: ROLES, defaultRole: 'agent', ...permForm({ ticked: [...rolePerms('agent')] }),
     agents: all('SELECT id,name FROM agents WHERE active=1 ORDER BY name'),
     clients: all('SELECT id,company_name FROM clients ORDER BY company_name'),
   });

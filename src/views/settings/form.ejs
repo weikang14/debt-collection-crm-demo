@@ -15,6 +15,9 @@
   <div class="alert is-red">Open loans above the <%= cap %>% p.a. cap:
     <% overCap.forEach((o, i) => { %><%= i ? ', ' : '' %><a href="/cases/<%= o.id %>"><%= o.case_no %></a> (<%= Number(o.rate.toFixed(4)) %>%)<% }) %> — re-plan them with a restructure.</div>
   <% } %>
+  <label>Data retention (years) <span class="hint">(personal data of a debtor whose cases are all Fully Paid, Closed or Cancelled is removed this many years after the last activity; at least 6, the limitation period)</span>
+    <input name="retention_years" type="number" step="1" min="6" max="99" value="<%= s.retention_years ?? 7 %>" required>
+  </label>
   <label>Logo <span class="hint">(PNG/JPEG/SVG/WebP, max 512KB)</span>
     <input name="logo" type="file" accept="image/png,image/jpeg,image/svg+xml,image/webp">
   </label>
@@ -25,4 +28,16 @@
     </div>
   <% } %>
   <div class="form-actions"><button class="btn btn-gold" type="submit">Save</button><a class="btn" href="/">Cancel</a></div>
+</form>
+<form class="card form" method="post" action="/settings/anonymize" style="margin-top:14px">
+  <h3 style="margin:0">Data retention</h3>
+  <% if (!due.list.length) { %>
+  <p class="hint">No debtor is past the <%= due.years %>-year retention period (nothing on file since before <%= due.cutoff %>).</p>
+  <% } else { %>
+  <p><%= due.list.length %> debtor(s) past the <%= due.years %>-year retention period (all cases finished, last activity before <%= due.cutoff %>):
+    <% due.list.forEach((d, i) => { %><%= i ? ', ' : '' %><a href="/debtors/<%= d.id %>"><%= d.name %></a> (<%= d.last %>)<% }) %></p>
+  <p class="hint">Removing clears the name, IC, contact details, employer, salary, guarantor, remarks, call notes and numbers, and note / call / task text. Amounts, dates and receipt numbers stay. It cannot be undone.</p>
+  <label class="inline"><input type="checkbox" name="confirm" value="1"> I confirm the removal</label>
+  <div class="form-actions"><button class="btn" type="submit">Remove personal data</button></div>
+  <% } %>
 </form>

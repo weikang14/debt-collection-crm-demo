@@ -5,6 +5,7 @@ const { LEGAL_MAX_RATE, maxAnnualRate, nominalAnnualRate } = require('../service
 const { requireLogin, requireRole } = require('../middleware/auth');
 const { logAction } = require('../utils/audit');
 const { LOGO_MIME, MAX_LOGO_BYTES, toDataUrl } = require('../utils/logo');
+const { dueForRemoval, anonymizeDebtor } = require('../services/retention');
 const router = express.Router();
 
 const adminOnly = requireRole('admin');
@@ -18,6 +19,13 @@ function parseMaxRate(raw, current) {
     return { error: `Max annual interest rate must be above 0 and at most ${LEGAL_MAX_RATE}% (the legal limit)` };
   }
   return { value: n };
+}
+// F-35: whole years, not below the 6-year limitation period; blank keeps it.
+function parseRetention(raw, current) {
+  const s = String(raw ?? '').trim();
+  if (s === '') return { value: current ?? 7 };
+  if (!/^\d+$/.test(s) || Number(s) < 6 || Number(s) > 99) return { error: 'Retention period must be a whole number of years from 6 (the limitation period) to 99' };
+  return { value: Number(s) };
 }
 // Audit text for what changed, old → new (the logo is reported, not dumped).
 const settingsChanges = (old, next) => Object.keys(next)
@@ -41,7 +49,7 @@ router.get('/', requireLogin, adminOnly, (req, res) => {
     WHERE status NOT IN ('closed','cancelled') AND outstanding_amount > 0`)
     .map(c => ({ ...c, rate: nominalAnnualRate(c, c.principal_amount) }))
     .filter(c => c.rate !== null && c.rate > cap + 1e-9);
-  res.render('settings/form', { title: 'Company Settings', s, cap, overCap });
+  res.render('settings/form', { title: 'Company Settings', s, cap, overCap, due: dueForRemoval() });
 });
 
 router.post('/', requireLogin, adminOnly, (req, res) => {
@@ -58,6 +66,9 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
     const rate = parseMaxRate(b.max_annual_rate, old.max_annual_rate);
     if (rate.error) return res.redirect('/settings?err=' + encodeURIComponent(rate.error));
     const max_annual_rate = rate.value;
+    const keep = parseRetention(b.retention_years, old.retention_years);
+    if (keep.error) return res.redirect('/settings?err=' + encodeURIComponent(keep.error));
+    const retention_years = keep.value;
 
     // Logo precedence: remove wins, then a new upload, else keep the existing.
     let logo;
@@ -69,17 +80,29 @@ router.post('/', requireLogin, adminOnly, (req, res) => {
       logo = (get('SELECT logo FROM settings WHERE id=1') || {}).logo || '';
     }
 
-    const changes = settingsChanges(old, { company_name, address, phone, email, reg_no, licence_no, logo, max_annual_rate });
+    const changes = settingsChanges(old, { company_name, address, phone, email, reg_no, licence_no, logo, max_annual_rate, retention_years });
     // The upload callback runs after the per-request transaction (app.js) closed.
     db.transaction(() => {
-      run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, licence_no=?, logo=?, max_annual_rate=?, updated_at=datetime('now') WHERE id=1`,
-        [company_name, address, phone, email, reg_no, licence_no, logo, max_annual_rate]);
+      run(`UPDATE settings SET company_name=?, address=?, phone=?, email=?, reg_no=?, licence_no=?, logo=?, max_annual_rate=?, retention_years=?, updated_at=datetime('now') WHERE id=1`,
+        [company_name, address, phone, email, reg_no, licence_no, logo, max_annual_rate, retention_years]);
       logAction(req, 'update', 'settings', 1, `Updated company settings${changes.length ? ': ' + changes.join('; ') : ' (no changes)'}`);
     })();
     res.redirect('/settings?ok=' + encodeURIComponent('Company settings saved'));
   });
 });
 
+// F-35: remove the personal data of every debtor past the retention period.
+router.post('/anonymize', requireLogin, adminOnly, (req, res) => {
+  if (req.body.confirm !== '1') return res.redirect('/settings?err=' + encodeURIComponent('Tick the box to confirm the removal'));
+  const { years, list } = dueForRemoval();
+  for (const d of list) {
+    anonymizeDebtor(d.id);
+    logAction(req, 'anonymize', 'debtor', d.id, `Removed the personal data of debtor #${d.id} (${years}-year retention period; last activity ${d.last})`);
+  }
+  res.redirect('/settings?ok=' + encodeURIComponent(list.length ? `Personal data removed for ${list.length} debtor(s)` : 'No debtor is past the retention period'));
+});
+
 module.exports = router;
 module.exports.parseMaxRate = parseMaxRate;
+module.exports.parseRetention = parseRetention;
 module.exports.settingsChanges = settingsChanges;

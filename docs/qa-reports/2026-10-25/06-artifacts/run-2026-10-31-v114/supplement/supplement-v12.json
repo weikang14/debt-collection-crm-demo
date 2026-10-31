@@ -177,7 +177,7 @@
  {
   "id": "S-CASE-25",
   "expected": "CASE-25：manager 把 Closed 案件改回 Negotiation → 结案时间被清除",
-  "actual": "案件 8：closed_at 2026-10-26 15:24:35 → null；Status updated",
+  "actual": "案件 8：closed_at 2026-10-26 15:51:54 → null；Status updated",
   "result": "PASS",
   "note": ""
  }

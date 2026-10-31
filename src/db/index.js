@@ -132,6 +132,9 @@ function init() {
   try { db.prepare('ALTER TABLE cases ADD COLUMN agreement_no TEXT').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE cases ADD COLUMN agreement_date TEXT').run(); } catch (e) { /* exists */ }
   try { db.prepare('ALTER TABLE settings ADD COLUMN licence_no TEXT').run(); } catch (e) { /* exists */ }
+  // Migration (F-35): retention period in years, and when a debtor's personal data was removed.
+  try { db.prepare('ALTER TABLE settings ADD COLUMN retention_years INTEGER NOT NULL DEFAULT 7').run(); } catch (e) { /* exists */ }
+  try { db.prepare('ALTER TABLE debtors ADD COLUMN anonymized_at TEXT').run(); } catch (e) { /* exists */ }
   // Roles start with the default permissions the app shipped with.
   require('../utils/permissions').seedRoleDefaults();
   // Migration: legal rate cap setting (default 18% p.a.).
