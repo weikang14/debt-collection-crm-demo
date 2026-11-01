@@ -237,7 +237,7 @@ table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table
 <ul>
   <li>r2、calc-r2、compliance-r2 三组脚本和冒烟脚本已按手册 v1.2 / v1.12–1.14 规则更新（v1.14：逾期按账本、佣金按收款日、超额结算拦截、拆分逐笔核对、账号延时、演示开关 SEC-08 实测、admin 菜单多 Permissions；F-52 登录耗时比较改为 6 轮取中位数，原来 2 个样本会偶发误报）；calc-r2 已没有 PENDING 项，只剩 K-03 的 INFO 记录。第一轮脚本（<code>tests/qa/*.qa.js</code>、<code>calc/</code>、<code>compliance/</code>）按 v1.8 写，已由第二轮取代，建议归档。</li>
   <li>QA 测试手册 v1.2 中随 v1.12 / v1.13 改变预期的用例：CASE-02、RPT-02、RPT-05（新增列）、DASH-05（合计改为今日结清额）、PAY-09、PAY-10（原记录保留、作废原因）、CASE-08 与 RS-15（有还款后条款锁定）、AUD-02 / AUD-04（导出留记录、访问日志）、DEB-01 / SRCH-01（证件号脱敏）、CASE-14（通话字段）、SET-06（对账单标题和要素）、PTP-16（现在符合手册）。<b>已据此出 QA 测试手册 v1.3</b>（2026-10-31，改写 17 条、新增 6 条，共 229 条；<code>docs/QA测试手册.pdf</code>，源文件在 <code>docs/QA测试手册-源文件/</code>，按此前要求未提交）。</li>
-  <li>v1.12 / v1.13 已于 2026-10-31 合并到 master 并部署（Render 23:02 起为 v1.13.0，线上只读核对通过）。v1.14.0 已于 2026-11-01 合并到 master（<code>c3ba0e5</code>）并部署：Render 07:40 起为 v1.14.0，线上只读核对 15/15 通过（版本、演示账号页、权限页、新用户默认 agent、留存年限 7 年、审计搜索、Agents 月目标、Reports 目标按月数、案件 14、收据金额大写）。</li>
+  <li>v1.12 / v1.13 已于 2026-10-31 合并到 master 并部署（Render 23:02 起为 v1.13.0，线上只读核对通过）。v1.14.0 已于 2026-11-01 合并到 master（<code>c3ba0e5</code>）并部署：Render 07:40 起为 v1.14.0，线上只读核对 15/15 通过（版本、演示账号页、权限页、新用户默认 agent、留存年限 7 年、审计搜索、Agents 月目标、Reports 目标按月数、案件 14、收据金额大写）。v1.14.1（客户服务器部署相关）于同日合并到 master（<code>6d5619a</code>），Render 演示站已更新，线上只读核对 17/17 通过（另加两项：审计日志记录的是客户端的真实 IP，演示站的 Demo 提示仍在）；第二个 Render 服务 <code>debt-collection-crm.onrender.com</code> 已由你暂停（suspend）。</li>
 </ul>
 </section>
 
