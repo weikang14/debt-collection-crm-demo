@@ -216,7 +216,7 @@ table.issues th:nth-child(5) { width: 15%; } table.issues td:nth-child(4), table
 <tr><td>G-31</td><td>改派后补录的还款归属（你选 B）</td><td>v1.14：按收款日当天负责的催收员计佣金（记录每次分派的起始日；改派后补录、修改收款日期都会重新归属）</td></tr>
 <tr><td>F-35（部分）</td><td>资料留存期限（你选 7 年）</td><td>v1.14：公司设置可填留存年限（默认 7 年，最少 6 年即诉讼时效）；案件全部 Fully Paid / Closed / Cancelled 且最后活动超过年限的债务人列在设置页，admin 勾选确认后清除姓名、证件号、联系方式、薪资、担保人和备注 / 通话 / 任务文字，金额、日期、收据号保留，每人记一条审计（写明清除前的姓名和身份证号，审计日志可按姓名或身份证号搜索），清除后的债务人及其案件只读。一个证件号只能对应一个在用的债务人；与已清除的债务人同号时可以重新建档，但会提示此人曾在系统中（11-01 选 A）</td></tr>
 <tr><td>Agents 目标</td><td>Target 是月目标（11-01）</td><td>v1.14：Agents 页和催收员详情的已收金额、佣金、达成率改为按本月计算；Reports 的目标按所选范围涉及的月数放大（例如跨 3 个月 = 月目标 × 3），CSV 同步</td></tr>
-<tr><td>部署方式</td><td>正式环境部署在客户服务器，Render 只保留演示站（11-01；第二个 Render 服务 <code>debt-collection-crm.onrender.com</code> 由你删除）</td><td>v1.14.1：<code>TRUST_PROXY</code> 不在 Render 上也生效（反向代理后取真实 IP，登录限速不会因为共用代理地址把所有人锁住）；正式库已有用户时 <code>npm run seed</code> 拒绝执行（<code>--force</code> 才清空）；《部署上线指南》新增第九节（环境变量、nginx 示例、备份），《正式上线待办》同步</td></tr>
+<tr><td>部署方式</td><td>正式环境部署在客户服务器，Render 只保留演示站（11-01；第二个 Render 服务 <code>debt-collection-crm.onrender.com</code> 由你删除）</td><td>v1.14.1：<code>TRUST_PROXY</code> 不在 Render 上也生效（反向代理后取真实 IP，登录限速不会因为共用代理地址把所有人锁住）；正式库已有用户时 <code>npm run seed</code> 拒绝执行（<code>--force</code> 才清空）；数据库不随代码部署（<code>data/</code> 不进仓库），客户服务器从空库开始，用 <code>npm run create-admin</code> 建第一个管理员，不需要演示数据；《部署上线指南》新增第九节（环境变量、nginx 示例、备份），《正式上线待办》同步</td></tr>
 <tr><td>—</td><td>新建用户默认角色（你的答复）</td><td>v1.14：默认 agent（原来是 admin）</td></tr>
 <tr><td>D-08 / F-25</td><td>收据和对账单由哪个系统出具（A）</td><td>v1.14：由本系统出具；收据加金额大写、利息 / 本金、截至收款日的结清余额和签收栏。法定措辞仍待律师（见 5.2 G-26 余项）</td></tr>
 </tbody></table>

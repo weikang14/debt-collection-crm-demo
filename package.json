@@ -8,6 +8,7 @@
   "scripts": {
     "start": "node --no-warnings src/app.js",
     "seed": "node --no-warnings src/db/seed.js",
+    "create-admin": "node --no-warnings src/db/create-admin.js",
     "reset": "node -e \"require('fs').rmSync('data/crm.db',{force:true})\" && npm run seed",
     "backup": "node src/db/backup.js",
     "test": "node --no-warnings --require ./tests/tmp-db-cleanup.js --test"

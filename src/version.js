@@ -14,6 +14,7 @@ const CHANGELOG = [
   { version: '1.14.1', date: '2026-11-01', changes: [
     '客户服务器部署：TRUST_PROXY 不在 Render 上也生效（反向代理后能取到真实 IP，登录限速不会因为共用代理地址而把所有人锁住）',
     '正式环境（非 Render 演示站）下，数据库已有用户时 npm run seed 拒绝执行，防止误清空；确需清空加 --force',
+    '新增 npm run create-admin：客户服务器可以从空库开始，只建第一个管理员（一次性随机密码），不需要演示数据',
   ] },
   { version: '1.14.0', date: '2026-10-31', changes: [
     '权限可配置：admin 在 Team → Permissions 设置每个角色的权限（默认即原规则），新建或编辑用户时可在角色基础上增减；新增“查看薪资和担保人”权限',

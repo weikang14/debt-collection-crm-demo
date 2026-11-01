@@ -178,6 +178,29 @@ test('Customer server: TRUST_PROXY works off Render; a production seed refuses a
   }
 });
 
+test('Customer server: create-admin gives an empty database its first admin, with no demo data', () => {
+  const cp = require('node:child_process'), fs = require('node:fs'), bcrypt = require('bcryptjs');
+  const dbPath = process.env.CRM_DB_PATH + '-admin';
+  const create = (...args) => cp.spawnSync(process.execPath, ['--no-warnings', 'src/db/create-admin.js', ...args],
+    { cwd: path.join(__dirname, '..'), env: { ...process.env, CRM_DB_PATH: dbPath }, encoding: 'utf8' });
+  try {
+    const r = create('boss');
+    assert.strictEqual(r.status, 0, r.stderr);
+    const pw = r.stdout.match(/One-time password: (\S+)/)[1];
+    assert.strictEqual(create('boss').status, 1);            // an existing username is refused
+    assert.strictEqual(create().status, 1);                  // so is a missing one
+    const d = new (require('node:sqlite').DatabaseSync)(dbPath);
+    const users = d.prepare('SELECT username, role, password_hash FROM users').all();
+    const counts = d.prepare('SELECT (SELECT COUNT(*) FROM cases) c, (SELECT COUNT(*) FROM debtors) d, (SELECT COUNT(*) FROM audit_logs) a').get();
+    d.close();
+    assert.deepStrictEqual(users.map(u => [u.username, u.role]), [['boss', 'admin']]);
+    assert.ok(bcrypt.compareSync(pw, users[0].password_hash));
+    assert.deepStrictEqual({ ...counts }, { c: 0, d: 0, a: 1 });   // nothing but the admin and its audit row
+  } finally {
+    for (const f of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) fs.rmSync(f, { force: true });
+  }
+});
+
 test('11B / G-31: a payment is credited to the agent responsible on its payment date', () => {
   const id = newCase({ interest_amount: '0', loan_start_date: monthsAgo(2) });   // agent A from today
   db.run("UPDATE case_assignments SET from_date=? WHERE case_id=?", [monthsAgo(2), id]); // A held it from the start
