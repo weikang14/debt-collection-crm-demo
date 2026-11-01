@@ -158,6 +158,26 @@ test('7A / K-07: a production deploy without DEMO_MODE has no demo accounts page
   assert.deepStrictEqual(run({ NODE_ENV: 'production', SESSION_SECRET: 's', RENDER: 'true' }), [200, 302]); // the Render demo keeps them
 });
 
+test('Customer server: TRUST_PROXY works off Render; a production seed refuses a database with data', () => {
+  const cp = require('node:child_process'), fs = require('node:fs'), cwd = path.join(__dirname, '..');
+  const dbPath = process.env.CRM_DB_PATH + '-deploy';
+  const base = { ...process.env, NODE_ENV: 'production', SESSION_SECRET: 's', RENDER: '', CRM_DB_PATH: dbPath };
+  delete base.TRUST_PROXY;
+  const hops = env => cp.execFileSync(process.execPath, ['--no-warnings', '-e', "console.log(JSON.stringify(require('./src/app').get('trust proxy')))"],
+    { cwd, env: { ...base, ...env }, encoding: 'utf8' }).trim().split('\n').pop();
+  const seed = (...args) => cp.spawnSync(process.execPath, ['--no-warnings', 'src/db/seed.js', ...args], { cwd, env: base, encoding: 'utf8' }).status;
+  try {
+    assert.strictEqual(hops({}), 'false');                 // no proxy configured: req.ip is the socket address
+    assert.strictEqual(hops({ TRUST_PROXY: '1' }), '1');   // nginx in front of a customer server
+    assert.strictEqual(hops({ RENDER: 'true' }), '3');     // the Render demo default
+    assert.strictEqual(seed(), 0);                         // an empty database may be seeded
+    assert.strictEqual(seed(), 1);                         // one with data is left alone
+    assert.strictEqual(seed('--force'), 0);
+  } finally {
+    for (const f of [dbPath, `${dbPath}-wal`, `${dbPath}-shm`]) fs.rmSync(f, { force: true });
+  }
+});
+
 test('11B / G-31: a payment is credited to the agent responsible on its payment date', () => {
   const id = newCase({ interest_amount: '0', loan_start_date: monthsAgo(2) });   // agent A from today
   db.run("UPDATE case_assignments SET from_date=? WHERE case_id=?", [monthsAgo(2), id]); // A held it from the start

@@ -1,6 +1,8 @@
 # One-click deploy config for Render (https://render.com) — a Blueprint.
 # In Render: New + → Blueprint → connect this repo → it reads this file.
-# Gives a fixed public URL like https://debt-collection-crm.onrender.com
+# Gives a fixed public URL: https://debt-collection-crm-demo.onrender.com
+# Render hosts only this demo; production runs on the customer's own server
+# (docs/部署上线指南.md, section 九).
 #
 # Note: the free plan's disk is ephemeral, so the database is re-seeded on
 # every deploy/restart (startCommand runs `npm run seed`). For a demo this is

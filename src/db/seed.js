@@ -224,6 +224,14 @@ function deleteDemoRows() {
 module.exports = { seedDemo, clearAllTables, insertDemoRows, deleteDemo };
 
 if (require.main === module) {
+  // A seed wipes every table. On a real deployment (production, not the Render
+  // demo) only an empty database may be seeded, unless --force says so.
+  init();
+  if (process.env.NODE_ENV === 'production' && !process.env.RENDER && !process.argv.includes('--force')
+      && db.prepare('SELECT 1 FROM users LIMIT 1').get()) {
+    console.error('Refusing to seed: this production database already has data and seeding erases all of it. Run with --force only if that is intended.');
+    process.exit(1);
+  }
   seedDemo();
   console.log('Seed complete: 7 users, 5 clients, 12 debtors, 4 agents, 20 cases + related data.');
 }
